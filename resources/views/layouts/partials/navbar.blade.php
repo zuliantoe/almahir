@@ -1,0 +1,106 @@
+{{-- Main Navbar --}}
+<nav class="main-header navbar navbar-expand navbar-white navbar-light">
+    {{-- Left navbar links --}}
+    <ul class="navbar-nav">
+        <li class="nav-item">
+            <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+                <i class="fas fa-bars"></i>
+            </a>
+        </li>
+        <li class="nav-item d-none d-sm-inline-block">
+            <a href="{{ url('/') }}" class="nav-link">Home</a>
+        </li>
+    </ul>
+
+    {{-- Right navbar links --}}
+    <ul class="navbar-nav ml-auto">
+        {{-- Search form --}}
+        <li class="nav-item">
+            <a class="nav-link" data-widget="navbar-search" href="#" role="button">
+                <i class="fas fa-search"></i>
+            </a>
+            <div class="navbar-search-block">
+                <form class="form-inline">
+                    <div class="input-group input-group-sm">
+                        <input class="form-control form-control-navbar" type="search" placeholder="Search" aria-label="Search">
+                        <div class="input-group-append">
+                            <button class="btn btn-navbar" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <button class="btn btn-navbar" type="button" data-widget="navbar-search">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </li>
+
+        {{-- Notifications Dropdown --}}
+        <li class="nav-item dropdown">
+            <a class="nav-link" data-toggle="dropdown" href="#">
+                <i class="far fa-bell"></i>
+                <span class="badge badge-warning navbar-badge">3</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                <span class="dropdown-item dropdown-header">3 Notifications</span>
+                <div class="dropdown-divider"></div>
+                <a href="#" class="dropdown-item">
+                    <i class="fas fa-envelope mr-2"></i> 4 new messages
+                    <span class="float-right text-muted text-sm">3 mins</span>
+                </a>
+                <div class="dropdown-divider"></div>
+                <a href="#" class="dropdown-item dropdown-footer">See All Notifications</a>
+            </div>
+        </li>
+
+        {{-- Fullscreen button --}}
+        <li class="nav-item">
+            <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+                <i class="fas fa-expand-arrows-alt"></i>
+            </a>
+        </li>
+
+        {{-- User Account Dropdown --}}
+        <li class="nav-item dropdown">
+            <a class="nav-link" data-toggle="dropdown" href="#">
+                <i class="far fa-user"></i>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right">
+                @auth
+                    <span class="dropdown-item dropdown-header">{{ Auth::user()->name ?? 'User' }}</span>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item">
+                        <i class="fas fa-user mr-2"></i> Profile
+                    </a>
+                    <a href="#" class="dropdown-item">
+                        <i class="fas fa-cog mr-2"></i> Settings
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    @if(Route::has('logout'))
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="dropdown-item">
+                                <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                            </button>
+                        </form>
+                    @else
+                        <a href="#" class="dropdown-item text-muted">
+                            <i class="fas fa-sign-out-alt mr-2"></i> Logout (not configured)
+                        </a>
+                    @endif
+                @else
+                    @if(Route::has('login'))
+                        <a href="{{ route('login') }}" class="dropdown-item">
+                            <i class="fas fa-sign-in-alt mr-2"></i> Login
+                        </a>
+                    @else
+                        <span class="dropdown-item text-muted">
+                            <i class="fas fa-info-circle mr-2"></i> Guest Mode
+                        </span>
+                    @endif
+                @endauth
+            </div>
+        </li>
+    </ul>
+</nav>

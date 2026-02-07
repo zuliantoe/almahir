@@ -45,20 +45,23 @@ class MakeModuleMigration extends Command
             $this->info("Created directory: {$migrationsPath}");
         }
         
-        // Build the artisan command
+        // Build arguments for make:migration command
         $relativePath = "app/Modules/{$module}/Migrations";
         
-        $command = "make:migration {$name} --path={$relativePath}";
+        $arguments = [
+            'name' => $name,
+            '--path' => $relativePath,
+        ];
         
         if ($this->option('create')) {
-            $command .= " --create={$this->option('create')}";
+            $arguments['--create'] = $this->option('create');
         }
         
         if ($this->option('table')) {
-            $command .= " --table={$this->option('table')}";
+            $arguments['--table'] = $this->option('table');
         }
         
-        $this->call($command);
+        $this->call('make:migration', $arguments);
         
         $this->newLine();
         $this->info("✓ Migration created in module: {$module}");

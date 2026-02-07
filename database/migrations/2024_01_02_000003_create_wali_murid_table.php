@@ -27,13 +27,13 @@ return new class extends Migration
         Schema::create('siswa_wali', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('siswa_id');
-            $table->uuid('wali_murid_id');
+            $table->uuid('wali_murid');
             $table->enum('hubungan', ['ayah', 'ibu', 'wali'])->default('wali');
             $table->timestamps();
 
             $table->foreign('siswa_id')->references('id')->on('siswa')->onDelete('cascade');
-            $table->foreign('wali_murid_id')->references('id')->on('wali_murid')->onDelete('cascade');
-            $table->unique(['siswa_id', 'wali_murid_id']);
+            $table->foreign('wali_murid')->references('id')->on('wali_murid')->onDelete('cascade');
+            $table->unique(['siswa_id', 'wali_murid']);
         });
     }
 

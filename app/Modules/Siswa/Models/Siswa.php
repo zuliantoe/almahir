@@ -96,4 +96,9 @@ class Siswa extends Model
     {
         return 'NIS-' . $this->nis;
     }
+    public function pendaftaran()
+{
+    return $this->belongsTo(\Modules\Pendaftaran\Models\Pendaftaran::class);
+}
+
 }

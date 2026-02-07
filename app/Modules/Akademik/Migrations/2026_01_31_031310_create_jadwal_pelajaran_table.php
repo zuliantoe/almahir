@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreignId('mapel_id')->constrained('mata_pelajaran');
             $table->foreignId('kelas_id')->constrained('kelas');
             $table->foreignId('tahunajaran_id')->constrained('tahun_ajaran');
-            $table->bigInteger('guru_id')->index();
+        $table->bigInteger('guru_id')->index();
 
 
             $table->softDeletes();

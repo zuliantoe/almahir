@@ -9,34 +9,26 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('jadwal_piket', function (Blueprint $table) {
-            $table->id(); // id_jadwal otomatis
+            $table->id();
 
-            // Bulan jadwal (1-12)
             $table->tinyInteger('bulan');
-
-            // Pekan ke berapa dalam bulan (1-5)
             $table->tinyInteger('pekan');
-
-            // Hari (Senin, Selasa, dst)
             $table->string('hari');
-
-            // Tempat piket
             $table->string('tempat');
 
-            // FK ke siswa
-            $table->foreignId('siswa_id')
-                  ->constrained('siswa')
-                  ->onDelete('cascade');
+            // UUID FK ke siswa
+            $table->char('siswa_id', 36);
 
-            // Status piket
-            $table->enum('status', [
-                'belum',
-                'sudah'
-            ])->default('belum');
+            $table->foreign('siswa_id')
+                ->references('id')
+                ->on('siswa')
+                ->onDelete('cascade');
+
+            $table->enum('status', ['belum', 'sudah'])
+                ->default('belum');
 
             $table->timestamps();
 
-            // Biar siswa gak dobel piket di slot yang sama
             $table->unique(['bulan', 'pekan', 'hari', 'tempat', 'siswa_id']);
         });
     }

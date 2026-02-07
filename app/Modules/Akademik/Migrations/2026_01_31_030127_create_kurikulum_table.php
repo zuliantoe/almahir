@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('kurikulum', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_tahunajaran')->constrained('tahun_ajaran');
-            $table->foreignId('id_kelas')->constrained('kelas');
-            $table->foreignId('id_mapel')->constrained('mata_pelajaran');
+            $table->foreignId('tahunajaran_id')->constrained('tahun_ajaran');
+            $table->foreignId('kelas_id')->constrained('kelas');
+            $table->foreignId('mapel_id')->constrained('mata_pelajaran');
             $table->integer('totaljam');
             $table->softDeletes();
             $table->timestamps();

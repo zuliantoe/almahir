@@ -17,10 +17,10 @@ return new class extends Migration
             $table->integer('jamke');
             $table->time('jamawal');
             $table->time('jamakhir');
-            $table->foreignId('id_mapel')->constrained('mata_pelajaran');
-            $table->foreignId('id_kelas')->constrained('kelas');
-            $table->foreignId('id_tahunajaran')->constrained('tahun_ajaran');
-            $table->foreignId('guru_id')->constrained('guru');
+            $table->foreignId('mapel_id')->constrained('mata_pelajaran');
+            $table->foreignId('kelas_id')->constrained('kelas');
+            $table->foreignId('tahunajaran_id')->constrained('tahun_ajaran');
+            $table->bigInteger('guru_id')->index();
 
 
             $table->softDeletes();

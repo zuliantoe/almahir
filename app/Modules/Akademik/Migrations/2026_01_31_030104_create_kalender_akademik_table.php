@@ -11,13 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mata_pelajaran', function (Blueprint $table) {
+        Schema::create('kalender_akademik', function (Blueprint $table) {
             $table->id();
-            $table->string('kode');
-            $table->string('nama');
-            $table->foreignId('id_kategori')->constrained('kategori_pelajaran');
+            $table->foreignId('tahunajaran_id')->constrained('tahun_ajaran');
+            $table->date('tanggal_awal');
+            $table->date('tanggal_akhir');
+            $table->text("deksripsi");
+            $table->foreignId('kegiatan_id')->constrained('jenis_kegiatan');
+            // $table->string('acara');
 
-            
+
             $table->softDeletes();
             $table->timestamps();
         });
@@ -28,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('mata_pelajaran');
+        Schema::dropIfExists('kalender_akademik');
     }
 };

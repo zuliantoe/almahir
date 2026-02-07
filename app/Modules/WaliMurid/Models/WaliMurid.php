@@ -11,7 +11,7 @@ use Modules\Siswa\Models\Siswa;
 
 /**
  * WaliMurid Model
- * 
+ *
  * Represents a parent/guardian in the academic system.
  */
 class WaliMurid extends Model
@@ -42,7 +42,7 @@ class WaliMurid extends Model
      */
     public function siswa()
     {
-        return $this->belongsToMany(Siswa::class, 'siswa_wali', 'wali_murid_id', 'siswa_id')
+        return $this->belongsToMany(Siswa::class, 'siswa_wali', 'wali_murid', 'siswa_id')
             ->withPivot('hubungan')
             ->withTimestamps();
     }

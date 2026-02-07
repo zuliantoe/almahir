@@ -141,6 +141,19 @@
                         <p>Absensi</p>
                     </a>
                 </li>
+
+                {{-- Penilaian Tahfidz --}}
+                <li class="nav-item">
+                    <a href="{{ route('penilaiantahfidz.index') }}" class="nav-link {{ request()->is('penilaiantahfidz*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-book-open"></i>
+                        <p>Penilaian Tahfidz</p>
+                    </a>
+                </li>
+
+                {{-- Izin Sakit --}}
+                <li class="nav-item">
+                    <a href="{{ route('izinsakit.index') }}" class="nav-link {{ request()->is('izinsakit*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-notes-medical"></i>
                 @endif
 
                 {{-- 

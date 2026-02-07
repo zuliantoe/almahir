@@ -25,5 +25,10 @@ class Pendaftaran extends Model
     {
         return $this->hasOne(\Modules\Siswa\Models\Siswa::class);
     }
+    public function seleksi()
+{
+    return $this->hasMany(\Modules\Seleksi\Models\Seleksi::class);
+}
+
 }
 

@@ -6,7 +6,7 @@ use Modules\Siswa\Models\Siswa;
 use Modules\Seleksi\Models\Seleksi;
 class Pendaftaran extends Model
 {
-
+  protected $table = 'pendaftarans';
     protected $fillable = [
     'nisn',
     'nama_lengkap',
@@ -37,7 +37,7 @@ class Pendaftaran extends Model
     }
     public function seleksi()
 {
-    return $this->hasMany(Seleksi::class);
+    // return $this->hasMany(Seleksi::class);
 }
 
 

@@ -13,7 +13,6 @@ class PendaftaranController extends Controller
         $pendaftaran = Pendaftaran::latest()->get();
         return view('pendaftaran::index', compact('pendaftaran'));
     }
-
     public function create()
     {
         return view('pendaftaran::create');

@@ -23,13 +23,13 @@ class UangSaku extends Model
     ];
 
     // relasi ke Student
-    public function student()
+    public function siswa()
     {
         return $this->belongsTo(Siswa::class);
     }
     
     // Accessor untuk status default
-    public function getStatusAttribute($value)
+    public function ambilAtributStatus($value)
     {
         return $value ?: 'Diterima Bendahara';
     }

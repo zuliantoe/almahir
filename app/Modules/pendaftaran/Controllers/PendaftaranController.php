@@ -5,11 +5,9 @@ namespace Modules\Pendaftaran\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\Pendaftaran\Models\Pendaftaran;
-use Modules\Siswa\Models\Siswa;
 
 class PendaftaranController extends Controller
 {
-   
     public function index()
     {
         $pendaftaran = Pendaftaran::latest()->get();
@@ -23,29 +21,76 @@ class PendaftaranController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'nisn' => 'required|unique:pendaftaran,nisn',
-            'nama_lengkap' => 'required',
+        $validated = $request->validate([
+            'nisn' => 'required|string|max:20|unique:pendaftarans,nisn',
+            'nama_lengkap' => 'required|string',
+            'tempat_lahir' => 'required|string',
             'tanggal_lahir' => 'required|date',
-            'tempat_lahir' => 'required',
-            'jenis_kelamin' => 'required',
-            'alamat' => 'required',
-            'no_hp' => 'required',
+            'jenis_kelamin' => 'required|in:L,P',
+
+            'berat_badan' => 'required|numeric|min:20',
+            'tinggi_badan' => 'required|numeric',
+            'riwayat_sakit' => 'nullable|string',
+
+            'kelurahan' => 'required|string',
+            'kecamatan' => 'required|string',
+            'kota' => 'required|string',
+            'provinsi' => 'required|string',
+            'alamat' => 'required|string',
+
+            'nama_ayah' => 'required|string',
+            'pekerjaan_ayah' => 'required|string',
+            'no_hp' => 'required|string|max:15',
+            'email' => 'required|email|unique:pendaftarans,email',
         ]);
 
-        Pendaftaran::create([
-            'nisn' => $request->nisn,
-            'nama_lengkap' => $request->nama_lengkap,
-            'tanggal_lahir' => $request->tanggal_lahir,
-            'tempat_lahir' => $request->tempat_lahir,
-            'jenis_kelamin' => $request->jenis_kelamin,
-            'alamat' => $request->alamat,
-            'no_hp' => $request->no_hp,
-            'status' => 'pending',
-            'tanggal_daftar' => now(),
-        ]);
+        /*
+        |--------------------------------------------------------------------------
+        | LOGIKA SELEKSI OTOMATIS
+        |--------------------------------------------------------------------------
+        */
+        $status = 'pending';
+        $catatan = null;
 
-        return redirect()->back()->with('success', 'Pendaftaran berhasil');
+        if ($validated['tinggi_badan'] < 150) {
+            $status = 'ditolak';
+            $catatan = 'Tinggi badan kurang dari standar minimal (150 cm)';
+        }
+
+        if ($validated['berat_badan'] < 35) {
+            $status = 'ditolak';
+            $catatan = 'Berat badan kurang dari standar minimal (35 kg)';
+        }
+
+        if (!empty($validated['riwayat_sakit'])) {
+            $status = 'diproses';
+            $catatan = 'Perlu pemeriksaan riwayat sakit';
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SIMPAN DATA
+        |--------------------------------------------------------------------------
+        */
+        $validated['status'] = $status;
+        $validated['catatan'] = $catatan;
+        $validated['tanggal_daftar'] = now();
+
+        Pendaftaran::create($validated);
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESPONSE
+        |--------------------------------------------------------------------------
+        */
+        if ($status === 'ditolak') {
+            return redirect()
+                ->route('pendaftaran.create')
+                ->with('warning', $catatan);
+        }
+
+        return redirect()
+            ->route('pendaftaran.create')
+            ->with('success', 'Pendaftaran berhasil dikirim');
     }
-
 }

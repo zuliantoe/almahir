@@ -4,6 +4,8 @@ namespace Modules\PenilaianDanPresensi\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Modules\Guru\Models\Guru;
+use Modules\Siswa\Models\Siswa;
 
 class Presensi extends Model
 {
@@ -28,11 +30,11 @@ class Presensi extends Model
     // Relationships
     public function siswa()
     {
-        return $this->belongsTo(\App\Models\Siswa::class, 'id_siswa');
+        return $this->belongsTo(Siswa::class, 'id_siswa');
     }
 
     public function guru()
     {
-        return $this->belongsTo(\App\Models\Guru::class, 'id_guru');
+        return $this->belongsTo(Guru::class, 'id_guru');
     }
 }

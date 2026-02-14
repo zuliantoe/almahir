@@ -1,0 +1,28 @@
+<?php
+
+namespace Modules\Keuangan\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Pemasukan extends Model
+{
+    protected $table = 'pemasukans';
+
+    protected $fillable = [
+        'sumber_id',
+        'jumlah',
+        'tanggal',
+        'waktu', 
+        'deskripsi'
+    ];
+
+    protected $casts = [
+        'tanggal' => 'date',
+        'jumlah' => 'decimal:2'
+    ];
+
+    public function sumber()
+    {
+        return $this->belongsTo(Sumber::class);
+    }
+}

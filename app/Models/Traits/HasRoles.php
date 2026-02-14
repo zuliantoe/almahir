@@ -6,17 +6,17 @@ use App\Models\Role;
 
 /**
  * HasRoles Trait
- * 
+ *
  * Provides role-based access control functionality to the User model.
  * Include this trait in any model that needs role-based permissions.
- * 
+ *
  * @author SIAKAD Development Team
  */
 trait HasRoles
 {
     /**
      * Get all roles assigned to this user.
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function roles()
@@ -28,10 +28,10 @@ trait HasRoles
 
     /**
      * Check if user has a specific role.
-     * 
+     *
      * @param string|array $roles Single role name or array of role names
      * @return bool
-     * 
+     *
      * Usage:
      *   $user->hasRole('SUPER_ADMIN')
      *   $user->hasRole(['GURU', 'STAF_TU'])
@@ -51,7 +51,7 @@ trait HasRoles
 
     /**
      * Check if user has ALL of the specified roles.
-     * 
+     *
      * @param array $roles Array of role names
      * @return bool
      */
@@ -63,9 +63,9 @@ trait HasRoles
 
     /**
      * Check if user has a specific permission.
-     * 
+     *
      * Permissions are stored as JSON array in each role.
-     * 
+     *
      * @param string $permission Permission key to check
      * @return bool
      */
@@ -88,7 +88,7 @@ trait HasRoles
 
     /**
      * Assign a role to the user.
-     * 
+     *
      * @param string|Role $role Role name or Role model instance
      * @param string|null $assignedBy UUID of user who assigned this role
      * @return void
@@ -96,7 +96,7 @@ trait HasRoles
     public function assignRole($role, ?string $assignedBy = null): void
     {
         $roleModel = $role instanceof Role ? $role : Role::where('name', $role)->first();
-        
+
         if ($roleModel && !$this->hasRole($roleModel->name)) {
             $this->roles()->attach($roleModel->id, [
                 'id' => \Illuminate\Support\Str::uuid(),
@@ -107,14 +107,14 @@ trait HasRoles
 
     /**
      * Remove a role from the user.
-     * 
+     *
      * @param string|Role $role Role name or Role model instance
      * @return void
      */
     public function removeRole($role): void
     {
         $roleModel = $role instanceof Role ? $role : Role::where('name', $role)->first();
-        
+
         if ($roleModel) {
             $this->roles()->detach($roleModel->id);
         }
@@ -122,7 +122,7 @@ trait HasRoles
 
     /**
      * Sync user roles (remove all existing and assign new ones).
-     * 
+     *
      * @param array $roleNames Array of role names
      * @param string|null $assignedBy UUID of user who assigned these roles
      * @return void
@@ -130,7 +130,7 @@ trait HasRoles
     public function syncRoles(array $roleNames, ?string $assignedBy = null): void
     {
         $roles = Role::whereIn('name', $roleNames)->pluck('id')->toArray();
-        
+
         $syncData = [];
         foreach ($roles as $roleId) {
             $syncData[$roleId] = [
@@ -138,13 +138,13 @@ trait HasRoles
                 'assigned_by' => $assignedBy,
             ];
         }
-        
+
         $this->roles()->sync($syncData);
     }
 
     /**
      * Get array of role names for this user.
-     * 
+     *
      * @return array
      */
     public function getRoleNames(): array
@@ -154,7 +154,7 @@ trait HasRoles
 
     /**
      * Check if user is a Super Admin.
-     * 
+     *
      * @return bool
      */
     public function isSuperAdmin(): bool

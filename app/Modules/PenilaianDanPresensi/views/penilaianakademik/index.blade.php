@@ -12,10 +12,10 @@
         <x-alert type="danger" :message="session('error')" dismissible />
     @endif
 
-    <x-card title="Daftar IzinSakit" icon="fas fa-list">
+    <x-card title="Daftar Penilaian Akademik" icon="fas fa-list">
         <x-slot name="tools">
-            <a href="{{ route('izinsakit.create') }}" class="btn btn-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Tambah IzinSakit
+            <a href="{{ route('penilaiandanpresensi.penilaianakademik.create') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus mr-1"></i> Tambah Penilaian Akademik
             </a>
         </x-slot>
 
@@ -24,23 +24,35 @@
                 <thead class="thead-dark">
                     <tr>
                         <th>#</th>
-                        <th>Nama</th>
+                        <th>Siswa</th>
+                        <th>Guru</th>
+                        <th>Mata Pelajaran</th>
+                        <th>Tahun Ajaran</th>
+                        <th>Nilai</th>
                         <th class="text-center" style="width: 150px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($izinSakits as $index => $item)
+                    @forelse($penilaianAkademiks as $index => $item)
                     <tr>
                         <td>{{ $index + 1 }}</td>
-                        <td>{{ $item->nama ?? '-' }}</td>
+                        <td>{{ $item->siswa->nama ?? '-' }}</td>
+                        <td>{{ $item->guru->nama ?? '-' }}</td>
+                        <td>{{ $item->id_mapel ?? '-' }}</td>
+                        <td>{{ $item->id_tahun_ajaran ?? '-' }}</td>
+                        <td>{{ $item->nilai }}</td>
                         <td class="text-center">
                             <div class="btn-group btn-group-sm">
-                                <a href="{{ route('izinsakit.edit', $item->id) }}" 
+                                <a href="{{ route('penilaiandanpresensi.penilaianakademik.show', $item->id) }}"
+                                   class="btn btn-success" title="Lihat">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ route('penilaiandanpresensi.penilaianakademik.edit', $item->id) }}"
                                    class="btn btn-info" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <form action="{{ route('izinsakit.destroy', $item->id) }}" 
-                                      method="POST" 
+                                <form action="{{ route('penilaiandanpresensi.penilaianakademik.destroy', $item->id) }}"
+                                      method="POST"
                                       class="d-inline"
                                       onsubmit="return confirm('Hapus data ini?')">
                                     @csrf
@@ -54,9 +66,9 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="3" class="text-center text-muted py-4">
+                        <td colspan="7" class="text-center text-muted py-4">
                             <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                            Belum ada data. <a href="{{ route('izinsakit.create') }}">Tambah data pertama</a>.
+                            Belum ada data. <a href="{{ route('penilaiandanpresensi.penilaianakademik.create') }}">Tambah data pertama</a>.
                         </td>
                     </tr>
                     @endforelse

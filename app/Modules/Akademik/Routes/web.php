@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Akademik\Controllers\AkademikController;
+use Modules\Akademik\Controllers\TahunAjaranController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,3 +23,5 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/{id}', [AkademikController::class, 'update'])->name('update');
     Route::delete('/{id}', [AkademikController::class, 'destroy'])->name('destroy');
 });
+
+Route::resource('tahun-ajaran', TahunAjaranController::class);

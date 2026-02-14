@@ -8,18 +8,18 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Role Model
- * 
+ *
  * Represents a system role in the RBAC system.
  * Roles can have permissions stored as JSON and can be marked as system roles
  * (which cannot be deleted).
- * 
+ *
  * @property string $id UUID
  * @property string $name Role identifier (SUPER_ADMIN, GURU, etc.)
  * @property string $display_name Human readable name
  * @property string|null $description Role description
  * @property array|null $permissions JSON array of permission keys
  * @property bool $is_system If true, role cannot be deleted
- * 
+ *
  * @author SIAKAD Development Team
  */
 class Role extends Model
@@ -61,7 +61,7 @@ class Role extends Model
 
     /**
      * Check if role has a specific permission.
-     * 
+     *
      * @param string $permission Permission key to check
      * @return bool
      */
@@ -72,14 +72,14 @@ class Role extends Model
 
     /**
      * Add a permission to this role.
-     * 
+     *
      * @param string $permission Permission key to add
      * @return void
      */
     public function addPermission(string $permission): void
     {
         $permissions = $this->permissions ?? [];
-        
+
         if (!in_array($permission, $permissions)) {
             $permissions[] = $permission;
             $this->update(['permissions' => $permissions]);
@@ -88,7 +88,7 @@ class Role extends Model
 
     /**
      * Remove a permission from this role.
-     * 
+     *
      * @param string $permission Permission key to remove
      * @return void
      */
@@ -101,7 +101,7 @@ class Role extends Model
 
     /**
      * Sync permissions for this role.
-     * 
+     *
      * @param array $permissions Array of permission keys
      * @return void
      */
@@ -112,7 +112,7 @@ class Role extends Model
 
     /**
      * Find role by name.
-     * 
+     *
      * @param string $name Role name
      * @return static|null
      */

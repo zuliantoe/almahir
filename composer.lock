@@ -2529,6 +2529,7 @@
             "time": "2025-11-20T02:34:59+00:00"
         },
         {
+<<<<<<< HEAD
             "name": "nwidart/laravel-modules",
             "version": "v12.0.4",
             "source": {
@@ -2627,6 +2628,17 @@
             },
             "dist": {
                 "type": "zip",
+=======
+            "name": "phpoption/phpoption",
+            "version": "1.9.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/schmittjoh/php-option.git",
+                "reference": "75365b91986c2405cf5e1e012c5595cd487a98be"
+            },
+            "dist": {
+                "type": "zip",
+>>>>>>> 74c93ad2f99d1addaca0f04450fdb737c08fd8a3
                 "url": "https://api.github.com/repos/schmittjoh/php-option/zipball/75365b91986c2405cf5e1e012c5595cd487a98be",
                 "reference": "75365b91986c2405cf5e1e012c5595cd487a98be",
                 "shasum": ""
@@ -6094,6 +6106,7 @@
                 }
             ],
             "time": "2024-11-21T01:49:47+00:00"
+<<<<<<< HEAD
         },
         {
             "name": "wikimedia/composer-merge-plugin",
@@ -6150,6 +6163,8 @@
                 "source": "https://github.com/wikimedia/composer-merge-plugin/tree/v2.1.0"
             },
             "time": "2023-04-15T19:07:00+00:00"
+=======
+>>>>>>> 74c93ad2f99d1addaca0f04450fdb737c08fd8a3
         }
     ],
     "packages-dev": [

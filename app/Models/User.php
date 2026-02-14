@@ -11,14 +11,14 @@ use Illuminate\Notifications\Notifiable;
 
 /**
  * User Model
- * 
+ *
  * Represents a system user with RBAC capabilities.
  * Features:
  * - UUID as primary key
  * - Polymorphic relationship to Siswa/Guru/Staff via ref_id/ref_type
  * - Role-based access control via HasRoles trait
  * - Soft deletes for data preservation
- * 
+ *
  * @property string $id UUID
  * @property string $username Unique login username
  * @property string $email Unique email address
@@ -28,7 +28,7 @@ use Illuminate\Notifications\Notifiable;
  * @property string|null $ref_id Polymorphic reference ID
  * @property string|null $ref_type Polymorphic reference type
  * @property bool $is_active Account status
- * 
+ *
  * @author SIAKAD Development Team
  */
 class User extends Authenticatable
@@ -77,10 +77,10 @@ class User extends Authenticatable
 
     /**
      * Get the polymorphically related entity (Siswa, Guru, Staff, etc.)
-     * 
+     *
      * This allows a user account to be linked to any entity type,
      * making it flexible for different user types in the academic system.
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Relations\MorphTo
      */
     public function ref()
@@ -90,9 +90,9 @@ class User extends Authenticatable
 
     /**
      * Get the user's avatar URL.
-     * 
+     *
      * Returns a default avatar if none is set.
-     * 
+     *
      * @return string
      */
     public function getAvatarUrlAttribute(): string
@@ -100,7 +100,7 @@ class User extends Authenticatable
         if ($this->avatar) {
             return asset('storage/' . $this->avatar);
         }
-        
+
         // Return default avatar based on first letter of name
         $initial = strtoupper(substr($this->name ?? 'U', 0, 1));
         return "https://ui-avatars.com/api/?name={$initial}&color=fff&background=007bff";
@@ -108,9 +108,9 @@ class User extends Authenticatable
 
     /**
      * Update last login information.
-     * 
+     *
      * Call this method after successful authentication.
-     * 
+     *
      * @param string|null $ip IP address of the login request
      * @return void
      */
@@ -132,7 +132,7 @@ class User extends Authenticatable
 
     /**
      * Scope: Filter users by role.
-     * 
+     *
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param string $roleName
      */
@@ -145,7 +145,7 @@ class User extends Authenticatable
 
     /**
      * Get user's primary role display name.
-     * 
+     *
      * @return string|null
      */
     public function getPrimaryRoleAttribute(): ?string

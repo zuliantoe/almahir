@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * AuthController
- * 
+ *
  * Handles authentication operations (login, logout)
  */
 class AuthController extends Controller

@@ -9,6 +9,8 @@ use Illuminate\View\View;
 use Modules\PenilaianDanPresensi\Models\PenilaianAkademik;
 use App\Models\Siswa;
 use App\Models\Guru;
+use App\Modules\Akademik\Models\MataPelajaran as ModelsMataPelajaran;
+use App\Modules\Akademik\Models\TahunAjaran as ModelsTahunAjaran;
 use Modules\Akademik\Models\MataPelajaran;
 use Modules\Akademik\Models\TahunAjaran;
 use Modules\Guru\Models\Guru as ModelsGuru;
@@ -41,8 +43,8 @@ class PenilaianAkademikController extends Controller
     {
         $siswas = ModelsSiswa::all();
         $gurus = ModelsGuru::all();
-        $mapels = MataPelajaran::all();
-        $tahunAjarans = TahunAjaran::all();
+        $mapels = ModelsMataPelajaran::all();
+        $tahunAjarans = ModelsTahunAjaran::all();
 
         return view('penilaiandanpresensi::penilaianakademik.create', [
             'title' => 'Tambah Penilaian Akademik',
@@ -93,8 +95,8 @@ class PenilaianAkademikController extends Controller
         $penilaianAkademik = PenilaianAkademik::findOrFail($id);
         $siswas = ModelsSiswa::all();
         $gurus = ModelsGuru::all();
-        $mapels = MataPelajaran::all();
-        $tahunAjarans = TahunAjaran::all();
+        $mapels = ModelsMataPelajaran::all();
+        $tahunAjarans = ModelsTahunAjaran::all();
 
         return view('penilaiandanpresensi::penilaianakademik.edit', [
             'title' => 'Edit Penilaian Akademik',

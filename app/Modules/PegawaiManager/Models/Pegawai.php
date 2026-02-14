@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * PegawaiManager Model
- * 
+ *
  * @property string $id UUID primary key
  */
 class PegawaiManager extends Model

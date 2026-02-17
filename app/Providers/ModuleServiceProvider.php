@@ -5,23 +5,23 @@ namespace App\Providers;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-
+use Illuminate\Support\Facades\View;
 /**
  * ModuleServiceProvider
- * 
+ *
  * This service provider automatically discovers and registers all modules
  * located in the app/Modules directory. It handles:
  * - Route registration (with module prefix)
  * - View namespace registration
  * - Migration path registration
- * 
+ *
  * @author SIAKAD Development Team
  */
 class ModuleServiceProvider extends ServiceProvider
 {
     /**
      * Register services.
-     * 
+     *
      * This method is called during the registration phase of Laravel's
      * service container. We use it to register migrations from all modules.
      */
@@ -32,7 +32,7 @@ class ModuleServiceProvider extends ServiceProvider
 
     /**
      * Bootstrap services.
-     * 
+     *
      * This method is called after all service providers have been registered.
      * We use it to register routes and views from all modules.
      */
@@ -40,19 +40,24 @@ class ModuleServiceProvider extends ServiceProvider
     {
         $this->registerModuleRoutes();
         $this->registerModuleViews();
+        $modulePath = base_path('app/Modules/akademik/view');
+
+        if (is_dir($modulePath)) {
+            View::addNamespace('akademik', $modulePath);
+        }
     }
 
     /**
      * Get all module directories.
-     * 
+     *
      * Scans the app/Modules directory and returns an array of module information.
-     * 
+     *
      * @return array Array of ['name' => 'ModuleName', 'path' => '/full/path/to/module']
      */
     protected function getModules(): array
     {
         $modulesPath = app_path('Modules');
-        
+
         if (!File::isDirectory($modulesPath)) {
             return [];
         }
@@ -72,7 +77,7 @@ class ModuleServiceProvider extends ServiceProvider
 
     /**
      * Register routes from all modules.
-     * 
+     *
      * Each module can have its own routes defined in:
      * - Routes/web.php (web routes with module prefix)
      * - Routes/api.php (API routes with api/module prefix)
@@ -105,7 +110,7 @@ class ModuleServiceProvider extends ServiceProvider
 
     /**
      * Register views from all modules.
-     * 
+     *
      * Each module's views are registered with a namespace matching the module name.
      * Usage: @include('siswa::partials.header') or view('siswa::index')
      */
@@ -124,7 +129,7 @@ class ModuleServiceProvider extends ServiceProvider
 
     /**
      * Register migrations from all modules.
-     * 
+     *
      * This allows each module to have its own migrations that will be
      * automatically discovered and run with `php artisan migrate`.
      */

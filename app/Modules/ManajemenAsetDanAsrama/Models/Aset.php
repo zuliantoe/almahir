@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Modules\ManajemenAsetDanAsrama\Models;
+namespace Modules\ManajemenAsetDanAsrama\Models;  // UBAH dari App\Modules\... ke Modules\...
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\User;
+use App\Models\User; // ✅ TAMBAHKAN INI - Import User model
+use Modules\Siswa\Models\Siswa;  // Gunakan Modules\Siswa...
 
 class Aset extends Model
 {
@@ -60,8 +61,8 @@ class Aset extends Model
      * Relasi ke user yang menghapus (soft delete)
      */
     public function deletedBy()
-    {
-        return $this->belongsTo(User::class, 'deleted_by');
+ {
+        return $this->belongsTo(User::class, 'deleted_by'); // ✅ SEKARANG BISA
     }
 
     /**

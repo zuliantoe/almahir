@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\ManajemenAsetDanAsrama\Models;
+namespace Modules\ManajemenAsetDanAsrama\Models;  // UBAH
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;

@@ -119,6 +119,9 @@ php artisan make:module-controller Siswa ReportController --resource
 
 # Add sidebar menu to existing module
 php artisan make:module-menu Kelas --header="DATA MASTER" --label="Data Kelas" --icon="fas fa-door-open" --roles="SUPER_ADMIN,GURU" --order=10
+
+# Add permissions to existing module
+php artisan make:module-permission Kelas --group="Data Master" --label="Data Kelas" --key=kelas
 ```
 
 | Command | Description |
@@ -128,6 +131,7 @@ php artisan make:module-menu Kelas --header="DATA MASTER" --label="Data Kelas" -
 | `make:module-model {module} {name} [-m]` | Add model (with optional migration) |
 | `make:module-controller {module} {name} [-r]` | Add controller (`-r` for resource) |
 | `make:module-menu {module}` | Add sidebar menu (auto-displays in sidebar) |
+| `make:module-permission {module}` | Add permissions (auto-registered in RBAC) |
 
 ---
 
@@ -277,7 +281,34 @@ return [
 ]
 ```
 
-### 8. Refresh Autoloader
+### 8. Add Permissions
+
+Create `app/Modules/Kelas/permissions.php` — permissions auto-register in Role & Permission management:
+
+```php
+<?php
+
+return [
+    'group' => 'Data Master',           // Group di halaman Roles & Permissions
+    'modules' => [
+        'kelas' => [                     // Permission key prefix
+            'label' => 'Data Kelas',
+            'permissions' => ['kelas.view', 'kelas.create', 'kelas.edit', 'kelas.delete'],
+        ],
+    ],
+];
+```
+
+Or generate via command:
+```bash
+php artisan make:module-permission Kelas --group="Data Master" --label="Data Kelas" --key=kelas
+```
+
+> **Tips:**
+> - Gunakan `group` yang sama di beberapa modul untuk mengelompokkan permissions
+> - Actions bisa custom (e.g., `export`, `approve`, `import`)
+
+### 9. Refresh Autoloader
 
 ```bash
 composer dump-autoload
@@ -386,12 +417,13 @@ $user->assignRole('GURU');
 
 ### PermissionRegistry Service
 
-Centralized permission definitions in `app/Services/PermissionRegistry.php`:
+Permissions are auto-discovered from each module's `permissions.php` file.
+Core permissions (Pengaturan) are loaded as defaults.
 
 ```php
 use App\Services\PermissionRegistry;
 
-// Get all permission groups
+// Get all permission groups (auto-loaded from modules)
 $groups = PermissionRegistry::all();
 
 // Get all flat permissions
@@ -399,6 +431,17 @@ $all = PermissionRegistry::allPermissions();
 
 // Get total count
 $count = PermissionRegistry::count();
+
+// Manually register permissions (for non-module use)
+PermissionRegistry::register([
+    'group' => 'Custom',
+    'modules' => [
+        'custom' => [
+            'label' => 'Custom Feature',
+            'permissions' => ['custom.view', 'custom.edit'],
+        ],
+    ],
+]);
 ```
 
 ---

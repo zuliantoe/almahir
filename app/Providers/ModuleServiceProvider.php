@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\MenuRegistry;
+use App\Services\PermissionRegistry;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -47,6 +48,7 @@ class ModuleServiceProvider extends ServiceProvider
         $this->registerModuleRoutes();
         $this->registerModuleViews();
         $this->registerModuleMenus();
+        $this->registerModulePermissions();
 
         // Share module menus with all views for sidebar rendering
         View::composer('layouts.partials.sidebar', function ($view) {
@@ -171,6 +173,27 @@ class ModuleServiceProvider extends ServiceProvider
 
                 if (is_array($menuConfig)) {
                     $menuRegistry->register($menuConfig);
+                }
+            }
+        }
+    }
+
+    /**
+     * Register permissions from all modules.
+     *
+     * Each module can define a permissions.php file in its root directory
+     * that returns an array of permission configuration.
+     */
+    protected function registerModulePermissions(): void
+    {
+        foreach ($this->getModules() as $module) {
+            $permFile = $module['path'] . '/permissions.php';
+
+            if (File::exists($permFile)) {
+                $permConfig = require $permFile;
+
+                if (is_array($permConfig)) {
+                    PermissionRegistry::register($permConfig);
                 }
             }
         }

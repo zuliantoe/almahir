@@ -5,11 +5,12 @@ namespace App\Services;
 /**
  * PermissionRegistry
  * 
- * Centralized permission definitions for the RBAC system.
- * All available permissions are defined here for consistency.
+ * Dynamic permission registry for the RBAC system.
+ * Permissions are auto-discovered from each module's permissions.php file.
+ * Core permissions (Pengaturan) are registered as defaults.
  * 
  * Permission format: module.action
- * Actions: view, create, edit, delete
+ * Actions: view, create, edit, delete, export
  * 
  * @author SIAKAD Development Team
  */
@@ -18,64 +19,12 @@ class PermissionRegistry
     /**
      * All permission groups with their permissions
      */
-    protected static array $groups = [
-        'Data Master' => [
-            'siswa' => [
-                'label' => 'Data Siswa',
-                'permissions' => ['siswa.view', 'siswa.create', 'siswa.edit', 'siswa.delete'],
-            ],
-            'guru' => [
-                'label' => 'Data Guru',
-                'permissions' => ['guru.view', 'guru.create', 'guru.edit', 'guru.delete'],
-            ],
-            'walimurid' => [
-                'label' => 'Data Wali Murid',
-                'permissions' => ['walimurid.view', 'walimurid.create', 'walimurid.edit', 'walimurid.delete'],
-            ],
-            'kelas' => [
-                'label' => 'Data Kelas',
-                'permissions' => ['kelas.view', 'kelas.create', 'kelas.edit', 'kelas.delete'],
-            ],
-        ],
-        'Akademik' => [
-            'jadwal' => [
-                'label' => 'Jadwal Pelajaran',
-                'permissions' => ['jadwal.view', 'jadwal.create', 'jadwal.edit', 'jadwal.delete'],
-            ],
-            'nilai' => [
-                'label' => 'Nilai',
-                'permissions' => ['nilai.view', 'nilai.create', 'nilai.edit', 'nilai.delete'],
-            ],
-            'absensi' => [
-                'label' => 'Absensi',
-                'permissions' => ['absensi.view', 'absensi.create', 'absensi.edit', 'absensi.delete'],
-            ],
-        ],
-        'Keuangan' => [
-            'pembayaran' => [
-                'label' => 'Pembayaran',
-                'permissions' => ['pembayaran.view', 'pembayaran.create', 'pembayaran.edit', 'pembayaran.delete'],
-            ],
-            'laporan_keuangan' => [
-                'label' => 'Laporan Keuangan',
-                'permissions' => ['laporan_keuangan.view', 'laporan_keuangan.export'],
-            ],
-        ],
-        'Pengaturan' => [
-            'users' => [
-                'label' => 'Manajemen User',
-                'permissions' => ['users.view', 'users.create', 'users.edit', 'users.delete'],
-            ],
-            'roles' => [
-                'label' => 'Roles & Permissions',
-                'permissions' => ['roles.view', 'roles.create', 'roles.edit', 'roles.delete'],
-            ],
-            'settings' => [
-                'label' => 'Konfigurasi Sistem',
-                'permissions' => ['settings.view', 'settings.edit'],
-            ],
-        ],
-    ];
+    protected static array $groups = [];
+
+    /**
+     * Whether default (core) permissions have been loaded
+     */
+    protected static bool $defaultsLoaded = false;
 
     /**
      * Action labels for display
@@ -89,10 +38,59 @@ class PermissionRegistry
     ];
 
     /**
+     * Register a permission group from a module.
+     *
+     * @param array $config Permission config with keys: group, modules
+     */
+    public static function register(array $config): void
+    {
+        $group = $config['group'] ?? 'Lainnya';
+        $modules = $config['modules'] ?? [];
+
+        if (!isset(self::$groups[$group])) {
+            self::$groups[$group] = [];
+        }
+
+        self::$groups[$group] = array_merge(self::$groups[$group], $modules);
+    }
+
+    /**
+     * Load default core permissions (Pengaturan).
+     * These are not part of any module.
+     */
+    public static function loadDefaults(): void
+    {
+        if (self::$defaultsLoaded) {
+            return;
+        }
+
+        self::register([
+            'group' => 'Pengaturan',
+            'modules' => [
+                'users' => [
+                    'label' => 'Manajemen User',
+                    'permissions' => ['users.view', 'users.create', 'users.edit', 'users.delete'],
+                ],
+                'roles' => [
+                    'label' => 'Roles & Permissions',
+                    'permissions' => ['roles.view', 'roles.create', 'roles.edit', 'roles.delete'],
+                ],
+                'settings' => [
+                    'label' => 'Konfigurasi Sistem',
+                    'permissions' => ['settings.view', 'settings.edit'],
+                ],
+            ],
+        ]);
+
+        self::$defaultsLoaded = true;
+    }
+
+    /**
      * Get all permission groups with their definitions
      */
     public static function all(): array
     {
+        self::loadDefaults();
         return self::$groups;
     }
 
@@ -103,7 +101,7 @@ class PermissionRegistry
     {
         $permissions = [];
         
-        foreach (self::$groups as $groupName => $modules) {
+        foreach (self::all() as $groupName => $modules) {
             foreach ($modules as $moduleKey => $module) {
                 foreach ($module['permissions'] as $permission) {
                     $permissions[] = $permission;
@@ -119,6 +117,7 @@ class PermissionRegistry
      */
     public static function getGroup(string $groupName): array
     {
+        self::loadDefaults();
         return self::$groups[$groupName] ?? [];
     }
 
@@ -148,5 +147,14 @@ class PermissionRegistry
     public static function count(): int
     {
         return count(self::allPermissions());
+    }
+
+    /**
+     * Reset registry (useful for testing)
+     */
+    public static function reset(): void
+    {
+        self::$groups = [];
+        self::$defaultsLoaded = false;
     }
 }

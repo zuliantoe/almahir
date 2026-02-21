@@ -21,8 +21,8 @@
                 <div class="col-md-6">
                     <x-input
                         label="Tahun Ajaran"
-                        name="tahun_ajaran"
-                        value="{{ old('tahun_ajaran', $tahunAjaran->tahun_ajaran) }}"
+                        name="tahunajaran"
+                        value="{{ old('tahunajaran', $tahunAjaran->tahunajaran) }}"
                         placeholder="Contoh: 2023/2024"
                         icon="fas fa-calendar"
                         required

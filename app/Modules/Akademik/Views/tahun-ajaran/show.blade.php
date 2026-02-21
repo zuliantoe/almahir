@@ -12,7 +12,7 @@
                 <div class="info-box bg-light">
                     <div class="info-box-content">
                         <span class="info-box-text">Tahun Ajaran</span>
-                        <span class="info-box-number">{{ $tahunAjaran->tahun_ajaran }}</span>
+                        <span class="info-box-number">{{ $tahunAjaran->tahunajaran }}</span>
                     </div>
                 </div>
             </div>
@@ -41,7 +41,7 @@
                 </tr>
                 <tr>
                     <th>Tahun Ajaran</th>
-                    <td>{{ $tahunAjaran->tahun_ajaran }}</td>
+                    <td>{{ $tahunAjaran->tahunajaran }}</td>
                 </tr>
                 <tr>
                     <th>Status</th>

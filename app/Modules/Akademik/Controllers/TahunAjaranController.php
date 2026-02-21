@@ -2,10 +2,11 @@
 
 namespace Modules\Akademik\Controllers;
 
+use App\Http\Requests\AkademikRequest\StoreTahunAjaranRequest as AkademikRequestStoreTahunAjaranRequest;
+use App\Http\Requests\AkademikRequest\UpdateTahunAjaranRequest as AkademikRequestUpdateTahunAjaranRequest;
 use App\Modules\Akademik\Models\TahunAjaran;
 use Illuminate\Http\Request;
-use App\Http\Requests\StoreTahunAjaranRequest;
-use App\Http\Requests\UpdateTahunAjaranRequest;
+
 use Illuminate\Routing\Controller;
 
 class TahunAjaranController extends Controller
@@ -14,16 +15,15 @@ class TahunAjaranController extends Controller
     {
         $tahunAjaran = TahunAjaran::query()
             ->when($request->filled('search'), function ($query) use ($request) {
-                $query->where('tahun_ajaran', 'like', '%' . $request->search . '%');
+                $query->where('tahunajaran', 'like', '%' . $request->search . '%');
             })
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->status);
             })
             ->orderByDesc('status')
-            ->orderByDesc('tahun_ajaran')
+            ->orderByDesc('tahunajaran')
             ->paginate(10)
             ->withQueryString();
-
         // Gunakan namespace 'akademik'::view
         return view('akademik::tahun-ajaran.index', compact('tahunAjaran'));
     }
@@ -33,30 +33,29 @@ class TahunAjaranController extends Controller
         return view('akademik::tahun-ajaran.create');
     }
 
-    public function store(StoreTahunAjaranRequest $request)
-{
-    try {
-        $data = $request->validated();
-        $data['status'] = $request->boolean('status');
+    public function store(AkademikRequestStoreTahunAjaranRequest $request)
+    {
+        try {
+            $data = $request->validated();
+            $data['status'] = $request->boolean('status');
 
-        // Jika status aktif, nonaktifkan yang lain
-        if ($data['status']) {
-            TahunAjaran::where('status', true)->update(['status' => false]);
+            // Jika status aktif, nonaktifkan yang lain
+            if ($data['status']) {
+                TahunAjaran::where('status', true)->update(['status' => false]);
+            }
+
+            TahunAjaran::create($data);
+
+            return redirect()
+                ->route('akademik.tahun-ajaran.index')
+                ->with('success', 'Tahun ajaran berhasil ditambahkan.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Gagal menambahkan data: ' . $e->getMessage());
         }
-
-        TahunAjaran::create($data);
-
-        return redirect()
-            ->route('akademik.tahun-ajaran.index')
-            ->with('success', 'Tahun ajaran berhasil ditambahkan.');
-
-    } catch (\Exception $e) {
-        return redirect()
-            ->back()
-            ->withInput()
-            ->with('error', 'Gagal menambahkan data: ' . $e->getMessage());
     }
-}
 
     public function show(TahunAjaran $tahunAjaran)
     {
@@ -68,7 +67,7 @@ class TahunAjaranController extends Controller
         return view('akademik::tahun-ajaran.edit', compact('tahunAjaran'));
     }
 
-    public function update(UpdateTahunAjaranRequest $request, TahunAjaran $tahunAjaran)
+    public function update(AkademikRequestUpdateTahunAjaranRequest $request, TahunAjaran $tahunAjaran)
     {
         $data = $request->validated();
         $data['status'] = $request->boolean('status');

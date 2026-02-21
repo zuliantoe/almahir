@@ -21,8 +21,8 @@
                 <div class="col-md-6">
                     <x-input
                         label="Tahun Ajaran"
-                        name="tahun_ajaran"
-                        value="{{ old('tahun_ajaran') }}"
+                        name="tahunajaran"
+                        value="{{ old('tahunajaran') }}"
                         placeholder="Contoh: 2023/2024"
                         icon="fas fa-calendar"
                         required
@@ -92,7 +92,7 @@
 @push('js')
 <script>
 // Preview tahun ajaran
-document.querySelector('input[name="tahun_ajaran"]').addEventListener('keyup', function() {
+document.querySelector('input[name="tahunajaran"]').addEventListener('keyup', function() {
     document.getElementById('previewTahun').textContent = this.value || '-';
 });
 
@@ -102,6 +102,6 @@ document.getElementById('status').addEventListener('change', function() {
 });
 
 // Trigger preview on load
-document.querySelector('input[name="tahun_ajaran"]').dispatchEvent(new Event('keyup'));
+document.querySelector('input[name="tahunajaran"]').dispatchEvent(new Event('keyup'));
 </script>
 @endpush

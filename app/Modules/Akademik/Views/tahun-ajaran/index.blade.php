@@ -76,7 +76,7 @@
                     @forelse($tahunAjaran as $item)
                     <tr>
                         <td>{{ $loop->iteration + ($tahunAjaran->currentPage() - 1) * $tahunAjaran->perPage() }}</td>
-                        <td>{{ $item->tahun_ajaran }}</td>
+                        <td>{{ $item->tahunajaran }}</td>
                         <td>
                             @if($item->status)
                                 <span class="badge badge-success p-2">
@@ -104,7 +104,7 @@
                                 <button type="button"
                                         class="btn btn-danger btn-sm"
                                         title="Hapus Data"
-                                        onclick="confirmDelete('{{ $item->id }}', '{{ $item->tahun_ajaran }}')"
+                                        onclick="confirmDelete('{{ $item->id }}', '{{ $item->tahunajaran }}')"
                                         {{ $item->status ? 'disabled' : '' }}>
                                     <i class="fas fa-trash"></i>
                                 </button>

@@ -5,13 +5,14 @@ namespace App\Modules\Akademik\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TahunAjaran extends Model
 {
-    use HasFactory;
+    use HasFactory,SoftDeletes;
 
     protected $table = 'tahun_ajaran';
-    protected $fillable = ['tahun_ajaran', 'status'];
+    protected $fillable = ['tahunajaran', 'status'];
 
     public function kalenderAkademik(): HasMany
     {

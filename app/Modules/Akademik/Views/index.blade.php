@@ -1,68 +1,162 @@
 @extends('layouts.app')
 
-@section('title', $title)
+@section('title', 'Dashboard Akademik')
 
 @section('content')
-<div class="container-fluid">
-    {{-- Alert Messages --}}
-    @if(session('success'))
-        <x-alert type="success" :message="session('success')" dismissible />
-    @endif
-    @if(session('error'))
-        <x-alert type="danger" :message="session('error')" dismissible />
-    @endif
+    <div class="container-fluid">
 
-    <x-card title="Daftar Akademik" icon="fas fa-list">
-        <x-slot name="tools">
-            <a href="{{ route('akademik.create') }}" class="btn btn-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Tambah Akademik
-            </a>
-        </x-slot>
+        {{-- ====== Statistik Row ====== --}}
+        <div class="row">
 
-        <div class="table-responsive">
-            <table class="table table-hover table-striped">
-                <thead class="thead-dark">
-                    <tr>
-                        <th>#</th>
-                        <th>Nama</th>
-                        <th class="text-center" style="width: 150px;">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($akademiks as $index => $item)
-                    <tr>
-                        <td>{{ $index + 1 }}</td>
-                        <td>{{ $item->nama ?? '-' }}</td>
-                        <td class="text-center">
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ route('akademik.edit', $item->id) }}" 
-                                   class="btn btn-info" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('akademik.destroy', $item->id) }}" 
-                                      method="POST" 
-                                      class="d-inline"
-                                      onsubmit="return confirm('Hapus data ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger" title="Hapus">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="3" class="text-center text-muted py-4">
-                            <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                            Belum ada data. <a href="{{ route('akademik.create') }}">Tambah data pertama</a>.
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+            {{-- Total Siswa --}}
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-primary">
+                    <div class="inner">
+                        <h3>1,248</h3>
+                        <p>Total Siswa</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Total Guru --}}
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>86</h3>
+                        <p>Total Guru</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Total Kelas --}}
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>32</h3>
+                        <p>Total Kelas</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-school"></i>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Mata Pelajaran --}}
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>18</h3>
+                        <p>Mata Pelajaran</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                </div>
+            </div>
+
         </div>
-    </x-card>
-</div>
+
+        {{-- ====== Grafik & Aktivitas ====== --}}
+        <div class="row">
+
+            {{-- Grafik Statistik --}}
+            <div class="col-md-8">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-bolt mr-1"></i>
+                            Button Cepat
+                        </h3>
+                    </div>
+                    <div class="card-body">
+
+                        <a href="tahun-ajaran" class="btn btn-primary m-1">
+                            Tahun Ajaran
+                        </a>
+
+                        <a href="kelas" class="btn btn-success m-1">
+                            Kelas
+                        </a>
+
+                         <a href="jenis-kegiatan" class="btn btn-success m-1">
+                            Jenis Kegiatan
+                        </a>
+
+                        <a href="mapel" class="btn btn-danger m-1">
+                            Mata Pelajaran
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+
+            {{-- Aktivitas Terbaru --}}
+            <div class="col-md-4">
+                <div class="card card-secondary">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-bell mr-1"></i>
+                            Aktivitas Terbaru
+                        </h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <i class="fas fa-user-plus text-success mr-2"></i>
+                                5 Siswa baru ditambahkan
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-edit text-warning mr-2"></i>
+                                Data guru diperbarui
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-calendar-check text-primary mr-2"></i>
+                                Jadwal semester dibuat
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-file-alt text-danger mr-2"></i>
+                                Nilai raport diinput
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+@endsection
+
+@section('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('statistikChart').getContext('2d');
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Siswa', 'Guru', 'Kelas', 'Mapel'],
+                datasets: [{
+                    label: 'Data Akademik',
+                    data: [1248, 86, 32, 18],
+                    backgroundColor: [
+                        '#007bff',
+                        '#28a745',
+                        '#ffc107',
+                        '#dc3545'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    </script>
 @endsection

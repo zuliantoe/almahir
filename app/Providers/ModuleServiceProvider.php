@@ -2,37 +2,43 @@
 
 namespace App\Providers;
 
+use App\Services\MenuRegistry;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-
+use Illuminate\Support\Facades\View;
 /**
  * ModuleServiceProvider
- * 
+ *
  * This service provider automatically discovers and registers all modules
  * located in the app/Modules directory. It handles:
  * - Route registration (with module prefix)
  * - View namespace registration
  * - Migration path registration
- * 
+ *
  * @author SIAKAD Development Team
  */
 class ModuleServiceProvider extends ServiceProvider
 {
     /**
      * Register services.
-     * 
+     *
      * This method is called during the registration phase of Laravel's
      * service container. We use it to register migrations from all modules.
      */
     public function register(): void
     {
+        // Register MenuRegistry as singleton
+        $this->app->singleton(MenuRegistry::class, function () {
+            return new MenuRegistry();
+        });
+
         $this->registerModuleMigrations();
     }
 
     /**
      * Bootstrap services.
-     * 
+     *
      * This method is called after all service providers have been registered.
      * We use it to register routes and views from all modules.
      */
@@ -40,19 +46,26 @@ class ModuleServiceProvider extends ServiceProvider
     {
         $this->registerModuleRoutes();
         $this->registerModuleViews();
+        $this->registerModuleMenus();
+
+        // Share module menus with all views for sidebar rendering
+        View::composer('layouts.partials.sidebar', function ($view) {
+            $menuRegistry = app(MenuRegistry::class);
+            $view->with('moduleMenus', $menuRegistry->getMenusForUser());
+        });
     }
 
     /**
      * Get all module directories.
-     * 
+     *
      * Scans the app/Modules directory and returns an array of module information.
-     * 
+     *
      * @return array Array of ['name' => 'ModuleName', 'path' => '/full/path/to/module']
      */
     protected function getModules(): array
     {
         $modulesPath = app_path('Modules');
-        
+
         if (!File::isDirectory($modulesPath)) {
             return [];
         }
@@ -72,7 +85,7 @@ class ModuleServiceProvider extends ServiceProvider
 
     /**
      * Register routes from all modules.
-     * 
+     *
      * Each module can have its own routes defined in:
      * - Routes/web.php (web routes with module prefix)
      * - Routes/api.php (API routes with api/module prefix)
@@ -105,7 +118,7 @@ class ModuleServiceProvider extends ServiceProvider
 
     /**
      * Register views from all modules.
-     * 
+     *
      * Each module's views are registered with a namespace matching the module name.
      * Usage: @include('siswa::partials.header') or view('siswa::index')
      */
@@ -124,7 +137,7 @@ class ModuleServiceProvider extends ServiceProvider
 
     /**
      * Register migrations from all modules.
-     * 
+     *
      * This allows each module to have its own migrations that will be
      * automatically discovered and run with `php artisan migrate`.
      */
@@ -136,6 +149,29 @@ class ModuleServiceProvider extends ServiceProvider
             $migrationsPath = $modulePath . '/Migrations';
             if (File::isDirectory($migrationsPath)) {
                 $this->loadMigrationsFrom($migrationsPath);
+            }
+        }
+    }
+
+    /**
+     * Register menus from all modules.
+     *
+     * Each module can define a menu.php file in its root directory
+     * that returns an array of menu configuration.
+     */
+    protected function registerModuleMenus(): void
+    {
+        $menuRegistry = app(MenuRegistry::class);
+
+        foreach ($this->getModules() as $module) {
+            $menuFile = $module['path'] . '/menu.php';
+
+            if (File::exists($menuFile)) {
+                $menuConfig = require $menuFile;
+
+                if (is_array($menuConfig)) {
+                    $menuRegistry->register($menuConfig);
+                }
             }
         }
     }

@@ -4,48 +4,33 @@ namespace App\Modules\Akademik\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Modules\Siswa\Models\Siswa;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Guru\Models\Guru;
 
-class kelas extends Model
+class Kelas extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
-    protected $table='kelas';
+    protected $table = 'kelas';
+
     protected $fillable = [
-        'nama_kelas',
-        'kode_kelas',
+        'namakelas',
         'jenjang',
         'guru_id',
-        'kapasitas',
-        'keterangan',
-        'status'
     ];
 
-    public function walikelas():BelongsTo
+    public function walikelas()
     {
-        return $this->belongsTo(Guru::class,'guru_id');
+        return $this->belongsTo(Guru::class, 'guru_id');
     }
 
-
-    public function jadwalPelajaran():HasMany
+    public function jadwalPelajaran()
     {
-        return $this->hasMany(JadwalPelajaran::class,'kelas_id');
+        return $this->hasMany(JadwalPelajaran::class, 'kelas_id');
     }
 
-    public function kurikulum():HasMany
+    public function kurikulum()
     {
-        return $this->hasMany(Kurikulum::class,'kelas_id');
-    }
-
-    public function romberl():HasMany
-    {
-        return $this->hasMany(Siswa::class,Rombel::class,'kelas_id','id','siswa_id');
-    }
-
-    public function scopeAktif($query)
-    {
-        return $query->where('status','aktif');
+        return $this->hasMany(Kurikulum::class, 'kelas_id');
     }
 }

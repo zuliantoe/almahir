@@ -1,9 +1,9 @@
 <?php
 
-namespace Modules\ManajemenAsetDanAsrama\Models;
+namespace Modules\ManajemenAsetDanAsrama\Models;  // SUDAH BENAR
 
 use Illuminate\Database\Eloquent\Model;
-use Modules\Siswa\Models\Siswa;
+use Modules\Siswa\Models\Siswa;  // Gunakan Modules\Siswa...
 
 class JadwalPiket extends Model
 {

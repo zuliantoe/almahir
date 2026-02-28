@@ -2,6 +2,19 @@
 
 @section('title', $title)
 
+@section('content-header')
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h1 class="m-0">{{ $title }}</h1>
+    </div>
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item active">Manajemen Aset & Asrama</li>
+        </ol>
+    </div>
+</div>
+@endsection
+
 @section('content')
 <div class="container-fluid">
     {{-- Alert Messages --}}
@@ -12,57 +25,262 @@
         <x-alert type="danger" :message="session('error')" dismissible />
     @endif
 
-    <x-card title="Daftar ManajemenAsetDanAsrama" icon="fas fa-list">
-        <x-slot name="tools">
-            <a href="{{ route('manajemenasetdanasrama.create') }}" class="btn btn-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Tambah ManajemenAsetDanAsrama
-            </a>
-        </x-slot>
-
-        <div class="table-responsive">
-            <table class="table table-hover table-striped">
-                <thead class="thead-dark">
-                    <tr>
-                        <th>#</th>
-                        <th>Nama</th>
-                        <th class="text-center" style="width: 150px;">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($manajemenAsetDanAsramas as $index => $item)
-                    <tr>
-                        <td>{{ $index + 1 }}</td>
-                        <td>{{ $item->nama ?? '-' }}</td>
-                        <td class="text-center">
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ route('manajemenasetdanasrama.edit', $item->id) }}" 
-                                   class="btn btn-info" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('manajemenasetdanasrama.destroy', $item->id) }}" 
-                                      method="POST" 
-                                      class="d-inline"
-                                      onsubmit="return confirm('Hapus data ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger" title="Hapus">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="3" class="text-center text-muted py-4">
-                            <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                            Belum ada data. <a href="{{ route('manajemenasetdanasrama.create') }}">Tambah data pertama</a>.
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+    {{-- Info Boxes Row 1: Aset --}}
+    <div class="row">
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box">
+                <span class="info-box-icon bg-info elevation-1"><i class="fas fa-boxes"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Total Aset</span>
+                    <span class="info-box-number">{{ $totalAset }}</span>
+                </div>
+            </div>
         </div>
-    </x-card>
+        
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box">
+                <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-file-alt"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Total Pengajuan</span>
+                    <span class="info-box-number">{{ $totalPengajuan }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box">
+                <span class="info-box-icon bg-success elevation-1"><i class="fas fa-truck"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Total Pengadaan</span>
+                    <span class="info-box-number">{{ $totalPengadaan }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box">
+                <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-tools"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Total Kerusakan</span>
+                    <span class="info-box-number">{{ $totalKerusakan }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Info Boxes Row 2: Asrama --}}
+    <div class="row">
+        <div class="col-12 col-sm-6 col-md-4">
+            <div class="info-box">
+                <span class="info-box-icon bg-primary elevation-1"><i class="fas fa-door-open"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Total Kamar</span>
+                    <span class="info-box-number">{{ $totalKamar }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-sm-6 col-md-4">
+            <div class="info-box">
+                <span class="info-box-icon bg-secondary elevation-1"><i class="fas fa-users"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Total Penghuni</span>
+                    <span class="info-box-number">{{ $totalPenghuni }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-4">
+            <div class="info-box">
+                <span class="info-box-icon bg-purple elevation-1"><i class="fas fa-calendar-check"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Jadwal Piket Hari Ini</span>
+                    <span class="info-box-number">{{ $jadwalPiketHariIni->count() }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Quick Actions --}}
+    <div class="row">
+        <div class="col-md-12">
+            <x-card title="Aksi Cepat" icon="fas fa-bolt">
+                <div class="row">
+                    <div class="col-md-2 col-6 mb-2">
+                        <a href="{{ route('manajemenasetdanasrama.pengajuan.index') }}" class="btn btn-outline-warning btn-block">
+                            <i class="fas fa-file-alt"></i> Pengajuan
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-2">
+                        <a href="{{ route('manajemenasetdanasrama.persetujuan.index') }}" class="btn btn-outline-info btn-block">
+                            <i class="fas fa-check-double"></i> Persetujuan
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-2">
+                        <a href="{{ route('manajemenasetdanasrama.pengadaan.index') }}" class="btn btn-outline-success btn-block">
+                            <i class="fas fa-truck"></i> Pengadaan
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-2">
+                        <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="btn btn-outline-primary btn-block">
+                            <i class="fas fa-boxes"></i> Master Aset
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-2">
+                        <a href="{{ route('manajemenasetdanasrama.kamar.index') }}" class="btn btn-outline-secondary btn-block">
+                            <i class="fas fa-door-open"></i> Kamar
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-2">
+                        <a href="{{ route('manajemenasetdanasrama.jadwal-piket.index') }}" class="btn btn-outline-purple btn-block">
+                            <i class="fas fa-calendar-alt"></i> Jadwal Piket
+                        </a>
+                    </div>
+                </div>
+            </x-card>
+        </div>
+    </div>
+
+    {{-- Recent Data Tables --}}
+    <div class="row mt-3">
+        {{-- Pengajuan Terbaru --}}
+        <div class="col-md-6">
+            <x-card title="Pengajuan Terbaru" icon="fas fa-file-alt">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>No. Pengajuan</th>
+                                <th>Nama Aset</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($pengajuanTerbaru as $item)
+                            <tr>
+                                <td>{{ $item->nomor_pengajuan ?? '-' }}</td>
+                                <td>{{ $item->nama_aset ?? '-' }}</td>
+                                <td>
+                                    @if($item->status == 'diajukan')
+                                        <span class="badge badge-warning">Diajukan</span>
+                                    @elseif($item->status == 'disetujui')
+                                        <span class="badge badge-success">Disetujui</span>
+                                    @elseif($item->status == 'ditolak')
+                                        <span class="badge badge-danger">Ditolak</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">
+                                    <i class="fas fa-inbox"></i> Belum ada data
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <x-slot name="footer">
+                    <a href="{{ route('manajemenasetdanasrama.pengajuan.index') }}" class="btn btn-sm btn-primary">
+                        Lihat Semua <i class="fas fa-arrow-right"></i>
+                    </a>
+                </x-slot>
+            </x-card>
+        </div>
+
+        {{-- Aset Terbaru --}}
+        <div class="col-md-6">
+            <x-card title="Aset Terbaru" icon="fas fa-boxes">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Kode Aset</th>
+                                <th>Nama Aset</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($asetTerbaru as $item)
+                            <tr>
+                                <td>{{ $item->kode_aset ?? '-' }}</td>
+                                <td>{{ $item->nama_aset ?? '-' }}</td>
+                                <td>
+                                    @if($item->status_kondisi == 'baik')
+                                        <span class="badge badge-success">Baik</span>
+                                    @elseif($item->status_kondisi == 'rusak')
+                                        <span class="badge badge-danger">Rusak</span>
+                                    @elseif($item->status_kondisi == 'dalam_perbaikan')
+                                        <span class="badge badge-warning">Dalam Perbaikan</span>
+                                    @elseif($item->status_kondisi == 'sudah_diperbaiki')
+                                        <span class="badge badge-info">Sudah Diperbaiki</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">
+                                    <i class="fas fa-inbox"></i> Belum ada data
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <x-slot name="footer">
+                    <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="btn btn-sm btn-primary">
+                        Lihat Semua <i class="fas fa-arrow-right"></i>
+                    </a>
+                </x-slot>
+            </x-card>
+        </div>
+    </div>
+
+    {{-- Jadwal Piket Hari Ini --}}
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <x-card title="Jadwal Piket Hari Ini" icon="fas fa-calendar-check">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Tempat</th>
+                                <th>Siswa</th>
+                                <th>Pekan</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($jadwalPiketHariIni as $item)
+                            <tr>
+                                <td>{{ $item->tempat ?? '-' }}</td>
+                                <td>{{ $item->siswa->nama ?? '-' }}</td>
+                                <td>Pekan {{ $item->pekan }}</td>
+                                <td>
+                                    @if($item->status == 'belum')
+                                        <span class="badge badge-warning">Belum</span>
+                                    @else
+                                        <span class="badge badge-success">Sudah</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">
+                                    <i class="fas fa-inbox"></i> Tidak ada jadwal piket hari ini
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <x-slot name="footer">
+                    <a href="{{ route('manajemenasetdanasrama.jadwal-piket.index') }}" class="btn btn-sm btn-primary">
+                        Kelola Jadwal <i class="fas fa-arrow-right"></i>
+                    </a>
+                </x-slot>
+            </x-card>
+        </div>
+    </div>
 </div>
 @endsection

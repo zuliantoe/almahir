@@ -6,12 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('pendaftaran', function (Blueprint $table) {
+        Schema::create('pendaftarans', function (Blueprint $table) {
             $table->id();
             $table->string('nisn', 20)->unique();
             $table->string('nama_lengkap');
@@ -34,16 +31,12 @@ return new class extends Migration
             $table->timestamp('tanggal_daftar')->useCurrent();
             $table->timestamp('tanggal_diterima')->nullable();
             $table->text('catatan')->nullable();
-
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('pendaftaran');
+        Schema::dropIfExists('pendaftarans');
     }
 };

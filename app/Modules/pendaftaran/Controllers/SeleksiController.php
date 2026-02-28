@@ -1,5 +1,5 @@
 <?php
-namespace Modules\pendaftaran\Controllers;
+namespace Modules\Pendaftaran\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;    

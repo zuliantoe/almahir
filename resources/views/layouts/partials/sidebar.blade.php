@@ -37,166 +37,75 @@
 
                 {{-- 
                 |--------------------------------------------------------------------------
-                | DATA MASTER (SUPER_ADMIN, STAF_TU)
+                | DYNAMIC MODULE MENUS
+                | Auto-generated from each module's menu.php config file
                 |--------------------------------------------------------------------------
                 --}}
-                @if(Auth::check() && (Auth::user()->hasRole(['SUPER_ADMIN', 'STAF_TU'])))
-                <li class="nav-header">DATA MASTER</li>
-                
-                {{-- Data Siswa --}}
-                <li class="nav-item">
-                    <a href="{{ route('siswa.index') }}" class="nav-link {{ request()->is('siswa*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-user-graduate"></i>
-                        <p>Data Siswa</p>
-                    </a>
-                </li>
-                
-                {{-- Data Guru --}}
-                <li class="nav-item">
-                    <a href="{{ route('guru.index') }}" class="nav-link {{ request()->is('guru*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-chalkboard-teacher"></i>
-                        <p>Data Guru</p>
-                    </a>
-                </li>
+                @isset($moduleMenus)
+                    @foreach($moduleMenus as $section)
+                        <li class="nav-header">{{ $section['header'] }}</li>
 
-                {{-- Data Wali Murid --}}
-                <li class="nav-item">
-                    <a href="{{ route('walimurid.index') }}" class="nav-link {{ request()->is('walimurid*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-users"></i>
-                        <p>Data Wali Murid</p>
-                    </a>
-                </li>
-
-                {{-- Data Kelas --}}
-                <li class="nav-item has-treeview">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-door-open"></i>
-                        <p>
-                            Data Kelas
-                            <i class="fas fa-angle-left right"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Daftar Kelas</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Wali Kelas</p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                @endif
-
-                {{-- 
-                |--------------------------------------------------------------------------
-                | AKADEMIK (SUPER_ADMIN, GURU)
-                |--------------------------------------------------------------------------
-                --}}
-                @if(Auth::check() && (Auth::user()->hasRole(['SUPER_ADMIN', 'GURU'])))
-                <li class="nav-header">AKADEMIK</li>
-                
-                {{-- Jadwal Pelajaran --}}
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-calendar-alt"></i>
-                        <p>Jadwal Pelajaran</p>
-                    </a>
-                </li>
-                
-                {{-- Nilai --}}
-                <li class="nav-item has-treeview">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-clipboard-list"></i>
-                        <p>
-                            Nilai
-                            <i class="fas fa-angle-left right"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Input Nilai</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Rekap Nilai</p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                
-                {{-- Absensi --}}
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-user-check"></i>
-                        <p>Absensi</p>
-                    </a>
-                </li>
-
-                {{-- Penilaian Tahfidz --}}
-                <li class="nav-item">
-                    <a href="{{ route('penilaiantahfidz.index') }}" class="nav-link {{ request()->is('penilaiantahfidz*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-book-open"></i>
-                        <p>Penilaian Tahfidz</p>
-                    </a>
-                </li>
-
-                {{-- Izin Sakit --}}
-                <li class="nav-item">
-                    <a href="{{ route('izinsakit.index') }}" class="nav-link {{ request()->is('izinsakit*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-notes-medical"></i>
-                @endif
-
-                {{-- 
-                |--------------------------------------------------------------------------
-                | KEUANGAN (SUPER_ADMIN, KEUANGAN)
-                |--------------------------------------------------------------------------
-                --}}
-                @if(Auth::check() && (Auth::user()->hasRole(['SUPER_ADMIN', 'KEUANGAN'])))
-                <li class="nav-header">KEUANGAN</li>
-                
-                {{-- Pembayaran --}}
-                <li class="nav-item has-treeview">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-money-bill-wave"></i>
-                        <p>
-                            Pembayaran
-                            <i class="fas fa-angle-left right"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>SPP</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Biaya Lain</p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                
-                {{-- Laporan Keuangan --}}
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-chart-bar"></i>
-                        <p>Laporan Keuangan</p>
-                    </a>
-                </li>
-                @endif
+                        @foreach($section['items'] as $item)
+                            @if(!empty($item['children']))
+                                {{-- Treeview menu item with children --}}
+                                @php
+                                    $isTreeOpen = false;
+                                    foreach ($item['children'] as $child) {
+                                        if (!empty($child['match']) && request()->is($child['match'])) {
+                                            $isTreeOpen = true;
+                                            break;
+                                        }
+                                    }
+                                @endphp
+                                <li class="nav-item has-treeview {{ $isTreeOpen ? 'menu-open' : '' }}">
+                                    <a href="{{ $item['url'] ?? '#' }}" class="nav-link {{ $isTreeOpen ? 'active' : '' }}">
+                                        <i class="nav-icon {{ $item['icon'] ?? 'far fa-circle' }}"></i>
+                                        <p>
+                                            {{ $item['label'] }}
+                                            <i class="fas fa-angle-left right"></i>
+                                        </p>
+                                    </a>
+                                    <ul class="nav nav-treeview">
+                                        @foreach($item['children'] as $child)
+                                            @php
+                                                $childUrl = '#';
+                                                if (!empty($child['route'])) {
+                                                    try { $childUrl = route($child['route']); } catch (\Exception $e) { $childUrl = '#'; }
+                                                } elseif (!empty($child['url'])) {
+                                                    $childUrl = $child['url'];
+                                                }
+                                                $childActive = !empty($child['match']) && request()->is($child['match']);
+                                            @endphp
+                                            <li class="nav-item">
+                                                <a href="{{ $childUrl }}" class="nav-link {{ $childActive ? 'active' : '' }}">
+                                                    <i class="far fa-circle nav-icon"></i>
+                                                    <p>{{ $child['label'] }}</p>
+                                                </a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </li>
+                            @else
+                                {{-- Single menu item --}}
+                                @php
+                                    $itemUrl = '#';
+                                    if (!empty($item['route'])) {
+                                        try { $itemUrl = route($item['route']); } catch (\Exception $e) { $itemUrl = '#'; }
+                                    } elseif (!empty($item['url'])) {
+                                        $itemUrl = $item['url'];
+                                    }
+                                    $itemActive = !empty($item['match']) && request()->is($item['match']);
+                                @endphp
+                                <li class="nav-item">
+                                    <a href="{{ $itemUrl }}" class="nav-link {{ $itemActive ? 'active' : '' }}">
+                                        <i class="nav-icon {{ $item['icon'] ?? 'far fa-circle' }}"></i>
+                                        <p>{{ $item['label'] }}</p>
+                                    </a>
+                                </li>
+                            @endif
+                        @endforeach
+                    @endforeach
+                @endisset
 
                 {{-- 
                 |--------------------------------------------------------------------------

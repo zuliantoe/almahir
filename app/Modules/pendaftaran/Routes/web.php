@@ -5,24 +5,24 @@ use Modules\Pendaftaran\Controllers\SeleksiController;
 use Modules\Pendaftaran\Controllers\PendaftaranController;
 
 
-Route::get('/pendaftaran', [PendaftaranController::class, 'create'])
-    ->name('pendaftaran.create');
+Route::get('/', [PendaftaranController::class, 'create'])
+    ->name('create');
 
-Route::post('/pendaftaran', [PendaftaranController::class, 'store'])
-    ->name('pendaftaran.store');
+Route::post('/', [PendaftaranController::class, 'store'])
+    ->name('store');
 
 
 
 Route::middleware(['auth'])->prefix('admin')->group(function () {
 
-    Route::get('/pendaftaran', [PendaftaranController::class, 'index'])
-        ->name('pendaftaran.index');
+    Route::get('/', [PendaftaranController::class, 'index'])
+        ->name('index');
 
-    Route::get('/pendaftaran/{id}', [PendaftaranController::class, 'show'])
-        ->name('pendaftaran.show');
+    Route::get('/{id}', [PendaftaranController::class, 'show'])
+        ->name('show');
 
-    Route::put('/pendaftaran/{id}/status', [PendaftaranController::class, 'updateStatus'])
-        ->name('pendaftaran.updateStatus');
+    Route::put('/{id}/status', [PendaftaranController::class, 'updateStatus'])
+        ->name('updateStatus');
 
 });
 

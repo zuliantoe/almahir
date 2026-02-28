@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\ManajemenAsetDanAsrama\Models;
+namespace Modules\ManajemenAsetDanAsrama\Models;  // SUDAH BENAR
 
 use Illuminate\Database\Eloquent\Model;
 

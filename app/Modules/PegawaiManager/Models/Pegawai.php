@@ -5,52 +5,59 @@ namespace Modules\PegawaiManager\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\User;
 
 class Pegawai extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasUuids;
 
-    /**
-     * Table name
-     */
     protected $table = 'pegawai';
 
-    /**
-     * UUID settings
-     */
-    protected $keyType = 'string';
     public $incrementing = false;
+    protected $keyType = 'string';
 
-    /**
-     * Fillable fields (sesuai migration lu)
-     */
     protected $fillable = [
-        'user_id',
         'nama',
+        'user_id',
         'type_pegawai_id',
         'no_hp',
         'email',
         'alamat',
         'tanggal_masuk',
-        'foto'
+        'foto',
     ];
 
-    /**
-     * Casts
-     */
     protected $casts = [
         'tanggal_masuk' => 'date',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
     ];
 
-    /**
-     * Relasi ke User
-     */
-    public function user()
+    /*
+    |--------------------------------------------------------------------------
+    | RELATIONSHIPS
+    |--------------------------------------------------------------------------
+    */
+
+    // 🔥 Pegawai belongs to User
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class);
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // 🔥 Pegawai belongs to TypePegawai
+    public function typePegawai(): BelongsTo
+    {
+        return $this->belongsTo(TypePegawai::class, 'type_pegawai_id');
+    }
+
+    public function izins(): HasMany
+    {
+        return $this->hasMany(Izin::class);
+    }
+
+    public function absensis(): HasMany
+    {
+        return $this->hasMany(Absensi::class);
     }
 }

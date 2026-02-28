@@ -6,10 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Modules\PegawaiManager\Models\Pegawai;
 
 /**
  * PegawaiManagerController
- * 
+ *
  * CRUD operations for PegawaiManager module.
  */
 class PegawaiManagerController extends Controller
@@ -20,10 +21,10 @@ class PegawaiManagerController extends Controller
     public function index(Request $request): View
     {
         // TODO: Implement listing logic
-        $pegawaiManagers = collect();
-        
+        $pegawaiManagers = Pegawai::with(['user', 'typePegawai'])->get();
+
         return view('pegawaimanager::index', [
-            'title' => 'Daftar PegawaiManager',
+            'title' => 'Daftar Pegawai',
             'pegawaiManagers' => $pegawaiManagers,
         ]);
     }
@@ -60,7 +61,7 @@ class PegawaiManagerController extends Controller
     {
         // TODO: Find record
         $pegawaiManager = null;
-        
+
         return view('pegawaimanager::show', [
             'title' => 'Detail PegawaiManager',
             'pegawaiManager' => $pegawaiManager,
@@ -74,7 +75,7 @@ class PegawaiManagerController extends Controller
     {
         // TODO: Find record
         $pegawaiManager = null;
-        
+
         return view('pegawaimanager::edit', [
             'title' => 'Edit PegawaiManager',
             'pegawaiManager' => $pegawaiManager,

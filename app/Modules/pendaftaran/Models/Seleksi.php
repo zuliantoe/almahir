@@ -1,5 +1,6 @@
 <?php
-namespace Modules\Seleksi\Models;
+
+namespace Modules\Pendaftaran\Models;
 
 
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ class Seleksi extends Model
 {
     use HasFactory;
 
-    protected $table = 'seleksi';
+    protected $table = 'seleksis';
 
     protected $fillable = [
         'pendaftaran_id',

@@ -1,23 +1,52 @@
 <?php
+
 namespace Modules\Pendaftaran\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;    
-use Modules\Seleksi\Models\Seleksi;
+use Illuminate\Http\Request;
+use Modules\Pendaftaran\Models\Seleksi;
+use Modules\Pendaftaran\Models\Pendaftaran;
 
 class SeleksiController extends Controller
+
 {
-    public function store(Request $request)
+
+    public function index($id)
     {
-        $request->validate([
-            'pendaftaran_id' => 'required',
-            'nama_tes' => 'required',
-        ]);
+        $pendaftaran = Pendaftaran::with('seleksis')->findOrFail($id);
 
-        Seleksi::create($request->all());
-
-        return back()->with('success', 'Tes berhasil ditambahkan');
+        return view('pendaftaran::admin.jadwal', compact('pendaftaran'));
     }
+    public function store(Request $request, $id)
+{
+    $request->validate([
+        'nama_tes' => 'required|string|max:255',
+        'tanggal' => 'required|date',
+        'jam' => 'required',
+        'metode' => 'required|in:offline,online',
+        'lokasi' => 'nullable|string|max:255',
+        'link' => 'nullable|url',
+    ]);
+
+    Seleksi::create([
+        'pendaftaran_id' => $id,
+        'nama_tes' => $request->nama_tes,
+        'tanggal' => $request->tanggal,
+        'jam' => $request->jam,
+        'pengampu' => $request->pengampu,
+        'metode' => $request->metode,
+        'lokasi' => $request->lokasi,
+        'link' => $request->link,
+    ]);
+
+    // ubah status jadi diproses kalau masih pending
+    $pendaftaran = Pendaftaran::findOrFail($id);
+    if ($pendaftaran->status == 'pending') {
+        $pendaftaran->update(['status' => 'diproses']);
+    }
+
+    return back()->with('success', 'Jadwal berhasil ditambahkan');
+}
 
     public function update(Request $request, $id)
     {

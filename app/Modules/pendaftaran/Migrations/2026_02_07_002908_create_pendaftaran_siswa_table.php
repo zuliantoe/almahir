@@ -27,7 +27,7 @@ return new class extends Migration
             $table->string('pekerjaan_ayah');
             $table->string('no_hp', 15);
             $table->string('email')->unique();
-            $table->enum('status', ['ditunda', 'diproses', 'diterima', 'ditolak'])->default('pending');
+            $table->enum('status', ['ditunda', 'diproses', 'diterima', 'ditolak'])->default('ditunda');
             $table->timestamp('tanggal_daftar')->useCurrent();
             $table->timestamp('tanggal_diterima')->nullable();
             $table->text('catatan')->nullable();

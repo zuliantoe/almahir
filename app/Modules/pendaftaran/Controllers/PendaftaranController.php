@@ -10,8 +10,17 @@ class PendaftaranController extends Controller
 {
     public function index()
     {
-        $pendaftaran = Pendaftaran::latest()->get();
-        return view('pendaftaran::index', compact('pendaftaran'));
+        $data = Pendaftaran::latest()->get();
+
+        return view('pendaftaran::admin.pendaftaran', compact('data'));
+    }
+
+
+    public function show($id)
+    {
+        $pendaftaran = Pendaftaran::findOrFail($id);
+
+        return view('pendaftaran::admin.show', compact('pendaftaran'));
     }
     public function create()
     {
@@ -20,16 +29,32 @@ class PendaftaranController extends Controller
 
     public function store(Request $request)
     {
+        $currentYear = date('Y');
+        $minYear = $currentYear - 18; // minimal umur 3 tahun
+        $maxYear = $currentYear - 3;  // maksimal umur 18 tahun
+
         $validated = $request->validate([
-            'nisn' => 'required|string|max:20|unique:pendaftarans,nisn',
-            'nama_lengkap' => 'required|string',
-            'tempat_lahir' => 'required|string',
-            'tanggal_lahir' => 'required|date',
+
+            'nisn' => 'required|digits_between:5,20|unique:pendaftarans,nisn',
+
+            'nama_lengkap' => 'required|string|max:255',
+
+            'tempat_lahir' => 'required|string|max:255',
+
+            'tanggal_lahir' => [
+                'required',
+                'date',
+                "after_or_equal:$minYear-01-01",
+                "before_or_equal:$maxYear-12-31",
+            ],
+
             'jenis_kelamin' => 'required|in:L,P',
 
             'berat_badan' => 'required|numeric|min:20',
-            'tinggi_badan' => 'required|numeric',
-            'riwayat_sakit' => 'nullable|string',
+
+            'tinggi_badan' => 'required|numeric|min:50',
+
+            'riwayat_sakit' => 'required|string',
 
             'kelurahan' => 'required|string',
             'kecamatan' => 'required|string',
@@ -39,57 +64,19 @@ class PendaftaranController extends Controller
 
             'nama_ayah' => 'required|string',
             'pekerjaan_ayah' => 'required|string',
-            'no_hp' => 'required|string|max:15',
+
+            'no_hp' => 'required|digits_between:10,15',
+
             'email' => 'required|email|unique:pendaftarans,email',
+
         ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | LOGIKA SELEKSI OTOMATIS
-        |--------------------------------------------------------------------------
-        */
-        $status = 'pending';
-        $catatan = null;
-
-        if ($validated['tinggi_badan'] < 150) {
-            $status = 'ditolak';
-            $catatan = 'Tinggi badan kurang dari standar minimal (150 cm)';
-        }
-
-        if ($validated['berat_badan'] < 35) {
-            $status = 'ditolak';
-            $catatan = 'Berat badan kurang dari standar minimal (35 kg)';
-        }
-
-        if (!empty($validated['riwayat_sakit'])) {
-            $status = 'diproses';
-            $catatan = 'Perlu pemeriksaan riwayat sakit';
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | SIMPAN DATA
-        |--------------------------------------------------------------------------
-        */
-        $validated['status'] = $status;
-        $validated['catatan'] = $catatan;
         $validated['tanggal_daftar'] = now();
+        $validated['status'] = 'pending';
 
         Pendaftaran::create($validated);
 
-        /*
-        |--------------------------------------------------------------------------
-        | RESPONSE
-        |--------------------------------------------------------------------------
-        */
-        if ($status === 'ditolak') {
-            return redirect()
-                ->route('pendaftaran.create')
-                ->with('warning', $catatan);
-        }
-
-        return redirect()
-            ->route('pendaftaran.create')
-            ->with('success', 'Pendaftaran berhasil dikirim');
+        return redirect('/pendaftaran')
+            ->with('success', 'Pendaftaran berhasil');
     }
 }

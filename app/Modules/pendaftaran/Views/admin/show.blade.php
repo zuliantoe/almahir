@@ -125,8 +125,8 @@
                 <tr>
                     <th width="30%">Status</th>
                     <td>
-                        @if ($pendaftaran->status == 'pending')
-                            <span class="badge badge-warning">Pending</span>
+                        @if ($pendaftaran->status == 'ditunda')
+                            <span class="badge badge-warning">Ditunda</span>
                         @elseif($pendaftaran->status == 'diproses')
                             <span class="badge badge-info">Diproses</span>
                         @elseif($pendaftaran->status == 'diterima')

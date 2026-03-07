@@ -22,7 +22,7 @@
     <div class="card-body">
 
         {{-- FORM TAMBAH JADWAL --}}
-        <form method="POST" action="{{ route('pendaftaran.admin.jadwal.store', $pendaftaran->id) }}">
+        <form method="POST" action="{{ url('pendaftaran/admin/jadwal/store', $pendaftaran->id) }}">
             @csrf
 
             <div class="form-group">
@@ -96,7 +96,7 @@
     </div>
 
     <div class="card-footer text-right">
-        <a href="{{ route('pendaftaran.admin.pendaftaran') }}" class="btn btn-secondary">
+        <a href="/pendaftaran/admin/pendaftaran'" class="btn btn-secondary">
             Kembali
         </a>
     </div>

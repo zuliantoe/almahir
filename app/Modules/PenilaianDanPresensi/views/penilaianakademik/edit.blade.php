@@ -44,7 +44,7 @@
                 <select name="id_tahun_ajaran" id="id_tahun_ajaran" class="form-control" required>
                     <option value="">Pilih Tahun Ajaran</option>
                     @foreach($tahunAjarans as $tahunAjaran)
-                        <option value="{{ $tahunAjaran->id }}" {{ old('id_tahun_ajaran', $penilaianAkademik->id_tahun_ajaran) == $tahunAjaran->id ? 'selected' : '' }}>{{ $tahunAjaran->tahun_ajaran }}</option>
+                        <option value="{{ $tahunAjaran->id }}" {{ old('id_tahun_ajaran', $penilaianAkademik->id_tahun_ajaran) == $tahunAjaran->id ? 'selected' : '' }}>{{ $tahunAjaran->tahunajaran }}</option>
                     @endforeach
                 </select>
             </div>

@@ -2,7 +2,7 @@
 
 namespace Modules\PenilaianDanPresensi\Models;
 
-use App\Modules\Akademik\Models\kelas;
+use App\Modules\Akademik\Models\kelas as AkademikKelas;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Siswa\Models\Siswa;
@@ -34,6 +34,6 @@ class IzinSakit extends Model
 
     public function kelas()
     {
-        return $this->belongsTo(kelas::class, 'id_kelas');
+        return $this->belongsTo(AkademikKelas::class, 'id_kelas');
     }
 }

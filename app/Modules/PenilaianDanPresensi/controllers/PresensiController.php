@@ -5,12 +5,13 @@ namespace Modules\PenilaianDanPresensi\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 use Modules\PenilaianDanPresensi\Models\Presensi;
-use App\Models\Siswa;
-use App\Models\Guru;
 use Modules\Guru\Models\Guru as ModelsGuru;
 use Modules\Siswa\Models\Siswa as ModelsSiswa;
+use App\Modules\Akademik\Models\MataPelajaran;
+use App\Modules\Akademik\Models\JadwalPelajaran;
 
 /**
  * PresensiController
@@ -26,9 +27,14 @@ class PresensiController extends Controller
     {
         $presensis = Presensi::with(['siswa', 'guru'])->paginate(10);
 
+        $mapels = MataPelajaran::orderBy('nama')->get()->keyBy('id');
+        $jadwals = JadwalPelajaran::orderBy('hari')->get()->keyBy('id');
+
         return view('penilaiandanpresensi::presensi.index', [
             'title' => 'Daftar Presensi',
             'presensis' => $presensis,
+            'mapels' => $mapels,
+            'jadwals' => $jadwals,
         ]);
     }
 
@@ -37,13 +43,18 @@ class PresensiController extends Controller
      */
     public function create(): View
     {
-        $siswas = ModelsSiswa::all();
-        $gurus = ModelsGuru::all();
+        // order by akademik data first
+        $mapels = MataPelajaran::orderBy('nama')->get();
+        $jadwals = JadwalPelajaran::orderBy('hari')->orderBy('jamawal')->get();
+        $gurus = ModelsGuru::orderBy('nama')->get();
+        $siswas = ModelsSiswa::orderBy('nama')->get();
 
         return view('penilaiandanpresensi::presensi.create', [
             'title' => 'Tambah Presensi',
             'siswas' => $siswas,
             'gurus' => $gurus,
+            'mapels' => $mapels,
+            'jadwals' => $jadwals,
         ]);
     }
 
@@ -55,11 +66,12 @@ class PresensiController extends Controller
         $validated = $request->validate([
             'id_siswa' => 'required|exists:siswa,id',
             'id_guru' => 'required|exists:guru,id',
-            'id_mapel' => 'required|exists:mapel,id',
+            'id_mapel' => 'required|exists:mata_pelajaran,id',
             'id_jadwal_pelajaran' => 'required|exists:jadwal_pelajaran,id',
             'jam' => 'required|date_format:H:i',
             'status' => 'required|string|max:255',
             'kategori' => 'required|string|max:255',
+            'scan_id' => 'nullable|string',
         ]);
 
         Presensi::create($validated);
@@ -69,15 +81,49 @@ class PresensiController extends Controller
     }
 
     /**
+     * Scan kartu ID dan ambil data siswa
+     */
+    public function scanCard(Request $request): JsonResponse
+    {
+        $request->validate([
+            'scan_id' => 'required|string',
+        ]);
+
+        $siswa = ModelsSiswa::where('id', $request->scan_id)
+            ->orWhere('nis', $request->scan_id)
+            ->first();
+
+        if (!$siswa) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Siswa tidak ditemukan',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id_siswa' => $siswa->id,
+                'nama_siswa' => $siswa->nama,
+            ],
+        ]);
+    }
+
+    /**
      * Display the specified resource.
      */
     public function show(string $id): View
     {
         $presensi = Presensi::with(['siswa', 'guru'])->findOrFail($id);
 
+        $mapel = MataPelajaran::find($presensi->id_mapel);
+        $jadwal = JadwalPelajaran::find($presensi->id_jadwal_pelajaran);
+
         return view('penilaiandanpresensi::presensi.show', [
             'title' => 'Detail Presensi',
             'presensi' => $presensi,
+            'mapel' => $mapel,
+            'jadwal' => $jadwal,
         ]);
     }
 
@@ -87,14 +133,18 @@ class PresensiController extends Controller
     public function edit(string $id): View
     {
         $presensi = Presensi::findOrFail($id);
-        $siswas = ModelsSiswa::all();
-        $gurus = ModelsGuru::all();
+        $mapels = MataPelajaran::orderBy('nama')->get();
+        $jadwals = JadwalPelajaran::orderBy('hari')->orderBy('jamawal')->get();
+        $gurus = ModelsGuru::orderBy('nama')->get();
+        $siswas = ModelsSiswa::orderBy('nama')->get();
 
         return view('penilaiandanpresensi::presensi.edit', [
             'title' => 'Edit Presensi',
             'presensi' => $presensi,
             'siswas' => $siswas,
             'gurus' => $gurus,
+            'mapels' => $mapels,
+            'jadwals' => $jadwals,
         ]);
     }
 
@@ -106,11 +156,12 @@ class PresensiController extends Controller
         $validated = $request->validate([
             'id_siswa' => 'required|exists:siswa,id',
             'id_guru' => 'required|exists:guru,id',
-            'id_mapel' => 'required|exists:mapel,id',
+            'id_mapel' => 'required|exists:mata_pelajaran,id',
             'id_jadwal_pelajaran' => 'required|exists:jadwal_pelajaran,id',
             'jam' => 'required|date_format:H:i',
             'status' => 'required|string|max:255',
             'kategori' => 'required|string|max:255',
+            'scan_id' => 'nullable|string',
         ]);
 
         $presensi = Presensi::findOrFail($id);

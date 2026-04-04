@@ -13,10 +13,10 @@
             <dd class="col-sm-9">{{ $penilaianAkademik->guru->nama ?? '-' }}</dd>
 
             <dt class="col-sm-3">Mata Pelajaran</dt>
-            <dd class="col-sm-9">{{ $penilaianAkademik->id_mapel ?? '-' }}</dd>
+            <dd class="col-sm-9">{{ $penilaianAkademik->mataPelajaran->nama ?? '-' }}</dd>
 
             <dt class="col-sm-3">Tahun Ajaran</dt>
-            <dd class="col-sm-9">{{ $penilaianAkademik->id_tahun_ajaran ?? '-' }}</dd>
+            <dd class="col-sm-9">{{ $penilaianAkademik->tahunAjaran->tahunajaran ?? '-' }}</dd>
 
             <dt class="col-sm-3">Nilai</dt>
             <dd class="col-sm-9">{{ $penilaianAkademik->nilai }}</dd>

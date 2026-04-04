@@ -7,10 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Modules\PenilaianDanPresensi\Models\PenilaianTahfidz;
-use App\Models\Siswa;
-use App\Models\Guru;
 use Modules\Guru\Models\Guru as ModelsGuru;
 use Modules\Siswa\Models\Siswa as ModelsSiswa;
+use App\Modules\Akademik\Models\kelas as AkademikKelas;
 
 /**
  * PenilaianTahfidzController
@@ -26,7 +25,8 @@ class PenilaianTahfidzController extends Controller
     {
         $penilaianTahfidzs = PenilaianTahfidz::with(['siswa', 'guru'])->paginate(10);
 
-        return view('penilaiandanpresensi::penilaiantahfidz.index', [
+        // directory uses hyphen between penilaian and tahfidz
+        return view('penilaiandanpresensi::penilaian-tahfidz.index', [
             'title' => 'Daftar Penilaian Tahfidz',
             'penilaianTahfidzs' => $penilaianTahfidzs,
         ]);
@@ -37,13 +37,15 @@ class PenilaianTahfidzController extends Controller
      */
     public function create(): View
     {
-        $siswas = ModelsSiswa::all();
-        $gurus = ModelsGuru::all();
+        $kelas = AkademikKelas::orderBy('nama_kelas')->get();
+        $gurus = ModelsGuru::orderBy('nama')->get();
+        $siswas = ModelsSiswa::orderBy('nama')->get();
 
-        return view('penilaiandanpresensi::penilaiantahfidz.create', [
+        return view('penilaiandanpresensi::penilaian-tahfidz.create', [
             'title' => 'Tambah Penilaian Tahfidz',
             'siswas' => $siswas,
             'gurus' => $gurus,
+            'kelas' => $kelas,
         ]);
     }
 
@@ -77,7 +79,7 @@ class PenilaianTahfidzController extends Controller
     {
         $penilaianTahfidz = PenilaianTahfidz::with(['siswa', 'guru'])->findOrFail($id);
 
-        return view('penilaiandanpresensi::penilaiantahfidz.show', [
+        return view('penilaiandanpresensi::penilaian-tahfidz.show', [
             'title' => 'Detail Penilaian Tahfidz',
             'penilaianTahfidz' => $penilaianTahfidz,
         ]);
@@ -89,14 +91,16 @@ class PenilaianTahfidzController extends Controller
     public function edit(string $id): View
     {
         $penilaianTahfidz = PenilaianTahfidz::findOrFail($id);
-        $siswas = ModelsSiswa::all();
-        $gurus = ModelsGuru::all();
+        $kelas = AkademikKelas::orderBy('nama_kelas')->get();
+        $gurus = ModelsGuru::orderBy('nama')->get();
+        $siswas = ModelsSiswa::orderBy('nama')->get();
 
-        return view('penilaiandanpresensi::penilaiantahfidz.edit', [
+        return view('penilaiandanpresensi::penilaian-tahfidz.edit', [
             'title' => 'Edit Penilaian Tahfidz',
             'penilaianTahfidz' => $penilaianTahfidz,
             'siswas' => $siswas,
             'gurus' => $gurus,
+            'kelas' => $kelas,
         ]);
     }
 
@@ -107,7 +111,7 @@ class PenilaianTahfidzController extends Controller
     {
         $validated = $request->validate([
             'id_siswa' => 'required|exists:siswa,id',
-            'id_kelas' => 'required|integer',
+            'id_kelas' => 'required|exists:kelas,id',
             'tanggal' => 'required|date',
             'surat_awal' => 'required|string|max:255',
             'surat_akhir' => 'required|string|max:255',

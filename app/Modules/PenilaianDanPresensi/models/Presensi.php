@@ -21,6 +21,7 @@ class Presensi extends Model
         'jam',
         'status',
         'kategori',
+        'scan_id',
     ];
 
     protected $casts = [

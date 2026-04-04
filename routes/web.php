@@ -81,3 +81,33 @@ if (config('app.debug') && class_exists(\App\Http\Controllers\DevController::cla
     Route::get('/dev/ui-guide', [\App\Http\Controllers\DevController::class, 'uiGuide'])->name('dev.ui-guide');
 }
 
+/*
+|--------------------------------------------------------------------------
+| Presensi Routes (SHORT PREFIX)
+|--------------------------------------------------------------------------
+*/
+use Modules\PenilaianDanPresensi\Controllers\PresensiController;
+
+Route::middleware(['auth'])->group(function () {
+    Route::prefix('presensi')->name('presensi.')->group(function () {
+        Route::get('/', [PresensiController::class, 'index'])->name('index');
+        Route::get('/create', [PresensiController::class, 'create'])->name('create');
+        Route::post('/', [PresensiController::class, 'store'])->name('store');
+        Route::get('/{id}', [PresensiController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [PresensiController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [PresensiController::class, 'update'])->name('update');
+        Route::delete('/{id}', [PresensiController::class, 'destroy'])->name('destroy');
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Penilaian dan Presensi Dashboard (UNIFIED)
+|--------------------------------------------------------------------------
+*/
+use Modules\PenilaianDanPresensi\Controllers\DashboardController;
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/penilaian', [DashboardController::class, 'index'])->name('penilaian.dashboard');
+});
+

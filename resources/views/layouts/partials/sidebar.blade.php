@@ -127,6 +127,87 @@
                     @endforeach
                 @endisset
 
+                {{-- Penilaian & Presensi --}}
+                @if(Auth::check() && (Auth::user()->hasRole(['SUPER_ADMIN', 'GURU'])))
+                <li class="nav-item has-treeview {{ request()->is('penilaiandanpresensi*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link {{ request()->is('penilaiandanpresensi*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-chart-line"></i>
+                        <p>
+                            Penilaian & Presensi
+                            <i class="fas fa-angle-left right"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="{{ route('penilaiandanpresensi.penilaianakademik.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik*') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Penilaian Akademik</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaiantahfidz*') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Penilaian Tahfidz</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('penilaiandanpresensi.presensi.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/presensi*') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Presensi</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('penilaiandanpresensi.izinsakit.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/izinsakit*') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Izin & Sakit</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                @endif
+
+                {{-- 
+                |--------------------------------------------------------------------------
+                | KEUANGAN (SUPER_ADMIN, KEUANGAN)
+                |--------------------------------------------------------------------------
+                --}}
+                @if(Auth::check() && (Auth::user()->hasRole(['SUPER_ADMIN', 'KEUANGAN'])))
+                <li class="nav-header">KEUANGAN</li>
+                
+                {{-- Pembayaran --}}
+                <li class="nav-item has-treeview">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-money-bill-wave"></i>
+                        <p>
+                            Pembayaran
+                            <i class="fas fa-angle-left right"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>SPP</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Biaya Lain</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                
+                {{-- Laporan Keuangan --}}
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-chart-bar"></i>
+                        <p>Laporan Keuangan</p>
+                    </a>
+                </li>
+                @endif
+
                 {{-- 
                 |--------------------------------------------------------------------------
                 | PENGATURAN (SUPER_ADMIN only)

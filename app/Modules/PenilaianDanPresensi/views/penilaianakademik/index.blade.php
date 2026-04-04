@@ -23,7 +23,7 @@
             <table class="table table-hover table-striped">
                 <thead class="thead-dark">
                     <tr>
-                        <th>#</th>
+                        <th>No</th>
                         <th>Siswa</th>
                         <th>Guru</th>
                         <th>Mata Pelajaran</th>
@@ -38,8 +38,8 @@
                         <td>{{ $index + 1 }}</td>
                         <td>{{ $item->siswa->nama ?? '-' }}</td>
                         <td>{{ $item->guru->nama ?? '-' }}</td>
-                        <td>{{ $item->id_mapel ?? '-' }}</td>
-                        <td>{{ $item->id_tahun_ajaran ?? '-' }}</td>
+                        <td>{{ $item->mataPelajaran->nama ?? '-' }}</td>
+                        <td>{{ $item->tahunAjaran->tahunajaran ?? '-' }}</td>
                         <td>{{ $item->nilai }}</td>
                         <td class="text-center">
                             <div class="btn-group btn-group-sm">

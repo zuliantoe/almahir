@@ -7,14 +7,10 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Modules\PenilaianDanPresensi\Models\PenilaianAkademik;
-use App\Models\Siswa;
-use App\Models\Guru;
-use App\Modules\Akademik\Models\MataPelajaran as ModelsMataPelajaran;
-use App\Modules\Akademik\Models\TahunAjaran as ModelsTahunAjaran;
-use Modules\Akademik\Models\MataPelajaran;
-use Modules\Akademik\Models\TahunAjaran;
-use Modules\Guru\Models\Guru as ModelsGuru;
 use Modules\Siswa\Models\Siswa as ModelsSiswa;
+use Modules\Guru\Models\Guru as ModelsGuru;
+use App\Modules\Akademik\Models\MataPelajaran;
+use App\Modules\Akademik\Models\TahunAjaran;
 
 /**
  * PenilaianAkademikController
@@ -28,7 +24,7 @@ class PenilaianAkademikController extends Controller
      */
     public function index(Request $request): View
     {
-        $penilaianAkademiks = PenilaianAkademik::with(['siswa', 'guru'])->paginate(10);
+        $penilaianAkademiks = PenilaianAkademik::with(['siswa', 'guru', 'mataPelajaran', 'tahunAjaran'])->paginate(10);
 
         return view('penilaiandanpresensi::penilaianakademik.index', [
             'title' => 'Daftar Penilaian Akademik',
@@ -41,10 +37,11 @@ class PenilaianAkademikController extends Controller
      */
     public function create(): View
     {
-        $siswas = ModelsSiswa::all();
-        $gurus = ModelsGuru::all();
-        $mapels = ModelsMataPelajaran::all();
-        $tahunAjarans = ModelsTahunAjaran::all();
+        // master data order: akademik -> guru -> siswa
+        $mapels = MataPelajaran::orderBy('nama')->get();
+        $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
+        $gurus = ModelsGuru::orderBy('nama')->get();
+        $siswas = ModelsSiswa::orderBy('nama')->get();
 
         return view('penilaiandanpresensi::penilaianakademik.create', [
             'title' => 'Tambah Penilaian Akademik',
@@ -60,18 +57,44 @@ class PenilaianAkademikController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'id_siswa' => 'required|exists:siswa,id',
+        // Validate master data
+        $request->validate([
             'id_guru' => 'required|exists:guru,id',
-            'id_mapel' => 'required|exists:mapel,id',
+            'id_mapel' => 'required|exists:mata_pelajaran,id',
             'id_tahun_ajaran' => 'required|exists:tahun_ajaran,id',
-            'nilai' => 'required|integer|min:0|max:100',
         ]);
 
-        PenilaianAkademik::create($validated);
+        // Validate penilaian array
+        $request->validate([
+            'penilaian' => 'required|array|min:1',
+            'penilaian.*.id_siswa' => 'required|exists:siswa,id',
+            'penilaian.*.nilai' => 'required|integer|min:0|max:100',
+        ], [
+            'penilaian.required' => 'Minimal harus ada 1 penilaian.',
+            'penilaian.min' => 'Minimal harus ada 1 penilaian.',
+            'penilaian.*.id_siswa.required' => 'Pilih siswa untuk setiap baris.',
+            'penilaian.*.id_siswa.exists' => 'Siswa tidak ditemukan.',
+            'penilaian.*.nilai.required' => 'Nilai tidak boleh kosong.',
+            'penilaian.*.nilai.integer' => 'Nilai harus berupa angka.',
+            'penilaian.*.nilai.min' => 'Nilai minimal adalah 0.',
+            'penilaian.*.nilai.max' => 'Nilai maksimal adalah 100.',
+        ]);
+
+        // Store multiple penilaian
+        $stored = 0;
+        foreach ($request->penilaian as $item) {
+            PenilaianAkademik::create([
+                'id_siswa' => $item['id_siswa'],
+                'id_guru' => $request->id_guru,
+                'id_mapel' => $request->id_mapel,
+                'id_tahun_ajaran' => $request->id_tahun_ajaran,
+                'nilai' => $item['nilai'],
+            ]);
+            $stored++;
+        }
 
         return redirect()->route('penilaiandanpresensi.penilaianakademik.index')
-            ->with('success', 'Data berhasil ditambahkan.');
+            ->with('success', "Total {$stored} penilaian berhasil ditambahkan.");
     }
 
     /**
@@ -79,7 +102,7 @@ class PenilaianAkademikController extends Controller
      */
     public function show(string $id): View
     {
-        $penilaianAkademik = PenilaianAkademik::with(['siswa', 'guru'])->findOrFail($id);
+        $penilaianAkademik = PenilaianAkademik::with(['siswa', 'guru', 'mataPelajaran', 'tahunAjaran'])->findOrFail($id);
 
         return view('penilaiandanpresensi::penilaianakademik.show', [
             'title' => 'Detail Penilaian Akademik',
@@ -93,10 +116,10 @@ class PenilaianAkademikController extends Controller
     public function edit(string $id): View
     {
         $penilaianAkademik = PenilaianAkademik::findOrFail($id);
-        $siswas = ModelsSiswa::all();
-        $gurus = ModelsGuru::all();
-        $mapels = ModelsMataPelajaran::all();
-        $tahunAjarans = ModelsTahunAjaran::all();
+        $mapels = MataPelajaran::orderBy('nama')->get();
+        $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
+        $gurus = ModelsGuru::orderBy('nama')->get();
+        $siswas = ModelsSiswa::orderBy('nama')->get();
 
         return view('penilaiandanpresensi::penilaianakademik.edit', [
             'title' => 'Edit Penilaian Akademik',
@@ -116,7 +139,7 @@ class PenilaianAkademikController extends Controller
         $validated = $request->validate([
             'id_siswa' => 'required|exists:siswa,id',
             'id_guru' => 'required|exists:guru,id',
-            'id_mapel' => 'required|exists:mapel,id',
+            'id_mapel' => 'required|exists:mata_pelajaran,id',
             'id_tahun_ajaran' => 'required|exists:tahun_ajaran,id',
             'nilai' => 'required|integer|min:0|max:100',
         ]);

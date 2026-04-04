@@ -7,8 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Modules\PenilaianDanPresensi\Models\IzinSakit;
-use App\Models\Siswa;
 use Modules\Siswa\Models\Siswa as ModelsSiswa;
+use App\Modules\Akademik\Models\kelas as AkademikKelas;
 
 /**
  * IzinSakitController
@@ -22,7 +22,8 @@ class IzinSakitController extends Controller
      */
     public function index(Request $request): View
     {
-        $izinSakits = IzinSakit::with(['siswa'])->paginate(10);
+        // include kelas relation for display
+        $izinSakits = IzinSakit::with(['siswa', 'kelas'])->paginate(10);
 
         return view('penilaiandanpresensi::izinsakit.index', [
             'title' => 'Daftar Izin Sakit',
@@ -35,11 +36,14 @@ class IzinSakitController extends Controller
      */
     public function create(): View
     {
-        $siswas = ModelsSiswa::all();
+        // akademik classes first, then siswa
+        $kelas = AkademikKelas::orderBy('nama_kelas')->get();
+        $siswas = ModelsSiswa::orderBy('nama')->get();
 
         return view('penilaiandanpresensi::izinsakit.create', [
             'title' => 'Tambah Izin Sakit',
             'siswas' => $siswas,
+            'kelas' => $kelas,
         ]);
     }
 
@@ -67,7 +71,7 @@ class IzinSakitController extends Controller
      */
     public function show(string $id): View
     {
-        $izinSakit = IzinSakit::with(['siswa'])->findOrFail($id);
+        $izinSakit = IzinSakit::with(['siswa', 'kelas'])->findOrFail($id);
 
         return view('penilaiandanpresensi::izinsakit.show', [
             'title' => 'Detail Izin Sakit',
@@ -81,12 +85,14 @@ class IzinSakitController extends Controller
     public function edit(string $id): View
     {
         $izinSakit = IzinSakit::findOrFail($id);
-        $siswas = ModelsSiswa::all();
+        $kelas = AkademikKelas::orderBy('nama_kelas')->get();
+        $siswas = ModelsSiswa::orderBy('nama')->get();
 
         return view('penilaiandanpresensi::izinsakit.edit', [
             'title' => 'Edit Izin Sakit',
             'izinSakit' => $izinSakit,
             'siswas' => $siswas,
+            'kelas' => $kelas,
         ]);
     }
 
@@ -97,7 +103,7 @@ class IzinSakitController extends Controller
     {
         $validated = $request->validate([
             'id_siswa' => 'required|exists:siswa,id',
-            'id_kelas' => 'required|integer',
+            'id_kelas' => 'required|exists:kelas,id',
             'jenis' => 'required|string|max:255',
             'tgl_mulai' => 'required|date',
             'tgl_selesai' => 'required|date|after_or_equal:tgl_mulai',

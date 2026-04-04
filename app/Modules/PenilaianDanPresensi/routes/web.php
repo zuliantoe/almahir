@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\PenilaianDanPresensi\Controllers\DashboardController;
 use Modules\PenilaianDanPresensi\Controllers\PenilaianAkademikController;
 use Modules\PenilaianDanPresensi\Controllers\PresensiController;
 use Modules\PenilaianDanPresensi\Controllers\PenilaianTahfidzController;
@@ -17,6 +18,13 @@ use Modules\PenilaianDanPresensi\Controllers\IzinSakitController;
 */
 
 Route::middleware(['auth'])->group(function () {
+    // Dashboard Routes
+    Route::get('/', [DashboardController::class, 'index'])->name('index');
+    Route::get('/dashboard-penilaian-akademik', [DashboardController::class, 'dashboardPenilaianAkademik'])->name('dashboard-penilaian-akademik');
+    Route::get('/dashboard-penilaian-tahfidz', [DashboardController::class, 'dashboardPenilaianTahfidz'])->name('dashboard-penilaian-tahfidz');
+    Route::get('/dashboard-presensi', [DashboardController::class, 'dashboardPresensi'])->name('dashboard-presensi');
+    Route::get('/dashboard-izin-sakit', [DashboardController::class, 'dashboardIzinSakit'])->name('dashboard-izin-sakit');
+
     // Penilaian Akademik Routes
     Route::prefix('penilaianakademik')->name('penilaianakademik.')->group(function () {
         Route::get('/', [PenilaianAkademikController::class, 'index'])->name('index');
@@ -33,6 +41,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [PresensiController::class, 'index'])->name('index');
         Route::get('/create', [PresensiController::class, 'create'])->name('create');
         Route::post('/', [PresensiController::class, 'store'])->name('store');
+        Route::post('/scan-card', [PresensiController::class, 'scanCard'])->name('scan-card');
         Route::get('/{id}', [PresensiController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [PresensiController::class, 'edit'])->name('edit');
         Route::put('/{id}', [PresensiController::class, 'update'])->name('update');

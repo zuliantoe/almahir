@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\ManajemenAsetDanAsrama\Models;  // UBAH
+namespace Modules\ManajemenAsetDanAsrama\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -9,6 +9,12 @@ use App\Models\User;
 class PengajuanAset extends Model
 {
     use SoftDeletes;
+
+    // Konstanta status
+    const STATUS_DIAJUKAN = 'diajukan';
+    const STATUS_DISETUJUI = 'disetujui';
+    const STATUS_DITOLAK = 'ditolak';
+    const STATUS_PROSES_PENGADAAN = 'proses_pengadaan';
 
     protected $table = 'pengajuan_aset';
 
@@ -30,8 +36,8 @@ class PengajuanAset extends Model
 
     protected $casts = [
         'tanggal_pengajuan' => 'date',
-        'approved_at' => 'datetime',
-        'estimasi_harga' => 'decimal:2',
+        'approved_at'       => 'datetime',
+        'estimasi_harga'    => 'decimal:2',
     ];
 
     /**
@@ -71,7 +77,7 @@ class PengajuanAset extends Model
      */
     public function scopeDiajukan($query)
     {
-        return $query->where('status', 'diajukan');
+        return $query->where('status', self::STATUS_DIAJUKAN);
     }
 
     /**
@@ -79,7 +85,7 @@ class PengajuanAset extends Model
      */
     public function scopeDisetujui($query)
     {
-        return $query->where('status', 'disetujui');
+        return $query->where('status', self::STATUS_DISETUJUI);
     }
 
     /**
@@ -87,7 +93,7 @@ class PengajuanAset extends Model
      */
     public function scopeDitolak($query)
     {
-        return $query->where('status', 'ditolak');
+        return $query->where('status', self::STATUS_DITOLAK);
     }
 
     /**
@@ -95,7 +101,7 @@ class PengajuanAset extends Model
      */
     public function scopeProsesPengadaan($query)
     {
-        return $query->where('status', 'proses_pengadaan');
+        return $query->where('status', self::STATUS_PROSES_PENGADAAN);
     }
 
     /**
@@ -104,5 +110,18 @@ class PengajuanAset extends Model
     public function scopeAktif($query)
     {
         return $query->whereNull('deleted_at');
+    }
+
+    /**
+     * Generate nomor pengajuan otomatis
+     */
+    public static function generateNomorPengajuan(): string
+    {
+        $yearMonth = date('Ym');
+        $last = self::whereYear('created_at', date('Y'))
+                    ->whereMonth('created_at', date('m'))
+                    ->count();
+        $nomorUrut = str_pad($last + 1, 4, '0', STR_PAD_LEFT);
+        return "PJ-{$yearMonth}-{$nomorUrut}";
     }
 }

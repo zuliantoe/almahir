@@ -14,11 +14,15 @@ return new class extends Migration
         Schema::create('pengadaan_aset', function (Blueprint $table) {
             $table->id();
             
-            // Nomor PO: PO-YYYYMM-XXXX (contoh: PO-202602-0001)
+            // Nomor PO: format PO-YYYYMM-XXXX (unique)
             $table->string('nomor_po')->unique();
             
-            $table->foreignId('pengajuan_id')->constrained('pengajuan_aset');
+            // Foreign key ke pengajuan_aset (integer)
+            $table->foreignId('pengajuan_id')
+                  ->constrained('pengajuan_aset')
+                  ->onDelete('cascade');
             
+            // Informasi vendor dan pengadaan
             $table->string('vendor');
             $table->date('tanggal_pesan');
             $table->date('estimasi_datang');
@@ -26,6 +30,7 @@ return new class extends Migration
             $table->decimal('biaya_riil', 15, 2)->default(0);
             $table->text('catatan_pengadaan')->nullable();
             
+            // Status pengadaan
             $table->enum('status', [
                 'dipesan',
                 'datang',

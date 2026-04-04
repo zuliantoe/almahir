@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\PegawaiManager\Controllers\PegawaiManagerController;
+use Modules\PegawaiManager\Controllers\TypePegawaiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,6 +15,7 @@ use Modules\PegawaiManager\Controllers\PegawaiManagerController;
 */
 
 Route::middleware(['auth'])->group(function () {
+    // Pegawai CRUD
     Route::get('/', [PegawaiManagerController::class, 'index'])->name('index');
     Route::get('/create', [PegawaiManagerController::class, 'create'])->name('create');
     Route::post('/', [PegawaiManagerController::class, 'store'])->name('store');
@@ -21,4 +23,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/{id}/edit', [PegawaiManagerController::class, 'edit'])->name('edit');
     Route::put('/{id}', [PegawaiManagerController::class, 'update'])->name('update');
     Route::delete('/{id}', [PegawaiManagerController::class, 'destroy'])->name('destroy');
+
+    // Type Pegawai CRUD
+    Route::resource('types', TypePegawaiController::class)->names('types');
 });

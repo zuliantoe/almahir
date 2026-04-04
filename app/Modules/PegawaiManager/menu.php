@@ -10,10 +10,16 @@ return [
     'order'  => 10,
     'items'  => [
         [
-            'label' => 'Data Manager',
-            'icon'  => 'fas fa-file-alt',
+            'label' => 'Data Pegawai',
+            'icon'  => 'fas fa-users',
             'route' => 'pegawaimanager.index',
-            'match' => 'pegawaimanager*',
+            'match' => 'pegawaimanager',
+        ],
+        [
+            'label' => 'Tipe Pegawai',
+            'icon'  => 'fas fa-tags',
+            'route' => 'pegawaimanager.types.index',
+            'match' => 'pegawaimanager/types*',
         ],
     ],
 ];

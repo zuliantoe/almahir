@@ -24,11 +24,40 @@ class PegawaiManagerController extends Controller
      */
     public function index(Request $request): View
     {
-        $pegawaiManagers = Pegawai::with(['user', 'typePegawai'])->latest()->get();
+        $query = Pegawai::with(['user', 'typePegawai'])->latest();
+
+        // Filter: Search Name or Email
+        if ($request->has('search') && $request->search != '') {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('nama', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('email', 'like', '%' . $searchTerm . '%');
+            });
+        }
+
+        // Filter: Employee Type
+        if ($request->has('type') && $request->type != '') {
+            $query->where('type_pegawai_id', $request->type);
+        }
+
+        // Filter: System Role
+        if ($request->has('role') && $request->role != '') {
+            $roleName = $request->role;
+            $query->whereHas('user', function($q) use ($roleName) {
+                $q->role($roleName);
+            });
+        }
+
+        $pegawaiManagers = $query->paginate(10)->withQueryString();
+        
+        $types = TypePegawai::all();
+        $roles = Role::all();
 
         return view('pegawaimanager::index', [
             'title' => 'Daftar Pegawai',
             'pegawaiManagers' => $pegawaiManagers,
+            'types' => $types,
+            'roles' => $roles,
         ]);
     }
 
@@ -101,16 +130,13 @@ class PegawaiManagerController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id): View
     {
-        $pegawaiManager = Pegawai::findOrFail($id);
+        $pegawai = Pegawai::with(['user', 'typePegawai'])->findOrFail($id);
 
         return view('pegawaimanager::show', [
-            'title' => 'Detail Pegawai',
-            'pegawaiManager' => $pegawaiManager,
+            'title' => 'Detail Profil Pegawai',
+            'pegawai' => $pegawai,
         ]);
     }
 

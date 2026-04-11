@@ -63,18 +63,52 @@ class SeleksiController extends Controller
         return back()->with('success', 'Tes dihapus');
     }
     public function updateNilai(Request $request, $id)
-{
-    $request->validate([
-        'nilai' => 'required|numeric|min:0|max:100'
-    ]);
+    {
+        $request->validate([
+            'nilai' => 'required|numeric|min:0|max:100'
+        ]);
 
-    $seleksi = \Modules\Pendaftaran\Models\Seleksi::findOrFail($id);
+        $seleksi = \Modules\Pendaftaran\Models\Seleksi::findOrFail($id);
 
-    $seleksi->update([
-        'nilai' => $request->nilai
-    ]);
+        $seleksi->update([
+            'nilai' => $request->nilai
+        ]);
 
-    return back()->with('success', 'Nilai berhasil disimpan');
-}
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Nilai berhasil disimpan']);
+        }
+
+        return back()->with('success', 'Nilai berhasil disimpan');
+    }
     
+    public function applyTemplate(Request $request, $id)
+    {
+        $request->validate([
+            'template_id' => 'required|exists:template_seleksis,id',
+            'tanggal' => 'required|date',
+            'jam' => 'required'
+        ]);
+
+        $template = \Modules\Pendaftaran\Models\TemplateSeleksi::with('items')->findOrFail($request->template_id);
+        
+        foreach ($template->items as $item) {
+            \Modules\Pendaftaran\Models\Seleksi::create([
+                'pendaftaran_id' => $id,
+                'nama_tes' => $item->nama_tes,
+                'tanggal' => $request->tanggal,
+                'jam' => $request->jam,
+                'pengampu' => $item->pengampu,
+                'metode' => $item->metode,
+                'lokasi' => $item->lokasi,
+                'link' => $item->link,
+            ]);
+        }
+
+        $pendaftaran = Pendaftaran::findOrFail($id);
+        if ($pendaftaran->status == 'pending') {
+            $pendaftaran->update(['status' => 'diproses']);
+        }
+
+        return back()->with('success', 'Template tes berhasil diterapkan');
+    }
 }

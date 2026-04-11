@@ -8,11 +8,21 @@ use Modules\Pendaftaran\Models\Pendaftaran;
 
 class PendaftaranController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $data = Pendaftaran::latest()->get();
+        $query = Pendaftaran::query();
 
-        return view('pendaftaran::admin.pendaftaran', compact('data'));
+        if ($request->has('status') && $request->status != '') {
+            $query->where('status', $request->status);
+        }
+
+        $data = $query->latest()->get();
+
+        $totalPendaftar = Pendaftaran::count();
+        $totalDiterima = Pendaftaran::where('status', 'diterima')->count();
+        $totalDitolak = Pendaftaran::where('status', 'ditolak')->count();
+
+        return view('pendaftaran::admin.pendaftaran', compact('data', 'totalPendaftar', 'totalDiterima', 'totalDitolak'));
     }
 
 
@@ -86,10 +96,38 @@ class PendaftaranController extends Controller
         ]);
 
         $pendaftaran = Pendaftaran::findOrFail($id);
-        $pendaftaran->update([
-            'status' => $request->status,
-        ]);
+
+        if (in_array($request->status, ['diterima', 'ditolak'])) {
+            $hasUnscoredTests = \Modules\Pendaftaran\Models\Seleksi::where('pendaftaran_id', $id)
+                                ->whereNull('nilai')
+                                ->exists();
+                                
+            if ($hasUnscoredTests) {
+                return back()->with('error', 'Terdeteksi ada tes yang belum selesai, silahkan selesaikan proses tes.');
+            }
+        }
+
+        $updateData = ['status' => $request->status];
+        if ($request->status === 'diterima') {
+            $updateData['tanggal_diterima'] = now();
+        }
+
+        $pendaftaran->update($updateData);
 
         return back()->with('success', 'Status pendaftaran berhasil diperbarui');
+    }
+
+    public function updateCatatan(Request $request, $id)
+    {
+        $request->validate([
+            'catatan' => 'nullable|string'
+        ]);
+
+        $pendaftaran = Pendaftaran::findOrFail($id);
+        $pendaftaran->update([
+            'catatan' => $request->catatan,
+        ]);
+
+        return back()->with('success', 'Catatan berhasil diperbarui');
     }
 }

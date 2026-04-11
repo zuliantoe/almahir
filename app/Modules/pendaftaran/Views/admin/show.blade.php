@@ -44,6 +44,24 @@
 
         <div class="card-body">
 
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            @endif
+
             {{-- DATA SISWA --}}
             <h5 class="mb-3"><strong>Data Siswa</strong></h5>
             <table class="table table-bordered mb-4">
@@ -133,7 +151,12 @@
 
 
             {{-- STATUS & ADMIN --}}
-            <h5 class="mb-3"><strong>Status Pendaftaran</strong></h5>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="m-0"><strong>Status Pendaftaran</strong></h5>
+                <button type="button" class="btn btn-sm btn-info" data-toggle="modal" data-target="#modalCatatan">
+                    <i class="fas fa-edit"></i> Edit Catatan
+                </button>
+            </div>
             <table class="table table-bordered">
                 <tr>
                     <th width="30%">Status</th>
@@ -151,11 +174,11 @@
                 </tr>
                 <tr>
                     <th>Tanggal Daftar</th>
-                    <td>{{ $pendaftaran->tanggal_daftar }}</td>
+                    <td>{{ date('d-m-Y H:i', strtotime($pendaftaran->tanggal_daftar)) }} </td>
                 </tr>
                 <tr>
                     <th>Tanggal Diterima</th>
-                    <td>{{ $pendaftaran->tanggal_diterima ?? '-' }}</td>
+                    <td>{{ $pendaftaran->tanggal_diterima ? date('d-m-Y H:i', strtotime($pendaftaran->tanggal_diterima)) : '-' }}</td>
                 </tr>
                 <tr>
                     <th>Catatan</th>
@@ -229,12 +252,86 @@
                 </div>
             </div>
 
+            <!-- Modal Catatan -->
+            <div class="modal modal-bottom-up fade" id="modalCatatan" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <form action="/pendaftaran/admin/pendaftaran/{{ $pendaftaran->id }}/catatan" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <div class="modal-header bg-info text-white">
+                                <h5 class="modal-title">Edit Catatan Pendaftaran</h5>
+                                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body text-left">
+                                <div class="form-group">
+                                    <label>Catatan Tambahan</label>
+                                    <textarea name="catatan" rows="4" class="form-control" placeholder="Tulis catatan admin di sini...">{{ $pendaftaran->catatan }}</textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-info">Simpan Catatan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
             {{-- JADWAL TES --}}
             <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
                 <h5 class="m-0"><strong>Jadwal Tes</strong></h5>
-                <a href="/pendaftaran/admin/pendaftaran/{{ $pendaftaran->id }}/jadwal" class="btn btn-sm btn-success">
-                    <i class="fas fa-calendar-plus"></i> Set Jadwal
-                </a>
+                <div>
+                    <button type="button" class="btn btn-sm btn-info mr-2" data-toggle="modal" data-target="#modalPilihTemplate">
+                        <i class="fas fa-list-ol"></i> Pilih Template
+                    </button>
+                    <a href="/pendaftaran/admin/pendaftaran/{{ $pendaftaran->id }}/jadwal" class="btn btn-sm btn-success">
+                        <i class="fas fa-calendar-plus"></i> Set Jadwal Manual
+                    </a>
+                </div>
+            </div>
+
+            <!-- Modal Pilih Template -->
+            <div class="modal modal-bottom-up fade" id="modalPilihTemplate" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <form action="/pendaftaran/admin/pendaftaran/{{ $pendaftaran->id }}/apply-template" method="POST">
+                            @csrf
+                            <div class="modal-header bg-info text-white">
+                                <h5 class="modal-title">Pilih Template Tes Seleksi</h5>
+                                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body text-left">
+                                <div class="form-group">
+                                    <label>Pilih Template</label>
+                                    <select name="template_id" class="form-control" required>
+                                        <option value="">-- Pilih Template --</option>
+                                        @foreach(\Modules\Pendaftaran\Models\TemplateSeleksi::latest()->get() as $tmpl)
+                                            <option value="{{ $tmpl->id }}">{{ $tmpl->nama_template }}</option>
+                                        @endforeach
+                                    </select>
+                                    <small class="text-muted">Template akan mendaftarkan beberapa tes sekaligus ke pendaftar.</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>Tanggal Tes <i>(Default untuk semua baris tes)</i></label>
+                                    <input type="date" name="tanggal" class="form-control" value="{{ date('Y-m-d') }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Jam <i>(Default, bisa diedit nanti)</i></label>
+                                    <input type="time" name="jam" class="form-control" value="08:00" required>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-info">Terapkan Template</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
 
             @if ($pendaftaran->seleksis->count() > 0)

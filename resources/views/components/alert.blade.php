@@ -1,38 +1,43 @@
 {{--
-Alert Component
-Usage: <x-alert type="success" message="Your message" dismissible />
+Alert Component (SweetAlert2 Standard)
+Usage: <x-alert type="success" message="Your message" />
 Types: success, danger, warning, info
 --}}
 @props([
     'type' => 'info',
     'message' => '',
-    'dismissible' => false,
 ])
 
 @php
-$alertClasses = [
-    'success' => 'alert-success',
-    'danger' => 'alert-danger',
-    'warning' => 'alert-warning',
-    'info' => 'alert-info',
-];
-$alertClass = $alertClasses[$type] ?? 'alert-info';
-$icon = match($type) {
-    'success' => 'fas fa-check-circle',
-    'danger' => 'fas fa-exclamation-triangle',
-    'warning' => 'fas fa-exclamation-circle',
-    'info' => 'fas fa-info-circle',
-    default => 'fas fa-info-circle',
+$swalType = match($type) {
+    'success' => 'success',
+    'danger', 'error' => 'error',
+    'warning' => 'warning',
+    'info' => 'info',
+    default => 'info',
 };
+$title = $message ?: $slot;
 @endphp
 
-<div {{ $attributes->merge(['class' => "alert {$alertClass}" . ($dismissible ? ' alert-dismissible fade show' : '')]) }}
-     role="alert">
-    @if($dismissible)
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    @endif
-    <i class="{{ $icon }} mr-2"></i>
-    {{ $message ?? $slot }}
-</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof Swal !== 'undefined') {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+
+            Toast.fire({
+                icon: '{{ $swalType }}',
+                title: '{!! addslashes($title) !!}'
+            });
+        }
+    });
+</script>

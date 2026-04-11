@@ -62,4 +62,19 @@ class SeleksiController extends Controller
 
         return back()->with('success', 'Tes dihapus');
     }
+    public function updateNilai(Request $request, $id)
+{
+    $request->validate([
+        'nilai' => 'required|numeric|min:0|max:100'
+    ]);
+
+    $seleksi = \Modules\Pendaftaran\Models\Seleksi::findOrFail($id);
+
+    $seleksi->update([
+        'nilai' => $request->nilai
+    ]);
+
+    return back()->with('success', 'Nilai berhasil disimpan');
+}
+    
 }

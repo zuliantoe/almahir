@@ -63,7 +63,7 @@
                             <td>{{ $item->no_hp }}</td>
                             <td>
                                 @if ($item->status == 'pending')
-                                    <span class="badge badge-warning">Pending</span>
+                                    <span class="badge badge-warning">Ditunda</span>
                                 @elseif($item->status == 'diproses')
                                     <span class="badge badge-info">Diproses</span>
                                 @elseif($item->status == 'diterima')
@@ -76,11 +76,6 @@
 
                                 <a href="/pendaftaran/admin/pendaftaran/{{ $item->id }}" class="btn btn-sm btn-primary">
                                     <i class="fas fa-eye"></i> Lihat
-                                </a>
-
-                                <a href="/pendaftaran/admin/pendaftaran/{{ $item->id }}/jadwal"
-                                    class="btn btn-sm btn-success">
-                                    <i class="fas fa-calendar-plus"></i> Set Jadwal
                                 </a>
 
                             </td>

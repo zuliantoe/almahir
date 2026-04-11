@@ -40,12 +40,21 @@ Route::prefix('admin')->group(function () {
     Route::get(
         '/pendaftaran/{id}/jadwal',
         [SeleksiController::class, 'index']
-    )->name('pendaftaran.admin.jadwal.index');
+    )->name('admin.jadwal.index');
+
+    Route::put(
+        '/pendaftaran/{id}/status',
+        [PendaftaranController::class, 'updateStatus']
+    )->name('admin.pendaftaran.updateStatus');
 
     Route::post(
         '/pendaftaran/{id}/jadwal',
         [SeleksiController::class, 'store']
-    )->name('pendaftaran.admin.jadwal.store');
+    )->name('admin.jadwal.store');
+    Route::put(
+        '/pendaftaran/jadwal/{id}/nilai',
+        [SeleksiController::class, 'updateNilai']
+    )->name('admin.jadwal.updateNilai');
 });
 
 

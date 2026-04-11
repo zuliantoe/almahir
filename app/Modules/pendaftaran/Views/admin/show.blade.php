@@ -22,6 +22,19 @@
 
 @section('content')
 
+@push('styles')
+<style>
+    /* Animasi modal muncul dari bawah ke atas */
+    .modal-bottom-up.fade .modal-dialog {
+        transform: translate(0, 50px);
+        transition: transform 0.3s ease-out;
+    }
+    .modal-bottom-up.show .modal-dialog {
+        transform: none;
+    }
+</style>
+@endpush
+
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">
@@ -125,7 +138,7 @@
                 <tr>
                     <th width="30%">Status</th>
                     <td>
-                        @if ($pendaftaran->status == 'ditunda')
+                        @if ($pendaftaran->status == 'pending')
                             <span class="badge badge-warning">Ditunda</span>
                         @elseif($pendaftaran->status == 'diproses')
                             <span class="badge badge-info">Diproses</span>
@@ -150,8 +163,119 @@
                 </tr>
             </table>
 
+            <div class="mt-3">
+                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modalTerima" {{ $pendaftaran->status == 'diterima' ? 'disabled' : '' }}>
+                    <i class="fas fa-check"></i> Terima
+                </button>
+
+                <button type="button" class="btn btn-danger ml-2" data-toggle="modal" data-target="#modalTolak" {{ $pendaftaran->status == 'ditolak' ? 'disabled' : '' }}>
+                    <i class="fas fa-times"></i> Tolak
+                </button>
+            </div>
+
+            <!-- Modal Terima -->
+            <div class="modal modal-bottom-up fade" id="modalTerima" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <form action="/pendaftaran/admin/pendaftaran/{{ $pendaftaran->id }}/status" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <input type="hidden" name="status" value="diterima">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title">Konfirmasi Terima</h5>
+                                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body text-center py-4">
+                                <i class="fas fa-check-circle text-success mb-3" style="font-size: 4rem;"></i>
+                                <h5 class="mb-0">Apakah Anda yakin ingin menerima pendaftar ini?</h5>
+                                <p class="text-muted mt-2">Status pendaftaran akan diubah menjadi "Diterima".</p>
+                            </div>
+                            <div class="modal-footer justify-content-center">
+                                <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-success px-4">Ya, Terima</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Tolak -->
+            <div class="modal modal-bottom-up fade" id="modalTolak" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <form action="/pendaftaran/admin/pendaftaran/{{ $pendaftaran->id }}/status" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <input type="hidden" name="status" value="ditolak">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">Konfirmasi Tolak</h5>
+                                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body text-center py-4">
+                                <i class="fas fa-times-circle text-danger mb-3" style="font-size: 4rem;"></i>
+                                <h5 class="mb-0">Apakah Anda yakin ingin menolak pendaftar ini?</h5>
+                                <p class="text-muted mt-2">Status pendaftaran akan diubah menjadi "Ditolak".</p>
+                            </div>
+                            <div class="modal-footer justify-content-center">
+                                <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-danger px-4">Ya, Tolak</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            {{-- JADWAL TES --}}
+            <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+                <h5 class="m-0"><strong>Jadwal Tes</strong></h5>
+                <a href="/pendaftaran/admin/pendaftaran/{{ $pendaftaran->id }}/jadwal" class="btn btn-sm btn-success">
+                    <i class="fas fa-calendar-plus"></i> Set Jadwal
+                </a>
+            </div>
+
+            @if ($pendaftaran->seleksis->count() > 0)
+
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Nama Tes</th>
+                            <th>Tanggal</th>
+                            <th>Jam</th>
+                            <th>Pengampu</th>
+                            <th>Metode</th>
+                            <th>Lokasi / Link</th>
+                            <th>Nilai</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($pendaftaran->seleksis as $jadwal)
+                            <tr>
+                                <td>{{ $jadwal->nama_tes }}</td>
+                                <td>{{ $jadwal->tanggal }}</td>
+                                <td>{{ $jadwal->jam }}</td>
+                                <td>{{ $jadwal->pengampu }}</td>
+                                <td>{{ $jadwal->metode }}</td>
+                                <td>
+                                    {{ $jadwal->lokasi ?? '-' }}
+                                    @if ($jadwal->link)
+                                        <br>
+                                        <a href="{{ $jadwal->link }}" target="_blank">Link</a>
+                                    @endif
+                                </td>
+                                <td>{{ $jadwal->nilai ?? '-' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @else
+                <p class="text-muted">Belum ada jadwal tes</p>
+            @endif
         </div>
-        
+
 
         <div class="card-footer text-right">
             <a href="/pendaftaran/admin/pendaftaran" class="btn btn-secondary">

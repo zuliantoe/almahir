@@ -18,7 +18,7 @@ class PendaftaranController extends Controller
 
     public function show($id)
     {
-        $pendaftaran = Pendaftaran::findOrFail($id);
+        $pendaftaran = Pendaftaran::with('seleksis')->findOrFail($id);
 
         return view('pendaftaran::admin.show', compact('pendaftaran'));
     }
@@ -78,5 +78,18 @@ class PendaftaranController extends Controller
 
         return redirect('/pendaftaran')
             ->with('success', 'Pendaftaran berhasil');
+    }
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,diproses,diterima,ditolak',
+        ]);
+
+        $pendaftaran = Pendaftaran::findOrFail($id);
+        $pendaftaran->update([
+            'status' => $request->status,
+        ]);
+
+        return back()->with('success', 'Status pendaftaran berhasil diperbarui');
     }
 }

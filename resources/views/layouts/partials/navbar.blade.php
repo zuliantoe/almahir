@@ -100,10 +100,10 @@
                     {{-- Menu Body --}}
                     <div class="dropdown-divider m-0"></div>
                     <div class="p-2">
-                        <a href="#" class="dropdown-item rounded py-2">
+                        <a href="{{ route('profile.edit') }}" class="dropdown-item rounded py-2">
                             <i class="fas fa-user-cog mr-2 text-primary"></i> Pengaturan Profil
                         </a>
-                        <a href="#" class="dropdown-item rounded py-2">
+                        <a href="{{ route('profile.edit') }}#security" class="dropdown-item rounded py-2">
                             <i class="fas fa-key mr-2 text-info"></i> Ganti Password
                         </a>
                     </div>

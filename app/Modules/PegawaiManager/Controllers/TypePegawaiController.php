@@ -15,7 +15,7 @@ class TypePegawaiController extends Controller
      */
     public function index(): View
     {
-        $types = TypePegawai::latest()->get();
+        $types = TypePegawai::withCount('pegawai')->latest()->paginate(10);
 
         return view('pegawaimanager::type-pegawai.index', [
             'title' => 'Tipe Pegawai',

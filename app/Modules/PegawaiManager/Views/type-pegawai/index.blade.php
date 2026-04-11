@@ -20,26 +20,24 @@
 
         <div class="table-responsive">
             <table class="table table-hover table-striped">
-            <div class="form-group">
-                <label>Nama Kategori Pegawai <span class="text-danger">*</span></label>
-                <input type="text" name="nama_type" class="form-control" value="{{ old('nama_type') }}" 
-                    placeholder="Contoh: Guru Tetap, Staf Administrasi, dll." required>
-                <small class="form-text text-muted">Masukkan nama kategori atau klasifikasi posisi pegawai di sekolah.</small>
-            </div>
-        <thead class="thead-dark">
-            <tr>
-                <th style="width: 50px;" class="text-center">No</th>
-                <th>Kategori / Nama Tipe</th>
-                <th class="text-center">Tanggal Dibuat</th>
-                <th class="text-center" style="width: 150px;">Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($types as $index => $item)
-            <tr>
-                <td class="text-center">{{ $index + 1 }}</td>
-                <td class="font-weight-bold text-dark">{{ $item->nama_type }}</td>
-                <td class="text-center text-muted small">{{ $item->created_at->format('d/m/Y H:i') }}</td>
+                <thead class="thead-dark">
+                    <tr>
+                        <th style="width: 50px;" class="text-center">No</th>
+                        <th>Kategori / Nama Tipe</th>
+                        <th class="text-center">Jumlah Pegawai</th>
+                        <th class="text-center">Tanggal Dibuat</th>
+                        <th class="text-center" style="width: 150px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($types as $index => $item)
+                    <tr>
+                        <td class="text-center">{{ $types->firstItem() + $index }}</td>
+                        <td class="font-weight-bold text-dark">{{ $item->nama_type }}</td>
+                        <td class="text-center">
+                            <span class="badge badge-info">{{ $item->pegawai_count }} Pegawai</span>
+                        </td>
+                        <td class="text-center text-muted small">{{ $item->created_at->format('d/m/Y H:i') }}</td>
                         <td class="text-center">
                             <div class="btn-group btn-group-sm">
                                 <a href="{{ route('pegawaimanager.types.edit', $item->id) }}" 
@@ -70,6 +68,19 @@
                 </tbody>
             </table>
         </div>
+
+        {{-- Pagination Links --}}
+        @if($types->hasPages())
+            <div class="card-footer bg-light border-top d-flex justify-content-between align-items-center py-3">
+                <div class="text-muted small font-italic">
+                    Menampilkan <strong>{{ $types->firstItem() }}</strong> sampai <strong>{{ $types->lastItem() }}</strong> 
+                    dari <strong>{{ $types->total() }}</strong> total tipe.
+                </div>
+                <div class="pagination-sm">
+                    {{ $types->links() }}
+                </div>
+            </div>
+        @endif
     </x-card>
 </div>
 @endsection

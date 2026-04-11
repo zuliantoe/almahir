@@ -229,4 +229,62 @@ class PegawaiManagerController extends Controller
         return redirect()->route('pegawaimanager.index')
             ->with('success', 'Data pegawai berhasil dihapus.');
     }
+
+    /**
+     * Export Pegawai data to CSV (Excel compatible)
+     */
+    public function export()
+    {
+        $pegawais = Pegawai::with(['user', 'typePegawai'])->get();
+        
+        $filename = "laporan_pegawai_" . date('Y-m-d_H-i-s') . ".csv";
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $columns = [
+            'No', 
+            'Nama Lengkap', 
+            'Tipe Pegawai', 
+            'Role Akses', 
+            'No HP', 
+            'Email', 
+            'Alamat', 
+            'Tanggal Masuk'
+        ];
+
+        $callback = function() use($pegawais, $columns) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for Excel UTF-8 compatibility
+            fputs($file, "\xEF\xBB\xBF");
+            
+            fputcsv($file, $columns, ';'); // Use semicolon for Excel intl compatibility
+
+            $no = 1;
+            foreach ($pegawais as $p) {
+                $role = $p->user ? collect($p->user->roles)->pluck('name')->join(', ') : '-';
+                $row = [
+                    $no++,
+                    $p->nama,
+                    $p->typePegawai->nama_type ?? '-',
+                    $role,
+                    $p->no_hp ?? '-',
+                    $p->email ?? '-',
+                    $p->alamat ?? '-',
+                    $p->tanggal_masuk ? $p->tanggal_masuk->format('Y-m-d') : '-'
+                ];
+                fputcsv($file, $row, ';');
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }

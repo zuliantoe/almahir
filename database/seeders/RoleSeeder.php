@@ -30,6 +30,7 @@ class RoleSeeder extends Seeder
                 'siswa.view',
                 'nilai.view', 'nilai.create', 'nilai.edit',
                 'absensi.view', 'absensi.create', 'absensi.edit',
+                'perizinan.view', 'perizinan.create',
             ],
         ],
         [
@@ -38,6 +39,18 @@ class RoleSeeder extends Seeder
             'description' => 'General staff role.',
             'permissions' => [
                 'profile.view', 'profile.edit',
+                'perizinan.view', 'perizinan.create',
+            ],
+        ],
+        [
+            'name' => 'STAF_TU',
+            'display_name' => 'Staf Tata Usaha',
+            'description' => 'Administrative staff with HR management access.',
+            'permissions' => [
+                'siswa.view', 'siswa.create', 'siswa.edit',
+                'guru.view', 'guru.create', 'guru.edit',
+                'perizinan.view', 'perizinan.manage',
+                'absensi.view', 
             ],
         ],
     ];

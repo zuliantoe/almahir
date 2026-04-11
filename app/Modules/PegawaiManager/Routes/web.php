@@ -15,6 +15,16 @@ use Modules\PegawaiManager\Controllers\TypePegawaiController;
 */
 
 Route::middleware(['auth'])->group(function () {
+    // Dashboard Pegawai
+    Route::get('/dashboard', [\Modules\PegawaiManager\Controllers\DashboardController::class, 'index'])->name('dashboard');
+
+    // Type Pegawai CRUD
+    // Diletakkan SEBELUM Pegawai CRUD agar kata 'types' tidak ditangkap oleh parameter {id}
+    Route::resource('types', TypePegawaiController::class)->names('types');
+
+    // Export Laporan Pegawai
+    Route::get('/export', [PegawaiManagerController::class, 'export'])->name('export');
+
     // Pegawai CRUD
     Route::get('/', [PegawaiManagerController::class, 'index'])->name('index');
     Route::get('/create', [PegawaiManagerController::class, 'create'])->name('create');
@@ -23,7 +33,4 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/{id}/edit', [PegawaiManagerController::class, 'edit'])->name('edit');
     Route::put('/{id}', [PegawaiManagerController::class, 'update'])->name('update');
     Route::delete('/{id}', [PegawaiManagerController::class, 'destroy'])->name('destroy');
-
-    // Type Pegawai CRUD
-    Route::resource('types', TypePegawaiController::class)->names('types');
 });

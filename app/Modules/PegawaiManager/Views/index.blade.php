@@ -10,6 +10,9 @@
     <x-card title="Daftar Pegawai" icon="fas fa-users">
 
         <x-slot name="tools">
+            <a href="{{ route('pegawaimanager.export') }}" class="btn btn-success btn-sm rounded-pill px-3 shadow-sm mr-2" title="Unduh data dalam format CSV/Excel">
+                <i class="fas fa-file-excel mr-1"></i> Export Data
+            </a>
             <a href="{{ route('pegawaimanager.create') }}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
                 <i class="fas fa-plus mr-1"></i> Tambah Pegawai
             </a>

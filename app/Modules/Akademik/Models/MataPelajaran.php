@@ -16,6 +16,7 @@ class MataPelajaran extends Model
         'kode',
         'nama',        
         'kategori_id',
+        'kelompok',
     ];
 
     public function kategori(): BelongsTo

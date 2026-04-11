@@ -2,120 +2,130 @@
 
 @section('title', 'Jenis Kegiatan')
 
+@include('akademik::components.style')
+
 @section('content')
-<div class="bg-white rounded-lg shadow-md p-6">
+<div class="container-fluid py-4">
 
     {{-- Header --}}
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h3 class="text-xl font-semibold">Daftar Jenis Kegiatan</h3>
-            <p class="text-sm text-gray-500">Manajemen jenis kegiatan kalender akademik</p>
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="font-weight-bold text-dark mb-0">Manajemen Jenis Kegiatan</h2>
+                <p class="text-muted mb-0">Daftar klasifikasi kegiatan pada kalender akademik</p>
+            </div>
+            <a href="{{ route('akademik.jenis-kegiatan.create') }}" class="btn btn-primary btn-modern">
+                <i class="fas fa-plus mr-1"></i> Tambah Kegiatan
+            </a>
         </div>
-        <a href="{{ route('akademik.jenis-kegiatan.create') }}" class="btn-primary">
-            + Tambah Jenis Kegiatan
-        </a>
     </div>
 
-    {{-- Search --}}
-    <div class="mb-6 bg-gray-50 p-4 rounded-lg">
-        <form action="{{ route('akademik.jenis-kegiatan.index') }}" method="GET">
-            <div class="flex items-center gap-3">
-                <input type="text"
-                       name="search"
-                       placeholder="Cari jenis kegiatan..."
-                       value="{{ request('search') }}"
-                       class="form-input w-full">
-
-                <button type="submit" class="btn-primary">
-                    Cari
-                </button>
-
-                @if(request('search'))
-                    <a href="{{ route('akademik.jenis-kegiatan.index') }}" class="btn-secondary">
-                        Reset
-                    </a>
-                @endif
-            </div>
-        </form>
+    {{-- Search & Filter --}}
+    <div class="card card-modern mb-4">
+        <div class="card-body">
+            <form action="{{ route('akademik.jenis-kegiatan.index') }}" method="GET">
+                <div class="row align-items-end">
+                    <div class="col-md-5 mb-3">
+                        <label class="font-weight-bold">Pencarian Kata Kunci</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                            </div>
+                            <input type="text"
+                                   name="search"
+                                   placeholder="Ketik nama kegiatan..."
+                                   value="{{ request('search') }}"
+                                   class="form-control form-control-modern">
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-primary btn-modern mr-2" type="submit">
+                            <i class="fas fa-search"></i> Cari Data
+                        </button>
+                        @if(request('search'))
+                        <a href="{{ route('akademik.jenis-kegiatan.index') }}" class="btn btn-secondary btn-modern">
+                            <i class="fas fa-sync"></i> Reset
+                        </a>
+                        @endif
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 
     {{-- Table --}}
-    <div class="overflow-x-auto">
-        <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <thead class="bg-gray-100 text-gray-700 text-sm uppercase">
-                <tr>
-                    <th class="px-4 py-3 text-left w-16">No</th>
-                    <th class="px-4 py-3 text-left">Jenis Kegiatan</th>
-                    <th class="px-4 py-3 text-left">Deskripsi</th>
-                    <th class="px-4 py-3 text-left w-40">Jumlah Kegiatan</th>
-                    <th class="px-4 py-3 text-left w-40">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="text-gray-600 text-sm">
-                @forelse($jenisKegiatan as $item)
-                <tr class="border-t hover:bg-gray-50 transition">
-                    <td class="px-4 py-3">
-                        {{ $loop->iteration + ($jenisKegiatan->currentPage() - 1) * $jenisKegiatan->perPage() }}
-                    </td>
-
-                    <td class="px-4 py-3 font-medium">
-                        {{ $item->jeniskegiatan }}
-                    </td>
-
-                    <td class="px-4 py-3 text-gray-500">
-                        {{ $item->deskripsi ?? '-' }}
-                    </td>
-
-                    <td class="px-4 py-3">
-                        <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
-                            {{ $item->kalender_akademik_count ?? $item->kalenderAkademik->count() }}
-                            kegiatan
-                        </span>
-                    </td>
-
-                    <td class="px-4 py-3">
-                        <div class="flex gap-3 items-center">
-
-                            {{-- Show --}}
+    <div class="card card-modern">
+        <div class="card-body p-0 table-responsive">
+            <table class="table table-hover table-modern text-nowrap">
+                <thead>
+                    <tr>
+                        <th width="5%" class="text-center">No</th>
+                        <th class="w-25">Jenis Kegiatan</th>
+                        <th>Deskripsi Singkat</th>
+                        <th width="15%" class="text-center">Dipakai Di Kalender</th>
+                        <th width="15%" class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($jenisKegiatan as $item)
+                    <tr>
+                        <td class="text-center">
+                            {{ $loop->iteration + ($jenisKegiatan->currentPage() - 1) * $jenisKegiatan->perPage() }}
+                        </td>
+                        <td class="font-weight-bold text-dark">
+                            <span class="badge badge-light badge-modern" style="font-size: 0.9rem;">{{ $item->jeniskegiatan }}</span>
+                        </td>
+                        <td class="text-muted text-wrap">
+                            {{ Str::limit($item->deskripsi ?? '-', 60) }}
+                        </td>
+                        <td class="text-center">
+                            @if(($item->kalender_akademik_count ?? $item->kalenderAkademik->count()) > 0)
+                                <span class="badge badge-success badge-modern px-3 py-2">
+                                    {{ $item->kalender_akademik_count ?? $item->kalenderAkademik->count() }} Kegiatan
+                                </span>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
                             <a href="{{ route('akademik.jenis-kegiatan.show', $item->id) }}"
-                               class="text-blue-500 hover:text-blue-700">
-                                👁
+                               class="btn btn-info btn-sm btn-modern" title="Detail">
+                                <i class="fas fa-eye"></i>
                             </a>
-
-                            {{-- Edit --}}
                             <a href="{{ route('akademik.jenis-kegiatan.edit', $item->id) }}"
-                               class="text-green-500 hover:text-green-700">
-                                ✏
+                               class="btn btn-warning btn-sm btn-modern text-white" title="Edit">
+                                <i class="fas fa-edit"></i>
                             </a>
-
-                            {{-- Delete --}}
                             <form action="{{ route('akademik.jenis-kegiatan.destroy', $item->id) }}"
                                   method="POST"
+                                  class="d-inline"
                                   onsubmit="return confirm('Yakin ingin menghapus data ini?')">
                                 @csrf
                                 @method('DELETE')
-                                <button class="text-red-500 hover:text-red-700">
-                                    🗑
+                                <button type="submit" class="btn btn-danger btn-sm btn-modern" title="Hapus">
+                                    <i class="fas fa-trash"></i>
                                 </button>
                             </form>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                            <p class="font-weight-bold text-muted">Tidak ada master jenis kegiatan.</p>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="5" class="px-4 py-6 text-center text-gray-400">
-                        Tidak ada data jenis kegiatan.
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    {{-- Pagination --}}
-    <div class="mt-6">
-        {{ $jenisKegiatan->withQueryString()->links() }}
+        {{-- Pagination --}}
+        @if($jenisKegiatan->hasPages())
+        <div class="card-footer bg-white pt-3 pb-0">
+            {{ $jenisKegiatan->withQueryString()->links() }}
+        </div>
+        @endif
     </div>
 
 </div>

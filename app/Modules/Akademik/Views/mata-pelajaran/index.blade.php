@@ -2,101 +2,124 @@
 
 @section('title', 'Mata Pelajaran')
 
+@include('akademik::components.style')
+
 @section('content')
-<div class="bg-white rounded-lg shadow-md p-6">
-    <div class="flex justify-between items-center mb-6">
-        <h3 class="text-xl font-semibold">Daftar Mata Pelajaran</h3>
-        @can('isAdmin')
-        <a href="{{ route('akademik.mata-pelajaran.create') }}" class="btn-primary">
-            Tambah Mata Pelajaran
-        </a>
-        @endcan
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h2 class="font-weight-bold text-dark mb-0">Manajemen Mata Pelajaran</h2>
+            <a href="{{ route('akademik.mata-pelajaran.create') }}" class="btn btn-primary btn-modern">
+                <i class="fas fa-plus mr-1"></i> Tambah Pelajaran Baru
+            </a>
+        </div>
     </div>
 
     {{-- Search & Filter --}}
-    <div class="mb-6 card">
-        <form method="GET">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label class="form-label">Cari Kode/Nama</label>
-                    <input type="text" name="search"
-                        value="{{ request('search') }}"
-                        class="form-input">
-                </div>
+    <div class="card card-modern mb-4">
+        <div class="card-body">
+            <form method="GET">
+                <div class="row align-items-end">
+                    <div class="col-md-4 mb-3">
+                        <label class="font-weight-bold">Cari Kode/Nama</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                            </div>
+                            <input type="text" name="search"
+                                value="{{ request('search') }}"
+                                class="form-control form-control-modern" placeholder="Ketik kata kunci...">
+                        </div>
+                    </div>
 
-                <div>
-                    <label class="form-label">Kategori</label>
-                    <select name="kategori" class="form-input">
-                        <option value="">Semua Kategori</option>
-                        @foreach($kategoriList as $kategori)
-                        <option value="{{ $kategori->id }}"
-                            {{ request('kategori') == $kategori->id ? 'selected' : '' }}>
-                            {{ $kategori->kategori }}
-                        </option>
-                        @endforeach
-                    </select>
-                </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="font-weight-bold">Kategori</label>
+                        <select name="kategori" class="form-control form-control-modern">
+                            <option value="">Semua Kategori</option>
+                            @foreach($kategoriList as $kategori)
+                            <option value="{{ $kategori->id }}"
+                                {{ request('kategori') == $kategori->id ? 'selected' : '' }}>
+                                {{ $kategori->kategori }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                <div class="flex items-end gap-2">
-                    <button class="btn-primary">Terapkan</button>
-                    @if(request()->has('search') || request()->has('kategori'))
-                    <a href="{{ route('akademik.mata-pelajaran.index') }}" class="btn-secondary">
-                        Reset
-                    </a>
-                    @endif
+                    <div class="col-md-4 mb-3">
+                        <button type="submit" class="btn btn-primary btn-modern mr-2">
+                            <i class="fas fa-filter"></i> Terapkan
+                        </button>
+                        @if(request()->has('search') || request()->has('kategori'))
+                        <a href="{{ route('akademik.mata-pelajaran.index') }}" class="btn btn-secondary btn-modern">
+                            <i class="fas fa-sync"></i> Reset
+                        </a>
+                        @endif
+                    </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 
     {{-- Table --}}
-    <div class="overflow-x-auto">
-        <table class="min-w-full bg-white">
-            <thead class="bg-gray-100">
-                <tr>
-                    <th class="px-4 py-3">No</th>
-                    <th class="px-4 py-3">Kode</th>
-                    <th class="px-4 py-3">Nama</th>
-                    <th class="px-4 py-3">Kategori</th>
-                    <th class="px-4 py-3">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($mataPelajaran as $item)
-                <tr class="border-t hover:bg-gray-50">
-                    <td class="px-4 py-3">
-                        {{ $loop->iteration + ($mataPelajaran->currentPage() - 1) * $mataPelajaran->perPage() }}
-                    </td>
-                    <td class="px-4 py-3">{{ $item->kode }}</td>
-                    <td class="px-4 py-3">{{ $item->nama }}</td>
-                    <td class="px-4 py-3">
-                        {{ $item->kategori->kategori ?? '-' }}
-                    </td>
-                    <td class="px-4 py-3 flex gap-2">
-                        <a href="{{ route('akademik.mata-pelajaran.show', $item) }}" class="text-blue-500">Detail</a>
-                        <a href="{{ route('akademik.mata-pelajaran.edit', $item) }}" class="text-green-500">Edit</a>
-                        <form method="POST" action="{{ route('akademik.mata-pelajaran.destroy', $item) }}">
-                            @csrf
-                            @method('DELETE')
-                            <button onclick="return confirm('Yakin?')" class="text-red-500">
-                                Hapus
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="5" class="text-center py-4">
-                        Tidak ada data.
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    <div class="mt-6">
-        {{ $mataPelajaran->withQueryString()->links() }}
+    <div class="card card-modern">
+        <div class="card-body p-0 table-responsive">
+            <table class="table table-hover table-modern text-nowrap">
+                <thead>
+                    <tr>
+                        <th width="5%" class="text-center">No</th>
+                        <th>Kode</th>
+                        <th>Nama Mata Pelajaran</th>
+                        <th>Kategori</th>
+                        <th width="15%" class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($mataPelajaran as $item)
+                    <tr>
+                        <td class="text-center">
+                            {{ $loop->iteration + ($mataPelajaran->currentPage() - 1) * $mataPelajaran->perPage() }}
+                        </td>
+                        <td><span class="badge badge-light badge-modern">{{ $item->kode }}</span></td>
+                        <td class="font-weight-bold text-dark">{{ $item->nama }}</td>
+                        <td>
+                            @if(isset($item->kategori->kategori))
+                                <span class="badge badge-info badge-modern">{{ $item->kategori->kategori }}</span>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            <a href="{{ route('akademik.mata-pelajaran.show', $item) }}" class="btn btn-info btn-sm btn-modern" title="Detail">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ route('akademik.mata-pelajaran.edit', $item) }}" class="btn btn-warning btn-sm btn-modern text-white" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form method="POST" action="{{ route('akademik.mata-pelajaran.destroy', $item) }}" class="d-inline">
+                                @csrf
+                                @method('DELETE')
+                                <button onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?')" class="btn btn-danger btn-sm btn-modern" title="Hapus">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                            <p class="text-muted font-weight-bold">Tidak ada data mata pelajaran.</p>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if($mataPelajaran->hasPages())
+        <div class="card-footer bg-white pt-3 pb-0">
+            {{ $mataPelajaran->withQueryString()->links() }}
+        </div>
+        @endif
     </div>
 </div>
 @endsection

@@ -20,5 +20,10 @@ class DatabaseSeeder extends Seeder
         
         // Then seed users
         $this->call(UserSeeder::class);
+
+        // Academic Dummy Data
+        if (class_exists(\App\Modules\Akademik\Database\Seeders\AcademicDummySeeder::class)) {
+            $this->call(\App\Modules\Akademik\Database\Seeders\AcademicDummySeeder::class);
+        }
     }
 }

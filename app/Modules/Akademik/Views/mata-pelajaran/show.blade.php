@@ -2,33 +2,27 @@
 
 @section('title', 'Detail Mata Pelajaran')
 
-@include('akademik::components.style')
-
 @section('content')
-<div class="container-fluid py-4">
+<div class="container-fluid">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card card-modern">
-                <div class="card-header bg-gradient-blue">
-                    <h3 class="card-title text-white"><i class="fas fa-info-circle mr-2"></i> Detail Mata Pelajaran</h3>
-                </div>
-                
-                <div class="card-body">
-                    <table class="table table-borderless table-striped">
+            <x-card title="Detail Mata Pelajaran" icon="fas fa-info-circle" type="primary" outline>
+                <div class="table-responsive">
+                    <table class="table table-striped">
                         <tbody>
                             <tr>
-                                <th width="35%" class="text-muted">Kode Mata Pelajaran</th>
-                                <td><span class="badge badge-light badge-modern h6 mb-0">{{ $mataPelajaran->kode }}</span></td>
+                                <th width="40%" class="text-muted">Kode Mata Pelajaran</th>
+                                <td><span class="badge badge-light border">{{ $mataPelajaran->kode }}</span></td>
                             </tr>
                             <tr>
                                 <th class="text-muted">Nama Mata Pelajaran</th>
-                                <td class="font-weight-bold text-dark h5">{{ $mataPelajaran->nama }}</td>
+                                <td><strong>{{ $mataPelajaran->nama }}</strong></td>
                             </tr>
                             <tr>
                                 <th class="text-muted">Kategori</th>
-                                <td>
+                               <td>
                                     @if(isset($mataPelajaran->kategori->kategori))
-                                        <span class="badge badge-info badge-modern">{{ $mataPelajaran->kategori->kategori }}</span>
+                                        <span class="badge badge-info">{{ $mataPelajaran->kategori->kategori }}</span>
                                     @else
                                         <span class="text-muted">-</span>
                                     @endif
@@ -38,15 +32,17 @@
                     </table>
                 </div>
                 
-                <div class="card-footer bg-white text-right">
-                    <a href="{{ route('akademik.mata-pelajaran.index') }}" class="btn btn-secondary btn-modern mr-2">
-                        <i class="fas fa-arrow-left"></i> Kembali
-                    </a>
-                    <a href="{{ route('akademik.mata-pelajaran.edit', $mataPelajaran) }}" class="btn btn-warning btn-modern text-white">
-                        <i class="fas fa-edit"></i> Edit Data
-                    </a>
+                <hr>
+
+                <div class="d-flex justify-content-end">
+                    <x-btn :href="route('akademik.mata-pelajaran.index')" class="btn-secondary mr-2" icon="fas fa-arrow-left">
+                        Kembali
+                    </x-btn>
+                    <x-btn :href="route('akademik.mata-pelajaran.edit', $mataPelajaran)" class="btn-warning text-white" icon="fas fa-edit">
+                        Edit Data
+                    </x-btn>
                 </div>
-            </div>
+            </x-card>
         </div>
     </div>
 </div>

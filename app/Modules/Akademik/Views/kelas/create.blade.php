@@ -2,97 +2,74 @@
 
 @section('title', 'Tambah Kelas')
 
-@include('akademik::components.style')
-
 @section('content')
-<div class="container-fluid py-4">
-
-    {{-- Error Alert --}}
+<div class="container-fluid">
+    {{-- Error Messages --}}
     @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show" style="border-radius: 0.5rem; border:none; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-            <strong>Terjadi Kesalahan!</strong>
-            <ul class="mb-0 mt-2">
-                @foreach ($errors->all() as $e)
-                    <li>{{ $e }}</li>
+        <x-alert type="danger" dismissible>
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
                 @endforeach
             </ul>
-        </div>
+        </x-alert>
     @endif
 
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card card-modern">
-                <div class="card-header bg-gradient-blue">
-                    <h3 class="card-title text-white">
-                        <i class="fas fa-plus-circle mr-2"></i>
-                        Form Tambah Kelas
-                    </h3>
-                </div>
-
+            <x-card title="Tambah Kelas" icon="fas fa-plus-circle" type="primary" outline>
                 <form action="{{ route('akademik.kelas.store') }}" method="POST">
                     @csrf
 
-                    <div class="card-body">
-                        <div class="row">
-                            {{-- Nama Kelas --}}
-                            <div class="col-md-6 mb-4">
-                                <div class="form-group mb-0">
-                                    <label class="font-weight-bold">Nama Kelas</label>
-                                    <input type="text"
-                                           name="namakelas"
-                                           class="form-control form-control-modern"
-                                           placeholder="Contoh: X IPA 1"
-                                           value="{{ old('namakelas') }}"
-                                           required>
-                                </div>
-                            </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <x-input label="Nama Kelas" name="namakelas" 
+                                     :value="old('namakelas')" 
+                                     placeholder="Contoh: X IPA 1" required />
+                        </div>
 
-                            {{-- Jenjang --}}
-                            <div class="col-md-6 mb-4">
-                                <div class="form-group mb-0">
-                                    <label class="font-weight-bold">Jenjang</label>
-                                    <select name="jenjang" class="form-control form-control-modern" required>
-                                        <option value="">-- Pilih Jenjang --</option>
-                                        <option value="X" {{ old('jenjang') == 'X' ? 'selected' : '' }}>Kelas X</option>
-                                        <option value="XI" {{ old('jenjang') == 'XI' ? 'selected' : '' }}>Kelas XI</option>
-                                        <option value="XII" {{ old('jenjang') == 'XII' ? 'selected' : '' }}>Kelas XII</option>
-                                    </select>
-                                </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Jenjang <span class="text-danger">*</span></label>
+                                <select name="jenjang" class="form-control @error('jenjang') is-invalid @enderror" required>
+                                    <option value="">-- Pilih Jenjang --</option>
+                                    <option value="X" {{ old('jenjang') == 'X' ? 'selected' : '' }}>Kelas X</option>
+                                    <option value="XI" {{ old('jenjang') == 'XI' ? 'selected' : '' }}>Kelas XI</option>
+                                    <option value="XII" {{ old('jenjang') == 'XII' ? 'selected' : '' }}>Kelas XII</option>
+                                </select>
+                                @error('jenjang') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
+                        </div>
 
-                            {{-- Wali Kelas --}}
-                            <div class="col-md-12 mb-2">
-                                <div class="form-group mb-0">
-                                    <label class="font-weight-bold">Wali Kelas</label>
-                                    <select name="guru_id" class="form-control form-control-modern">
-                                        <option value="">-- Pilih Guru Wali Kelas --</option>
-                                        @foreach($guru ?? [] as $g)
-                                            <option value="{{ $g->id }}"
-                                                {{ old('guru_id') == $g->id ? 'selected' : '' }}>
-                                                {{ $g->nama }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Wali Kelas</label>
+                                <select name="guru_id" class="form-control @error('guru_id') is-invalid @enderror">
+                                    <option value="">-- Pilih Guru Wali Kelas --</option>
+                                    @foreach($guru ?? [] as $g)
+                                        <option value="{{ $g->id }}" {{ old('guru_id') == $g->id ? 'selected' : '' }}>
+                                            {{ $g->nama }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('guru_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
                     </div>
 
-                    {{-- Footer --}}
-                    <div class="card-footer bg-white text-right py-3 border-0">
-                        <a href="{{ route('akademik.kelas.index') }}" class="btn btn-secondary btn-modern mr-2">
-                            <i class="fas fa-times"></i> Batal
-                        </a>
-                        <button type="submit" class="btn btn-primary btn-modern">
-                            <i class="fas fa-save mr-1"></i> Simpan
-                        </button>
-                    </div>
+                    <hr>
 
+                    <div class="d-flex justify-content-end">
+                        <x-btn :href="route('akademik.kelas.index')" class="btn-secondary mr-2" icon="fas fa-times">
+                            Batal
+                        </x-btn>
+                        <x-btn type="submit" icon="fas fa-save">
+                            Simpan Data
+                        </x-btn>
+                    </div>
                 </form>
-            </div>
+            </x-card>
         </div>
     </div>
-
 </div>
 @endsection

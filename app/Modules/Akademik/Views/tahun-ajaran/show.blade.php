@@ -4,130 +4,117 @@
 
 @section('content')
 <div class="container-fluid">
-    <x-card title="Detail Tahun Ajaran" type="info">
-
-        {{-- Header Info --}}
-        <div class="row">
-            <div class="col-md-6">
-                <div class="info-box bg-light">
-                    <div class="info-box-content">
-                        <span class="info-box-text">Tahun Ajaran</span>
-                        <span class="info-box-number">{{ $tahunAjaran->tahunajaran }}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="info-box bg-light">
-                    <div class="info-box-content">
-                        <span class="info-box-text">Status</span>
-                        <span class="info-box-number">
-                            @if($tahunAjaran->status)
-                                <span class="badge badge-success">AKTIF</span>
-                            @else
-                                <span class="badge badge-secondary">TIDAK AKTIF</span>
-                            @endif
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Detail Table --}}
-        <div class="table-responsive">
-            <table class="table table-bordered">
-                <tr>
-                    <th width="200">ID</th>
-                    <td>{{ $tahunAjaran->id }}</td>
-                </tr>
-                <tr>
-                    <th>Tahun Ajaran</th>
-                    <td>{{ $tahunAjaran->tahunajaran }}</td>
-                </tr>
-                <tr>
-                    <th>Status</th>
-                    <td>
+    <div class="row">
+        <div class="col-md-4">
+            <x-card title="Periode Akademik" icon="fas fa-calendar-check" type="primary" outline>
+                <div class="text-center py-3">
+                    <h1 class="display-4 font-weight-bold mb-0 text-primary">{{ $tahunAjaran->tahunajaran }}</h1>
+                    <div class="mt-2">
                         @if($tahunAjaran->status)
-                            <span class="badge badge-success">Aktif</span>
-                            <small class="text-muted">(Tahun ajaran sedang berjalan)</small>
+                            <span class="badge badge-success px-4 py-2 h5">
+                                <i class="fas fa-check-circle mr-1"></i> AKTIF
+                            </span>
                         @else
-                            <span class="badge badge-secondary">Tidak Aktif</span>
+                            <span class="badge badge-secondary px-4 py-2 h5">
+                                <i class="fas fa-times-circle mr-1"></i> TIDAK AKTIF
+                            </span>
                         @endif
-                    </td>
-                </tr>
-                <tr>
-                    <th>Dibuat Pada</th>
-                    <td>{{ $tahunAjaran->created_at->format('d F Y H:i:s') }}</td>
-                </tr>
-                <tr>
-                    <th>Diperbarui Pada</th>
-                    <td>{{ $tahunAjaran->updated_at->format('d F Y H:i:s') }}</td>
-                </tr>
-            </table>
+                    </div>
+                </div>
+
+                <div class="table-responsive mt-4">
+                    <table class="table table-sm">
+                        <tr>
+                            <th class="text-muted small text-uppercase">Tahun Ajaran</th>
+                            <td class="text-right font-weight-bold">{{ $tahunAjaran->tahunajaran }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted small text-uppercase">Dibuat</th>
+                            <td class="text-right">{{ $tahunAjaran->created_at->format('d/m/Y') }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted small text-uppercase">Pembaruan</th>
+                            <td class="text-right">{{ $tahunAjaran->updated_at->format('d/m/Y') }}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between">
+                    <x-btn :href="route('akademik.tahun-ajaran.index')" class="btn-secondary" icon="fas fa-arrow-left">
+                        Kembali
+                    </x-btn>
+                    <x-btn :href="route('akademik.tahun-ajaran.edit', $tahunAjaran->id)" class="btn-warning text-white" icon="fas fa-edit">
+                        Edit Data
+                    </x-btn>
+                </div>
+            </x-card>
         </div>
 
-        {{-- Related Data Stats --}}
-        <div class="row mt-4">
-            <div class="col-md-3">
-                <div class="small-box bg-info">
-                    <div class="inner">
-                        <h3>{{ $tahunAjaran->kalenderAkademik()->count() }}</h3>
-                        <p>Kalender Akademik</p>
+        <div class="col-md-8">
+            <div class="row">
+                <div class="col-sm-6 mb-4">
+                    <div class="small-box bg-info elevation-2 h-100">
+                        <div class="inner">
+                            <h3>{{ $tahunAjaran->kalenderAkademik()->count() }}</h3>
+                            <p>Agenda Kalender Akademik</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <a href="{{ route('akademik.kalender-akademik.index', ['tahunajaran_id' => $tahunAjaran->id]) }}" class="small-box-footer">
+                            Lihat Detail <i class="fas fa-arrow-circle-right"></i>
+                        </a>
                     </div>
-                    <div class="icon">
-                        <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="col-sm-6 mb-4">
+                    <div class="small-box bg-success elevation-2 h-100">
+                        <div class="inner">
+                            <h3>{{ $tahunAjaran->jadwalPelajaran()->count() }}</h3>
+                            <p>Jadwal Pelajaran Terdaftar</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <span class="small-box-footer d-block p-2">Data Terintegrasi</span>
+                    </div>
+                </div>
+                <div class="col-sm-6 mb-4">
+                    <div class="small-box bg-warning elevation-2 h-100">
+                        <div class="inner">
+                            <h3>{{ $tahunAjaran->kurikulum()->count() }}</h3>
+                            <p>Struktur Kurikulum</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <span class="small-box-footer d-block p-2 text-dark">Data Pengaturan</span>
+                    </div>
+                </div>
+                <div class="col-sm-6 mb-4">
+                    <div class="small-box bg-danger elevation-2 h-100">
+                        <div class="inner">
+                            <h3>{{ $tahunAjaran->rombel()->count() }}</h3>
+                            <p>Rombongan Belajar</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <span class="small-box-footer d-block p-2">Data Relasi</span>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="small-box bg-success">
-                    <div class="inner">
-                        <h3>{{ $tahunAjaran->jadwalPelajaran()->count() }}</h3>
-                        <p>Jadwal Pelajaran</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
+
+            <x-card title="Catatan Admin" icon="fas fa-sticky-note" outline collapsible>
+                <div class="p-2">
+                    <p class="mb-0 text-muted">
+                        Tahun ajaran ini menyimpan seluruh data transaksi akademik termasuk nilai, presensi, dan jadwal. 
+                        Pastikan status aktif hanya pada satu periode berjalan untuk menjaga konsistensi data.
+                    </p>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="small-box bg-warning">
-                    <div class="inner">
-                        <h3>{{ $tahunAjaran->kurikulum()->count() }}</h3>
-                        <p>Kurikulum</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-book"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="small-box bg-danger">
-                    <div class="inner">
-                        <h3>{{ $tahunAjaran->rombel()->count() }}</h3>
-                        <p>Rombel</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                </div>
-            </div>
+            </x-card>
         </div>
-
-        {{-- Footer Buttons --}}
-        <x-slot name="footer">
-            <div class="d-flex justify-content-between">
-                <a href="{{ route('akademik.tahun-ajaran.index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Kembali
-                </a>
-                <div>
-                    <a href="{{ route('akademik.tahun-ajaran.edit', $tahunAjaran->id) }}"
-                       class="btn btn-warning">
-                        <i class="fas fa-edit"></i> Edit
-                    </a>
-                </div>
-            </div>
-        </x-slot>
-
-    </x-card>
+    </div>
 </div>
 @endsection

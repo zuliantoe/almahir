@@ -2,69 +2,45 @@
 
 @section('title', 'Edit Kelas')
 
-@include('akademik::components.style')
-
 @section('content')
-<div class="container-fluid py-4">
-
-    {{-- Error --}}
+<div class="container-fluid">
+    {{-- Error Messages --}}
     @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show" style="border-radius: 0.5rem; border:none; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-            <strong>Terjadi Kesalahan!</strong>
-            <ul class="mb-0 mt-2">
-                @foreach ($errors->all() as $e)
-                    <li>{{ $e }}</li>
+        <x-alert type="danger" dismissible>
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
                 @endforeach
             </ul>
-        </div>
+        </x-alert>
     @endif
 
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card card-modern border-top-0">
-                <div class="card-header bg-gradient-purple">
-                    <h3 class="card-title text-white">
-                        <i class="fas fa-edit mr-1"></i>
-                        Form Edit Kelas
-                    </h3>
-                </div>
-
+            <x-card title="Edit Data Kelas" icon="fas fa-edit" type="warning" outline>
                 <form action="{{ route('akademik.kelas.update', $kelas->id) }}" method="POST">
                     @csrf
                     @method('PUT')
 
-                    <div class="card-body">
+                    <x-input label="Nama Kelas" name="nama" :value="old('nama', $kelas->nama)" required />
+                    
+                    <x-alert type="info">
+                        <i class="fas fa-info-circle mr-1"></i> Untuk mengedit Jenjang atau Wali Kelas, masuk ke pengaturan tingkat lanjut kelas.
+                    </x-alert>
 
-                        <div class="form-group mb-4">
-                            <label class="font-weight-bold">Nama Kelas</label>
-                            <input type="text"
-                                   name="nama"
-                                   class="form-control form-control-modern"
-                                   value="{{ old('nama', $kelas->nama) }}"
-                                   required>
-                        </div>
-                        
-                        <div class="alert alert-info" style="border-radius: 0.5rem; border:none; background-color: #f1f8ff; color: #0056b3;">
-                            <i class="fas fa-info-circle"></i> Untuk mengedit Jenjang atau Wali Kelas, masuk ke pengaturan tingkat lanjut kelas.
-                        </div>
+                    <hr>
 
-                    </div>
-
-                    <div class="card-footer bg-white text-right border-0 py-3">
-                        <a href="{{ route('akademik.kelas.index') }}" class="btn btn-secondary btn-modern mr-2">
+                    <div class="d-flex justify-content-end">
+                        <x-btn :href="route('akademik.kelas.index')" class="btn-secondary mr-2" icon="fas fa-times">
                             Batal
-                        </a>
-
-                        <button type="submit" class="btn btn-warning btn-modern text-white">
-                            <i class="fas fa-save mr-1"></i> Update Perubahan
-                        </button>
+                        </x-btn>
+                        <x-btn type="submit" class="btn-warning text-white" icon="fas fa-save">
+                            Simpan Perubahan
+                        </x-btn>
                     </div>
-
                 </form>
-            </div>
+            </x-card>
         </div>
     </div>
-
 </div>
 @endsection

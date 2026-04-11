@@ -2,123 +2,96 @@
 
 @section('title', 'Data Tahun Ajaran')
 
-@include('akademik::components.style')
-
 @section('content')
-<div class="container-fluid py-4">
+<div class="container-fluid">
+    {{-- Success/Error Messages --}}
+    @if(session('success'))
+        <x-alert type="success" :message="session('success')" dismissible />
+    @endif
 
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col-12 d-flex justify-content-between align-items-center">
-            <h2 class="font-weight-bold text-dark mb-0">Manajemen Tahun Ajaran</h2>
-            <a href="{{ route('akademik.tahun-ajaran.create') }}" class="btn btn-primary btn-modern">
-                <i class="fas fa-plus mr-1"></i> Tambah Tahun Ajaran
-            </a>
+            <h1 class="h3 mb-0 text-gray-800">Manajemen Tahun Ajaran</h1>
+            <x-btn :href="route('akademik.tahun-ajaran.create')" icon="fas fa-plus">
+                Tambah Tahun Ajaran
+            </x-btn>
         </div>
     </div>
 
     {{-- Form Filter --}}
-    <div class="card card-modern mb-4">
-        <div class="card-body">
-            <form action="{{ route('akademik.tahun-ajaran.index') }}" method="GET">
-                <div class="row align-items-end">
-                    <div class="col-md-5 mb-3">
-                        <label class="font-weight-bold">Cari Tahun Ajaran</label>
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
-                            </div>
-                            <input type="text" name="search"
-                                value="{{ request('search') }}"
-                                class="form-control form-control-modern" placeholder="Masukkan tahun ajaran...">
-                        </div>
-                    </div>
+    <x-card title="Filter Data" icon="fas fa-filter" outline collapsible>
+        <form action="{{ route('akademik.tahun-ajaran.index') }}" method="GET">
+            <div class="row align-items-end">
+                <div class="col-md-5 mb-3">
+                    <x-input label="Cari Tahun Ajaran" name="search" :value="request('search')" placeholder="Masukkan tahun ajaran..." prepend="<i class='fas fa-search'></i>" />
+                </div>
 
-                    <div class="col-md-4 mb-3">
-                        <label class="font-weight-bold">Status</label>
-                        <select name="status" class="form-control form-control-modern">
+                <div class="col-md-4 mb-3">
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select name="status" class="form-control">
                             <option value="">Semua Status</option>
                             <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Aktif</option>
                             <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Tidak Aktif</option>
                         </select>
                     </div>
-
-                    <div class="col-md-3 mb-3 text-right">
-                        <button type="submit" class="btn btn-primary btn-modern py-2 px-4 shadow-sm w-100">
-                            <i class="fas fa-filter"></i> Filter
-                        </button>
-                    </div>
                 </div>
-            </form>
-        </div>
-    </div>
 
-    {{-- Info Data --}}
-    <div class="alert alert-light alert-dismissible fade show border" style="border-radius: 0.5rem; background-color: white;">
-        <i class="fas fa-info-circle text-info mr-2"></i>
-        Menampilkan {{ $tahunAjaran->firstItem() ?? 0 }} - {{ $tahunAjaran->lastItem() ?? 0 }}
-        dari total <strong>{{ $tahunAjaran->total() }}</strong> data tahun ajaran
-    </div>
+                <div class="col-md-3 mb-3">
+                    <x-btn type="submit" class="btn-info w-100" icon="fas fa-filter">
+                        Filter
+                    </x-btn>
+                </div>
+            </div>
+        </form>
+    </x-card>
 
     {{-- Tabel Data --}}
-    <div class="card card-modern">
-        <div class="card-header bg-gradient-blue">
-            <h3 class="card-title text-white">
-                <i class="fas fa-calendar-alt mr-2"></i>Daftar Periode
-            </h3>
-        </div>
-        <div class="card-body p-0 table-responsive">
-            <table class="table table-hover table-modern text-nowrap">
+    <x-card title="Daftar Periode Akademik" type="primary" outline>
+        <div class="table-responsive">
+            <table class="table table-hover">
                 <thead>
                     <tr>
                         <th width="5%" class="text-center">No</th>
-                        <th width="40%">Tahun Ajaran</th>
-                        <th width="20%">Status</th>
-                        <th width="20%">Dibuat</th>
-                        <th width="15%" class="text-center">Aksi</th>
+                        <th>Tahun Ajaran</th>
+                        <th>Status</th>
+                        <th>Dibuat</th>
+                        <th width="150px" class="text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($tahunAjaran as $item)
                     <tr>
                         <td class="text-center">{{ $loop->iteration + ($tahunAjaran->currentPage() - 1) * $tahunAjaran->perPage() }}</td>
-                        <td class="font-weight-bold text-dark">
-                            <span class="badge badge-light badge-modern">{{ $item->tahunajaran }}</span>
-                        </td>
+                        <td><span class="badge badge-light border">{{ $item->tahunajaran }}</span></td>
                         <td>
                             @if($item->status)
-                                <span class="badge badge-success badge-modern">
+                                <span class="badge badge-success">
                                     <i class="fas fa-check-circle"></i> Aktif
                                 </span>
                             @else
-                                <span class="badge badge-secondary badge-modern">
+                                <span class="badge badge-secondary">
                                     <i class="fas fa-times-circle"></i> Tidak Aktif
                                 </span>
                             @endif
                         </td>
                         <td class="text-muted"><i class="far fa-clock mr-1"></i> {{ $item->created_at->format('d/m/Y H:i') }}</td>
                         <td class="text-center">
+                            <div class="btn-group">
+                                <x-btn :href="route('akademik.tahun-ajaran.show', $item->id)" size="sm" class="btn-info" title="Detail">
+                                    <i class="fas fa-eye"></i>
+                                </x-btn>
+                                <x-btn :href="route('akademik.tahun-ajaran.edit', $item->id)" size="sm" class="btn-warning" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </x-btn>
+                                <x-btn size="sm" class="btn-danger" title="Hapus" 
+                                       onclick="confirmDelete('{{ $item->id }}', '{{ $item->tahunajaran }}')"
+                                       :disabled="$item->status">
+                                    <i class="fas fa-trash"></i>
+                                </x-btn>
+                            </div>
                             
-                            <a href="{{ route('akademik.tahun-ajaran.show', $item->id) }}"
-                               class="btn btn-info btn-sm btn-modern" title="Lihat Detail">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{{ route('akademik.tahun-ajaran.edit', $item->id) }}"
-                               class="btn btn-warning btn-sm btn-modern text-white" title="Edit Data">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button type="button"
-                                    class="btn btn-danger btn-sm btn-modern"
-                                    title="Hapus Data"
-                                    onclick="confirmDelete('{{ $item->id }}', '{{ $item->tahunajaran }}')"
-                                    {{ $item->status ? 'disabled' : '' }}>
-                                <i class="fas fa-trash"></i>
-                            </button>
-
-                            {{-- Form Delete Tersembunyi --}}
-                            <form id="delete-form-{{ $item->id }}"
-                                  action="{{ route('akademik.tahun-ajaran.destroy', $item->id) }}"
-                                  method="POST"
-                                  style="display: none;">
+                            <form id="delete-form-{{ $item->id }}" action="{{ route('akademik.tahun-ajaran.destroy', $item->id) }}" method="POST" style="display: none;">
                                 @csrf
                                 @method('DELETE')
                             </form>
@@ -126,31 +99,22 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="text-center py-5">
-                            <div class="text-muted">
-                                <i class="fas fa-calendar-times fa-3x mb-3 text-light"></i>
-                                <p class="font-weight-bold">Tidak ada data tahun ajaran</p>
-                                @if(request()->has('search') || request()->has('status'))
-                                    <a href="{{ route('akademik.tahun-ajaran.index') }}" class="btn btn-primary btn-modern mt-2">
-                                        <i class="fas fa-sync"></i> Reset Filter
-                                    </a>
-                                @endif
-                            </div>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="fas fa-calendar-times fa-2x mb-3"></i><br>
+                            Tidak ada data tahun ajaran
                         </td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-
-        {{-- Pagination --}}
+        
         @if($tahunAjaran->hasPages())
-        <div class="card-footer bg-white border-0 pt-3 flex items-center justify-between">
+        <x-slot name="footer">
             {{ $tahunAjaran->withQueryString()->links() }}
-        </div>
+        </x-slot>
         @endif
-
-    </div>
+    </x-card>
 </div>
 @endsection
 
@@ -167,8 +131,8 @@ function confirmDelete(id, tahunAjaran) {
         confirmButtonText: 'Ya, Hapus!',
         cancelButtonText: 'Batal',
         customClass: {
-            confirmButton: 'btn btn-danger btn-modern mx-1',
-            cancelButton: 'btn btn-secondary btn-modern mx-1'
+            confirmButton: 'btn btn-danger mx-1',
+            cancelButton: 'btn btn-secondary mx-1'
         },
         buttonsStyling: false
     }).then((result) => {

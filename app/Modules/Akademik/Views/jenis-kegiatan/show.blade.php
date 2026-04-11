@@ -3,78 +3,79 @@
 @section('title', 'Detail Jenis Kegiatan')
 
 @section('content')
-<div class="max-w-3xl mx-auto bg-white rounded-xl shadow-md p-6">
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <x-card title="Detail Jenis Kegiatan" icon="fas fa-info-circle" type="primary" outline>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <tbody>
+                            <tr>
+                                <th width="40%" class="text-muted">Nama Jenis Kegiatan</th>
+                                <td><strong>{{ $jenisKegiatan->jeniskegiatan }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Deskripsi</th>
+                                <td>{{ $jenisKegiatan->deskripsi ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Total Penggunaan</th>
+                                <td>
+                                    <span class="badge badge-success px-3 py-2">
+                                        {{ $jenisKegiatan->kalenderAkademik->count() }} Kegiatan
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <hr>
 
-    {{-- Header --}}
-    <div class="flex justify-between items-start mb-6">
-        <div>
-            <h2 class="text-xl font-semibold text-gray-800">
-                Detail Jenis Kegiatan
-            </h2>
-            <p class="text-sm text-gray-500">
-                Informasi lengkap jenis kegiatan kalender akademik
-            </p>
+                <div class="d-flex justify-content-end">
+                    <x-btn :href="route('akademik.jenis-kegiatan.index')" class="btn-secondary mr-2" icon="fas fa-arrow-left">
+                        Kembali
+                    </x-btn>
+                    <x-btn :href="route('akademik.jenis-kegiatan.edit', $jenisKegiatan->id)" class="btn-warning text-white mr-2" icon="fas fa-edit">
+                        Edit Data
+                    </x-btn>
+                    <x-btn size="md" class="btn-danger" icon="fas fa-trash" onclick="confirmDelete()">
+                        Hapus
+                    </x-btn>
+                    
+                    <form id="delete-form" action="{{ route('akademik.jenis-kegiatan.destroy', $jenisKegiatan->id) }}" method="POST" style="display: none;">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                </div>
+            </x-card>
         </div>
-
-        <span class="px-3 py-1 text-sm bg-indigo-100 text-indigo-700 rounded-full">
-            {{ $jenisKegiatan->kalenderAkademik->count() }} Kegiatan
-        </span>
     </div>
-
-    {{-- Detail Card --}}
-    <div class="space-y-5">
-
-        {{-- Nama --}}
-        <div>
-            <p class="text-sm text-gray-500">Nama Jenis Kegiatan</p>
-            <p class="text-lg font-medium text-gray-800">
-                {{ $jenisKegiatan->jeniskegiatan }}
-            </p>
-        </div>
-
-        {{-- Deskripsi --}}
-        <div>
-            <p class="text-sm text-gray-500">Deskripsi</p>
-            <p class="text-gray-700">
-                {{ $jenisKegiatan->deskripsi ?? '-' }}
-            </p>
-        </div>
-
-        {{-- Statistik --}}
-        <div class="bg-gray-50 rounded-lg p-4 border">
-            <p class="text-sm text-gray-500">Jumlah Kegiatan Terkait</p>
-            <p class="text-2xl font-semibold text-indigo-600">
-                {{ $jenisKegiatan->kalenderAkademik->count() }}
-            </p>
-        </div>
-
-    </div>
-
-    {{-- Action Buttons --}}
-    <div class="mt-8 flex justify-end gap-3">
-
-        <a href="{{ route('akademik.jenis-kegiatan.index') }}"
-           class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-            Kembali
-        </a>
-
-        <a href="{{ route('akademik.jenis-kegiatan.edit', $jenisKegiatan->id) }}"
-           class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
-            Edit
-        </a>
-
-        <form action="{{ route('akademik.jenis-kegiatan.destroy', $jenisKegiatan->id) }}"
-              method="POST"
-              onsubmit="return confirm('Yakin ingin menghapus jenis kegiatan ini?')">
-            @csrf
-            @method('DELETE')
-            <button type="submit"
-                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                Hapus
-            </button>
-        </form>
-
-    </div>
-
 </div>
 @endsection
+
+@push('js')
+<script>
+function confirmDelete() {
+    Swal.fire({
+        title: 'Konfirmasi Hapus',
+        text: "Apakah Anda yakin ingin menghapus data ini?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e3342f',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal',
+        customClass: {
+            confirmButton: 'btn btn-danger mx-1',
+            cancelButton: 'btn btn-secondary mx-1'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form').submit();
+        }
+    });
+}
+</script>
+@endpush

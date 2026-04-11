@@ -12,6 +12,9 @@ use Modules\Akademik\Controllers\KategoriPelajaranController as ControllersKateg
 use Modules\Akademik\Controllers\KelasController as ControllersKelasController;
 use Modules\Akademik\Controllers\MataPelajaranController;
 use Modules\Akademik\Controllers\TahunAjaranController;
+use Modules\Akademik\Controllers\JadwalPelajaranController;
+use Modules\Akademik\Controllers\KalenderAkademikController;
+use Modules\Akademik\Controllers\KurikulumController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,6 +40,9 @@ Route::middleware(['web','auth'])->group(function () {
     Route::resource('jenis-kegiatan',ControllersJenisKegiatanController::class);
     Route::resource('kategori-pelajaran',ControllersKategoriPelajaranController::class);
     Route::resource('mata-pelajaran',MataPelajaranController::class);
+    Route::resource('jadwal-pelajaran', JadwalPelajaranController::class);
+    Route::resource('kalender-akademik', KalenderAkademikController::class);
+    Route::resource('kurikulum', KurikulumController::class);
 });
 
 

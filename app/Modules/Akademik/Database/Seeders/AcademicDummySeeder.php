@@ -36,8 +36,8 @@ class AcademicDummySeeder extends Seeder
         $t12 = Tingkat::updateOrCreate(['kode_tingkat' => '12'], ['nama_tingkat' => 'Kelas 12']);
 
         // 3. Kategori Pelajaran
-        $katMandiri = KategoriPelajaran::updateOrCreate(['kategori' => 'Internal'], ['deskripsi' => 'Kurikulum Internal']);
-        $katNasional = KategoriPelajaran::updateOrCreate(['kategori' => 'Nasional'], ['deskripsi' => 'Kurikulum Nasional']);
+        $katMandiri = KategoriPelajaran::updateOrCreate(['kategori' => 'Internal'], []);
+        $katNasional = KategoriPelajaran::updateOrCreate(['kategori' => 'Nasional'], []);
 
         // 4. Mata Pelajaran
         $mapels = [
@@ -87,10 +87,17 @@ class AcademicDummySeeder extends Seeder
         ];
 
         $kelasObjects = [];
-        foreach ($kelasList as $kl) {
+        foreach ($kelasList as $key => $kl) {
+            // Note: jenjang and guru_id (integer) are required in database but mismatched with Guru models (UUID).
+            // We use dummy integer for guru_id to satisfy DB constraint without valid relation here.
             $kelasObjects[] = Kelas::updateOrCreate(
                 ['nama_kelas' => $kl['nama']],
-                ['kode_kelas' => $kl['kode'], 'tingkat_id' => $kl['tingkat']->id]
+                [
+                    'kode_kelas' => $kl['kode'], 
+                    'tingkat_id' => null, // UUID mismatch if tingkat uses uuid, let nullable if allowed or provide id
+                    'jenjang' => 'SMA',
+                    'guru_id' => 0 
+                ]
             );
         }
 
@@ -101,7 +108,6 @@ class AcademicDummySeeder extends Seeder
                 [
                     'nama_rombel' => 'Rombel ' . $ko->nama_kelas . ' 24/25',
                     'wali_kelas_id' => $guruObjects[$key % count($guruObjects)]->id,
-                    'keterangan' => 'Rombongan Belajar ' . $ko->nama_kelas
                 ]
             );
 

@@ -25,11 +25,9 @@ class KamarController extends BaseController
     /**
      * Show the form for creating a new kamar.
      */
-    public function create(): View
+    public function create()
     {
-        return view('manajemenasetdanasrama::kamar.create', [
-            'title' => 'Tambah Kamar',
-        ]);
+        return redirect()->route('manajemenasetdanasrama.kamar.index');
     }
 
     /**
@@ -52,14 +50,9 @@ class KamarController extends BaseController
     /**
      * Show the form for editing the specified kamar.
      */
-    public function edit(string $id): View
+    public function edit(string $id)
     {
-        $kamar = Kamar::findOrFail($id);
-        
-        return view('manajemenasetdanasrama::kamar.edit', [
-            'title' => 'Edit Kamar',
-            'kamar' => $kamar,
-        ]);
+        return redirect()->route('manajemenasetdanasrama.kamar.index');
     }
 
     /**

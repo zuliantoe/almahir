@@ -18,6 +18,18 @@
 
 @section('content')
 <div class="container-fluid">
+    {{-- Quick Navigation --}}
+    <div class="row mb-3">
+        <div class="col-md-12 d-flex justify-content-between">
+            <a href="{{ route('manajemenasetdanasrama.index') }}" class="btn btn-outline-secondary shadow-sm">
+                <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+            </a>
+            <a href="{{ route('manajemenasetdanasrama.persetujuan.index') }}" class="btn btn-outline-primary shadow-sm">
+                Lanjut ke Persetujuan <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
     {{-- Alert Messages --}}
     @if(session('success'))
         <x-alert type="success" :message="session('success')" dismissible />
@@ -26,31 +38,27 @@
         <x-alert type="danger" :message="session('error')" dismissible />
     @endif
 
-    {{-- Tombol Tambah --}}
-    <div class="row mb-3">
-        <div class="col-md-12">
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalTambahPengajuan">
-                <i class="fas fa-plus"></i> Tambah Pengajuan
-            </button>
-        </div>
-    </div>
-
-    {{-- Daftar Pengajuan --}}
     <div class="row">
         <div class="col-md-12">
             <x-card title="Daftar Pengajuan Aset" icon="fas fa-file-alt">
+                <x-slot name="tools">
+                    <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#modalTambahPengajuan">
+                        <i class="fas fa-plus mr-1"></i> Tambah Pengajuan
+                    </button>
+                </x-slot>
+
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover table-striped">
                         <thead>
                             <tr>
-                                <th>No</th>
-                                <th>Nomor Pengajuan</th>
+                                <th width="50">No</th>
+                                <th width="140">Nomor Pengajuan</th>
                                 <th>Nama Aset</th>
-                                <th>Estimasi Harga</th>
-                                <th>Tanggal Pengajuan</th>
-                                <th>Status</th>
-                                <th>Pengaju</th>
-                                <th width="200">Aksi</th>
+                                <th width="140">Estimasi Harga</th>
+                                <th width="130">Tanggal Pengajuan</th>
+                                <th width="150">Status</th>
+                                <th width="150">Pengaju</th>
+                                <th width="150">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -58,18 +66,14 @@
                             <tr>
                                 <td>{{ $loop->iteration + ($pengajuan->currentPage() - 1) * $pengajuan->perPage() }}</td>
                                 <td>{{ $item->nomor_pengajuan ?? '-' }}</td>
-                                <td>{{ $item->nama_aset }}</td>
+                                <td><strong>{{ $item->nama_aset }}</strong></td>
                                 <td>Rp {{ number_format($item->estimasi_harga, 0, ',', '.') }}</td>
                                 <td>{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d/m/Y') }}</td>
                                 <td>
                                     @if($item->status == 'diajukan')
-                                        <span class="badge badge-warning">Diajukan</span>
-                                    @elseif($item->status == 'disetujui')
-                                        <span class="badge badge-success">Disetujui</span>
+                                        <span class="badge badge-warning">Menunggu Persetujuan</span>
                                     @elseif($item->status == 'ditolak')
                                         <span class="badge badge-danger">Ditolak</span>
-                                    @elseif($item->status == 'proses_pengadaan')
-                                        <span class="badge badge-info">Proses Pengadaan</span>
                                     @endif
                                 </td>
                                 <td>{{ $item->pengaju->name ?? '-' }}</td>
@@ -79,8 +83,7 @@
                                         <i class="fas fa-eye"></i>
                                     </button>
 
-                                    {{-- Tombol Edit (hanya jika status diajukan/ditolak) --}}
-                                    @if(in_array($item->status, ['diajukan', 'ditolak']))
+                                    {{-- Tombol Edit --}}
                                     <button type="button" class="btn btn-xs btn-warning" 
                                             data-toggle="modal" 
                                             data-target="#modalEditPengajuan"
@@ -91,10 +94,8 @@
                                             title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    @endif
 
-                                    {{-- Tombol Hapus (hanya jika status diajukan/ditolak) --}}
-                                    @if(in_array($item->status, ['diajukan', 'ditolak']))
+                                    {{-- Tombol Hapus --}}
                                     <button type="button" class="btn btn-xs btn-danger" 
                                             data-toggle="modal" 
                                             data-target="#modalHapusPengajuan"
@@ -103,11 +104,10 @@
                                             title="Hapus">
                                         <i class="fas fa-trash"></i>
                                     </button>
-                                    @endif
 
                                     {{-- Tombol Ajukan Kembali (khusus ditolak) --}}
                                     @if($item->status == 'ditolak')
-                                    <button type="button" class="btn btn-xs btn-secondary btn-ajukan-ulang"
+                                    <button type="button" class="btn btn-xs btn-secondary btn-ajukan-ulang mt-1"
                                             data-toggle="modal" 
                                             data-target="#modalAjukanUlang"
                                             data-id="{{ $item->id }}"
@@ -151,9 +151,9 @@
         <div class="modal-content">
             <form action="{{ route('manajemenasetdanasrama.pengajuan.store') }}" method="POST">
                 @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTambahPengajuanLabel">Tambah Pengajuan Aset</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <div class="modal-header bg-primary">
+                    <h5 class="modal-title text-white" id="modalTambahPengajuanLabel">Tambah Pengajuan Aset</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -203,7 +203,7 @@
             <form id="formEditPengajuan" action="" method="POST">
                 @csrf
                 @method('PUT')
-                <div class="modal-header">
+                <div class="modal-header bg-warning">
                     <h5 class="modal-title" id="modalEditPengajuanLabel">Edit Pengajuan Aset</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
@@ -239,9 +239,9 @@
             <form id="formHapusPengajuan" action="" method="POST">
                 @csrf
                 @method('DELETE')
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalHapusPengajuanLabel">Hapus Pengajuan Aset</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <div class="modal-header bg-danger">
+                    <h5 class="modal-title text-white" id="modalHapusPengajuanLabel">Hapus Pengajuan Aset</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -265,9 +265,9 @@
 <div class="modal fade" id="modalDetailPengajuan" tabindex="-1" role="dialog" aria-labelledby="modalDetailPengajuanLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalDetailPengajuanLabel">Detail Pengajuan Aset</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <div class="modal-header bg-info">
+                <h5 class="modal-title text-white" id="modalDetailPengajuanLabel">Detail Pengajuan Aset</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -348,9 +348,9 @@
         <div class="modal-content">
             <form id="formAjukanUlang" action="" method="POST">
                 @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalAjukanUlangLabel">Ajukan Kembali Pengajuan</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <div class="modal-header bg-secondary">
+                    <h5 class="modal-title text-white" id="modalAjukanUlangLabel">Ajukan Kembali Pengajuan</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>

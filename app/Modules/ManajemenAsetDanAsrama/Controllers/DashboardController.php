@@ -22,21 +22,11 @@ class DashboardController extends BaseController
     {
         $totalAset = Aset::count();
         $totalPengajuan = PengajuanAset::count();
-        $totalPengadaan = PengadaanAset::count();
-        $totalKerusakan = Kerusakan::count();
-        $totalPemeliharaan = Pemeliharaan::count();
+        $totalPengadaan = PengadaanAset::whereHas('pengajuan')->count();
+        $totalKerusakan = Kerusakan::whereHas('aset')->count();
+        $totalPemeliharaan = Pemeliharaan::whereHas('aset')->count();
         $totalKamar = Kamar::count();
-        $totalPenghuni = KamarPenghuni::count();
-        
-        $pengajuanTerbaru = PengajuanAset::with('pengaju')
-                                ->latest()
-                                ->take(5)
-                                ->get();
-        
-        $asetTerbaru = Aset::with('pengadaan')
-                            ->latest()
-                            ->take(5)
-                            ->get();
+        $totalPenghuni = KamarPenghuni::whereHas('kamar')->count();
         
         $jadwalPiketHariIni = JadwalPiket::with('siswa')
                                 ->where('hari', $this->getHariIndo(date('l')))
@@ -60,8 +50,6 @@ class DashboardController extends BaseController
             'totalPemeliharaan' => $totalPemeliharaan,
             'totalKamar'        => $totalKamar,
             'totalPenghuni'     => $totalPenghuni,
-            'pengajuanTerbaru'  => $pengajuanTerbaru,
-            'asetTerbaru'       => $asetTerbaru,
             'jadwalPiketHariIni'=> $jadwalPiketHariIni,
             'asetByStatus'      => $asetByStatus,
         ]);

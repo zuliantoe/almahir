@@ -15,20 +15,14 @@ class TrashController extends BaseController
      */
     public function index(Request $request): View
     {
-        $pengajuanTrash = PengajuanAset::onlyTrashed()
-                            ->with(['pengaju', 'deletedBy'])
-                            ->latest('deleted_at')
-                            ->get();
-        
         $asetTrash = Aset::onlyTrashed()
                         ->with('deletedBy')
                         ->latest('deleted_at')
                         ->get();
         
         return view('manajemenasetdanasrama::trash.index', [
-            'title'          => 'Data Terhapus (Trash)',
-            'pengajuanTrash' => $pengajuanTrash,
-            'asetTrash'      => $asetTrash,
+            'title'     => 'Data Terhapus (Trash)',
+            'asetTrash' => $asetTrash,
         ]);
     }
 
@@ -37,11 +31,7 @@ class TrashController extends BaseController
      */
     public function restore(string $type, string $id): RedirectResponse
     {
-        if ($type === 'pengajuan') {
-            $item = PengajuanAset::onlyTrashed()->findOrFail($id);
-            $item->restore();
-            $message = 'Pengajuan aset berhasil dipulihkan.';
-        } elseif ($type === 'aset') {
+        if ($type === 'aset') {
             $item = Aset::onlyTrashed()->findOrFail($id);
             $item->restore();
             $message = 'Aset berhasil dipulihkan.';
@@ -58,11 +48,7 @@ class TrashController extends BaseController
      */
     public function forceDelete(string $type, string $id): RedirectResponse
     {
-        if ($type === 'pengajuan') {
-            $item = PengajuanAset::onlyTrashed()->findOrFail($id);
-            $item->forceDelete();
-            $message = 'Pengajuan aset berhasil dihapus permanen.';
-        } elseif ($type === 'aset') {
+        if ($type === 'aset') {
             $item = Aset::onlyTrashed()->findOrFail($id);
             $item->forceDelete();
             $message = 'Aset berhasil dihapus permanen.';

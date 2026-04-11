@@ -82,12 +82,63 @@ class AsetController extends BaseController
         ]);
 
         $aset = Aset::findOrFail($id);
-        $aset->deleted_by = auth()->id;
+        $aset->deleted_by = auth()->id();
         $aset->alasan_hapus = $request->alasan_hapus;
         $aset->save();
         $aset->delete();
 
         return redirect()->route('manajemenasetdanasrama.aset.index')
             ->with('success', 'Aset berhasil dipindahkan ke trash.');
+    }
+
+    /**
+     * Duplicate the specified aset.
+     */
+    public function duplicate(Request $request, string $id): RedirectResponse
+    {
+        $request->validate([
+            'jumlah_duplikat' => 'required|integer|min:1|max:50'
+        ]);
+
+        $originalAset = Aset::findOrFail($id);
+        $jumlah = (int) $request->jumlah_duplikat;
+        $baseCode = $originalAset->kode_aset;
+
+        // Pisahkan bagian teks dan bagian angka (e.g. MEJA-001 -> 'MEJA-', '001')
+        // Jika tidak ada angka di belakang, tambahkan '-1'
+        if (preg_match('/^(.*?)(\d+)$/', $baseCode, $matches)) {
+            $prefix = $matches[1];
+            $numericFormatLength = strlen($matches[2]);
+            $currentNumber = (int) $matches[2];
+        } else {
+            $prefix = $baseCode . '-';
+            $numericFormatLength = 1;
+            $currentNumber = 0;
+        }
+
+        $duplicatedCount = 0;
+
+        for ($i = 1; $i <= $jumlah; $i++) {
+            $currentNumber++;
+            
+            // Coba cari kode yang belum terpakai kalau-kalau sudah ada
+            do {
+                $newCode = $prefix . str_pad($currentNumber, $numericFormatLength, '0', STR_PAD_LEFT);
+                $exists = Aset::withTrashed()->where('kode_aset', $newCode)->exists();
+                if ($exists) {
+                    $currentNumber++;
+                }
+            } while ($exists);
+
+            $newAset = $originalAset->replicate();
+            $newAset->kode_aset = $newCode;
+            $newAset->status_kondisi = 'baik'; // Set status awal ke baik
+            $newAset->save();
+
+            $duplicatedCount++;
+        }
+
+        return redirect()->route('manajemenasetdanasrama.aset.index')
+            ->with('success', "Berhasil menduplikat aset sebanyak {$duplicatedCount} kali dengan rentang kode berurutan.");
     }
 }

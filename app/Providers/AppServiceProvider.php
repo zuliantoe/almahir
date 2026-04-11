@@ -21,14 +21,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Paginator::useBootstrapFour();
-
-        // Register custom permission check for @can and standard Gate authorizations
-        \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
-            if (method_exists($user, 'hasPermission') && $user->hasPermission($ability)) {
-                return true;
-            }
-            return null; // Return null so next Gate checks can be processed if any
-        });
+        \Illuminate\Pagination\Paginator::useBootstrapFour();
     }
 }

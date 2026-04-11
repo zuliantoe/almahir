@@ -14,7 +14,10 @@ class PengajuanController extends BaseController
      */
     public function index(Request $request): View
     {
+        // Hanya tampilkan pengajuan yang masih di tahap pengajuan
+        // Yang sudah disetujui/proses_pengadaan sudah pindah ke halaman Pengadaan
         $pengajuan = PengajuanAset::with(['pengaju', 'approver'])
+                        ->whereIn('status', ['diajukan', 'ditolak'])
                         ->latest()
                         ->paginate(15);
         
@@ -27,11 +30,9 @@ class PengajuanController extends BaseController
     /**
      * Show the form for creating a new pengajuan aset.
      */
-    public function create(): View
+    public function create()
     {
-        return view('manajemenasetdanasrama::pengajuan.create', [
-            'title' => 'Tambah Pengajuan Aset',
-        ]);
+        return redirect()->route('manajemenasetdanasrama.pengajuan.index');
     }
 
     /**

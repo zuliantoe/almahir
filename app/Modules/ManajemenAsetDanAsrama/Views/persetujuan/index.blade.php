@@ -18,6 +18,18 @@
 
 @section('content')
 <div class="container-fluid">
+    {{-- Quick Navigation --}}
+    <div class="row mb-3">
+        <div class="col-md-12 d-flex justify-content-between">
+            <a href="{{ route('manajemenasetdanasrama.pengajuan.index') }}" class="btn btn-outline-secondary shadow-sm">
+                <i class="fas fa-arrow-left"></i> Kembali ke Pengajuan
+            </a>
+            <a href="{{ route('manajemenasetdanasrama.pengadaan.index') }}" class="btn btn-outline-primary shadow-sm">
+                Lanjut ke Pengadaan <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
     {{-- Alert Messages --}}
     @if(session('success'))
         <x-alert type="success" :message="session('success')" dismissible />

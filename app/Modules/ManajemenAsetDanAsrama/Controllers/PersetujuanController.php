@@ -43,8 +43,8 @@ class PersetujuanController extends BaseController
         $pengajuan->approved_at = now();
         $pengajuan->save();
 
-        return redirect()->route('manajemenasetdanasrama.persetujuan.index')
-            ->with('success', 'Pengajuan aset disetujui.');
+        return redirect()->route('manajemenasetdanasrama.pengadaan.proses', $pengajuan->id)
+            ->with('success', 'Pengajuan aset disetujui. Silakan proses pengadaan.');
     }
 
     /**

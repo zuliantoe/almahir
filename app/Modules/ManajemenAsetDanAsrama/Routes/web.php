@@ -63,6 +63,7 @@ Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
         Route::get('{id}/edit', [AsetController::class, 'edit'])->name('edit');
         Route::put('{id}', [AsetController::class, 'update'])->name('update');
         Route::delete('{id}', [AsetController::class, 'destroy'])->name('destroy');
+        Route::post('{id}/duplicate', [AsetController::class, 'duplicate'])->name('duplicate');
     });
     
     // Kamar
@@ -104,6 +105,7 @@ Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
         Route::get('{id}/edit', [KerusakanController::class, 'edit'])->name('edit');
         Route::put('{id}', [KerusakanController::class, 'update'])->name('update');
         Route::delete('{id}', [KerusakanController::class, 'destroy'])->name('destroy');
+        Route::post('{id}/proses-pemeliharaan', [KerusakanController::class, 'prosesPemeliharaan'])->name('proses-pemeliharaan');
     });
     
     // Pemeliharaan
@@ -114,6 +116,7 @@ Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
         Route::get('{id}/edit', [PemeliharaanController::class, 'edit'])->name('edit');
         Route::put('{id}', [PemeliharaanController::class, 'update'])->name('update');
         Route::delete('{id}', [PemeliharaanController::class, 'destroy'])->name('destroy');
+        Route::post('{id}/selesai', [PemeliharaanController::class, 'selesai'])->name('selesai');
     });
     
     // Trash

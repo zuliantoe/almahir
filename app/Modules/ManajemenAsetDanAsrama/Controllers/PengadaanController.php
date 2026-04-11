@@ -17,12 +17,20 @@ class PengadaanController extends BaseController
     public function index(Request $request): View
     {
         $pengadaan = PengadaanAset::with('pengajuan')
+                        ->whereHas('pengajuan')
                         ->latest()
                         ->paginate(15);
         
+        // Pengajuan yang sudah disetujui tapi belum dibuatkan pengadaan
+        $menungguProses = PengajuanAset::with('pengaju')
+                            ->where('status', 'disetujui')
+                            ->latest()
+                            ->get();
+
         return view('manajemenasetdanasrama::pengadaan.index', [
-            'title'     => 'Data Pengadaan Aset',
-            'pengadaan' => $pengadaan,
+            'title'          => 'Data Pengadaan Aset',
+            'pengadaan'      => $pengadaan,
+            'menungguProses' => $menungguProses,
         ]);
     }
 
@@ -45,7 +53,7 @@ class PengadaanController extends BaseController
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'pengajuan_id'    => 'required|exists:pengajuan_aset,id',
+            'pengajuan_id'    => 'required|exists:pengajuan_aset,id|unique:pengadaan_aset,pengajuan_id',
             'vendor'          => 'required|string|max:255',
             'tanggal_pesan'   => 'required|date',
             'estimasi_datang' => 'required|date|after:tanggal_pesan',
@@ -91,6 +99,11 @@ class PengadaanController extends BaseController
 
         $pengadaan = PengadaanAset::with('pengajuan')->findOrFail($id);
         
+        if ($pengadaan->status === 'datang') {
+            return redirect()->route('manajemenasetdanasrama.pengadaan.index')
+                ->with('error', 'Status pengadaan ini sudah selesai (Barang Datang), tidak dapat diupdate lagi.');
+        }
+
         // Update status pengadaan
         $pengadaan->tanggal_datang = $request->tanggal_datang;
         $pengadaan->status = 'datang';

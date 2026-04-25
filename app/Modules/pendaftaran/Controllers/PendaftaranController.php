@@ -12,17 +12,36 @@ class PendaftaranController extends Controller
     {
         $query = Pendaftaran::query();
 
-        if ($request->has('status') && $request->status != '') {
-            $query->where('status', $request->status);
+        // Default ke 'pending' jika status kosong atau tidak ada
+        $currentStatus = $request->status ?: 'pending';
+
+        if ($currentStatus !== 'all') {
+            $query->where('status', $currentStatus);
         }
 
-        $data = $query->latest()->get();
+        $data = $query->orderBy('tanggal_daftar', 'desc')->get()->groupBy(function($item) {
+            $date = \Carbon\Carbon::parse($item->tanggal_daftar)->startOfDay();
+            $today = \Carbon\Carbon::today();
 
-        $totalPendaftar = Pendaftaran::count();
-        $totalDiterima = Pendaftaran::where('status', 'diterima')->count();
-        $totalDitolak = Pendaftaran::where('status', 'ditolak')->count();
+            if ($date->equalTo($today)) {
+                return 'Hari Ini';
+            } elseif ($date->equalTo($today->copy()->subDay())) {
+                return 'Kemarin';
+            } elseif ($date->greaterThanOrEqualTo($today->copy()->startOfWeek())) {
+                return 'Minggu Ini';
+            } elseif ($date->greaterThanOrEqualTo($today->copy()->startOfMonth())) {
+                return 'Bulan Ini';
+            } else {
+                // Hitung selisih bulan absolut
+                $monthDiff = ($today->year - $date->year) * 12 + ($today->month - $date->month);
+                if ($monthDiff == 1) {
+                    return '1 Bulan Lalu';
+                }
+                return $monthDiff . ' Bulan Lalu';
+            }
+        });
 
-        return view('pendaftaran::admin.pendaftaran', compact('data', 'totalPendaftar', 'totalDiterima', 'totalDitolak'));
+        return view('pendaftaran::admin.pendaftaran', compact('data', 'currentStatus'));
     }
 
 

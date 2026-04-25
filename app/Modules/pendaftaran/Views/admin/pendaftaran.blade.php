@@ -19,50 +19,6 @@
 
 @section('content')
 
-    {{-- Info Box --}}
-    <div class="row">
-        <div class="col-md-4">
-            <div class="info-box">
-                <span class="info-box-icon bg-primary elevation-1">
-                    <i class="fas fa-user-graduate"></i>
-                </span>
-                <div class="info-box-content">
-                    <span class="info-box-text">Total Pendaftar</span>
-                    <span class="info-box-number">
-                        {{ $totalPendaftar }}
-                    </span>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="info-box">
-                <span class="info-box-icon bg-success elevation-1">
-                    <i class="fas fa-check-circle"></i>
-                </span>
-                <div class="info-box-content">
-                    <span class="info-box-text">Total Diterima</span>
-                    <span class="info-box-number">
-                        {{ $totalDiterima }}
-                    </span>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="info-box">
-                <span class="info-box-icon bg-danger elevation-1">
-                    <i class="fas fa-times-circle"></i>
-                </span>
-                <div class="info-box-content">
-                    <span class="info-box-text">Total Ditolak</span>
-                    <span class="info-box-number">
-                        {{ $totalDitolak }}
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
     {{-- Table Card --}}
     <div class="card">
         <div class="card-header pb-3">
@@ -78,11 +34,11 @@
                     <div class="col-md-3">
                         <label>Filter Status</label>
                         <select name="status" class="form-control form-control-sm" onchange="this.form.submit()">
-                            <option value="">Semua Status</option>
-                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Ditunda</option>
-                            <option value="diproses" {{ request('status') == 'diproses' ? 'selected' : '' }}>Diproses</option>
-                            <option value="diterima" {{ request('status') == 'diterima' ? 'selected' : '' }}>Diterima</option>
-                            <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
+                            <option value="all" {{ $currentStatus == 'all' ? 'selected' : '' }}>Semua Status</option>
+                            <option value="pending" {{ $currentStatus == 'pending' ? 'selected' : '' }}>Ditunda</option>
+                            <option value="diproses" {{ $currentStatus == 'diproses' ? 'selected' : '' }}>Diproses</option>
+                            <option value="diterima" {{ $currentStatus == 'diterima' ? 'selected' : '' }}>Diterima</option>
+                            <option value="ditolak" {{ $currentStatus == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
                         </select>
                     </div>
                 </div>
@@ -102,30 +58,33 @@
                 </thead>
                 <tbody>
 
-                    @forelse ($data as $item)
-                        <tr>
-                            <td>{{ $item->nama_lengkap }}</td>
-                            <td>{{ $item->tempat_lahir }}</td>
-                            <td>{{ $item->no_hp }}</td>
-                            <td>
-                                @if ($item->status == 'pending')
-                                    <span class="badge badge-warning">Ditunda</span>
-                                @elseif($item->status == 'diproses')
-                                    <span class="badge badge-info">Diproses</span>
-                                @elseif($item->status == 'diterima')
-                                    <span class="badge badge-success">Diterima</span>
-                                @else
-                                    <span class="badge badge-danger">Ditolak</span>
-                                @endif
-                            </td>
-                            <td>
-
-                                <a href="/pendaftaran/admin/pendaftaran/{{ $item->id }}" class="btn btn-sm btn-primary">
-                                    <i class="fas fa-eye"></i> Lihat
-                                </a>
-
-                            </td>
+                    @forelse ($data as $groupName => $items)
+                        <tr class="bg-light">
+                            <td colspan="5"><strong>{{ $groupName }}</strong></td>
                         </tr>
+                        @foreach ($items as $item)
+                            <tr>
+                                <td>{{ $item->nama_lengkap }}</td>
+                                <td>{{ $item->tempat_lahir }}</td>
+                                <td>{{ $item->no_hp }}</td>
+                                <td>
+                                    @if ($item->status == 'pending')
+                                        <span class="badge badge-warning">Ditunda</span>
+                                    @elseif($item->status == 'diproses')
+                                        <span class="badge badge-info">Diproses</span>
+                                    @elseif($item->status == 'diterima')
+                                        <span class="badge badge-success">Diterima</span>
+                                    @else
+                                        <span class="badge badge-danger">Ditolak</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <a href="/pendaftaran/admin/pendaftaran/{{ $item->id }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> Lihat
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforeach
                     @empty
                         <tr>
                             <td colspan="5" class="text-center">

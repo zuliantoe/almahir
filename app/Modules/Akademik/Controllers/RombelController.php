@@ -36,6 +36,7 @@ class RombelController extends Controller
             'kelas_id' => 'required|exists:kelas,id',
             'tahunajaran_id' => 'required|exists:tahun_ajaran,id',
             'guru_id' => 'required|exists:guru,id',
+            'keterangan' => 'nullable|string',
             'siswa_ids' => 'required|array',
             'siswa_ids.*' => 'exists:siswa,id'
         ]);
@@ -82,6 +83,7 @@ class RombelController extends Controller
             'kelas_id' => 'required|exists:kelas,id',
             'tahunajaran_id' => 'required|exists:tahun_ajaran,id',
             'guru_id' => 'required|exists:guru,id',
+            'keterangan' => 'nullable|string',
             'siswa_ids' => 'required|array',
             'siswa_ids.*' => 'exists:siswa,id'
         ]);

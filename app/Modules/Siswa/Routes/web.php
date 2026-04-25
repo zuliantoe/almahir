@@ -20,6 +20,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/', [SiswaController::class, 'index'])->name('index');
     Route::get('/create', [SiswaController::class, 'create'])->name('create');
     Route::post('/', [SiswaController::class, 'store'])->name('store');
+    Route::get('/kalender-akademik', [\Modules\Akademik\Controllers\KalenderAkademikController::class, 'index'])->name('kalender-akademik');
     Route::get('/{id}', [SiswaController::class, 'show'])->name('show');
     Route::get('/{id}/edit', [SiswaController::class, 'edit'])->name('edit');
     Route::put('/{id}', [SiswaController::class, 'update'])->name('update');

@@ -12,11 +12,16 @@
     <div class="row mb-3">
         <div class="col-12 d-flex justify-content-between align-items-center">
             <h1 class="h3 mb-0 text-gray-800">Kalender Akademik</h1>
-            @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
-            <x-btn :href="route('akademik.kalender-akademik.create')" icon="fas fa-plus">
-                Tambah Kegiatan
-            </x-btn>
-            @endif
+            <div class="btn-group">
+                <x-btn :href="route('akademik.kalender-akademik.index', ['view' => 'calendar'])" class="btn-outline-primary" icon="fas fa-calendar-alt">
+                    Mode Kalender
+                </x-btn>
+                @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
+                <x-btn :href="route('akademik.kalender-akademik.create')" icon="fas fa-plus" class="ml-2">
+                    Tambah Kegiatan
+                </x-btn>
+                @endif
+            </div>
         </div>
     </div>
 
@@ -71,9 +76,20 @@
                     @forelse($kalenderAkademik as $item)
                     <tr>
                         <td class="text-center">{{ $loop->iteration + ($kalenderAkademik->currentPage() - 1) * $kalenderAkademik->perPage() }}</td>
-                        <td>{{ $item->tahunAjaran->tahunajaran }} ({{ $item->tahunAjaran->semester }})</td>
+                        <td>
+                            {{ $item->tahunAjaran->tahunajaran }}
+                            @if($item->tahunAjaran->semester)
+                                ({{ $item->tahunAjaran->semester }})
+                            @endif
+                        </td>
                         <td><strong>{{ $item->nama_kegiatan }}</strong></td>
-                        <td><span class="badge badge-secondary">{{ $item->jenisKegiatan->jeniskegiatan }}</span></td>
+                        <td>
+                            <span class="badge badge-secondary">{{ $item->jenisKegiatan->jeniskegiatan }}</span>
+                            @if(!$item->jenisKegiatan->is_kbm)
+                                <span class="badge badge-danger ml-1" title="Hari ini diliburkan/tidak ada KBM">Non-KBM</span>
+                            @endif
+                        </td>
+
                         <td><i class="far fa-calendar-alt mr-1"></i> {{ date('d/m/Y', strtotime($item->tanggal_awal)) }}</td>
                         <td><i class="far fa-calendar-check mr-1"></i> {{ date('d/m/Y', strtotime($item->tanggal_akhir)) }}</td>
                         @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))

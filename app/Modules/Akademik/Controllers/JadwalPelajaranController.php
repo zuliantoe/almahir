@@ -12,10 +12,21 @@ use Modules\Guru\Models\Guru;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
+use App\Modules\Akademik\Services\JadwalPelajaranService;
+use App\Modules\Akademik\Models\TahunAjaran;
+
 class JadwalPelajaranController extends Controller
 {
+    protected $jadwalService;
+
+    public function __construct(JadwalPelajaranService $jadwalService)
+    {
+        $this->jadwalService = $jadwalService;
+    }
+
     /**
      * Tampilkan jadwal pelajaran.
+
      * - GURU : hanya jadwal miliknya (tabel mingguan)
      * - SISWA : jadwal kelasnya (tabel mingguan)
      * - Admin : semua jadwal (list paginated + filter)
@@ -111,8 +122,23 @@ class JadwalPelajaranController extends Controller
         $rombels = Rombel::with('kelas')->get();
         $gurus   = Guru::aktif()->get();
 
-        return view('akademik::jadwal-pelajaran.index', compact('jadwalPelajaran', 'rombels', 'gurus'));
+        $summaryJP = [];
+        if ($request->filled('rombel_id')) {
+            $rombel = Rombel::find($request->rombel_id);
+            if ($rombel) {
+                $mapels = JadwalPelajaran::where('rombel_id', $rombel->id)
+                    ->pluck('mapel_id')
+                    ->unique();
+                
+                foreach ($mapels as $mId) {
+                    $summaryJP[$mId] = $this->jadwalService->hitungEstimasiTotalJP($mId, $rombel->id, $rombel->tahunajaran_id);
+                }
+            }
+        }
+
+        return view('akademik::jadwal-pelajaran.index', compact('jadwalPelajaran', 'rombels', 'gurus', 'summaryJP'));
     }
+
 
     public function create()
     {

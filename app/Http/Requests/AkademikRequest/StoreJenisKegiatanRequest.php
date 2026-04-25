@@ -14,7 +14,8 @@ class StoreJenisKegiatanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'jeniskegiatan' => 'required|string|max:255|unique:jenis_kegiatan,jeniskegiatan',
+            'jeniskegiatan' => 'required|string|max:255',
+            'is_kbm' => 'boolean',
             'deskripsi' => 'nullable|string|max:500',
         ];
     }

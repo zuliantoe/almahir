@@ -50,7 +50,9 @@
                         <th width="5%" class="text-center">No</th>
                         <th width="200px">Jenis Kegiatan</th>
                         <th>Deskripsi Singkat</th>
+                        <th width="120px" class="text-center">Status KBM</th>
                         <th width="200px" class="text-center">Total Penggunaan</th>
+
                         @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
                         <th width="150px" class="text-center">Aksi</th>
                         @endif
@@ -65,6 +67,13 @@
                         <td><span class="badge badge-light border">{{ $item->jeniskegiatan }}</span></td>
                         <td class="text-muted text-wrap">
                             {{ Str::limit($item->deskripsi ?? '-', 100) }}
+                        </td>
+                        <td class="text-center">
+                            @if($item->is_kbm)
+                                <span class="badge badge-success"><i class="fas fa-check-circle"></i> KBM Aktif</span>
+                            @else
+                                <span class="badge badge-danger"><i class="fas fa-times-circle"></i> Non-KBM</span>
+                            @endif
                         </td>
                         <td class="text-center">
                             @if(($item->kalender_akademik_count ?? $item->kalenderAkademik->count()) > 0)

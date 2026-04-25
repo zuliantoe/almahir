@@ -45,7 +45,12 @@
                             </td>
                             <td>{{ $r->kelas->nama_kelas ?? '-' }}</td>
                             <td>
-                                <span class="badge badge-info">{{ $r->tahunAjaran->tahunajaran ?? '-' }} ({{ $r->tahunAjaran->semester ?? '-' }})</span>
+                                <span class="badge badge-info">
+                                    {{ $r->tahunAjaran->tahunajaran ?? '-' }}
+                                    @if($r->tahunAjaran && $r->tahunAjaran->semester)
+                                        ({{ $r->tahunAjaran->semester }})
+                                    @endif
+                                </span>
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">

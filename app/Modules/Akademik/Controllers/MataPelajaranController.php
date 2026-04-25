@@ -109,6 +109,11 @@ class MataPelajaranController extends Controller
 
     public function destroy(MataPelajaran $mataPelajaran)
     {
+        if ($mataPelajaran->jadwalPelajaran()->exists() || $mataPelajaran->kurikulum()->exists()) {
+            return redirect()->route('akademik.mata-pelajaran.index')
+                ->with('error', 'Mata pelajaran tidak dapat dihapus karena masih digunakan dalam jadwal atau kurikulum.');
+        }
+
         $mataPelajaran->delete();
 
         return redirect()->route('akademik.mata-pelajaran.index')

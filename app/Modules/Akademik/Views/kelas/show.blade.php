@@ -10,9 +10,9 @@
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <tbody>
-                            <tr>
+                             <tr>
                                 <th width="40%" class="text-muted small text-uppercase font-weight-bold">Nama Kelas</th>
-                                <td><strong class="h5">{{ $kelas->nama }}</strong></td>
+                                <td><strong class="h5">{{ $kelas->nama_kelas }}</strong></td>
                             </tr>
                             <tr>
                                 <th class="text-muted small text-uppercase font-weight-bold">Total Jadwal Pelajaran</th>

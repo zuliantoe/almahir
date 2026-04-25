@@ -95,8 +95,6 @@ class AcademicDummySeeder extends Seeder
                 [
                     'kode_kelas' => $kl['kode'], 
                     'tingkat_id' => null, // UUID mismatch if tingkat uses uuid, let nullable if allowed or provide id
-                    'jenjang' => 'SMA',
-                    'guru_id' => 0 
                 ]
             );
         }
@@ -107,7 +105,7 @@ class AcademicDummySeeder extends Seeder
                 ['kelas_id' => $ko->id, 'tahunajaran_id' => $tahun->id],
                 [
                     'nama_rombel' => 'Rombel ' . $ko->nama_kelas . ' 24/25',
-                    'wali_kelas_id' => $guruObjects[$key % count($guruObjects)]->id,
+                    'guru_id' => $guruObjects[$key % count($guruObjects)]->id,
                 ]
             );
 
@@ -118,7 +116,7 @@ class AcademicDummySeeder extends Seeder
                     ['nis' => $nis],
                     [
                         'nama' => 'Siswa ' . $ko->nama_kelas . ' ' . $i,
-                        'email' => strtolower(str_replace(['-', ' '], '', $ko->nama_kelas)) . $i . '@student.com',
+                        'email' => strtolower(str_replace(['-', ' '], '', $ko->nama_kelas)) . $i . '@siakad.local',
                         'status' => 'aktif'
                     ]
                 );

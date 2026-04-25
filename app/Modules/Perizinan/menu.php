@@ -2,7 +2,7 @@
 
 return [
     'header' => 'KEHADIRAN',
-    'roles'  => ['SUPER_ADMIN', 'GURU', 'STAFF', 'STAF_TU'],
+    'roles'  => ['SUPER_ADMIN', 'STAFF', 'STAF_TU'],
     'order'  => 21,
     'items'  => [
         [
@@ -10,6 +10,8 @@ return [
             'icon'  => 'fas fa-envelope-open-text',
             'route' => 'perizinan.index',
             'match' => 'perizinan*',
+            'roles' => ['SUPER_ADMIN', 'STAFF', 'STAF_TU'],
         ],
     ],
 ];
+

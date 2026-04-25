@@ -10,20 +10,21 @@ use App\Http\Requests\AkademikRequest\UpdateKelasRequest;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use App\Modules\Akademik\Models\kelas as ModelsKelas;
+use App\Modules\Akademik\Models\Tingkat;
 use Modules\Guru\Models\Guru;
+
 
 class KelasController extends Controller
 {
     public function index(Request $request)
     {
-        $kelas = ModelsKelas::with('walikelas')
+        $kelas = ModelsKelas::query()
             ->when($request->filled('search'), function ($query) use ($request) {
                 $query->where(function ($q) use ($request) {
-                    $q->where('namakelas', 'like', '%' . $request->search . '%')
-                      ->orWhere('jenjang', 'like', '%' . $request->search . '%');
+                    $q->where('nama_kelas', 'like', '%' . $request->search . '%');
                 });
             })
-            ->orderBy('namakelas')
+            ->orderBy('nama_kelas')
             ->paginate(10)
             ->withQueryString();
 
@@ -32,20 +33,15 @@ class KelasController extends Controller
 
     public function create()
     {
-         $guru = Guru::orderBy('nama')->get();
+        $guru = Guru::orderBy('nama')->get();
+        $tingkat = Tingkat::orderBy('nama_tingkat')->get();
 
-        return view('akademik::kelas.create');
+        return view('akademik::kelas.create', compact('guru', 'tingkat'));
     }
 
     public function store(StoreKelasRequest $request)
     {
-        $validated = $request->validate([
-            'namakelas' => 'required|string|max:255',
-            'jenjang'   => 'required|string|max:50',
-            'guru_id'   => 'nullable|integer',
-        ]);
-
-        ModelsKelas::create($validated);
+        ModelsKelas::create($request->validated());
 
         return redirect()
             ->route('akademik.kelas.index')
@@ -61,18 +57,15 @@ class KelasController extends Controller
 
     public function edit(ModelsKelas $kelas)
     {
-        return view('akademik::kelas.edit', compact('kelas'));
+        $guru = Guru::orderBy('nama')->get();
+        $tingkat = Tingkat::orderBy('nama_tingkat')->get();
+
+        return view('akademik::kelas.edit', compact('kelas', 'guru', 'tingkat'));
     }
 
     public function update(UpdateKelasRequest $request, ModelsKelas $kelas)
     {
-        $validated = $request->validate([
-            'namakelas' => 'required|string|max:255',
-            'jenjang'   => 'required|string|max:50',
-            'guru_id'   => 'nullable|integer',
-        ]);
-
-        $kelas->update($validated);
+        $kelas->update($request->validated());
 
         return redirect()
             ->route('akademik.kelas.index')

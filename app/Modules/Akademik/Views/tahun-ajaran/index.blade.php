@@ -12,9 +12,11 @@
     <div class="row mb-3">
         <div class="col-12 d-flex justify-content-between align-items-center">
             <h1 class="h3 mb-0 text-gray-800">Manajemen Tahun Ajaran</h1>
+            @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
             <x-btn :href="route('akademik.tahun-ajaran.create')" icon="fas fa-plus">
                 Tambah Tahun Ajaran
             </x-btn>
+            @endif
         </div>
     </div>
 
@@ -56,7 +58,9 @@
                         <th>Tahun Ajaran</th>
                         <th>Status</th>
                         <th>Dibuat</th>
+                        @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
                         <th width="150px" class="text-center">Aksi</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -76,6 +80,7 @@
                             @endif
                         </td>
                         <td class="text-muted"><i class="far fa-clock mr-1"></i> {{ $item->created_at->format('d/m/Y H:i') }}</td>
+                        @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
                         <td class="text-center">
                             <div class="btn-group">
                                 <x-btn :href="route('akademik.tahun-ajaran.show', $item->id)" size="sm" class="btn-info" title="Detail">
@@ -84,18 +89,17 @@
                                 <x-btn :href="route('akademik.tahun-ajaran.edit', $item->id)" size="sm" class="btn-warning" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </x-btn>
-                                <x-btn size="sm" class="btn-danger" title="Hapus" 
-                                       onclick="confirmDelete('{{ $item->id }}', '{{ $item->tahunajaran }}')"
-                                       :disabled="$item->status">
-                                    <i class="fas fa-trash"></i>
-                                </x-btn>
+                                <form action="{{ route('akademik.tahun-ajaran.destroy', $item->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <x-btn type="submit" size="sm" class="btn-danger btn-delete" title="Hapus" 
+                                           :disabled="$item->status">
+                                        <i class="fas fa-trash"></i>
+                                    </x-btn>
+                                </form>
                             </div>
-                            
-                            <form id="delete-form-{{ $item->id }}" action="{{ route('akademik.tahun-ajaran.destroy', $item->id) }}" method="POST" style="display: none;">
-                                @csrf
-                                @method('DELETE')
-                            </form>
                         </td>
+                        @endif
                     </tr>
                     @empty
                     <tr>
@@ -118,28 +122,3 @@
 </div>
 @endsection
 
-@push('js')
-<script>
-function confirmDelete(id, tahunAjaran) {
-    Swal.fire({
-        title: 'Konfirmasi Hapus',
-        text: `Apakah Anda yakin ingin menghapus tahun ajaran "${tahunAjaran}"?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#e3342f',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Ya, Hapus!',
-        cancelButtonText: 'Batal',
-        customClass: {
-            confirmButton: 'btn btn-danger mx-1',
-            cancelButton: 'btn btn-secondary mx-1'
-        },
-        buttonsStyling: false
-    }).then((result) => {
-        if (result.isConfirmed) {
-            document.getElementById('delete-form-' + id).submit();
-        }
-    });
-}
-</script>
-@endpush

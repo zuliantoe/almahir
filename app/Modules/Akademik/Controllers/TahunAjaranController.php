@@ -93,6 +93,12 @@ class TahunAjaranController extends Controller
                 ->with('error', 'Tahun ajaran aktif tidak dapat dihapus.');
         }
 
+        if ($tahunAjaran->kalenderAkademik()->exists() || $tahunAjaran->jadwalPelajaran()->exists() || $tahunAjaran->kurikulum()->exists() || $tahunAjaran->rombel()->exists()) {
+            return redirect()
+                ->route('akademik.tahun-ajaran.index')
+                ->with('error', 'Data tidak dapat dihapus karena masih digunakan (Kalender Akademik, Jadwal Pelajaran, Kurikulum, atau Rombel).');
+        }
+
         $tahunAjaran->delete();
 
         return redirect()

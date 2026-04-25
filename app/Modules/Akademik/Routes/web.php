@@ -15,6 +15,7 @@ use Modules\Akademik\Controllers\TahunAjaranController;
 use Modules\Akademik\Controllers\JadwalPelajaranController;
 use Modules\Akademik\Controllers\KalenderAkademikController;
 use Modules\Akademik\Controllers\KurikulumController;
+use Modules\Akademik\Controllers\RombelController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,7 +27,7 @@ use Modules\Akademik\Controllers\KurikulumController;
 |
 */
 
-Route::middleware(['web','auth'])->group(function () {
+Route::middleware(['web', 'auth', \Modules\Akademik\Middleware\ReadOnlyRoleMiddleware::class])->group(function () {
     Route::get('/', [AkademikController::class, 'index'])->name('index');
     // Route::get('/create', [AkademikController::class, 'create'])->name('create');
     // Route::post('/', [AkademikController::class, 'store'])->name('store');
@@ -36,13 +37,13 @@ Route::middleware(['web','auth'])->group(function () {
     // Route::delete('/{id}', [AkademikController::class, 'destroy'])->name('destroy');
 
     Route::resource('tahun-ajaran', TahunAjaranController::class);
-    Route::resource('kelas',ControllersKelasController::class);
-    Route::resource('jenis-kegiatan',ControllersJenisKegiatanController::class);
-    Route::resource('kategori-pelajaran',ControllersKategoriPelajaranController::class);
-    Route::resource('mata-pelajaran',MataPelajaranController::class);
+    Route::resource('kelas', ControllersKelasController::class)->parameters(['kelas' => 'kelas']);
+    Route::resource('jenis-kegiatan', ControllersJenisKegiatanController::class);
+    Route::resource('kategori-pelajaran', ControllersKategoriPelajaranController::class);
+    Route::resource('mata-pelajaran', MataPelajaranController::class);
     Route::resource('jadwal-pelajaran', JadwalPelajaranController::class);
     Route::resource('kalender-akademik', KalenderAkademikController::class);
     Route::resource('kurikulum', KurikulumController::class);
+    Route::resource('rombel', RombelController::class);
+
 });
-
-

@@ -55,6 +55,14 @@ class User extends Authenticatable
         return $this->hasOne(Pegawai::class, 'user_id');
     }
 
+    /**
+     * Polymorphic relationship to link with Guru or Siswa.
+     */
+    public function ref()
+    {
+        return $this->morphTo('ref');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | ACCESSORS

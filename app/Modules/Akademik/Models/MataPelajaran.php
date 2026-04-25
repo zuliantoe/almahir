@@ -23,4 +23,14 @@ class MataPelajaran extends Model
     {
         return $this->belongsTo(KategoriPelajaran::class, 'kategori_id');
     }
+
+    public function jadwalPelajaran()
+    {
+        return $this->hasMany(JadwalPelajaran::class, 'mapel_id');
+    }
+
+    public function kurikulum()
+    {
+        return $this->hasMany(Kurikulum::class, 'mapel_id');
+    }
 }

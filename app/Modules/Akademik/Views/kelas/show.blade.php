@@ -4,56 +4,52 @@
 
 @section('content')
 <div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <x-card title="Detail Informasi Kelas" icon="fas fa-school" type="primary" outline>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <tbody>
+                            <tr>
+                                <th width="40%" class="text-muted small text-uppercase font-weight-bold">Nama Kelas</th>
+                                <td><strong class="h5">{{ $kelas->nama }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted small text-uppercase font-weight-bold">Total Jadwal Pelajaran</th>
+                                <td>
+                                    <span class="badge badge-info px-3 py-2 font-weight-bold">
+                                        {{ $kelas->jadwal_pelajaran_count ?? 0 }} Jadwal
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted small text-uppercase font-weight-bold">Total Struktur Kurikulum</th>
+                                <td>
+                                    <span class="badge badge-primary px-3 py-2 font-weight-bold">
+                                        {{ $kelas->kurikulum_count ?? 0 }} Kurikulum
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted small text-uppercase font-weight-bold">Terakhir Diperbarui</th>
+                                <td><span class="text-muted">{{ $kelas->updated_at->format('d/m/Y H:i') }}</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
-    {{-- Header --}}
-    <div class="row mb-3">
-        <div class="col-sm-6">
-            <h1 class="m-0">Detail Kelas</h1>
-        </div>
-        <div class="col-sm-6 text-right">
-            <a href="{{ route('akademik.kelas.index') }}" class="btn btn-secondary btn-sm">
-                <i class="fas fa-arrow-left mr-1"></i> Kembali
-            </a>
+                <hr>
+
+                <div class="d-flex justify-content-end">
+                    <x-btn :href="route('akademik.kelas.index')" class="btn-secondary mr-2" icon="fas fa-arrow-left">
+                        Kembali
+                    </x-btn>
+                    <x-btn :href="route('akademik.kelas.edit', $kelas->id)" class="btn-warning text-white" icon="fas fa-edit">
+                        Edit Data
+                    </x-btn>
+                </div>
+            </x-card>
         </div>
     </div>
-
-    {{-- Card --}}
-    <div class="card card-info card-outline">
-        <div class="card-header">
-            <h3 class="card-title">
-                <i class="fas fa-info-circle mr-1"></i>
-                Informasi Kelas
-            </h3>
-        </div>
-
-        <div class="card-body">
-
-            <div class="row">
-                <div class="col-md-6">
-                    <strong>Nama Kelas</strong>
-                    <p class="text-muted">{{ $kelas->nama }}</p>
-                </div>
-
-                <div class="col-md-3">
-                    <strong>Total Jadwal</strong>
-                    <p class="text-muted">{{ $kelas->jadwal_pelajaran_count ?? 0 }}</p>
-                </div>
-
-                <div class="col-md-3">
-                    <strong>Total Kurikulum</strong>
-                    <p class="text-muted">{{ $kelas->kurikulum_count ?? 0 }}</p>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="card-footer text-right">
-            <a href="{{ route('akademik.kelas.edit', $kelas->id) }}"
-               class="btn btn-warning">
-                <i class="fas fa-edit mr-1"></i> Edit
-            </a>
-        </div>
-    </div>
-
 </div>
 @endsection

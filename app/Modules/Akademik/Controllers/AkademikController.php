@@ -19,12 +19,22 @@ class AkademikController extends Controller
      */
     public function index(Request $request): View
     {
-        // TODO: Implement listing logic
-        $akademiks = collect();
+        $totalSiswa = \Modules\Siswa\Models\Siswa::count();
+        $totalGuru = \Modules\Guru\Models\Guru::count();
+        $totalKelas = \App\Modules\Akademik\Models\Kelas::count();
+        $totalMapel = \App\Modules\Akademik\Models\MataPelajaran::count();
         
+        $siswaTerbaru = \Modules\Siswa\Models\Siswa::latest()->take(5)->get();
+        $guruTerbaru = \Modules\Guru\Models\Guru::latest()->take(5)->get();
+
         return view('akademik::index', [
-            'title' => 'Daftar Akademik',
-            'akademiks' => $akademiks,
+            'title' => 'Dashboard Akademik',
+            'totalSiswa' => $totalSiswa,
+            'totalGuru' => $totalGuru,
+            'totalKelas' => $totalKelas,
+            'totalMapel' => $totalMapel,
+            'siswaTerbaru' => $siswaTerbaru,
+            'guruTerbaru' => $guruTerbaru,
         ]);
     }
 

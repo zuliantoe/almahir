@@ -4,44 +4,26 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="row">
+    <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Tambah Kategori Pelajaran</h3>
-                    <div class="card-tools">
-                        <a href="{{ route('akademik.kategori-pelajaran.index') }}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-arrow-left"></i> Kembali
-                        </a>
+            <x-card title="Tambah Kategori Pelajaran" icon="fas fa-plus-circle" type="primary" outline>
+                <form action="{{ route('akademik.kategori-pelajaran.store') }}" method="POST">
+                    @csrf
+
+                    <x-input label="Nama Kategori" name="kategori" :value="old('kategori')" 
+                             placeholder="Contoh: Muatan Lokal" required maxlength="100" />
+
+                    <hr>
+
+                    <div class="d-flex justify-content-end">
+                        <x-btn :href="route('akademik.kategori-pelajaran.index')" class="btn-secondary mr-2" icon="fas fa-times">
+                            Batal
+                        </x-btn>
+                        <x-btn type="submit" icon="fas fa-save">
+                            Simpan Kategori
+                        </x-btn>
                     </div>
-                </div>
-                <div class="card-body">
-                    <form action="{{ route('akademik.kategori-pelajaran.store') }}" method="POST">
-                        @csrf
-
-                        <div class="form-group">
-                            <label for="kategori">Nama Kategori <span class="text-danger">*</span></label>
-                            <input type="text"
-                                   name="kategori"
-                                   id="kategori"
-                                   class="form-control @error('kategori') is-invalid @enderror"
-                                   value="{{ old('kategori') }}"
-                                   maxlength="100"
-                                   required>
-                            @error('kategori')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="form-group text-right">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Simpan
-                            </button>
-                            <a href="{{ route('akademik.kategori-pelajaran.index') }}" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Batal
-                            </a>
-                        </div>
-                    </form>
+                </form>
                 </div>
             </div>
         </div>

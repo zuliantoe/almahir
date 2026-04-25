@@ -5,7 +5,6 @@ namespace App\Modules\Akademik\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Modules\Guru\Models\Guru;
 
 class Kelas extends Model
 {
@@ -14,19 +13,19 @@ class Kelas extends Model
     protected $table = 'kelas';
 
     protected $fillable = [
-        'namakelas',
-        'jenjang',
-        'guru_id',
+        'kode_kelas',
+        'nama_kelas',
+        'tingkat_id',
     ];
 
-    public function walikelas()
+    public function tingkat()
     {
-        return $this->belongsTo(Guru::class, 'guru_id');
+        return $this->belongsTo(Tingkat::class, 'tingkat_id');
     }
 
-    public function jadwalPelajaran()
+    public function rombel()
     {
-        return $this->hasMany(JadwalPelajaran::class, 'kelas_id');
+        return $this->hasMany(Rombel::class, 'kelas_id');
     }
 
     public function kurikulum()

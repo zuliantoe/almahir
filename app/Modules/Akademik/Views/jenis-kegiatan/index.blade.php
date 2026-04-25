@@ -3,120 +3,136 @@
 @section('title', 'Jenis Kegiatan')
 
 @section('content')
-<div class="bg-white rounded-lg shadow-md p-6">
+<div class="container-fluid">
+    {{-- Success/Error Messages --}}
+    @if(session('success'))
+        <x-alert type="success" :message="session('success')" dismissible />
+    @endif
 
-    {{-- Header --}}
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h3 class="text-xl font-semibold">Daftar Jenis Kegiatan</h3>
-            <p class="text-sm text-gray-500">Manajemen jenis kegiatan kalender akademik</p>
+    <div class="row mb-3">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0 text-gray-800">Manajemen Jenis Kegiatan</h1>
+            <x-btn :href="route('akademik.jenis-kegiatan.create')" icon="fas fa-plus">
+                Tambah Kegiatan
+            </x-btn>
         </div>
-        <a href="{{ route('akademik.jenis-kegiatan.create') }}" class="btn-primary">
-            + Tambah Jenis Kegiatan
-        </a>
     </div>
 
-    {{-- Search --}}
-    <div class="mb-6 bg-gray-50 p-4 rounded-lg">
+    {{-- Search & Filter --}}
+    <x-card title="Filter Data" icon="fas fa-filter" outline collapsible>
         <form action="{{ route('akademik.jenis-kegiatan.index') }}" method="GET">
-            <div class="flex items-center gap-3">
-                <input type="text"
-                       name="search"
-                       placeholder="Cari jenis kegiatan..."
-                       value="{{ request('search') }}"
-                       class="form-input w-full">
-
-                <button type="submit" class="btn-primary">
-                    Cari
-                </button>
-
-                @if(request('search'))
-                    <a href="{{ route('akademik.jenis-kegiatan.index') }}" class="btn-secondary">
-                        Reset
-                    </a>
-                @endif
+            <div class="row align-items-end">
+                <div class="col-md-5 mb-3">
+                    <x-input label="Pencarian Kata Kunci" name="search" :value="request('search')" placeholder="Ketik nama kegiatan..." prepend="<i class='fas fa-search'></i>" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="btn-group w-100">
+                        <x-btn type="submit" class="btn-info flex-fill" icon="fas fa-search">
+                            Cari Data
+                        </x-btn>
+                        @if(request('search'))
+                            <x-btn :href="route('akademik.jenis-kegiatan.index')" class="btn-secondary" icon="fas fa-sync" title="Reset" />
+                        @endif
+                    </div>
+                </div>
             </div>
         </form>
-    </div>
+    </x-card>
 
-    {{-- Table --}}
-    <div class="overflow-x-auto">
-        <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <thead class="bg-gray-100 text-gray-700 text-sm uppercase">
-                <tr>
-                    <th class="px-4 py-3 text-left w-16">No</th>
-                    <th class="px-4 py-3 text-left">Jenis Kegiatan</th>
-                    <th class="px-4 py-3 text-left">Deskripsi</th>
-                    <th class="px-4 py-3 text-left w-40">Jumlah Kegiatan</th>
-                    <th class="px-4 py-3 text-left w-40">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="text-gray-600 text-sm">
-                @forelse($jenisKegiatan as $item)
-                <tr class="border-t hover:bg-gray-50 transition">
-                    <td class="px-4 py-3">
-                        {{ $loop->iteration + ($jenisKegiatan->currentPage() - 1) * $jenisKegiatan->perPage() }}
-                    </td>
+    {{-- Tabel Data --}}
+    <x-card title="Daftar Klasifikasi Kegiatan" type="primary" outline>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th width="5%" class="text-center">No</th>
+                        <th width="200px">Jenis Kegiatan</th>
+                        <th>Deskripsi Singkat</th>
+                        <th width="200px" class="text-center">Total Penggunaan</th>
+                        <th width="150px" class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($jenisKegiatan as $item)
+                    <tr>
+                        <td class="text-center">
+                            {{ $loop->iteration + ($jenisKegiatan->currentPage() - 1) * $jenisKegiatan->perPage() }}
+                        </td>
+                        <td><span class="badge badge-light border">{{ $item->jeniskegiatan }}</span></td>
+                        <td class="text-muted text-wrap">
+                            {{ Str::limit($item->deskripsi ?? '-', 100) }}
+                        </td>
+                        <td class="text-center">
+                            @if(($item->kalender_akademik_count ?? $item->kalenderAkademik->count()) > 0)
+                                <span class="badge badge-success px-3 py-2">
+                                    {{ $item->kalender_akademik_count ?? $item->kalenderAkademik->count() }} Kegiatan
+                                </span>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <x-btn :href="route('akademik.jenis-kegiatan.show', $item->id)" size="sm" class="btn-info" title="Detail">
+                                    <i class="fas fa-eye"></i>
+                                </x-btn>
+                                <x-btn :href="route('akademik.jenis-kegiatan.edit', $item->id)" size="sm" class="btn-warning" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </x-btn>
+                                <x-btn size="sm" class="btn-danger" title="Hapus" onclick="confirmDelete('{{ $item->id }}')">
+                                    <i class="fas fa-trash"></i>
+                                </x-btn>
+                            </div>
 
-                    <td class="px-4 py-3 font-medium">
-                        {{ $item->jeniskegiatan }}
-                    </td>
-
-                    <td class="px-4 py-3 text-gray-500">
-                        {{ $item->deskripsi ?? '-' }}
-                    </td>
-
-                    <td class="px-4 py-3">
-                        <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
-                            {{ $item->kalender_akademik_count ?? $item->kalenderAkademik->count() }}
-                            kegiatan
-                        </span>
-                    </td>
-
-                    <td class="px-4 py-3">
-                        <div class="flex gap-3 items-center">
-
-                            {{-- Show --}}
-                            <a href="{{ route('akademik.jenis-kegiatan.show', $item->id) }}"
-                               class="text-blue-500 hover:text-blue-700">
-                                👁
-                            </a>
-
-                            {{-- Edit --}}
-                            <a href="{{ route('akademik.jenis-kegiatan.edit', $item->id) }}"
-                               class="text-green-500 hover:text-green-700">
-                                ✏
-                            </a>
-
-                            {{-- Delete --}}
-                            <form action="{{ route('akademik.jenis-kegiatan.destroy', $item->id) }}"
-                                  method="POST"
-                                  onsubmit="return confirm('Yakin ingin menghapus data ini?')">
+                            <form id="delete-form-{{ $item->id }}" action="{{ route('akademik.jenis-kegiatan.destroy', $item->id) }}" method="POST" style="display: none;">
                                 @csrf
                                 @method('DELETE')
-                                <button class="text-red-500 hover:text-red-700">
-                                    🗑
-                                </button>
                             </form>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="fas fa-folder-open fa-2x mb-3"></i><br>
+                            Tidak ada master jenis kegiatan.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="5" class="px-4 py-6 text-center text-gray-400">
-                        Tidak ada data jenis kegiatan.
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    {{-- Pagination --}}
-    <div class="mt-6">
-        {{ $jenisKegiatan->withQueryString()->links() }}
-    </div>
-
+        @if($jenisKegiatan->hasPages())
+        <x-slot name="footer">
+            {{ $jenisKegiatan->withQueryString()->links() }}
+        </x-slot>
+        @endif
+    </x-card>
 </div>
 @endsection
+
+@push('js')
+<script>
+function confirmDelete(id) {
+    Swal.fire({
+        title: 'Konfirmasi Hapus',
+        text: "Apakah Anda yakin ingin menghapus data ini?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e3342f',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal',
+        customClass: {
+            confirmButton: 'btn btn-danger mx-1',
+            cancelButton: 'btn btn-secondary mx-1'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-' + id).submit();
+        }
+    });
+}
+</script>
+@endpush

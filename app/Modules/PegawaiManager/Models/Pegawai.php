@@ -51,13 +51,13 @@ class Pegawai extends Model
         return $this->belongsTo(TypePegawai::class, 'type_pegawai_id');
     }
 
-    public function izins(): HasMany
+    public function perizinans(): HasMany
     {
-        return $this->hasMany(Izin::class);
+        return $this->hasMany(\Modules\Perizinan\Models\Perizinan::class, 'user_id');
     }
 
     public function absensis(): HasMany
     {
-        return $this->hasMany(Absensi::class);
+        return $this->hasMany(\Modules\Absensi\Models\Absensi::class, 'pegawai_id');
     }
 }

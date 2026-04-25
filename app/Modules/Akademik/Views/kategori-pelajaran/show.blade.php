@@ -4,37 +4,39 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="row">
+    <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Detail Kategori Pelajaran</h3>
-                    <div class="card-tools">
-                        <span class="badge badge-info">
-                            {{ $kategoriPelajaran->mata_pelajaran_count ?? $kategoriPelajaran->mataPelajaran->count() }} Mata Pelajaran
-                        </span>
-                    </div>
+            <x-card title="Detail Kategori Pelajaran" icon="fas fa-info-circle" type="primary" outline>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <tbody>
+                            <tr>
+                                <th width="40%" class="text-muted">Nama Kategori</th>
+                                <td><strong>{{ $kategoriPelajaran->kategori }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Total Mata Pelajaran</th>
+                                <td>
+                                    <span class="badge badge-info px-3 py-2">
+                                        {{ $kategoriPelajaran->mata_pelajaran_count ?? $kategoriPelajaran->mataPelajaran->count() }} Mata Pelajaran
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="card-body">
-                    <div class="form-group">
-                        <label>Nama Kategori</label>
-                        <p class="form-control-static font-weight-bold">
-                            {{ $kategoriPelajaran->kategori }}
-                        </p>
-                    </div>
+                
+                <hr>
 
-                    <div class="form-group text-right">
-                        <a href="{{ route('akademik.kategori-pelajaran.edit', $kategoriPelajaran->id) }}"
-                           class="btn btn-warning">
-                            <i class="fas fa-edit"></i> Edit
-                        </a>
-                        <a href="{{ route('akademik.kategori-pelajaran.index') }}"
-                           class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Kembali
-                        </a>
-                    </div>
+                <div class="d-flex justify-content-end">
+                    <x-btn :href="route('akademik.kategori-pelajaran.index')" class="btn-secondary mr-2" icon="fas fa-arrow-left">
+                        Kembali
+                    </x-btn>
+                    <x-btn :href="route('akademik.kategori-pelajaran.edit', $kategoriPelajaran->id)" class="btn-warning text-white" icon="fas fa-edit">
+                        Edit Data
+                    </x-btn>
                 </div>
-            </div>
+            </x-card>
         </div>
     </div>
 </div>

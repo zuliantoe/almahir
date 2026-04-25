@@ -1,7 +1,17 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\ManajemenAsetDanAsrama\Controllers\ManajemenAsetDanAsramaController;
+use Modules\ManajemenAsetDanAsrama\Controllers\DashboardController;
+use Modules\ManajemenAsetDanAsrama\Controllers\PengajuanController;
+use Modules\ManajemenAsetDanAsrama\Controllers\PersetujuanController;
+use Modules\ManajemenAsetDanAsrama\Controllers\PengadaanController;
+use Modules\ManajemenAsetDanAsrama\Controllers\AsetController;
+use Modules\ManajemenAsetDanAsrama\Controllers\KamarController;
+use Modules\ManajemenAsetDanAsrama\Controllers\PenghuniController;
+use Modules\ManajemenAsetDanAsrama\Controllers\JadwalPiketController;
+use Modules\ManajemenAsetDanAsrama\Controllers\KerusakanController;
+use Modules\ManajemenAsetDanAsrama\Controllers\PemeliharaanController;
+use Modules\ManajemenAsetDanAsrama\Controllers\TrashController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,79 +24,105 @@ use Modules\ManajemenAsetDanAsrama\Controllers\ManajemenAsetDanAsramaController;
 */
 
 Route::middleware(['auth'])->group(function () {
-    // Dashboard / Index
-    Route::get('/', [ManajemenAsetDanAsramaController::class, 'index'])->name('index');
+    // Dashboard
+    Route::get('/', [DashboardController::class, 'index'])->name('index');
     
-    // Resource routes untuk Pengajuan Aset
-    Route::get('/pengajuan', [ManajemenAsetDanAsramaController::class, 'pengajuanIndex'])->name('pengajuan.index');
-    Route::get('/pengajuan/create', [ManajemenAsetDanAsramaController::class, 'pengajuanCreate'])->name('pengajuan.create');
-    Route::post('/pengajuan', [ManajemenAsetDanAsramaController::class, 'pengajuanStore'])->name('pengajuan.store');
-    Route::get('/pengajuan/{id}', [ManajemenAsetDanAsramaController::class, 'pengajuanShow'])->name('pengajuan.show');
-    Route::get('/pengajuan/{id}/edit', [ManajemenAsetDanAsramaController::class, 'pengajuanEdit'])->name('pengajuan.edit');
-    Route::put('/pengajuan/{id}', [ManajemenAsetDanAsramaController::class, 'pengajuanUpdate'])->name('pengajuan.update');
-    Route::delete('/pengajuan/{id}', [ManajemenAsetDanAsramaController::class, 'pengajuanDestroy'])->name('pengajuan.destroy');
+    // Pengajuan Aset
+// Pengajuan Aset
+Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
+    Route::get('/', [PengajuanController::class, 'index'])->name('index');
+    Route::get('create', [PengajuanController::class, 'create'])->name('create');
+    Route::post('/', [PengajuanController::class, 'store'])->name('store');
+    Route::get('{id}', [PengajuanController::class, 'show'])->name('show');
+    Route::get('{id}/edit', [PengajuanController::class, 'edit'])->name('edit');
+    Route::put('{id}', [PengajuanController::class, 'update'])->name('update');
+    Route::delete('{id}', [PengajuanController::class, 'destroy'])->name('destroy');
+    // Route untuk ajukan ulang (resubmit) pengajuan yang ditolak
+    Route::post('{id}/ajukan-ulang', [PengajuanController::class, 'ajukanUlang'])->name('ajukan-ulang');
+});
     
-    // Routes untuk Persetujuan
-    Route::get('/persetujuan', [ManajemenAsetDanAsramaController::class, 'persetujuanIndex'])->name('persetujuan.index');
-    Route::post('/persetujuan/{id}/approve', [ManajemenAsetDanAsramaController::class, 'persetujuanApprove'])->name('persetujuan.approve');
-    Route::post('/persetujuan/{id}/reject', [ManajemenAsetDanAsramaController::class, 'persetujuanReject'])->name('persetujuan.reject');
+    // Persetujuan
+    Route::prefix('persetujuan')->name('persetujuan.')->group(function () {
+        Route::get('/', [PersetujuanController::class, 'index'])->name('index');
+        Route::post('{id}/approve', [PersetujuanController::class, 'approve'])->name('approve');
+        Route::post('{id}/reject', [PersetujuanController::class, 'reject'])->name('reject');
+    });
     
-    // Routes untuk Pengadaan
-    Route::get('/pengadaan', [ManajemenAsetDanAsramaController::class, 'pengadaanIndex'])->name('pengadaan.index');
-    Route::get('/pengadaan/{id}/proses', [ManajemenAsetDanAsramaController::class, 'pengadaanProses'])->name('pengadaan.proses');
-    Route::post('/pengadaan/store', [ManajemenAsetDanAsramaController::class, 'pengadaanStore'])->name('pengadaan.store');
-    Route::post('/pengadaan/{id}/selesai', [ManajemenAsetDanAsramaController::class, 'pengadaanSelesai'])->name('pengadaan.selesai');
+    // Pengadaan
+    Route::prefix('pengadaan')->name('pengadaan.')->group(function () {
+        Route::get('/', [PengadaanController::class, 'index'])->name('index');
+        Route::get('{id}/proses', [PengadaanController::class, 'proses'])->name('proses');
+        Route::post('store', [PengadaanController::class, 'store'])->name('store');
+        Route::post('{id}/selesai', [PengadaanController::class, 'selesai'])->name('selesai');
+    });
     
-    // Routes untuk Master Aset
-    Route::get('/aset', [ManajemenAsetDanAsramaController::class, 'asetIndex'])->name('aset.index');
-    Route::get('/aset/{id}', [ManajemenAsetDanAsramaController::class, 'asetShow'])->name('aset.show');
-    Route::get('/aset/{id}/edit', [ManajemenAsetDanAsramaController::class, 'asetEdit'])->name('aset.edit');
-    Route::put('/aset/{id}', [ManajemenAsetDanAsramaController::class, 'asetUpdate'])->name('aset.update');
-    Route::delete('/aset/{id}', [ManajemenAsetDanAsramaController::class, 'asetDestroy'])->name('aset.destroy');
+    // Master Aset
+    Route::prefix('aset')->name('aset.')->group(function () {
+        Route::get('/', [AsetController::class, 'index'])->name('index');
+        Route::get('{id}', [AsetController::class, 'show'])->name('show');
+        Route::get('{id}/edit', [AsetController::class, 'edit'])->name('edit');
+        Route::put('{id}', [AsetController::class, 'update'])->name('update');
+        Route::delete('{id}', [AsetController::class, 'destroy'])->name('destroy');
+        Route::post('{id}/duplicate', [AsetController::class, 'duplicate'])->name('duplicate');
+    });
     
-    // Routes untuk Kamar
-    Route::get('/kamar', [ManajemenAsetDanAsramaController::class, 'kamarIndex'])->name('kamar.index');
-    Route::get('/kamar/create', [ManajemenAsetDanAsramaController::class, 'kamarCreate'])->name('kamar.create');
-    Route::post('/kamar', [ManajemenAsetDanAsramaController::class, 'kamarStore'])->name('kamar.store');
-    Route::get('/kamar/{id}/edit', [ManajemenAsetDanAsramaController::class, 'kamarEdit'])->name('kamar.edit');
-    Route::put('/kamar/{id}', [ManajemenAsetDanAsramaController::class, 'kamarUpdate'])->name('kamar.update');
-    Route::delete('/kamar/{id}', [ManajemenAsetDanAsramaController::class, 'kamarDestroy'])->name('kamar.destroy');
+    // Kamar
+    Route::prefix('kamar')->name('kamar.')->group(function () {
+        Route::get('/', [KamarController::class, 'index'])->name('index');
+        Route::get('create', [KamarController::class, 'create'])->name('create');
+        Route::post('/', [KamarController::class, 'store'])->name('store');
+        Route::get('{id}/edit', [KamarController::class, 'edit'])->name('edit');
+        Route::put('{id}', [KamarController::class, 'update'])->name('update');
+        Route::delete('{id}', [KamarController::class, 'destroy'])->name('destroy');
+    });
     
-    // Routes untuk Penghuni Kamar
-    Route::get('/penghuni', [ManajemenAsetDanAsramaController::class, 'penghuniIndex'])->name('penghuni.index');
-    Route::get('/penghuni/create', [ManajemenAsetDanAsramaController::class, 'penghuniCreate'])->name('penghuni.create');
-    Route::post('/penghuni', [ManajemenAsetDanAsramaController::class, 'penghuniStore'])->name('penghuni.store');
-    Route::get('/penghuni/{id}/edit', [ManajemenAsetDanAsramaController::class, 'penghuniEdit'])->name('penghuni.edit');
-    Route::put('/penghuni/{id}', [ManajemenAsetDanAsramaController::class, 'penghuniUpdate'])->name('penghuni.update');
-    Route::delete('/penghuni/{id}', [ManajemenAsetDanAsramaController::class, 'penghuniDestroy'])->name('penghuni.destroy');
+    // Penghuni Kamar
+    Route::prefix('penghuni')->name('penghuni.')->group(function () {
+        Route::get('/', [PenghuniController::class, 'index'])->name('index');
+        Route::get('create', [PenghuniController::class, 'create'])->name('create');
+        Route::post('/', [PenghuniController::class, 'store'])->name('store');
+        Route::get('{id}/edit', [PenghuniController::class, 'edit'])->name('edit');
+        Route::put('{id}', [PenghuniController::class, 'update'])->name('update');
+        Route::delete('{id}', [PenghuniController::class, 'destroy'])->name('destroy');
+    });
     
-    // Routes untuk Jadwal Piket
-    Route::get('/jadwal-piket', [ManajemenAsetDanAsramaController::class, 'jadwalPiketIndex'])->name('jadwal-piket.index');
-    Route::get('/jadwal-piket/create', [ManajemenAsetDanAsramaController::class, 'jadwalPiketCreate'])->name('jadwal-piket.create');
-    Route::post('/jadwal-piket', [ManajemenAsetDanAsramaController::class, 'jadwalPiketStore'])->name('jadwal-piket.store');
-    Route::get('/jadwal-piket/{id}/edit', [ManajemenAsetDanAsramaController::class, 'jadwalPiketEdit'])->name('jadwal-piket.edit');
-    Route::put('/jadwal-piket/{id}', [ManajemenAsetDanAsramaController::class, 'jadwalPiketUpdate'])->name('jadwal-piket.update');
-    Route::delete('/jadwal-piket/{id}', [ManajemenAsetDanAsramaController::class, 'jadwalPiketDestroy'])->name('jadwal-piket.destroy');
-    Route::post('/jadwal-piket/{id}/selesai', [ManajemenAsetDanAsramaController::class, 'jadwalPiketSelesai'])->name('jadwal-piket.selesai');
+    // Jadwal Piket
+    Route::prefix('jadwal-piket')->name('jadwal-piket.')->group(function () {
+        Route::get('/', [JadwalPiketController::class, 'index'])->name('index');
+        Route::get('create', [JadwalPiketController::class, 'create'])->name('create');
+        Route::post('/', [JadwalPiketController::class, 'store'])->name('store');
+        Route::get('{id}/edit', [JadwalPiketController::class, 'edit'])->name('edit');
+        Route::put('{id}', [JadwalPiketController::class, 'update'])->name('update');
+        Route::delete('{id}', [JadwalPiketController::class, 'destroy'])->name('destroy');
+        Route::post('{id}/selesai', [JadwalPiketController::class, 'selesai'])->name('selesai');
+    });
     
-    // Routes untuk Kerusakan
-    Route::get('/kerusakan', [ManajemenAsetDanAsramaController::class, 'kerusakanIndex'])->name('kerusakan.index');
-    Route::get('/kerusakan/create', [ManajemenAsetDanAsramaController::class, 'kerusakanCreate'])->name('kerusakan.create');
-    Route::post('/kerusakan', [ManajemenAsetDanAsramaController::class, 'kerusakanStore'])->name('kerusakan.store');
-    Route::get('/kerusakan/{id}/edit', [ManajemenAsetDanAsramaController::class, 'kerusakanEdit'])->name('kerusakan.edit');
-    Route::put('/kerusakan/{id}', [ManajemenAsetDanAsramaController::class, 'kerusakanUpdate'])->name('kerusakan.update');
-    Route::delete('/kerusakan/{id}', [ManajemenAsetDanAsramaController::class, 'kerusakanDestroy'])->name('kerusakan.destroy');
+    // Kerusakan
+    Route::prefix('kerusakan')->name('kerusakan.')->group(function () {
+        Route::get('/', [KerusakanController::class, 'index'])->name('index');
+        Route::get('create', [KerusakanController::class, 'create'])->name('create');
+        Route::post('/', [KerusakanController::class, 'store'])->name('store');
+        Route::get('{id}/edit', [KerusakanController::class, 'edit'])->name('edit');
+        Route::put('{id}', [KerusakanController::class, 'update'])->name('update');
+        Route::delete('{id}', [KerusakanController::class, 'destroy'])->name('destroy');
+        Route::post('{id}/proses-pemeliharaan', [KerusakanController::class, 'prosesPemeliharaan'])->name('proses-pemeliharaan');
+    });
     
-    // Routes untuk Pemeliharaan
-    Route::get('/pemeliharaan', [ManajemenAsetDanAsramaController::class, 'pemeliharaanIndex'])->name('pemeliharaan.index');
-    Route::get('/pemeliharaan/create', [ManajemenAsetDanAsramaController::class, 'pemeliharaanCreate'])->name('pemeliharaan.create');
-    Route::post('/pemeliharaan', [ManajemenAsetDanAsramaController::class, 'pemeliharaanStore'])->name('pemeliharaan.store');
-    Route::get('/pemeliharaan/{id}/edit', [ManajemenAsetDanAsramaController::class, 'pemeliharaanEdit'])->name('pemeliharaan.edit');
-    Route::put('/pemeliharaan/{id}', [ManajemenAsetDanAsramaController::class, 'pemeliharaanUpdate'])->name('pemeliharaan.update');
-    Route::delete('/pemeliharaan/{id}', [ManajemenAsetDanAsramaController::class, 'pemeliharaanDestroy'])->name('pemeliharaan.destroy');
+    // Pemeliharaan
+    Route::prefix('pemeliharaan')->name('pemeliharaan.')->group(function () {
+        Route::get('/', [PemeliharaanController::class, 'index'])->name('index');
+        Route::get('create', [PemeliharaanController::class, 'create'])->name('create');
+        Route::post('/', [PemeliharaanController::class, 'store'])->name('store');
+        Route::get('{id}/edit', [PemeliharaanController::class, 'edit'])->name('edit');
+        Route::put('{id}', [PemeliharaanController::class, 'update'])->name('update');
+        Route::delete('{id}', [PemeliharaanController::class, 'destroy'])->name('destroy');
+        Route::post('{id}/selesai', [PemeliharaanController::class, 'selesai'])->name('selesai');
+    });
     
-    // Routes untuk Trash (Soft Delete)
-    Route::get('/trash', [ManajemenAsetDanAsramaController::class, 'trashIndex'])->name('trash.index');
-    Route::post('/trash/{type}/{id}/restore', [ManajemenAsetDanAsramaController::class, 'trashRestore'])->name('trash.restore');
-    Route::delete('/trash/{type}/{id}/force-delete', [ManajemenAsetDanAsramaController::class, 'trashForceDelete'])->name('trash.force-delete');
+    // Trash
+    Route::prefix('trash')->name('trash.')->group(function () {
+        Route::get('/', [TrashController::class, 'index'])->name('index');
+        Route::post('{type}/{id}/restore', [TrashController::class, 'restore'])->name('restore');
+        Route::delete('{type}/{id}/force-delete', [TrashController::class, 'forceDelete'])->name('force-delete');
+    });
 });

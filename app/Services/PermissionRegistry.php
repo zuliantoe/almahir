@@ -50,6 +50,10 @@ class PermissionRegistry
                 'label' => 'Absensi',
                 'permissions' => ['absensi.view', 'absensi.create', 'absensi.edit', 'absensi.delete'],
             ],
+            'perizinan' => [
+                'label' => 'Perizinan Pegawai',
+                'permissions' => ['perizinan.view', 'perizinan.create', 'perizinan.manage'],
+            ],
         ],
         'Keuangan' => [
             'pembayaran' => [

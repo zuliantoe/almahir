@@ -12,13 +12,26 @@ class Kurikulum extends Model
 
     protected $table = 'kurikulum';
     protected $fillable = [
+        'master_kurikulum_id',
+        'tingkat_id',
         'tahunajaran_id',
         'kelas_id',
-        'matpel_id',
+        'mapel_id',
         'total_jam',
         'semester',
+        'kkm',
         'deskripsi'
     ];
+
+    public function masterKurikulum(): BelongsTo
+    {
+        return $this->belongsTo(MasterKurikulum::class, 'master_kurikulum_id');
+    }
+
+    public function tingkat(): BelongsTo
+    {
+        return $this->belongsTo(Tingkat::class, 'tingkat_id');
+    }
 
     public function tahunAjaran(): BelongsTo
     {
@@ -32,6 +45,6 @@ class Kurikulum extends Model
 
     public function mataPelajaran():BelongsTo
     {
-        return $this->belongsTo(MataPelajaran::class,'matapelajaran_id');
+        return $this->belongsTo(MataPelajaran::class,'mapel_id');
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\ManajemenAsetDanAsrama\Models;  // UBAH
+namespace Modules\ManajemenAsetDanAsrama\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,7 +11,16 @@ class Kerusakan extends Model
     protected $fillable = [
         'aset_id',
         'tanggal_rusak',
+        'tanggal_kerusakan',
         'deskripsi_kerusakan',
+        'tingkat_kerusakan',
+        'status_penanganan',
+        'catatan',
+    ];
+
+    protected $casts = [
+        'tanggal_rusak' => 'date',
+        'tanggal_kerusakan' => 'date',
     ];
 
     // Relasi: kerusakan milik 1 aset

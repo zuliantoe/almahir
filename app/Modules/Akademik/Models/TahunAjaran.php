@@ -12,7 +12,7 @@ class TahunAjaran extends Model
     use HasFactory,SoftDeletes;
 
     protected $table = 'tahun_ajaran';
-    protected $fillable = ['tahunajaran', 'status'];
+    protected $fillable = ['tahunajaran', 'semester', 'status', 'keterangan'];
 
     public function kalenderAkademik(): HasMany
     {

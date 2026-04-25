@@ -4,128 +4,130 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Daftar Kategori Pelajaran</h3>
-                    <div class="card-tools">
-                        <a href="{{ route('akademik.kategori-pelajaran.create') }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-plus"></i> Tambah Kategori
-                        </a>
-                    </div>
-                </div>
-                <div class="card-body">
-                    {{-- Search --}}
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <form action="{{ route('akademik.kategori-pelajaran.index') }}" method="GET" class="form-inline">
-                                <div class="input-group">
-                                    <input type="text"
-                                           name="search"
-                                           class="form-control"
-                                           placeholder="Cari kategori..."
-                                           value="{{ request('search') }}">
-                                    <div class="input-group-append">
-                                        <button class="btn btn-primary" type="submit">
-                                            <i class="fas fa-search"></i>
-                                        </button>
-                                        @if(request('search'))
-                                            <a href="{{ route('akademik.kategori-pelajaran.index') }}" class="btn btn-secondary">
-                                                <i class="fas fa-times"></i>
-                                            </a>
-                                        @endif
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+    {{-- Success/Error Messages --}}
+    @if(session('success'))
+        <x-alert type="success" :message="session('success')" dismissible />
+    @endif
+    @if(session('error'))
+        <x-alert type="danger" :message="session('error')" dismissible />
+    @endif
 
-                    {{-- Flash Messages --}}
-                    @if(session('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            {{ session('success') }}
-                            <button type="button" class="close" data-dismiss="alert">
-                                <span>&times;</span>
-                            </button>
-                        </div>
-                    @endif
-
-                    @if(session('error'))
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            {{ session('error') }}
-                            <button type="button" class="close" data-dismiss="alert">
-                                <span>&times;</span>
-                            </button>
-                        </div>
-                    @endif
-
-                    {{-- Table --}}
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover">
-                            <thead>
-                                <tr>
-                                    <th width="50">No</th>
-                                    <th>Kategori</th>
-                                    <th width="200">Jumlah Mata Pelajaran</th>
-                                    <th width="200">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($kategoriPelajaran as $item)
-                                <tr>
-                                    <td>{{ $loop->iteration + ($kategoriPelajaran->currentPage() - 1) * $kategoriPelajaran->perPage() }}</td>
-                                    <td>{{ $item->kategori }}</td>
-                                    <td>
-                                        <span class="badge badge-info">
-                                            {{ $item->mata_pelajaran_count ?? $item->mataPelajaran->count() }} Mata Pelajaran
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <a href="{{ route('akademik.kategori-pelajaran.show', $item->id) }}"
-                                               class="btn btn-sm btn-info"
-                                               title="Detail">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <a href="{{ route('akademik.kategori-pelajaran.edit', $item->id) }}"
-                                               class="btn btn-sm btn-warning"
-                                               title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <form action="{{ route('akademik.kategori-pelajaran.destroy', $item->id) }}"
-                                                  method="POST"
-                                                  class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit"
-                                                        class="btn btn-sm btn-danger"
-                                                        title="Hapus"
-                                                        onclick="return confirm('Yakin ingin menghapus kategori ini?')">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted">
-                                        Tidak ada data kategori pelajaran.
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {{-- Pagination --}}
-                    <div class="mt-3">
-                        {{ $kategoriPelajaran->links() }}
-                    </div>
-                </div>
-            </div>
+    <div class="row mb-3">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0 text-gray-800">Kategori Mata Pelajaran</h1>
+            <x-btn :href="route('akademik.kategori-pelajaran.create')" icon="fas fa-plus">
+                Tambah Kategori
+            </x-btn>
         </div>
     </div>
+
+    <x-card title="Daftar Kategori" icon="fas fa-tags" type="primary" outline>
+        <div class="table-responsive">
+            {{-- Search Bar --}}
+            <div class="mb-3">
+                <form action="{{ route('akademik.kategori-pelajaran.index') }}" method="GET">
+                    <div class="row align-items-end">
+                        <div class="col-md-5">
+                            <x-input label="Cari Kategori" name="search" :value="request('search')" placeholder="Cari nama kategori..." prepend="<i class='fas fa-search'></i>" />
+                        </div>
+                        <div class="col-md-3">
+                             <div class="btn-group w-100">
+                                <x-btn type="submit" class="btn-info" icon="fas fa-search">Cari</x-btn>
+                                @if(request('search'))
+                                    <x-btn :href="route('akademik.kategori-pelajaran.index')" class="btn-secondary" icon="fas fa-times">Reset</x-btn>
+                                @endif
+                             </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            {{-- Table --}}
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th width="5%" class="text-center">No</th>
+                        <th>Nama Kategori</th>
+                        <th class="text-center">Jumlah Mata Pelajaran</th>
+                        <th width="150px" class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($kategoriPelajaran as $item)
+                    <tr>
+                        <td class="text-center">{{ $loop->iteration + ($kategoriPelajaran->currentPage() - 1) * $kategoriPelajaran->perPage() }}</td>
+                        <td><strong>{{ $item->kategori }}</strong></td>
+                        <td class="text-center">
+                            @if(($item->mata_pelajaran_count ?? $item->mataPelajaran->count()) > 0)
+                                <span class="badge badge-info px-3 py-2">
+                                    {{ $item->mata_pelajaran_count ?? $item->mataPelajaran->count() }} Mapel
+                                </span>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <x-btn :href="route('akademik.kategori-pelajaran.show', $item->id)" size="sm" class="btn-info" title="Detail">
+                                    <i class="fas fa-eye"></i>
+                                </x-btn>
+                                <x-btn :href="route('akademik.kategori-pelajaran.edit', $item->id)" size="sm" class="btn-warning" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </x-btn>
+                                <x-btn size="sm" class="btn-danger" title="Hapus" onclick="confirmDelete('{{ $item->id }}')">
+                                    <i class="fas fa-trash"></i>
+                                </x-btn>
+                            </div>
+
+                            <form id="delete-form-{{ $item->id }}" action="{{ route('akademik.kategori-pelajaran.destroy', $item->id) }}" method="POST" style="display: none;">
+                                @csrf
+                                @method('DELETE')
+                            </form>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted">
+                            <i class="fas fa-tags fa-2x mb-3"></i><br>
+                            Tidak ada data kategori pelajaran.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if($kategoriPelajaran->hasPages())
+        <x-slot name="footer">
+            {{ $kategoriPelajaran->links() }}
+        </x-slot>
+        @endif
+    </x-card>
 </div>
 @endsection
+
+@push('js')
+<script>
+function confirmDelete(id) {
+    Swal.fire({
+        title: 'Konfirmasi Hapus',
+        text: "Apakah Anda yakin ingin menghapus kategori ini?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e3342f',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal',
+        customClass: {
+            confirmButton: 'btn btn-danger mx-1',
+            cancelButton: 'btn btn-secondary mx-1'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-' + id).submit();
+        }
+    });
+}
+</script>
+@endpush

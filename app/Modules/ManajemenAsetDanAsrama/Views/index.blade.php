@@ -137,104 +137,33 @@
                         </a>
                     </div>
                 </div>
+                <div class="row mt-2">
+                    <div class="col-md-2 col-6 mb-2">
+                        <a href="{{ route('manajemenasetdanasrama.penghuni.index') }}" class="btn btn-outline-dark btn-block">
+                            <i class="fas fa-users"></i> Penghuni
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-2">
+                        <a href="{{ route('manajemenasetdanasrama.kerusakan.index') }}" class="btn btn-outline-danger btn-block">
+                            <i class="fas fa-exclamation-triangle"></i> Kerusakan
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-2">
+                        <a href="{{ route('manajemenasetdanasrama.pemeliharaan.index') }}" class="btn btn-outline-info btn-block">
+                            <i class="fas fa-wrench"></i> Pemeliharaan
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-2">
+                        <a href="{{ route('manajemenasetdanasrama.trash.index') }}" class="btn btn-outline-secondary btn-block">
+                            <i class="fas fa-trash-restore"></i> Trash
+                        </a>
+                    </div>
+                </div>
             </x-card>
         </div>
     </div>
 
-    {{-- Recent Data Tables --}}
-    <div class="row mt-3">
-        {{-- Pengajuan Terbaru --}}
-        <div class="col-md-6">
-            <x-card title="Pengajuan Terbaru" icon="fas fa-file-alt">
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover">
-                        <thead>
-                            <tr>
-                                <th>No. Pengajuan</th>
-                                <th>Nama Aset</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($pengajuanTerbaru as $item)
-                            <tr>
-                                <td>{{ $item->nomor_pengajuan ?? '-' }}</td>
-                                <td>{{ $item->nama_aset ?? '-' }}</td>
-                                <td>
-                                    @if($item->status == 'diajukan')
-                                        <span class="badge badge-warning">Diajukan</span>
-                                    @elseif($item->status == 'disetujui')
-                                        <span class="badge badge-success">Disetujui</span>
-                                    @elseif($item->status == 'ditolak')
-                                        <span class="badge badge-danger">Ditolak</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="3" class="text-center text-muted">
-                                    <i class="fas fa-inbox"></i> Belum ada data
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                <x-slot name="footer">
-                    <a href="{{ route('manajemenasetdanasrama.pengajuan.index') }}" class="btn btn-sm btn-primary">
-                        Lihat Semua <i class="fas fa-arrow-right"></i>
-                    </a>
-                </x-slot>
-            </x-card>
-        </div>
 
-        {{-- Aset Terbaru --}}
-        <div class="col-md-6">
-            <x-card title="Aset Terbaru" icon="fas fa-boxes">
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover">
-                        <thead>
-                            <tr>
-                                <th>Kode Aset</th>
-                                <th>Nama Aset</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($asetTerbaru as $item)
-                            <tr>
-                                <td>{{ $item->kode_aset ?? '-' }}</td>
-                                <td>{{ $item->nama_aset ?? '-' }}</td>
-                                <td>
-                                    @if($item->status_kondisi == 'baik')
-                                        <span class="badge badge-success">Baik</span>
-                                    @elseif($item->status_kondisi == 'rusak')
-                                        <span class="badge badge-danger">Rusak</span>
-                                    @elseif($item->status_kondisi == 'dalam_perbaikan')
-                                        <span class="badge badge-warning">Dalam Perbaikan</span>
-                                    @elseif($item->status_kondisi == 'sudah_diperbaiki')
-                                        <span class="badge badge-info">Sudah Diperbaiki</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="3" class="text-center text-muted">
-                                    <i class="fas fa-inbox"></i> Belum ada data
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                <x-slot name="footer">
-                    <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="btn btn-sm btn-primary">
-                        Lihat Semua <i class="fas fa-arrow-right"></i>
-                    </a>
-                </x-slot>
-            </x-card>
-        </div>
-    </div>
 
     {{-- Jadwal Piket Hari Ini --}}
     <div class="row mt-3">

@@ -13,8 +13,8 @@ class JenisKegiatan extends Model
     protected $table = 'jenis_kegiatan';
     protected $fillable = ['jeniskegiatan','deskripsi'];
 
-    public function KalenderAkademik():HasMany
+    public function kalenderAkademik():HasMany
     {
-        return $this->hasMany(KalenderAkademik::class,'jeniskegiatan_id');
+        return $this->hasMany(KalenderAkademik::class, 'kegiatan_id');
     }
 }

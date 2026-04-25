@@ -4,65 +4,194 @@
 
 @section('content')
 <div class="container-fluid">
-    {{-- Alert Messages --}}
-    @if(session('success'))
-        <x-alert type="success" :message="session('success')" dismissible />
-    @endif
-    @if(session('error'))
-        <x-alert type="danger" :message="session('error')" dismissible />
-    @endif
 
-    <x-card title="Daftar PegawaiManager" icon="fas fa-list">
+    {{-- Alerts handled globally via SweetAlert2 --}}
+
+    <x-card title="Daftar Pegawai" icon="fas fa-users">
+
         <x-slot name="tools">
-            <a href="{{ route('pegawaimanager.create') }}" class="btn btn-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Tambah PegawaiManager
+            <a href="{{ route('pegawaimanager.export') }}" class="btn btn-success btn-sm rounded-pill px-3 shadow-sm mr-2" title="Unduh data dalam format CSV/Excel">
+                <i class="fas fa-file-excel mr-1"></i> Export Data
+            </a>
+            <a href="{{ route('pegawaimanager.create') }}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+                <i class="fas fa-plus mr-1"></i> Tambah Pegawai
             </a>
         </x-slot>
 
+        {{-- Filter & Search Section: Standard SIAKAD Layout --}}
+        <div class="p-3 mb-4 bg-light rounded border shadow-sm">
+            <form action="{{ route('pegawaimanager.index') }}" method="GET">
+                <div class="row align-items-end">
+                    
+                    {{-- Pencarian --}}
+                    <div class="col-lg-4 col-md-4">
+                        <div class="form-group mb-0">
+                            <label class="text-xs font-weight-bold ml-1 text-muted"><i class="fas fa-search mr-1"></i> Cari Nama / Email</label>
+                            <input type="text" name="search" class="form-control form-control-sm" 
+                                   placeholder="Ketik kata kunci pencarian..." value="{{ request('search') }}">
+                        </div>
+                    </div>
+                    
+                    {{-- Tipe --}}
+                    <div class="col-lg-3 col-md-3">
+                        <div class="form-group mb-0">
+                            <label class="text-xs font-weight-bold ml-1 text-muted"><i class="fas fa-tag mr-1"></i> Tipe Pegawai</label>
+                            <select name="type" class="form-control form-control-sm" onchange="this.form.submit()">
+                                <option value="">-- Semua Kategori --</option>
+                                @foreach($types as $type)
+                                    <option value="{{ $type->id }}" {{ request('type') == $type->id ? 'selected' : '' }}>
+                                        {{ $type->nama_type }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Role --}}
+                    <div class="col-lg-3 col-md-3">
+                        <div class="form-group mb-0">
+                            <label class="text-xs font-weight-bold ml-1 text-muted"><i class="fas fa-shield-alt mr-1"></i> Role</label>
+                            <select name="role" class="form-control form-control-sm" onchange="this.form.submit()">
+                                <option value="">-- Semua Role --</option>
+                                @foreach($roles as $role)
+                                    <option value="{{ $role->name }}" {{ request('role') == $role->name ? 'selected' : '' }}>
+                                        {{ $role->display_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Tombol --}}
+                    <div class="col-lg-2 col-md-2 d-flex">
+                        <button type="submit" class="btn btn-primary btn-sm flex-fill mr-1 shadow-sm">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        <a href="{{ route('pegawaimanager.index') }}" class="btn btn-default btn-sm shadow-sm" title="Kembali ke awal">
+                            <i class="fas fa-sync-alt"></i>
+                        </a>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+
         <div class="table-responsive">
+
             <table class="table table-hover table-striped">
+
                 <thead class="thead-dark">
                     <tr>
-                        <th>#</th>
-                        <th>Nama</th>
+                        <th style="width: 50px;" class="text-center">No</th>
+                        <th>Identitas Pegawai</th>
+                        <th class="text-center">Hak Akses Sistem</th>
+                        <th class="text-center">Kategori / Tipe</th>
                         <th class="text-center" style="width: 150px;">Aksi</th>
                     </tr>
                 </thead>
+
                 <tbody>
+
                     @forelse($pegawaiManagers as $index => $item)
+
                     <tr>
-                        <td>{{ $index + 1 }}</td>
-                        <td>{{ $item->nama ?? '-' }}</td>
+
+                        <td class="text-center">{{ $index + 1 }}</td>
+
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <img src="{{ $item->user->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($item->nama).'&background=0D8ABC&color=fff&size=40' }}" 
+                                     class="img-circle elevation-1 mr-3" 
+                                     style="width: 45px; height: 45px; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); object-fit: cover;">
+                                <div>
+                                    <div class="font-weight-bold text-dark mb-0">{{ $item->nama }}</div>
+                                    <small class="text-muted"><i class="far fa-envelope mr-1"></i> {{ $item->email }}</small>
+                                </div>
+                            </div>
+                        </td>
+
                         <td class="text-center">
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ route('pegawaimanager.edit', $item->id) }}" 
-                                   class="btn btn-info" title="Edit">
+                            <div class="badge badge-light border px-3 py-2 text-xs" style="border-radius: 20px; font-weight: 600;">
+                                <i class="fas fa-shield-alt mr-1 text-success"></i> {{ $item->user->primary_role ?? 'Pegawai' }}
+                            </div>
+                        </td>
+
+                        <td class="text-center">
+                            <span class="badge badge-info-soft px-3 py-1 text-primary" style="font-weight: 600; border-radius: 8px; background-color: #e3f2fd;">
+                                {{ $item->typePegawai->nama_type ?? '-' }}
+                            </span>
+                        </td>
+
+                        <td class="text-center py-3">
+                            <div class="d-flex justify-content-center">
+                                <a href="{{ route('pegawaimanager.show', $item->id) }}"
+                                   class="btn btn-outline-primary btn-sm mx-1 shadow-sm px-2"
+                                   title="Lihat Detail Profil">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+
+                                <a href="{{ route('pegawaimanager.edit', $item->id) }}"
+                                   class="btn btn-outline-info btn-sm mx-1 shadow-sm px-2"
+                                   title="Edit Data">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <form action="{{ route('pegawaimanager.destroy', $item->id) }}" 
-                                      method="POST" 
-                                      class="d-inline"
-                                      onsubmit="return confirm('Hapus data ini?')">
+
+                                <form action="{{ route('pegawaimanager.destroy', $item->id) }}"
+                                      method="POST"
+                                      class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger" title="Hapus">
-                                        <i class="fas fa-trash"></i>
+                                    <button type="button"
+                                            class="btn btn-outline-danger btn-sm mx-1 shadow-sm px-2 btn-delete"
+                                            title="Hapus Data">
+                                        <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </form>
                             </div>
                         </td>
+
                     </tr>
+
                     @empty
+
                     <tr>
-                        <td colspan="3" class="text-center text-muted py-4">
-                            <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                            Belum ada data. <a href="{{ route('pegawaimanager.create') }}">Tambah data pertama</a>.
+                        <td colspan="5" class="text-center text-muted py-5 bg-white">
+                            <div class="mb-3">
+                                <i class="fas fa-search-minus fa-4x text-gray-300"></i>
+                            </div>
+                            @if(request()->anyFilled(['search', 'type', 'role']))
+                                <h5 class="font-weight-bold mb-1">Hasil Pencarian Tidak Ditemukan</h5>
+                                <p class="small">Coba gunakan kata kunci lain atau bersihkan filter Anda.</p>
+                                <a href="{{ route('pegawaimanager.index') }}" class="btn btn-primary btn-sm mt-2 rounded-pill px-4">Bersihkan Filter</a>
+                            @else
+                                <h5 class="font-weight-bold mb-1">Daftar Pegawai Masih Kosong</h5>
+                                <p class="small">Silakan tambahkan data pegawai pertama Anda untuk memulai.</p>
+                                <a href="{{ route('pegawaimanager.create') }}" class="btn btn-primary btn-sm mt-2 rounded-pill px-4">Tambah Pegawai</a>
+                            @endif
                         </td>
                     </tr>
+
                     @endforelse
+
                 </tbody>
             </table>
+
         </div>
+
+        {{-- Pagination Links --}}
+        @if($pegawaiManagers->hasPages())
+            <div class="card-footer bg-light border-top d-flex justify-content-between align-items-center py-3">
+                <div class="text-muted small font-italic">
+                    Menampilkan <strong>{{ $pegawaiManagers->firstItem() }}</strong> sampai <strong>{{ $pegawaiManagers->lastItem() }}</strong> 
+                    dari <strong>{{ $pegawaiManagers->total() }}</strong> total data pegawai.
+                </div>
+                <div class="pagination-sm">
+                    {{ $pegawaiManagers->links() }}
+                </div>
+            </div>
+        @endif
+
     </x-card>
+
 </div>
 @endsection

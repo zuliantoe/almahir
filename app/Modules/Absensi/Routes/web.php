@@ -1,0 +1,22 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Modules\Absensi\Controllers\AbsensiController;
+
+/*
+|--------------------------------------------------------------------------
+| Absensi Module Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth'])->group(function () {
+    
+    // Pegawai Routes
+    Route::get('/', [AbsensiController::class, 'index'])->name('index');
+    Route::get('/scan', [AbsensiController::class, 'create'])->name('create');
+    Route::post('/store', [AbsensiController::class, 'store'])->name('store');
+    Route::post('/update', [AbsensiController::class, 'update'])->name('update');
+
+    // Admin/Manage Routes
+    Route::get('/manage', [\Modules\Absensi\Controllers\ManageAbsensiController::class, 'index'])->name('manage.index');
+});

@@ -3,100 +3,147 @@
 @section('title', 'Mata Pelajaran')
 
 @section('content')
-<div class="bg-white rounded-lg shadow-md p-6">
-    <div class="flex justify-between items-center mb-6">
-        <h3 class="text-xl font-semibold">Daftar Mata Pelajaran</h3>
-        @can('isAdmin')
-        <a href="{{ route('akademik.mata-pelajaran.create') }}" class="btn-primary">
-            Tambah Mata Pelajaran
-        </a>
-        @endcan
+<div class="container-fluid">
+    {{-- Success/Error Messages --}}
+    @if(session('success'))
+        <x-alert type="success" :message="session('success')" dismissible />
+    @endif
+
+    <div class="row mb-3">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0 text-gray-800">Manajemen Mata Pelajaran</h1>
+            <x-btn :href="route('akademik.mata-pelajaran.create')" icon="fas fa-plus">
+                Tambah Pelajaran Baru
+            </x-btn>
+        </div>
     </div>
 
     {{-- Search & Filter --}}
-    <div class="mb-6 card">
+    <x-card title="Filter Data" icon="fas fa-filter" outline collapsible>
         <form method="GET">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label class="form-label">Cari Kode/Nama</label>
-                    <input type="text" name="search"
-                        value="{{ request('search') }}"
-                        class="form-input">
+            <div class="row align-items-end">
+                <div class="col-md-5 mb-3">
+                    <x-input label="Cari Kode/Nama" name="search" :value="request('search')" placeholder="Ketik kata kunci..." prepend="<i class='fas fa-search'></i>" />
                 </div>
 
-                <div>
-                    <label class="form-label">Kategori</label>
-                    <select name="kategori" class="form-input">
-                        <option value="">Semua Kategori</option>
-                        @foreach($kategoriList as $kategori)
-                        <option value="{{ $kategori->id }}"
-                            {{ request('kategori') == $kategori->id ? 'selected' : '' }}>
-                            {{ $kategori->kategori }}
-                        </option>
-                        @endforeach
-                    </select>
+                <div class="col-md-4 mb-3">
+                    <div class="form-group">
+                        <label>Kategori</label>
+                        <select name="kategori" class="form-control">
+                            <option value="">Semua Kategori</option>
+                            @foreach($kategoriList as $kategori)
+                            <option value="{{ $kategori->id }}" {{ request('kategori') == $kategori->id ? 'selected' : '' }}>
+                                {{ $kategori->kategori }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
-                <div class="flex items-end gap-2">
-                    <button class="btn-primary">Terapkan</button>
-                    @if(request()->has('search') || request()->has('kategori'))
-                    <a href="{{ route('akademik.mata-pelajaran.index') }}" class="btn-secondary">
-                        Reset
-                    </a>
-                    @endif
+                <div class="col-md-3 mb-3">
+                    <div class="btn-group w-100">
+                        <x-btn type="submit" class="btn-info flex-fill" icon="fas fa-search">
+                            Filter
+                        </x-btn>
+                        @if(request()->has('search') || request()->has('kategori'))
+                            <x-btn :href="route('akademik.mata-pelajaran.index')" class="btn-secondary" icon="fas fa-sync" title="Reset" />
+                        @endif
+                    </div>
                 </div>
             </div>
         </form>
-    </div>
+    </x-card>
 
-    {{-- Table --}}
-    <div class="overflow-x-auto">
-        <table class="min-w-full bg-white">
-            <thead class="bg-gray-100">
-                <tr>
-                    <th class="px-4 py-3">No</th>
-                    <th class="px-4 py-3">Kode</th>
-                    <th class="px-4 py-3">Nama</th>
-                    <th class="px-4 py-3">Kategori</th>
-                    <th class="px-4 py-3">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($mataPelajaran as $item)
-                <tr class="border-t hover:bg-gray-50">
-                    <td class="px-4 py-3">
-                        {{ $loop->iteration + ($mataPelajaran->currentPage() - 1) * $mataPelajaran->perPage() }}
-                    </td>
-                    <td class="px-4 py-3">{{ $item->kode }}</td>
-                    <td class="px-4 py-3">{{ $item->nama }}</td>
-                    <td class="px-4 py-3">
-                        {{ $item->kategori->kategori ?? '-' }}
-                    </td>
-                    <td class="px-4 py-3 flex gap-2">
-                        <a href="{{ route('akademik.mata-pelajaran.show', $item) }}" class="text-blue-500">Detail</a>
-                        <a href="{{ route('akademik.mata-pelajaran.edit', $item) }}" class="text-green-500">Edit</a>
-                        <form method="POST" action="{{ route('akademik.mata-pelajaran.destroy', $item) }}">
-                            @csrf
-                            @method('DELETE')
-                            <button onclick="return confirm('Yakin?')" class="text-red-500">
-                                Hapus
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="5" class="text-center py-4">
-                        Tidak ada data.
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    <div class="mt-6">
-        {{ $mataPelajaran->withQueryString()->links() }}
-    </div>
+    {{-- Tabel --}}
+    <x-card title="Daftar Mata Pelajaran" type="primary" outline>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th width="5%" class="text-center">No</th>
+                        <th>Kode</th>
+                        <th>Nama Mata Pelajaran</th>
+                        <th>Kategori</th>
+                        <th width="150px" class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($mataPelajaran as $item)
+                    <tr>
+                        <td class="text-center">
+                            {{ $loop->iteration + ($mataPelajaran->currentPage() - 1) * $mataPelajaran->perPage() }}
+                        </td>
+                        <td><span class="badge badge-light border">{{ $item->kode }}</span></td>
+                        <td><strong>{{ $item->nama }}</strong></td>
+                        <td>
+                            @if(isset($item->kategori->kategori))
+                                <span class="badge badge-info">{{ $item->kategori->kategori }}</span>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <x-btn :href="route('akademik.mata-pelajaran.show', $item)" size="sm" class="btn-info" title="Detail">
+                                    <i class="fas fa-eye"></i>
+                                </x-btn>
+                                <x-btn :href="route('akademik.mata-pelajaran.edit', $item)" size="sm" class="btn-warning" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </x-btn>
+                                <x-btn size="sm" class="btn-danger" title="Hapus" onclick="confirmDelete('{{ $item->id }}')">
+                                    <i class="fas fa-trash"></i>
+                                </x-btn>
+                            </div>
+                            
+                            <form id="delete-form-{{ $item->id }}" action="{{ route('akademik.mata-pelajaran.destroy', $item->id) }}" method="POST" style="display: none;">
+                                @csrf
+                                @method('DELETE')
+                            </form>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="fas fa-folder-open fa-2x mb-3"></i><br>
+                            Tidak ada data mata pelajaran.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        
+        @if($mataPelajaran->hasPages())
+        <x-slot name="footer">
+            {{ $mataPelajaran->withQueryString()->links() }}
+        </x-slot>
+        @endif
+    </x-card>
 </div>
 @endsection
+
+@push('js')
+<script>
+function confirmDelete(id) {
+    Swal.fire({
+        title: 'Konfirmasi Hapus',
+        text: "Apakah Anda yakin ingin menghapus data ini?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e3342f',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal',
+        customClass: {
+            confirmButton: 'btn btn-danger mx-1',
+            cancelButton: 'btn btn-secondary mx-1'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-' + id).submit();
+        }
+    });
+}
+</script>
+@endpush

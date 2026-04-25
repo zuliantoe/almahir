@@ -8,17 +8,46 @@ use Modules\Pendaftaran\Models\Pendaftaran;
 
 class PendaftaranController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $data = Pendaftaran::latest()->get();
+        $query = Pendaftaran::query();
 
-        return view('pendaftaran::admin.pendaftaran', compact('data'));
+        // Default ke 'pending' jika status kosong atau tidak ada
+        $currentStatus = $request->status ?: 'pending';
+
+        if ($currentStatus !== 'all') {
+            $query->where('status', $currentStatus);
+        }
+
+        $data = $query->orderBy('tanggal_daftar', 'desc')->get()->groupBy(function($item) {
+            $date = \Carbon\Carbon::parse($item->tanggal_daftar)->startOfDay();
+            $today = \Carbon\Carbon::today();
+
+            if ($date->equalTo($today)) {
+                return 'Hari Ini';
+            } elseif ($date->equalTo($today->copy()->subDay())) {
+                return 'Kemarin';
+            } elseif ($date->greaterThanOrEqualTo($today->copy()->startOfWeek())) {
+                return 'Minggu Ini';
+            } elseif ($date->greaterThanOrEqualTo($today->copy()->startOfMonth())) {
+                return 'Bulan Ini';
+            } else {
+                // Hitung selisih bulan absolut
+                $monthDiff = ($today->year - $date->year) * 12 + ($today->month - $date->month);
+                if ($monthDiff == 1) {
+                    return '1 Bulan Lalu';
+                }
+                return $monthDiff . ' Bulan Lalu';
+            }
+        });
+
+        return view('pendaftaran::admin.pendaftaran', compact('data', 'currentStatus'));
     }
 
 
     public function show($id)
     {
-        $pendaftaran = Pendaftaran::findOrFail($id);
+        $pendaftaran = Pendaftaran::with('seleksis')->findOrFail($id);
 
         return view('pendaftaran::admin.show', compact('pendaftaran'));
     }
@@ -78,5 +107,46 @@ class PendaftaranController extends Controller
 
         return redirect('/pendaftaran')
             ->with('success', 'Pendaftaran berhasil');
+    }
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,diproses,diterima,ditolak',
+        ]);
+
+        $pendaftaran = Pendaftaran::findOrFail($id);
+
+        if (in_array($request->status, ['diterima', 'ditolak'])) {
+            $hasUnscoredTests = \Modules\Pendaftaran\Models\Seleksi::where('pendaftaran_id', $id)
+                                ->whereNull('nilai')
+                                ->exists();
+                                
+            if ($hasUnscoredTests) {
+                return back()->with('error', 'Terdeteksi ada tes yang belum selesai, silahkan selesaikan proses tes.');
+            }
+        }
+
+        $updateData = ['status' => $request->status];
+        if ($request->status === 'diterima') {
+            $updateData['tanggal_diterima'] = now();
+        }
+
+        $pendaftaran->update($updateData);
+
+        return back()->with('success', 'Status pendaftaran berhasil diperbarui');
+    }
+
+    public function updateCatatan(Request $request, $id)
+    {
+        $request->validate([
+            'catatan' => 'nullable|string'
+        ]);
+
+        $pendaftaran = Pendaftaran::findOrFail($id);
+        $pendaftaran->update([
+            'catatan' => $request->catatan,
+        ]);
+
+        return back()->with('success', 'Catatan berhasil diperbarui');
     }
 }

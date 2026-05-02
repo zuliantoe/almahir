@@ -24,7 +24,7 @@ class UpdateJenisKegiatanRequest extends FormRequest
             ],
             'deskripsi' => 'nullable|string|max:500',
             'is_kbm' => 'boolean',
-
+            'warna' => 'nullable|string|max:7',
         ];
     }
 

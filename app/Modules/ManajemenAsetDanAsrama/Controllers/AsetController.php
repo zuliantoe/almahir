@@ -115,6 +115,44 @@ class AsetController extends BaseController
     }
 
     /**
+     * Restore the specified asset from trash.
+     */
+    public function restore(string $id): RedirectResponse
+    {
+        $aset = Aset::onlyTrashed()->findOrFail($id);
+        $aset->restore();
+
+        return redirect()->route('manajemenasetdanasrama.trash.index')
+            ->with('success', 'Aset berhasil dikembalikan.');
+    }
+
+    /**
+     * Print asset labels with QR Code.
+     */
+    public function printLabel(Request $request)
+    {
+        $ids = $request->input('ids');
+        if ($ids) {
+            $idsArray = explode(',', $ids);
+            $aset = Aset::with('kamar')->whereIn('id', $idsArray)->get();
+        } else {
+            // Jika tidak ada ID, mungkin dari halaman index tanpa seleksi (print all filtered?)
+            // Untuk sekarang, kita support yang ada ID-nya saja atau satu ID
+            $id = $request->input('id');
+            if ($id) {
+                $aset = Aset::with('kamar')->where('id', $id)->get();
+            } else {
+                return redirect()->back()->with('error', 'Pilih aset yang ingin dicetak labelnya.');
+            }
+        }
+
+        return view('manajemenasetdanasrama::aset.print-label', [
+            'title' => 'Cetak Label Aset',
+            'aset'  => $aset
+        ]);
+    }
+
+    /**
      * Duplicate the specified aset.
      */
     public function duplicate(Request $request, string $id): RedirectResponse

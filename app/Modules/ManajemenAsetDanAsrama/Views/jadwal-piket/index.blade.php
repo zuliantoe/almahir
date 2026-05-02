@@ -35,6 +35,9 @@
                     <button type="button" class="btn btn-sm btn-info mr-2" data-toggle="modal" data-target="#modalAutoGenerate">
                         <i class="fas fa-robot mr-1"></i> Auto-Generate
                     </button>
+                    <a href="{{ route('manajemenasetdanasrama.jadwal-piket.print', request()->all()) }}" target="_blank" class="btn btn-sm btn-secondary mr-2">
+                        <i class="fas fa-print mr-1"></i> Cetak Jadwal
+                    </a>
                     <a href="{{ route('manajemenasetdanasrama.jadwal-piket.create') }}" class="btn btn-sm btn-primary">
                         <i class="fas fa-plus mr-1"></i> Tambah Jadwal
                     </a>

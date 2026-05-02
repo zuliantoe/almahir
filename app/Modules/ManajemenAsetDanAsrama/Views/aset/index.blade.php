@@ -89,6 +89,9 @@
                                                     title="Hapus">
                                                 <i class="fas fa-trash"></i> Hapus
                                             </button>
+                                            <a href="{{ route('manajemenasetdanasrama.aset.print-label') }}?id={{ $item->id }}" target="_blank" class="btn btn-xs btn-default" title="Cetak Label">
+                                                <i class="fas fa-print"></i> Label
+                                            </a>
                                         </div>
                                         <div class="btn-group w-100">
                                             <a href="{{ route('manajemenasetdanasrama.kerusakan.create') }}?aset_id={{ $item->id }}" class="btn btn-xs btn-outline-danger" title="Lapor Kerusakan">

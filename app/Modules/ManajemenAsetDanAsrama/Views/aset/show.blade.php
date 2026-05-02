@@ -71,6 +71,9 @@
                     <a href="{{ route('manajemenasetdanasrama.aset.edit', $aset->id) }}" class="btn btn-sm btn-warning">
                         <i class="fas fa-edit mr-1"></i> Edit Aset
                     </a>
+                    <a href="{{ route('manajemenasetdanasrama.aset.print-label') }}?id={{ $aset->id }}" target="_blank" class="btn btn-sm btn-info">
+                        <i class="fas fa-print mr-1"></i> Cetak Label (QR)
+                    </a>
                     <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="btn btn-sm btn-secondary">
                         <i class="fas fa-arrow-left mr-1"></i> Kembali
                     </a>

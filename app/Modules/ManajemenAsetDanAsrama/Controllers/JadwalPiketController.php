@@ -175,4 +175,34 @@ class JadwalPiketController extends BaseController
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Print printer-friendly version of the schedule.
+     */
+    public function print(Request $request)
+    {
+        $query = JadwalPiket::with(['kamar', 'siswa']);
+
+        if ($request->filled('kamar_id')) {
+            $query->where('kamar_id', $request->kamar_id);
+        }
+
+        if ($request->filled('tanggal_mulai')) {
+            $query->where('tanggal', '>=', $request->tanggal_mulai);
+        }
+
+        if ($request->filled('tanggal_selesai')) {
+            $query->where('tanggal', '<=', $request->tanggal_selesai);
+        }
+
+        $jadwal = $query->orderBy('tanggal', 'asc')->get();
+        $kamar = Kamar::find($request->kamar_id);
+
+        return view('manajemenasetdanasrama::jadwal-piket.print', [
+            'title'  => 'Cetak Jadwal Piket',
+            'jadwal' => $jadwal,
+            'kamar'  => $kamar,
+            'request'=> $request
+        ]);
+    }
 }

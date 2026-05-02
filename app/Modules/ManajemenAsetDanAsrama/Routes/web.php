@@ -64,6 +64,7 @@ Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
         Route::put('{id}', [AsetController::class, 'update'])->name('update');
         Route::delete('{id}', [AsetController::class, 'destroy'])->name('destroy');
         Route::post('{id}/duplicate', [AsetController::class, 'duplicate'])->name('duplicate');
+        Route::get('print-label', [AsetController::class, 'printLabel'])->name('print-label');
     });
     
     // Kamar
@@ -97,6 +98,7 @@ Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
         Route::delete('{id}', [JadwalPiketController::class, 'destroy'])->name('destroy');
         Route::post('{id}/selesai', [JadwalPiketController::class, 'selesai'])->name('selesai');
         Route::post('auto-generate', [JadwalPiketController::class, 'autoGenerate'])->name('auto-generate');
+        Route::get('print', [JadwalPiketController::class, 'print'])->name('print');
     });
     
     // Kerusakan

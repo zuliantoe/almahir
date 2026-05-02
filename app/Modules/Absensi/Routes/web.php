@@ -19,4 +19,5 @@ Route::middleware(['auth'])->group(function () {
 
     // Admin/Manage Routes
     Route::get('/manage', [\Modules\Absensi\Controllers\ManageAbsensiController::class, 'index'])->name('manage.index');
+    Route::get('/manage/export', [\Modules\Absensi\Controllers\ManageAbsensiController::class, 'export'])->name('manage.export');
 });

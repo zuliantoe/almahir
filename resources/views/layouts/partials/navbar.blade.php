@@ -44,24 +44,53 @@
         <li class="nav-item dropdown">
             <a class="nav-link" data-toggle="dropdown" href="#" title="Notifikasi Sistem">
                 <i class="far fa-bell" style="font-size: 1.1rem;"></i>
-                <span class="badge badge-warning navbar-badge" style="top: 5px; right: 5px; font-size: 0.6rem;">3</span>
+                @auth
+                    @if(auth()->user()->unreadNotifications->count() > 0)
+                    <span class="badge badge-warning navbar-badge" style="top: 5px; right: 5px; font-size: 0.6rem;">{{ auth()->user()->unreadNotifications->count() }}</span>
+                    @endif
+                @endauth
             </a>
-            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right border-0 shadow-lg mt-2">
-                <span class="dropdown-item dropdown-header font-weight-bold">3 Notifikasi Masuk</span>
-                <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item py-3">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-primary-soft p-2 rounded-circle mr-3">
-                            <i class="fas fa-envelope text-primary"></i>
-                        </div>
-                        <div>
-                            <span class="d-block font-weight-bold text-sm">4 Pesan Baru</span>
-                            <small class="text-muted">Diterima 3 menit yang lalu</small>
-                        </div>
+            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right border-0 shadow-lg mt-2" style="max-height: 400px; overflow-y: auto;">
+                @auth
+                    @php
+                        $unreadCount = auth()->user()->unreadNotifications->count();
+                        $notifications = auth()->user()->unreadNotifications->take(5);
+                    @endphp
+                    <div class="sticky-top bg-white">
+                        <span class="dropdown-item dropdown-header font-weight-bold">{{ $unreadCount }} Notifikasi Baru</span>
+                        <div class="dropdown-divider m-0"></div>
                     </div>
-                </a>
-                <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item dropdown-footer text-primary font-weight-bold">Lihat Semua Notifikasi</a>
+                    
+                    @forelse($notifications as $notif)
+                    <a href="{{ route('notifications.read', $notif->id) }}" class="dropdown-item py-3 text-wrap" style="white-space: normal;">
+                        <div class="d-flex">
+                            <div class="p-2 rounded-circle mr-3 align-self-start" style="background-color: #f8f9fa;">
+                                <i class="{{ $notif->data['icon'] ?? 'fas fa-bell text-primary' }}"></i>
+                            </div>
+                            <div>
+                                <span class="d-block font-weight-bold text-sm">{{ $notif->data['title'] ?? 'Notifikasi Baru' }}</span>
+                                <small class="d-block text-dark mt-1">{{ \Illuminate\Support\Str::words($notif->data['message'] ?? '', 12, '...') }}</small>
+                                <small class="text-muted"><i class="far fa-clock mr-1"></i>{{ $notif->created_at->diffForHumans() }}</small>
+                            </div>
+                        </div>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    @empty
+                    <div class="dropdown-item text-center py-4 text-muted">
+                        <i class="fas fa-envelope-open-text fa-2x mb-2 text-gray-300"></i>
+                        <p class="mb-0 small">Belum ada notifikasi baru</p>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    @endforelse
+
+                    @if($unreadCount > 0)
+                    <div class="sticky-bottom bg-light text-center py-2 border-top">
+                        <a href="{{ route('notifications.readAll') }}" class="text-primary font-weight-bold text-sm">Tandai Semua Telah Dibaca</a>
+                    </div>
+                    @endif
+                @else
+                    <span class="dropdown-item dropdown-header">Bukan Pengguna</span>
+                @endauth
             </div>
         </li>
 

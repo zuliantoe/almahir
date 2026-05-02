@@ -15,11 +15,20 @@ class JadwalPiketController extends BaseController
      */
     public function index(Request $request): View
     {
-        $jadwal = JadwalPiket::with('siswa')
-                    ->orderBy('bulan')
+        $query = JadwalPiket::with('siswa');
+
+        if ($request->filled('bulan')) {
+            $query->where('bulan', $request->bulan);
+        }
+        if ($request->filled('pekan')) {
+            $query->where('pekan', $request->pekan);
+        }
+
+        $jadwal = $query->orderBy('bulan')
                     ->orderBy('pekan')
                     ->orderBy('hari')
-                    ->paginate(15);
+                    ->paginate(15)
+                    ->withQueryString();
         
         return view('manajemenasetdanasrama::jadwal-piket.index', [
             'title'  => 'Jadwal Piket',
@@ -45,7 +54,7 @@ class JadwalPiketController extends BaseController
      */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate($this->getValidationRules());
+        $validated = $request->validate($this->getValidationRules($request));
         $validated['status'] = 'belum';
 
         JadwalPiket::create($validated);
@@ -75,7 +84,7 @@ class JadwalPiketController extends BaseController
     public function update(Request $request, string $id): RedirectResponse
     {
         $jadwal = JadwalPiket::findOrFail($id);
-        $validated = $request->validate($this->getValidationRules());
+        $validated = $request->validate($this->getValidationRules($request, $id));
 
         $jadwal->update($validated);
 
@@ -86,14 +95,23 @@ class JadwalPiketController extends BaseController
     /**
      * Get common validation rules.
      */
-    private function getValidationRules(): array
+    private function getValidationRules(Request $request, ?string $id = null): array
     {
         return [
             'bulan'    => 'required|integer|between:1,12',
             'pekan'    => 'required|integer|between:1,5',
             'hari'     => 'required|string',
             'tempat'   => 'required|string|max:255',
-            'siswa_id' => 'required|exists:siswa,id',
+            'siswa_id' => [
+                'required',
+                'exists:siswa,id',
+                \Illuminate\Validation\Rule::unique('jadwal_piket')->where(function ($query) use ($request) {
+                    return $query->where('bulan', $request->bulan)
+                                 ->where('pekan', $request->pekan)
+                                 ->where('hari', $request->hari)
+                                 ->where('tempat', $request->tempat);
+                })->ignore($id),
+            ],
         ];
     }
 

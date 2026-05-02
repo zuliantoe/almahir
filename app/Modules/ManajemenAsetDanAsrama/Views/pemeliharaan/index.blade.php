@@ -196,6 +196,10 @@
                 </div>
                 <div class="modal-body">
                     <p>Apakah Anda yakin ingin menghapus data pemeliharaan untuk aset <strong id="hapus_nama"></strong>?</p>
+                    <div class="form-group">
+                        <label for="alasan_hapus">Alasan Penghapusan <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="alasan_hapus" name="alasan_hapus" rows="3" placeholder="Masukkan alasan penghapusan..." required></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
@@ -236,6 +240,7 @@
 
             var modal = $(this);
             modal.find('#hapus_nama').text(nama);
+            modal.find('#alasan_hapus').val('');
 
             var url = '{{ route("manajemenasetdanasrama.pemeliharaan.destroy", ":id") }}';
             url = url.replace(':id', id);

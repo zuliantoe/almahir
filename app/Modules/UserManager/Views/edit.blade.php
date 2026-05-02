@@ -8,7 +8,15 @@
         @csrf
         @method('PUT')
         
-        <x-card title="Edit User" icon="fas fa-user-edit">
+        <div class="card border-0 shadow-lg mb-4" style="border-radius: 15px; overflow: hidden;">
+            <div class="card-header gradient-primary border-0 p-4">
+                <h3 class="card-title text-white font-weight-bold mb-0">
+                    <i class="fas fa-user-edit mr-2"></i> Edit Data User: {{ $user->name }}
+                </h3>
+            </div>
+            
+            <div class="card-body p-4 bg-light">
+                <div class="glass-card p-4">
             <div class="row">
                 <div class="col-md-6">
                     <x-input label="Nama Lengkap" name="name" :value="old('name', $user->name)" required />
@@ -18,9 +26,14 @@
                 </div>
             </div>
 
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle mr-1"></i>
-                <strong>Password:</strong> Kosongkan jika tidak ingin mengubah password.
+            <div class="alert alert-info rounded shadow-sm border-0 border-left border-info p-3 mb-4" style="border-left-width: 5px !important; background: rgba(23, 162, 184, 0.05);">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-info-circle fa-2x text-info mr-3"></i>
+                    <div>
+                        <strong class="text-info d-block mb-1">Informasi Password</strong>
+                        <span class="text-muted">Kosongkan kolom password di bawah ini jika Anda tidak ingin mengubah password akun ini.</span>
+                    </div>
+                </div>
             </div>
 
             <div class="row">
@@ -37,12 +50,12 @@
                 <div class="row">
                     @foreach($roles as $role)
                         <div class="col-md-4">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" name="roles[]" value="{{ $role->id }}" 
+                            <div class="form-check p-3 bg-white rounded border shadow-sm mb-2 hover-elevate">
+                                <input type="checkbox" class="form-check-input ml-1 mt-2" name="roles[]" value="{{ $role->id }}" 
                                        id="role_{{ $role->id }}"
                                        {{ in_array($role->id, old('roles', $user->roles->pluck('id')->toArray())) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="role_{{ $role->id }}">
-                                    {{ $role->display_name }} <small class="text-muted">({{ $role->name }})</small>
+                                <label class="form-check-label ml-4 font-weight-bold" for="role_{{ $role->id }}">
+                                    {{ $role->display_name }} <br><span class="badge badge-light text-muted">{{ $role->name }}</span>
                                 </label>
                             </div>
                         </div>
@@ -55,10 +68,16 @@
 
             {{-- Linked Data Info --}}
             @if($linkedData)
-            <div class="alert alert-success">
-                <i class="fas fa-link mr-1"></i>
-                <strong>Data Terhubung:</strong> 
-                {{ $linkedData['type'] }} - <strong>{{ $linkedData['nama'] }}</strong>
+            <div class="alert alert-success rounded shadow-sm border-0 border-left border-success p-3 mb-4 mt-3" style="border-left-width: 5px !important; background: rgba(40, 167, 69, 0.05);">
+                <div class="d-flex align-items-center">
+                    <div class="bg-success-light text-success rounded-circle p-3 d-flex align-items-center justify-content-center mr-3" style="background: rgba(40, 167, 69, 0.1);">
+                        <i class="fas fa-link fa-lg"></i>
+                    </div>
+                    <div>
+                        <strong class="text-success d-block mb-1">Data Pegawai/Siswa Terhubung</strong>
+                        <span class="text-muted">User ini terhubung dengan profil <b>{{ $linkedData['type'] }}</b> bernama <b class="text-dark">{{ $linkedData['nama'] }}</b>.</span>
+                    </div>
+                </div>
                 <input type="hidden" name="ref_type" value="{{ $user->ref_type }}">
                 <input type="hidden" name="ref_id" value="{{ $user->ref_id }}">
             </div>
@@ -79,21 +98,28 @@
             </div>
 
             @if($user->last_login_at)
-            <div class="alert alert-secondary">
-                <i class="fas fa-clock mr-1"></i>
-                <strong>Last Login:</strong> {{ $user->last_login_at->format('d M Y, H:i') }} 
-                ({{ $user->last_login_at->diffForHumans() }})
+            <div class="p-3 bg-white rounded border mt-4 d-flex align-items-center">
+                <i class="fas fa-clock text-secondary mr-3 fa-2x"></i>
+                <div>
+                    <div class="text-muted small font-weight-bold text-uppercase">Terakhir Login Ke Sistem</div>
+                    <div class="font-weight-bolder">{{ $user->last_login_at->format('d M Y, H:i') }} <span class="text-muted font-weight-normal">({{ $user->last_login_at->diffForHumans() }})</span></div>
+                </div>
             </div>
             @endif
 
-            <hr>
+            <hr class="mt-4 mb-4">
             <div class="d-flex justify-content-between">
-                <a href="{{ route('users.index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left mr-1"></i> Kembali
+                <a href="{{ route('users.index') }}" class="btn btn-secondary rounded-pill px-4 py-2 shadow-sm btn-animate font-weight-bold">
+                    <i class="fas fa-arrow-left mr-1"></i> Kembali ke Daftar
                 </a>
-                <x-btn type="submit" variant="warning" icon="fas fa-save">Update</x-btn>
+                <button type="submit" class="btn btn-warning rounded-pill px-5 py-2 shadow-sm btn-animate font-weight-bold" style="color: #fff !important; text-shadow: 0px 1px 2px rgba(0,0,0,0.2);">
+                    <i class="fas fa-save mr-2"></i> Update Data User
+                </button>
             </div>
-        </x-card>
+            
+                </div>
+            </div>
+        </div>
     </form>
 </div>
 @endsection

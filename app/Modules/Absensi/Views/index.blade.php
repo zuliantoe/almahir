@@ -8,58 +8,67 @@
     <div class="row">
         {{-- Summary Cards --}}
         <div class="col-md-4">
-            <x-card class="bg-primary text-white mb-4">
+            <div class="glass-card hover-elevate bg-primary text-white mb-4 p-4" style="border-radius: 15px;">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="text-white-50 small">Total Kehadiran</div>
-                        <div class="text-lg font-weight-bold">{{ $stats['hadir'] }} Hari</div>
+                        <div class="text-white-50 small font-weight-bold text-uppercase">Total Kehadiran</div>
+                        <div class="display-4 font-weight-bold">{{ $stats['hadir'] }} <span class="h5">Hari</span></div>
                     </div>
-                    <i class="fas fa-calendar-check fa-2x opacity-50"></i>
+                    <div class="bg-white rounded-circle p-3 shadow-sm text-primary">
+                        <i class="fas fa-calendar-check fa-2x"></i>
+                    </div>
                 </div>
-            </x-card>
+            </div>
         </div>
         <div class="col-md-4">
-            <x-card class="bg-warning text-white mb-4">
+            <div class="glass-card hover-elevate bg-warning text-white mb-4 p-4" style="border-radius: 15px;">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="text-white-50 small">Total Terlambat</div>
-                        <div class="text-lg font-weight-bold">{{ $stats['terlambat'] }} Kali</div>
+                        <div class="text-white-50 small font-weight-bold text-uppercase">Total Terlambat</div>
+                        <div class="display-4 font-weight-bold">{{ $stats['terlambat'] }} <span class="h5">Kali</span></div>
                     </div>
-                    <i class="fas fa-clock fa-2x opacity-50"></i>
+                    <div class="bg-white rounded-circle p-3 shadow-sm text-warning">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
                 </div>
-            </x-card>
+            </div>
         </div>
         <div class="col-md-4">
-            <x-card class="bg-info text-white mb-4">
+            <div class="glass-card hover-elevate bg-info text-white mb-4 p-4" style="border-radius: 15px;">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="text-white-50 small">Izin / Sakit</div>
-                        <div class="text-lg font-weight-bold">{{ $stats['izin'] }} Hari</div>
+                        <div class="text-white-50 small font-weight-bold text-uppercase">Izin / Sakit</div>
+                        <div class="display-4 font-weight-bold">{{ $stats['izin'] }} <span class="h5">Hari</span></div>
                     </div>
-                    <i class="fas fa-envelope-open-text fa-2x opacity-50"></i>
+                    <div class="bg-white rounded-circle p-3 shadow-sm text-info">
+                        <i class="fas fa-envelope-open-text fa-2x"></i>
+                    </div>
                 </div>
-            </x-card>
+            </div>
         </div>
     </div>
 
-    <x-card title="Riwayat Absensi Saya" icon="fas fa-history">
-        <x-slot name="tools">
-            <a href="{{ route('absensi.create') }}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+    <div class="card border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+        <div class="card-header gradient-primary border-0 p-4 d-flex justify-content-between align-items-center">
+            <h3 class="card-title text-white font-weight-bold mb-0">
+                <i class="fas fa-history mr-2"></i> Riwayat Absensi Saya
+            </h3>
+            <a href="{{ route('absensi.create') }}" class="btn btn-light text-primary btn-sm rounded-pill px-4 shadow-sm btn-animate font-weight-bold">
                 <i class="fas fa-fingerprint mr-1"></i> Absen Sekarang
             </a>
-        </x-slot>
-
-        <div class="table-responsive">
-            <table class="table table-hover table-striped">
-                <thead class="thead-dark">
+        </div>
+        
+        <div class="card-body p-0">
+            <table class="table table-premium table-hover mb-0">
+                <thead class="bg-light">
                     <tr>
-                        <th class="text-center" style="width: 50px;">No</th>
-                        <th>Hari & Tanggal</th>
-                        <th class="text-center">Jam Masuk</th>
-                        <th class="text-center">Jam Pulang</th>
-                        <th class="text-center">Status</th>
-                        <th class="text-center">Durasi Kerja</th>
-                        <th class="text-center">Keterangan</th>
+                        <th class="text-center border-0 text-muted" style="width: 50px;">No</th>
+                        <th class="border-0 text-muted">Hari & Tanggal</th>
+                        <th class="text-center border-0 text-muted">Jam Masuk</th>
+                        <th class="text-center border-0 text-muted">Jam Pulang</th>
+                        <th class="text-center border-0 text-muted">Status</th>
+                        <th class="text-center border-0 text-muted">Durasi Kerja</th>
+                        <th class="text-center border-0 text-muted">Keterangan</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -130,9 +139,9 @@
             </table>
         </div>
 
-        <div class="mt-3">
+        <div class="p-4 border-top bg-light">
             {{ $absensi->links() }}
         </div>
-    </x-card>
+    </div>
 </div>
 @endsection

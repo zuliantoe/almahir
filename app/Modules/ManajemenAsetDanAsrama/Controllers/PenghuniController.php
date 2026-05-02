@@ -16,13 +16,20 @@ class PenghuniController extends BaseController
      */
     public function index(Request $request): View
     {
-        $penghuni = KamarPenghuni::with(['kamar', 'siswa'])
-                        ->latest()
-                        ->paginate(15);
+        $query = KamarPenghuni::with(['kamar', 'siswa']);
+
+        if ($request->filled('kamar_id')) {
+            $query->where('kamar_id', $request->kamar_id);
+        }
+
+        $penghuni = $query->latest()
+                        ->paginate(15)
+                        ->withQueryString();
         
         return view('manajemenasetdanasrama::penghuni.index', [
             'title'    => 'Data Penghuni Kamar',
             'penghuni' => $penghuni,
+            'kamar'    => Kamar::all(),
         ]);
     }
 
@@ -48,11 +55,28 @@ class PenghuniController extends BaseController
     {
         $validated = $request->validate([
             'kamar_id'      => 'required|exists:kamar,id',
-            'siswa_id'      => 'required|exists:siswa,id|unique:kamar_penghuni,siswa_id',
+            'siswa_id'      => 'required|exists:siswa,id',
             'tanggal_masuk' => 'required|date',
             'tanggal_keluar'=> 'nullable|date|after:tanggal_masuk',
             'keterangan'    => 'nullable|string',
         ]);
+
+        // Cek apakah siswa sudah aktif di kamar manapun
+        $isAktif = KamarPenghuni::where('siswa_id', $validated['siswa_id'])
+            ->where(function($query) {
+                $query->whereNull('tanggal_keluar')
+                      ->orWhere('tanggal_keluar', '>', now());
+            })->exists();
+
+        if ($isAktif) {
+            return back()->withInput()->with('error', 'Siswa ini masih terdaftar aktif di kamar. Silakan isi tanggal keluar pada data sebelumnya terlebih dahulu.');
+        }
+
+        // Cek kapasitas kamar
+        $kamar = Kamar::findOrFail($validated['kamar_id']);
+        if ($kamar->sisa <= 0) {
+            return back()->withInput()->with('error', 'Kamar ini sudah penuh (Kapasitas: ' . $kamar->kapasitas . ').');
+        }
 
         KamarPenghuni::create($validated);
 
@@ -86,11 +110,32 @@ class PenghuniController extends BaseController
         
         $validated = $request->validate([
             'kamar_id'      => 'required|exists:kamar,id',
-            'siswa_id'      => 'required|exists:siswa,id|unique:kamar_penghuni,siswa_id,' . $id,
+            'siswa_id'      => 'required|exists:siswa,id',
             'tanggal_masuk' => 'required|date',
             'tanggal_keluar'=> 'nullable|date|after:tanggal_masuk',
             'keterangan'    => 'nullable|string',
         ]);
+
+        // Jika mengubah siswa, pastikan siswa baru tidak aktif di tempat lain
+        if ($penghuni->siswa_id !== $validated['siswa_id']) {
+            $isAktif = KamarPenghuni::where('siswa_id', $validated['siswa_id'])
+                ->where(function($query) {
+                    $query->whereNull('tanggal_keluar')
+                          ->orWhere('tanggal_keluar', '>', now());
+                })->exists();
+
+            if ($isAktif) {
+                return back()->withInput()->with('error', 'Siswa yang dipilih masih terdaftar aktif di kamar lain.');
+            }
+        }
+
+        // Jika mengubah kamar, pastikan kamar baru masih ada slot
+        if ($penghuni->kamar_id !== $validated['kamar_id']) {
+            $kamarBaru = Kamar::findOrFail($validated['kamar_id']);
+            if ($kamarBaru->sisa <= 0) {
+                return back()->withInput()->with('error', 'Kamar tujuan sudah penuh.');
+            }
+        }
 
         $penghuni->update($validated);
 

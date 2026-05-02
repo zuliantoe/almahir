@@ -143,6 +143,124 @@
     </div>
 </div>
 
+    {{-- Kerusakan Terhapus --}}
+    <div class="row">
+        <div class="col-md-12">
+            <x-card title="Kerusakan Terhapus" icon="fas fa-exclamation-triangle">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th width="50">No</th>
+                                <th>Aset</th>
+                                <th>Deskripsi Kerusakan</th>
+                                <th>Alasan Hapus</th>
+                                <th width="150">Dihapus Oleh</th>
+                                <th width="150">Tanggal Hapus</th>
+                                <th width="150">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($kerusakanTrash as $item)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>
+                                    <strong>{{ $item->aset->nama_aset ?? '-' }}</strong>
+                                    <br><small class="text-muted">{{ $item->aset->kode_aset ?? '' }}</small>
+                                </td>
+                                <td>{{ Str::limit($item->deskripsi_kerusakan ?? '-', 50) }}</td>
+                                <td>{{ Str::limit($item->alasan_hapus ?? '-', 50) }}</td>
+                                <td>{{ $item->deletedBy->name ?? '-' }}</td>
+                                <td>{{ $item->deleted_at ? $item->deleted_at->format('d/m/Y H:i') : '-' }}</td>
+                                <td>
+                                    <form action="{{ route('manajemenasetdanasrama.trash.restore', ['type' => 'kerusakan', 'id' => $item->id]) }}" method="POST" style="display:inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-xs btn-success" title="Pulihkan">
+                                            <i class="fas fa-undo"></i>
+                                        </button>
+                                    </form>
+                                    <button type="button" class="btn btn-xs btn-danger"
+                                            data-toggle="modal" data-target="#modalForceDelete"
+                                            data-type="kerusakan" data-id="{{ $item->id }}"
+                                            data-nama="{{ $item->deskripsi_kerusakan ?? 'kerusakan' }}"
+                                            title="Hapus Permanen">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">
+                                    <i class="fas fa-inbox"></i> Tidak ada kerusakan yang terhapus
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </x-card>
+        </div>
+    </div>
+
+    {{-- Pemeliharaan Terhapus --}}
+    <div class="row">
+        <div class="col-md-12">
+            <x-card title="Pemeliharaan Terhapus" icon="fas fa-wrench">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th width="50">No</th>
+                                <th>Aset</th>
+                                <th>Deskripsi Pemeliharaan</th>
+                                <th>Alasan Hapus</th>
+                                <th width="150">Dihapus Oleh</th>
+                                <th width="150">Tanggal Hapus</th>
+                                <th width="150">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($pemeliharaanTrash as $item)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>
+                                    <strong>{{ $item->aset->nama_aset ?? '-' }}</strong>
+                                    <br><small class="text-muted">{{ $item->aset->kode_aset ?? '' }}</small>
+                                </td>
+                                <td>{{ Str::limit($item->deskripsi_pemeliharaan ?? '-', 50) }}</td>
+                                <td>{{ Str::limit($item->alasan_hapus ?? '-', 50) }}</td>
+                                <td>{{ $item->deletedBy->name ?? '-' }}</td>
+                                <td>{{ $item->deleted_at ? $item->deleted_at->format('d/m/Y H:i') : '-' }}</td>
+                                <td>
+                                    <form action="{{ route('manajemenasetdanasrama.trash.restore', ['type' => 'pemeliharaan', 'id' => $item->id]) }}" method="POST" style="display:inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-xs btn-success" title="Pulihkan">
+                                            <i class="fas fa-undo"></i>
+                                        </button>
+                                    </form>
+                                    <button type="button" class="btn btn-xs btn-danger"
+                                            data-toggle="modal" data-target="#modalForceDelete"
+                                            data-type="pemeliharaan" data-id="{{ $item->id }}"
+                                            data-nama="{{ $item->deskripsi_pemeliharaan ?? 'pemeliharaan' }}"
+                                            title="Hapus Permanen">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">
+                                    <i class="fas fa-inbox"></i> Tidak ada pemeliharaan yang terhapus
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </x-card>
+        </div>
+    </div>
+
 {{-- MODAL FORCE DELETE --}}
 <div class="modal fade" id="modalForceDelete" tabindex="-1" role="dialog" aria-labelledby="modalForceDeleteLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">

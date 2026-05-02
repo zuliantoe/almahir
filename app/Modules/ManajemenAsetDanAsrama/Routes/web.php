@@ -71,6 +71,7 @@ Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
         Route::get('/', [KamarController::class, 'index'])->name('index');
         Route::get('create', [KamarController::class, 'create'])->name('create');
         Route::post('/', [KamarController::class, 'store'])->name('store');
+        Route::get('{id}', [KamarController::class, 'show'])->name('show');
         Route::get('{id}/edit', [KamarController::class, 'edit'])->name('edit');
         Route::put('{id}', [KamarController::class, 'update'])->name('update');
         Route::delete('{id}', [KamarController::class, 'destroy'])->name('destroy');

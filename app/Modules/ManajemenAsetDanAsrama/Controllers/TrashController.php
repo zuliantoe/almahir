@@ -7,6 +7,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use App\Modules\ManajemenAsetDanAsrama\Models\PengajuanAset;
 use App\Modules\ManajemenAsetDanAsrama\Models\Aset;
+use App\Modules\ManajemenAsetDanAsrama\Models\Kerusakan;
+use App\Modules\ManajemenAsetDanAsrama\Models\Pemeliharaan;
 
 class TrashController extends BaseController
 {
@@ -24,11 +26,23 @@ class TrashController extends BaseController
                             ->with('deletedBy')
                             ->latest('deleted_at')
                             ->get();
+
+        $kerusakanTrash = Kerusakan::onlyTrashed()
+                            ->with(['aset:id,nama_aset,kode_aset', 'deletedBy'])
+                            ->latest('deleted_at')
+                            ->get();
+
+        $pemeliharaanTrash = Pemeliharaan::onlyTrashed()
+                            ->with(['aset:id,nama_aset,kode_aset', 'deletedBy'])
+                            ->latest('deleted_at')
+                            ->get();
         
         return view('manajemenasetdanasrama::trash.index', [
-            'title'          => 'Data Terhapus (Trash)',
-            'asetTrash'      => $asetTrash,
-            'pengajuanTrash' => $pengajuanTrash,
+            'title'             => 'Data Terhapus (Trash)',
+            'asetTrash'         => $asetTrash,
+            'pengajuanTrash'    => $pengajuanTrash,
+            'kerusakanTrash'    => $kerusakanTrash,
+            'pemeliharaanTrash' => $pemeliharaanTrash,
         ]);
     }
 
@@ -45,6 +59,14 @@ class TrashController extends BaseController
             $item = PengajuanAset::onlyTrashed()->findOrFail($id);
             $item->restore();
             $message = 'Pengajuan aset berhasil dipulihkan.';
+        } elseif ($type === 'kerusakan') {
+            $item = Kerusakan::onlyTrashed()->findOrFail($id);
+            $item->restore();
+            $message = 'Laporan kerusakan berhasil dipulihkan.';
+        } elseif ($type === 'pemeliharaan') {
+            $item = Pemeliharaan::onlyTrashed()->findOrFail($id);
+            $item->restore();
+            $message = 'Data pemeliharaan berhasil dipulihkan.';
         } else {
             abort(404);
         }
@@ -66,6 +88,14 @@ class TrashController extends BaseController
             $item = PengajuanAset::onlyTrashed()->findOrFail($id);
             $item->forceDelete();
             $message = 'Pengajuan aset berhasil dihapus permanen.';
+        } elseif ($type === 'kerusakan') {
+            $item = Kerusakan::onlyTrashed()->findOrFail($id);
+            $item->forceDelete();
+            $message = 'Laporan kerusakan berhasil dihapus permanen.';
+        } elseif ($type === 'pemeliharaan') {
+            $item = Pemeliharaan::onlyTrashed()->findOrFail($id);
+            $item->forceDelete();
+            $message = 'Data pemeliharaan berhasil dihapus permanen.';
         } else {
             abort(404);
         }

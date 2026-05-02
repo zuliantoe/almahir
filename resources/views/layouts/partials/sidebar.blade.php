@@ -98,7 +98,7 @@
                                             @endphp
                                             <li class="nav-item">
                                                 <a href="{{ $childUrl }}" class="nav-link {{ $childActive ? 'active' : '' }}">
-                                                    <i class="far fa-circle nav-icon"></i>
+                                                    <i class="nav-icon {{ $child['icon'] ?? 'far fa-circle' }}"></i>
                                                     <p>{{ $child['label'] }}</p>
                                                 </a>
                                             </li>

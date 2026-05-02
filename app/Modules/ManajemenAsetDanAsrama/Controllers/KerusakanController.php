@@ -7,9 +7,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use App\Modules\ManajemenAsetDanAsrama\Models\Kerusakan;
 use App\Modules\ManajemenAsetDanAsrama\Models\Aset;
+use App\Modules\ManajemenAsetDanAsrama\Traits\HasSoftDeleteWithUser;
 
 class KerusakanController extends BaseController
 {
+    use HasSoftDeleteWithUser;
     /**
      * Display a listing of kerusakan.
      */
@@ -150,12 +152,12 @@ class KerusakanController extends BaseController
     }
 
     /**
-     * Remove the specified kerusakan from storage.
+     * Remove the specified kerusakan from storage (soft delete).
      */
-    public function destroy(string $id): RedirectResponse
+    public function destroy(Request $request, string $id): RedirectResponse
     {
         $kerusakan = Kerusakan::findOrFail($id);
-        $kerusakan->delete();
+        $this->performSoftDelete($request, $kerusakan);
 
         return redirect()->route('manajemenasetdanasrama.kerusakan.index')
             ->with('success', 'Kerusakan berhasil dihapus.');

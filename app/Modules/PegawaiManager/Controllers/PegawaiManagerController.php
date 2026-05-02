@@ -15,6 +15,9 @@ use App\Models\Role;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Modules\PegawaiManager\Requests\StorePegawaiRequest;
+use Modules\PegawaiManager\Requests\UpdatePegawaiRequest;
+use Illuminate\Support\Facades\Cache;
 
 class PegawaiManagerController extends Controller
 {
@@ -50,8 +53,12 @@ class PegawaiManagerController extends Controller
 
         $pegawaiManagers = $query->paginate(10)->withQueryString();
         
-        $types = TypePegawai::all();
-        $roles = Role::all();
+        $types = Cache::remember('all_type_pegawai', 86400, function() {
+            return TypePegawai::all();
+        });
+        $roles = Cache::remember('all_roles', 86400, function() {
+            return Role::all();
+        });
 
         return view('pegawaimanager::index', [
             'title' => 'Daftar Pegawai',
@@ -66,8 +73,12 @@ class PegawaiManagerController extends Controller
      */
     public function create()
     {
-        $types = TypePegawai::all();
-        $roles = Role::all();
+        $types = Cache::remember('all_type_pegawai', 86400, function() {
+            return TypePegawai::all();
+        });
+        $roles = Cache::remember('all_roles', 86400, function() {
+            return Role::all();
+        });
 
         return view('pegawaimanager::create', [
             'title' => 'Tambah Pegawai',
@@ -79,17 +90,9 @@ class PegawaiManagerController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StorePegawaiRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'type_pegawai_id' => 'required|uuid',
-            'email' => 'required|email|unique:sys_users,email|unique:pegawai,email',
-            'no_hp' => 'nullable|string|max:20',
-            'alamat' => 'nullable|string',
-            'tanggal_masuk' => 'nullable|date',
-            'role_name' => 'required|string|exists:sys_roles,name',
-        ]);
+        $validated = $request->validated();
 
         try {
             DB::beginTransaction();
@@ -134,9 +137,26 @@ class PegawaiManagerController extends Controller
     {
         $pegawai = Pegawai::with(['user', 'typePegawai'])->findOrFail($id);
 
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+
+        $absensiStats = [
+            'hadir' => $pegawai->absensis()
+                ->whereMonth('tanggal', $currentMonth)
+                ->whereYear('tanggal', $currentYear)
+                ->where('status', 'HADIR')
+                ->count(),
+            'terlambat' => $pegawai->absensis()
+                ->whereMonth('tanggal', $currentMonth)
+                ->whereYear('tanggal', $currentYear)
+                ->where('status', 'TERLAMBAT')
+                ->count(),
+        ];
+
         return view('pegawaimanager::show', [
             'title' => 'Detail Profil Pegawai',
             'pegawai' => $pegawai,
+            'absensiStats' => $absensiStats,
         ]);
     }
 
@@ -146,8 +166,12 @@ class PegawaiManagerController extends Controller
     public function edit(string $id): View
     {
         $pegawaiManager = Pegawai::findOrFail($id);
-        $types = TypePegawai::all();
-        $roles = Role::all();
+        $types = Cache::remember('all_type_pegawai', 86400, function() {
+            return TypePegawai::all();
+        });
+        $roles = Cache::remember('all_roles', 86400, function() {
+            return Role::all();
+        });
 
         return view('pegawaimanager::edit', [
             'title' => 'Edit Pegawai',
@@ -160,24 +184,11 @@ class PegawaiManagerController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id): RedirectResponse
+    public function update(UpdatePegawaiRequest $request, string $id): RedirectResponse
     {
         $pegawai = Pegawai::findOrFail($id);
-
-        $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'type_pegawai_id' => 'required|uuid',
-            'email' => [
-                'required',
-                'email',
-                Rule::unique('sys_users', 'email')->ignore($pegawai->user_id),
-                Rule::unique('pegawai', 'email')->ignore($pegawai->id),
-            ],
-            'no_hp' => 'nullable|string|max:20',
-            'alamat' => 'nullable|string',
-            'tanggal_masuk' => 'nullable|date',
-            'role_name' => 'required|string|exists:sys_roles,name',
-        ]);
+        
+        $validated = $request->validated();
 
         try {
             DB::beginTransaction();
@@ -217,17 +228,33 @@ class PegawaiManagerController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id): RedirectResponse
     {
-        $pegawai = Pegawai::findOrFail($id);
+        $pegawai = Pegawai::with('user')->findOrFail($id);
 
-        $pegawai->delete();
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('pegawaimanager.index')
-            ->with('success', 'Data pegawai berhasil dihapus.');
+            $user = $pegawai->user;
+
+            // Hapus data pegawai
+            $pegawai->delete();
+
+            // Hapus akun user terkait (soft delete)
+            if ($user) {
+                $user->delete();
+            }
+
+            DB::commit();
+
+            return redirect()->route('pegawaimanager.index')
+                ->with('success', 'Data pegawai dan akun sistem terkait berhasil dihapus.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('pegawaimanager.index')
+                ->with('error', 'Terjadi kesalahan saat menghapus data: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -235,8 +262,6 @@ class PegawaiManagerController extends Controller
      */
     public function export()
     {
-        $pegawais = Pegawai::with(['user', 'typePegawai'])->get();
-        
         $filename = "laporan_pegawai_" . date('Y-m-d_H-i-s') . ".csv";
 
         $headers = [
@@ -258,7 +283,7 @@ class PegawaiManagerController extends Controller
             'Tanggal Masuk'
         ];
 
-        $callback = function() use($pegawais, $columns) {
+        $callback = function() use ($columns) {
             $file = fopen('php://output', 'w');
             
             // Add BOM for Excel UTF-8 compatibility
@@ -267,24 +292,154 @@ class PegawaiManagerController extends Controller
             fputcsv($file, $columns, ';'); // Use semicolon for Excel intl compatibility
 
             $no = 1;
-            foreach ($pegawais as $p) {
-                $role = $p->user ? collect($p->user->roles)->pluck('name')->join(', ') : '-';
-                $row = [
-                    $no++,
-                    $p->nama,
-                    $p->typePegawai->nama_type ?? '-',
-                    $role,
-                    $p->no_hp ?? '-',
-                    $p->email ?? '-',
-                    $p->alamat ?? '-',
-                    $p->tanggal_masuk ? $p->tanggal_masuk->format('Y-m-d') : '-'
-                ];
-                fputcsv($file, $row, ';');
-            }
+            
+            // Menggunakan chunk yang dilimit 200 data per loop agar RAM terhindar dari Memory OOM
+            Pegawai::with(['user', 'typePegawai'])
+                ->orderBy('created_at', 'desc')
+                ->chunk(200, function ($pegawais) use ($file, &$no) {
+                    foreach ($pegawais as $p) {
+                        $role = $p->user ? collect($p->user->roles)->pluck('name')->join(', ') : '-';
+                        $row = [
+                            $no++,
+                            $p->nama,
+                            $p->typePegawai->nama_type ?? '-',
+                            $role,
+                            $p->no_hp ?? '-',
+                            $p->email ?? '-',
+                            $p->alamat ?? '-',
+                            $p->tanggal_masuk ? $p->tanggal_masuk->format('Y-m-d') : '-'
+                        ];
+                        fputcsv($file, $row, ';');
+                    }
+                });
 
             fclose($file);
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Show the form for importing data.
+     */
+    public function importForm(): View
+    {
+        return view('pegawaimanager::import', [
+            'title' => 'Import Data Pegawai'
+        ]);
+    }
+
+    /**
+     * Process the imported CSV file.
+     */
+    public function processImport(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'file' => 'required|mimes:csv,txt|max:2048',
+        ]);
+
+        $file = $request->file('file');
+        $handle = fopen($file->getPathname(), "r");
+        
+        $header = true;
+        $successCount = 0;
+        $errorCount = 0;
+        
+        try {
+            DB::beginTransaction();
+            
+            // Menggunakan ';' sebagai pemisah karena format Export kita juga menggunakan ';'
+            while (($data = fgetcsv($handle, 1000, ";")) !== FALSE) {
+                // Handle jika pemisah ternyata ','
+                if (count($data) == 1 && strpos($data[0], ',') !== false) {
+                    $data = explode(',', $data[0]);
+                }
+
+                if ($header) {
+                    $header = false;
+                    continue; // Skip baris pertama (header)
+                }
+                
+                // Minimal indeks [1] (Nama Lengkap) dan [5] (Email) ada datanya, sesuai format export
+                if (count($data) < 6 || empty($data[1]) || empty($data[5])) {
+                    $errorCount++;
+                    continue;
+                }
+                
+                $nama = trim($data[1]);
+                $email = trim($data[5]);
+                
+                // Cek tipe pegawai berdasarkan nama tipe, jika tidak ketemu biarkan null atau default
+                $nama_type = trim($data[2]);
+                $type_id = null;
+                if (!empty($nama_type) && $nama_type !== '-') {
+                    $type = TypePegawai::where('nama_type', 'like', "%{$nama_type}%")->first();
+                    $type_id = $type ? $type->id : null;
+                }
+
+                $role_name = trim($data[3]);
+                if (empty($role_name) || $role_name === '-') $role_name = 'PEGAWAI';
+
+                $no_hp = trim($data[4]) !== '-' ? trim($data[4]) : null;
+                $alamat = trim($data[6]) !== '-' ? trim($data[6]) : null;
+                $tanggal = trim($data[7]) !== '-' ? trim($data[7]) : null;
+                
+                // Cek duplikasi email di User
+                if (User::where('email', $email)->exists()) {
+                    $errorCount++;
+                    continue;
+                }
+
+                // 1. Create User
+                $user = User::create([
+                    'id' => (string) Str::uuid(),
+                    'name' => $nama,
+                    'email' => $email,
+                    'password' => Hash::make('password123'),
+                    'account_status' => 'active',
+                ]);
+
+                // 2. Assign Role
+                if (\App\Models\Role::where('name', $role_name)->exists()) {
+                    $user->assignRole($role_name);
+                } else {
+                    $user->assignRole('PEGAWAI'); // Fallback role
+                }
+
+                // 3. Create Pegawai
+                Pegawai::create([
+                    'nama' => $nama,
+                    'user_id' => $user->id,
+                    'type_pegawai_id' => $type_id,
+                    'email' => $email,
+                    'no_hp' => $no_hp,
+                    'alamat' => $alamat,
+                    'tanggal_masuk' => $tanggal,
+                ]);
+                
+                $successCount++;
+            }
+            
+            fclose($handle);
+            DB::commit();
+            
+            $msg = "Berhasil mengimpor {$successCount} data pegawai baru.";
+            if ($errorCount > 0) {
+                $msg .= " ({$errorCount} baris dilewati karena format tidak valid atau email sudah terdaftar).";
+            }
+
+            if ($successCount > 0) {
+                return redirect()->route('pegawaimanager.index')->with('success', $msg);
+            } else {
+                return redirect()->back()->with('error', 'Gagal mengimpor data. Pastikan format CSV sesuai standar Export dan email belum terdaftar. ' . ($errorCount > 0 ? "({$errorCount} error ditemukan)" : ""));
+            }
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            if (is_resource($handle)) {
+                fclose($handle);
+            }
+            return redirect()->back()->with('error', 'Terjadi kesalahan sistem saat memproses file: ' . $e->getMessage());
+        }
     }
 }

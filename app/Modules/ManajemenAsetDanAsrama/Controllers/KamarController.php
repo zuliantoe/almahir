@@ -31,6 +31,36 @@ class KamarController extends BaseController
     }
 
     /**
+     * Show the details of the specified kamar.
+     */
+    public function show(string $id): View
+    {
+        $kamar = Kamar::findOrFail($id);
+        
+        // Ambil daftar penghuni yang sedang aktif di kamar ini
+        $penghuniAktif = $kamar->penghuni()
+            ->with('siswa')
+            ->whereNull('tanggal_keluar')
+            ->orWhere('tanggal_keluar', '>', now())
+            ->get();
+
+        // Ambil riwayat penghuni sebelumnya
+        $riwayatPenghuni = $kamar->penghuni()
+            ->with('siswa')
+            ->whereNotNull('tanggal_keluar')
+            ->where('tanggal_keluar', '<=', now())
+            ->orderBy('tanggal_keluar', 'desc')
+            ->get();
+
+        return view('manajemenasetdanasrama::kamar.show', [
+            'title'           => 'Detail Kamar: ' . $kamar->nama_kamar,
+            'kamar'           => $kamar,
+            'penghuniAktif'   => $penghuniAktif,
+            'riwayatPenghuni' => $riwayatPenghuni,
+        ]);
+    }
+
+    /**
      * Store a newly created kamar in storage.
      */
     public function store(Request $request): RedirectResponse

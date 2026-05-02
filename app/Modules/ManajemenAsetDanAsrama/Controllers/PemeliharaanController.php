@@ -7,9 +7,12 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use App\Modules\ManajemenAsetDanAsrama\Models\Pemeliharaan;
 use App\Modules\ManajemenAsetDanAsrama\Models\Aset;
+use App\Modules\ManajemenAsetDanAsrama\Models\Kerusakan;
+use App\Modules\ManajemenAsetDanAsrama\Traits\HasSoftDeleteWithUser;
 
 class PemeliharaanController extends BaseController
 {
+    use HasSoftDeleteWithUser;
     /**
      * Display a listing of pemeliharaan (hanya yang masih proses).
      */
@@ -146,7 +149,7 @@ class PemeliharaanController extends BaseController
         ]);
 
         // Apabila ada data Kerusakan untuk aset ini yang belum selesai, otomatis sinkronkan ke selesai
-        \Modules\ManajemenAsetDanAsrama\Models\Kerusakan::where('aset_id', $pemeliharaan->aset_id)
+        Kerusakan::where('aset_id', $pemeliharaan->aset_id)
             ->whereIn('status_penanganan', ['belum_ditangani', 'sedang_ditangani'])
             ->update([
                 'status_penanganan' => 'selesai',
@@ -158,12 +161,12 @@ class PemeliharaanController extends BaseController
     }
 
     /**
-     * Remove the specified pemeliharaan from storage.
+     * Remove the specified pemeliharaan from storage (soft delete).
      */
-    public function destroy(string $id): RedirectResponse
+    public function destroy(Request $request, string $id): RedirectResponse
     {
         $pemeliharaan = Pemeliharaan::findOrFail($id);
-        $pemeliharaan->delete();
+        $this->performSoftDelete($request, $pemeliharaan);
 
         return redirect()->route('manajemenasetdanasrama.pemeliharaan.index')
             ->with('success', 'Pemeliharaan berhasil dihapus.');

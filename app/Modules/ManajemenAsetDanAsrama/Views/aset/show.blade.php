@@ -164,7 +164,7 @@
                                 <td>
                                     @if($kerusakan->status_penanganan == 'belum_ditangani')
                                         <span class="badge badge-danger">Belum Ditangani</span>
-                                    @elseif($kerusakan->status_penanganan == 'sedang_diperbaiki')
+                                    @elseif($kerusakan->status_penanganan == 'sedang_ditangani')
                                         <span class="badge badge-warning">Sedang Diperbaiki</span>
                                     @elseif($kerusakan->status_penanganan == 'selesai')
                                         <span class="badge badge-success">Selesai</span>

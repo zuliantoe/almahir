@@ -3,9 +3,12 @@
 namespace App\Modules\ManajemenAsetDanAsrama\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\User;
 
 class Pemeliharaan extends Model
 {
+    use SoftDeletes;
     protected $table = 'pemeliharaan';
 
     protected $fillable = [
@@ -19,6 +22,8 @@ class Pemeliharaan extends Model
         'catatan',
         'status',
         'catatan_selesai',
+        'deleted_by',
+        'alasan_hapus',
     ];
 
     protected $casts = [
@@ -33,5 +38,11 @@ class Pemeliharaan extends Model
     public function aset()
     {
         return $this->belongsTo(Aset::class, 'aset_id');
+    }
+
+    // Relasi: user yang menghapus
+    public function deletedBy()
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
     }
 }

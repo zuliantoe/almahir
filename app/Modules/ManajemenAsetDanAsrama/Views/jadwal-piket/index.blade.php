@@ -34,6 +34,38 @@
                     </a>
                 </x-slot>
 
+                <div class="card-body border-bottom">
+                    <form action="{{ route('manajemenasetdanasrama.jadwal-piket.index') }}" method="GET" class="row">
+                        <div class="col-md-3 mb-2">
+                            <select name="bulan" class="form-control form-control-sm">
+                                <option value="">-- Semua Bulan --</option>
+                                @php
+                                    $namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                                @endphp
+                                @foreach($namaBulan as $idx => $nama)
+                                    <option value="{{ $idx + 1 }}" {{ request('bulan') == ($idx + 1) ? 'selected' : '' }}>{{ $nama }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <select name="pekan" class="form-control form-control-sm">
+                                <option value="">-- Semua Pekan --</option>
+                                @for($i = 1; $i <= 5; $i++)
+                                    <option value="{{ $i }}" {{ request('pekan') == $i ? 'selected' : '' }}>Pekan {{ $i }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <button type="submit" class="btn btn-sm btn-primary btn-block"><i class="fas fa-search"></i> Filter</button>
+                        </div>
+                        @if(request()->hasAny(['bulan', 'pekan']))
+                        <div class="col-md-2 mb-2">
+                            <a href="{{ route('manajemenasetdanasrama.jadwal-piket.index') }}" class="btn btn-sm btn-secondary btn-block">Reset</a>
+                        </div>
+                        @endif
+                    </form>
+                </div>
+
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover table-striped">
                         <thead>
@@ -127,6 +159,10 @@
                 </div>
                 <div class="modal-body">
                     <p>Apakah Anda yakin ingin menghapus jadwal piket <strong id="hapus_nama"></strong>?</p>
+                    <div class="form-group">
+                        <label for="alasan_hapus">Alasan Penghapusan <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="alasan_hapus" name="alasan_hapus" rows="3" placeholder="Masukkan alasan penghapusan..." required></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
@@ -145,6 +181,7 @@
             var button = $(event.relatedTarget);
             var modal = $(this);
             modal.find('#hapus_nama').text(button.data('nama'));
+            modal.find('#alasan_hapus').val('');
             var url = '{{ route("manajemenasetdanasrama.jadwal-piket.destroy", ":id") }}'.replace(':id', button.data('id'));
             modal.find('#formHapus').attr('action', url);
         });

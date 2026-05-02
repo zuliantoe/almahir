@@ -59,6 +59,9 @@
                                 <td>{!! $item->status_kapasitas_badge !!}</td>
                                 <td>{{ Str::limit($item->deskripsi ?? '-', 50) }}</td>
                                 <td>
+                                    <a href="{{ route('manajemenasetdanasrama.kamar.show', $item->id) }}" class="btn btn-xs btn-info" title="Detail">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
                                     <button type="button" class="btn btn-xs btn-warning"
                                             data-toggle="modal"
                                             data-target="#modalEditKamar"
@@ -197,6 +200,10 @@
                 <div class="modal-body">
                     <p>Apakah Anda yakin ingin menghapus kamar <strong id="hapus_nama_kamar"></strong>?</p>
                     <p class="text-danger"><small><i class="fas fa-info-circle"></i> Kamar yang masih memiliki penghuni tidak dapat dihapus.</small></p>
+                    <div class="form-group">
+                        <label for="alasan_hapus_kamar">Alasan Penghapusan <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="alasan_hapus_kamar" name="alasan_hapus" rows="3" placeholder="Masukkan alasan penghapusan..." required></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
@@ -228,6 +235,7 @@
             var button = $(event.relatedTarget);
             var modal = $(this);
             modal.find('#hapus_nama_kamar').text(button.data('nama'));
+            modal.find('#alasan_hapus_kamar').val('');
             var url = '{{ route("manajemenasetdanasrama.kamar.destroy", ":id") }}';
             url = url.replace(':id', button.data('id'));
             modal.find('#formHapusKamar').attr('action', url);

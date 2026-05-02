@@ -28,10 +28,10 @@ class DashboardController extends BaseController
         $totalKamar = Kamar::count();
         $totalPenghuni = KamarPenghuni::whereHas('kamar')->count();
         
-        $jadwalPiketHariIni = JadwalPiket::with('siswa')
-                                ->where('hari', $this->getHariIndo(date('l')))
+        $jadwalPiketHariIni = JadwalPiket::with(['siswa', 'kamar'])
+                                ->whereDate('tanggal', date('Y-m-d'))
                                 ->where('status', 'belum')
-                                ->take(5)
+                                ->take(10)
                                 ->get();
 
         $asetByStatus = [

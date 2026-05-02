@@ -173,18 +173,16 @@
                     <table class="table table-sm table-hover">
                         <thead>
                             <tr>
-                                <th>Tempat</th>
-                                <th>Siswa</th>
-                                <th>Pekan</th>
+                                <th>Kamar</th>
+                                <th>Nama Santri</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($jadwalPiketHariIni as $item)
                             <tr>
-                                <td>{{ $item->tempat ?? '-' }}</td>
+                                <td>{{ $item->kamar->nama_kamar ?? '-' }}</td>
                                 <td>{{ $item->siswa->nama ?? '-' }}</td>
-                                <td>Pekan {{ $item->pekan }}</td>
                                 <td>
                                     @if($item->status == 'belum')
                                         <span class="badge badge-warning">Belum</span>
@@ -195,7 +193,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="4" class="text-center text-muted">
+                                <td colspan="3" class="text-center text-muted">
                                     <i class="fas fa-inbox"></i> Tidak ada jadwal piket hari ini
                                 </td>
                             </tr>

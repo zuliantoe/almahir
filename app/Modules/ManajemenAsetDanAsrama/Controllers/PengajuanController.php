@@ -1,22 +1,25 @@
 <?php
 
-namespace Modules\ManajemenAsetDanAsrama\Controllers;
+namespace App\Modules\ManajemenAsetDanAsrama\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-use Modules\ManajemenAsetDanAsrama\Models\PengajuanAset;
+use App\Modules\ManajemenAsetDanAsrama\Models\PengajuanAset;
+use App\Modules\ManajemenAsetDanAsrama\Traits\HasNomorOtomatis;
+use App\Modules\ManajemenAsetDanAsrama\Traits\HasSoftDeleteWithUser;
 
 class PengajuanController extends BaseController
 {
+    use HasNomorOtomatis, HasSoftDeleteWithUser;
+
     /**
      * Display a listing of pengajuan aset.
      */
     public function index(Request $request): View
     {
-        // Hanya tampilkan pengajuan yang masih di tahap pengajuan
-        // Yang sudah disetujui/proses_pengadaan sudah pindah ke halaman Pengadaan
-        $pengajuan = PengajuanAset::with(['pengaju', 'approver'])
+        // Hanya tampilkan pengajuan yang masih di tahap pengajuan atau ditolak
+        $pengajuan = PengajuanAset::with(['pengaju:id,nama', 'approver:id,nama'])
                         ->whereIn('status', ['diajukan', 'ditolak'])
                         ->latest()
                         ->paginate(15);
@@ -47,16 +50,8 @@ class PengajuanController extends BaseController
             'tanggal_pengajuan'    => 'required|date',
         ]);
 
-        // Generate nomor pengajuan: PJ-YYYYMM-XXXX
-        $yearMonth = date('Ym');
-        $lastPengajuan = PengajuanAset::whereYear('created_at', date('Y'))
-                            ->whereMonth('created_at', date('m'))
-                            ->count();
-        $nomorUrut = str_pad($lastPengajuan + 1, 4, '0', STR_PAD_LEFT);
-        $nomorPengajuan = "PJ-{$yearMonth}-{$nomorUrut}";
-
         $data = $validated;
-        $data['nomor_pengajuan'] = $nomorPengajuan;
+        $data['nomor_pengajuan'] = $this->generateNomor(PengajuanAset::class, 'PJ');
         $data['pengaju_id'] = auth()->id();
         $data['status'] = 'diajukan';
 
@@ -125,15 +120,9 @@ class PengajuanController extends BaseController
      */
     public function destroy(Request $request, string $id): RedirectResponse
     {
-        $request->validate([
-            'alasan_hapus' => 'required|string'
-        ]);
-
         $pengajuan = PengajuanAset::findOrFail($id);
-        $pengajuan->deleted_by = auth()->id();
-        $pengajuan->alasan_hapus = $request->alasan_hapus;
-        $pengajuan->save();
-        $pengajuan->delete();
+        
+        $this->performSoftDelete($request, $pengajuan);
 
         return redirect()->route('manajemenasetdanasrama.pengajuan.index')
             ->with('success', 'Pengajuan aset berhasil dihapus.');

@@ -1,12 +1,12 @@
 <?php
 
-namespace Modules\ManajemenAsetDanAsrama\Controllers;
+namespace App\Modules\ManajemenAsetDanAsrama\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-use Modules\ManajemenAsetDanAsrama\Models\Pemeliharaan;
-use Modules\ManajemenAsetDanAsrama\Models\Aset;
+use App\Modules\ManajemenAsetDanAsrama\Models\Pemeliharaan;
+use App\Modules\ManajemenAsetDanAsrama\Models\Aset;
 
 class PemeliharaanController extends BaseController
 {
@@ -47,21 +47,9 @@ class PemeliharaanController extends BaseController
     public function store(Request $request): RedirectResponse
     {
         $aset = Aset::find($request->aset_id);
-        $minDate = $aset && $aset->tanggal_pengadaan ? $aset->tanggal_pengadaan->format('Y-m-d') : null;
-
-        $rules = [
-            'aset_id'           => 'required|exists:aset,id',
-            'tanggal_pemeliharaan' => 'required|date' . ($minDate ? '|after_or_equal:' . $minDate : ''),
-            'deskripsi_pemeliharaan' => 'required|string',
-            'biaya'             => 'required|numeric|min:0',
-            'catatan'           => 'nullable|string',
-        ];
-
-        $messages = [
-            'tanggal_pemeliharaan.after_or_equal' => 'Tanggal pemeliharaan tidak boleh sebelum tanggal pengadaan aset (' . ($minDate ? date('d/m/Y', strtotime($minDate)) : '') . ').'
-        ];
-
-        $validated = $request->validate($rules, $messages);
+        $data = $this->getValidationRulesAndMessages($request, $aset);
+        
+        $validated = $request->validate($data['rules'], $data['messages']);
 
         // Sync kolom asli yang NOT NULL
         $validated['tanggal_mulai_pemeliharaan'] = $validated['tanggal_pemeliharaan'];
@@ -99,6 +87,24 @@ class PemeliharaanController extends BaseController
     {
         $pemeliharaan = Pemeliharaan::findOrFail($id);
         $aset = Aset::find($request->aset_id);
+        $data = $this->getValidationRulesAndMessages($request, $aset);
+
+        $validated = $request->validate($data['rules'], $data['messages']);
+
+        // Sync kolom asli yang NOT NULL
+        $validated['tanggal_mulai_pemeliharaan'] = $validated['tanggal_pemeliharaan'];
+        $validated['biaya_pemeliharaan'] = $validated['biaya'];
+        $pemeliharaan->update($validated);
+
+        return redirect()->route('manajemenasetdanasrama.pemeliharaan.index')
+            ->with('success', 'Data pemeliharaan berhasil diperbarui.');
+    }
+
+    /**
+     * Get common validation rules and messages.
+     */
+    private function getValidationRulesAndMessages(Request $request, $aset): array
+    {
         $minDate = $aset && $aset->tanggal_pengadaan ? $aset->tanggal_pengadaan->format('Y-m-d') : null;
 
         $rules = [
@@ -113,15 +119,7 @@ class PemeliharaanController extends BaseController
             'tanggal_pemeliharaan.after_or_equal' => 'Tanggal pemeliharaan tidak boleh sebelum tanggal pengadaan aset (' . ($minDate ? date('d/m/Y', strtotime($minDate)) : '') . ').'
         ];
 
-        $validated = $request->validate($rules, $messages);
-
-        // Sync kolom asli yang NOT NULL
-        $validated['tanggal_mulai_pemeliharaan'] = $validated['tanggal_pemeliharaan'];
-        $validated['biaya_pemeliharaan'] = $validated['biaya'];
-        $pemeliharaan->update($validated);
-
-        return redirect()->route('manajemenasetdanasrama.pemeliharaan.index')
-            ->with('success', 'Data pemeliharaan berhasil diperbarui.');
+        return compact('rules', 'messages');
     }
 
     /**

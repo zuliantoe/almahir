@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\ManajemenAsetDanAsrama\Controllers;
+namespace App\Modules\ManajemenAsetDanAsrama\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-use Modules\ManajemenAsetDanAsrama\Models\JadwalPiket;
+use App\Modules\ManajemenAsetDanAsrama\Models\JadwalPiket;
 use Modules\Siswa\Models\Siswa;
 
 class JadwalPiketController extends BaseController
@@ -45,14 +45,7 @@ class JadwalPiketController extends BaseController
      */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'bulan'    => 'required|integer|between:1,12',
-            'pekan'    => 'required|integer|between:1,5',
-            'hari'     => 'required|string',
-            'tempat'   => 'required|string|max:255',
-            'siswa_id' => 'required|exists:siswa,id',
-        ]);
-
+        $validated = $request->validate($this->getValidationRules());
         $validated['status'] = 'belum';
 
         JadwalPiket::create($validated);
@@ -82,19 +75,26 @@ class JadwalPiketController extends BaseController
     public function update(Request $request, string $id): RedirectResponse
     {
         $jadwal = JadwalPiket::findOrFail($id);
-        
-        $validated = $request->validate([
-            'bulan'    => 'required|integer|between:1,12',
-            'pekan'    => 'required|integer|between:1,5',
-            'hari'     => 'required|string',
-            'tempat'   => 'required|string|max:255',
-            'siswa_id' => 'required|exists:siswa,id',
-        ]);
+        $validated = $request->validate($this->getValidationRules());
 
         $jadwal->update($validated);
 
         return redirect()->route('manajemenasetdanasrama.jadwal-piket.index')
             ->with('success', 'Jadwal piket berhasil diperbarui.');
+    }
+
+    /**
+     * Get common validation rules.
+     */
+    private function getValidationRules(): array
+    {
+        return [
+            'bulan'    => 'required|integer|between:1,12',
+            'pekan'    => 'required|integer|between:1,5',
+            'hari'     => 'required|string',
+            'tempat'   => 'required|string|max:255',
+            'siswa_id' => 'required|exists:siswa,id',
+        ];
     }
 
     /**

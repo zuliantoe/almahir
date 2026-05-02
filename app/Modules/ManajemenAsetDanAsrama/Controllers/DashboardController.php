@@ -1,17 +1,17 @@
 <?php
 
-namespace Modules\ManajemenAsetDanAsrama\Controllers;
+namespace App\Modules\ManajemenAsetDanAsrama\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Modules\ManajemenAsetDanAsrama\Models\Aset;
-use Modules\ManajemenAsetDanAsrama\Models\PengajuanAset;
-use Modules\ManajemenAsetDanAsrama\Models\PengadaanAset;
-use Modules\ManajemenAsetDanAsrama\Models\Kerusakan;
-use Modules\ManajemenAsetDanAsrama\Models\Pemeliharaan;
-use Modules\ManajemenAsetDanAsrama\Models\Kamar;
-use Modules\ManajemenAsetDanAsrama\Models\KamarPenghuni;
-use Modules\ManajemenAsetDanAsrama\Models\JadwalPiket;
+use App\Modules\ManajemenAsetDanAsrama\Models\Aset;
+use App\Modules\ManajemenAsetDanAsrama\Models\PengajuanAset;
+use App\Modules\ManajemenAsetDanAsrama\Models\PengadaanAset;
+use App\Modules\ManajemenAsetDanAsrama\Models\Kerusakan;
+use App\Modules\ManajemenAsetDanAsrama\Models\Pemeliharaan;
+use App\Modules\ManajemenAsetDanAsrama\Models\Kamar;
+use App\Modules\ManajemenAsetDanAsrama\Models\KamarPenghuni;
+use App\Modules\ManajemenAsetDanAsrama\Models\JadwalPiket;
 
 class DashboardController extends BaseController
 {

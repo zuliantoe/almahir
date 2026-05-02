@@ -1,17 +1,17 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\ManajemenAsetDanAsrama\Controllers\DashboardController;
-use Modules\ManajemenAsetDanAsrama\Controllers\PengajuanController;
-use Modules\ManajemenAsetDanAsrama\Controllers\PersetujuanController;
-use Modules\ManajemenAsetDanAsrama\Controllers\PengadaanController;
-use Modules\ManajemenAsetDanAsrama\Controllers\AsetController;
-use Modules\ManajemenAsetDanAsrama\Controllers\KamarController;
-use Modules\ManajemenAsetDanAsrama\Controllers\PenghuniController;
-use Modules\ManajemenAsetDanAsrama\Controllers\JadwalPiketController;
-use Modules\ManajemenAsetDanAsrama\Controllers\KerusakanController;
-use Modules\ManajemenAsetDanAsrama\Controllers\PemeliharaanController;
-use Modules\ManajemenAsetDanAsrama\Controllers\TrashController;
+use App\Modules\ManajemenAsetDanAsrama\Controllers\DashboardController;
+use App\Modules\ManajemenAsetDanAsrama\Controllers\PengajuanController;
+use App\Modules\ManajemenAsetDanAsrama\Controllers\PersetujuanController;
+use App\Modules\ManajemenAsetDanAsrama\Controllers\PengadaanController;
+use App\Modules\ManajemenAsetDanAsrama\Controllers\AsetController;
+use App\Modules\ManajemenAsetDanAsrama\Controllers\KamarController;
+use App\Modules\ManajemenAsetDanAsrama\Controllers\PenghuniController;
+use App\Modules\ManajemenAsetDanAsrama\Controllers\JadwalPiketController;
+use App\Modules\ManajemenAsetDanAsrama\Controllers\KerusakanController;
+use App\Modules\ManajemenAsetDanAsrama\Controllers\PemeliharaanController;
+use App\Modules\ManajemenAsetDanAsrama\Controllers\TrashController;
 
 /*
 |--------------------------------------------------------------------------

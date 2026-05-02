@@ -7,14 +7,18 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Modules\ManajemenAsetDanAsrama\Models\Aset;
 
+use Modules\ManajemenAsetDanAsrama\Traits\HasSoftDeleteWithUser;
+
 class AsetController extends BaseController
 {
+    use HasSoftDeleteWithUser;
+
     /**
      * Display a listing of master aset.
      */
     public function index(Request $request): View
     {
-        $aset = Aset::with('pengadaan.pengajuan')
+        $aset = Aset::with('pengadaan:id,nomor_po,pengajuan_id', 'pengadaan.pengajuan:id,nomor_pengajuan')
                     ->whereNull('deleted_at')
                     ->latest()
                     ->paginate(15);
@@ -77,15 +81,9 @@ class AsetController extends BaseController
      */
     public function destroy(Request $request, string $id): RedirectResponse
     {
-        $request->validate([
-            'alasan_hapus' => 'required|string'
-        ]);
-
         $aset = Aset::findOrFail($id);
-        $aset->deleted_by = auth()->id();
-        $aset->alasan_hapus = $request->alasan_hapus;
-        $aset->save();
-        $aset->delete();
+        
+        $this->performSoftDelete($request, $aset);
 
         return redirect()->route('manajemenasetdanasrama.aset.index')
             ->with('success', 'Aset berhasil dipindahkan ke trash.');

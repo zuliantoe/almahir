@@ -113,15 +113,26 @@ class PengajuanAset extends Model
     }
 
     /**
-     * Generate nomor pengajuan otomatis
+     * Accessor: Status Badge HTML
      */
-    public static function generateNomorPengajuan(): string
+    public function getStatusBadgeAttribute(): string
     {
-        $yearMonth = date('Ym');
-        $last = self::whereYear('created_at', date('Y'))
-                    ->whereMonth('created_at', date('m'))
-                    ->count();
-        $nomorUrut = str_pad($last + 1, 4, '0', STR_PAD_LEFT);
-        return "PJ-{$yearMonth}-{$nomorUrut}";
+        $status = $this->status;
+        $badges = [
+            self::STATUS_DIAJUKAN         => '<span class="badge badge-warning">Menunggu Persetujuan</span>',
+            self::STATUS_DISETUJUI        => '<span class="badge badge-success">Disetujui</span>',
+            self::STATUS_DITOLAK          => '<span class="badge badge-danger">Ditolak</span>',
+            self::STATUS_PROSES_PENGADAAN => '<span class="badge badge-info">Proses Pengadaan</span>',
+        ];
+
+        return $badges[$status] ?? '<span class="badge badge-secondary">'.ucfirst($status).'</span>';
+    }
+
+    /**
+     * Accessor: Estimasi Harga Terformat Rp
+     */
+    public function getEstimasiHargaFormattedAttribute(): string
+    {
+        return 'Rp ' . number_format($this->estimasi_harga, 0, ',', '.');
     }
 }

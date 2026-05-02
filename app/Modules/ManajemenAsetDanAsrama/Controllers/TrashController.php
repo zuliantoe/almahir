@@ -19,10 +19,16 @@ class TrashController extends BaseController
                         ->with('deletedBy')
                         ->latest('deleted_at')
                         ->get();
+
+        $pengajuanTrash = PengajuanAset::onlyTrashed()
+                            ->with('deletedBy')
+                            ->latest('deleted_at')
+                            ->get();
         
         return view('manajemenasetdanasrama::trash.index', [
-            'title'     => 'Data Terhapus (Trash)',
-            'asetTrash' => $asetTrash,
+            'title'          => 'Data Terhapus (Trash)',
+            'asetTrash'      => $asetTrash,
+            'pengajuanTrash' => $pengajuanTrash,
         ]);
     }
 
@@ -35,6 +41,10 @@ class TrashController extends BaseController
             $item = Aset::onlyTrashed()->findOrFail($id);
             $item->restore();
             $message = 'Aset berhasil dipulihkan.';
+        } elseif ($type === 'pengajuan') {
+            $item = PengajuanAset::onlyTrashed()->findOrFail($id);
+            $item->restore();
+            $message = 'Pengajuan aset berhasil dipulihkan.';
         } else {
             abort(404);
         }
@@ -52,6 +62,10 @@ class TrashController extends BaseController
             $item = Aset::onlyTrashed()->findOrFail($id);
             $item->forceDelete();
             $message = 'Aset berhasil dihapus permanen.';
+        } elseif ($type === 'pengajuan') {
+            $item = PengajuanAset::onlyTrashed()->findOrFail($id);
+            $item->forceDelete();
+            $message = 'Pengajuan aset berhasil dihapus permanen.';
         } else {
             abort(404);
         }

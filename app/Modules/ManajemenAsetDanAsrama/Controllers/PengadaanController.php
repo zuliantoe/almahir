@@ -9,20 +9,24 @@ use Modules\ManajemenAsetDanAsrama\Models\PengadaanAset;
 use Modules\ManajemenAsetDanAsrama\Models\PengajuanAset;
 use Modules\ManajemenAsetDanAsrama\Models\Aset;
 
+use Modules\ManajemenAsetDanAsrama\Traits\HasNomorOtomatis;
+
 class PengadaanController extends BaseController
 {
+    use HasNomorOtomatis;
+
     /**
      * Display a listing of pengadaan aset.
      */
     public function index(Request $request): View
     {
-        $pengadaan = PengadaanAset::with('pengajuan')
+        $pengadaan = PengadaanAset::with('pengajuan:id,nomor_pengajuan,nama_aset')
                         ->whereHas('pengajuan')
                         ->latest()
                         ->paginate(15);
         
         // Pengajuan yang sudah disetujui tapi belum dibuatkan pengadaan
-        $menungguProses = PengajuanAset::with('pengaju')
+        $menungguProses = PengajuanAset::with('pengaju:id,nama')
                             ->where('status', 'disetujui')
                             ->latest()
                             ->get();
@@ -61,16 +65,8 @@ class PengadaanController extends BaseController
             'catatan_pengadaan' => 'nullable|string',
         ]);
 
-        // Generate nomor PO: PO-YYYYMM-XXXX
-        $yearMonth = date('Ym');
-        $lastPengadaan = PengadaanAset::whereYear('created_at', date('Y'))
-                            ->whereMonth('created_at', date('m'))
-                            ->count();
-        $nomorUrut = str_pad($lastPengadaan + 1, 4, '0', STR_PAD_LEFT);
-        $nomorPO = "PO-{$yearMonth}-{$nomorUrut}";
-
         $data = $validated;
-        $data['nomor_po'] = $nomorPO;
+        $data['nomor_po'] = $this->generateNomor(PengadaanAset::class, 'PO');
         $data['status'] = 'dipesan';
 
         PengadaanAset::create($data);

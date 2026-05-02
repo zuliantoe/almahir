@@ -61,8 +61,32 @@ class Aset extends Model
      * Relasi ke user yang menghapus (soft delete)
      */
     public function deletedBy()
- {
-        return $this->belongsTo(User::class, 'deleted_by'); // ✅ SEKARANG BISA
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
+    }
+
+    /**
+     * Accessor: Status Badge HTML
+     */
+    public function getStatusBadgeAttribute(): string
+    {
+        $status = $this->status_kondisi;
+        $badges = [
+            'baik'              => '<span class="badge badge-success">Baik</span>',
+            'rusak'             => '<span class="badge badge-danger">Rusak</span>',
+            'dalam_perbaikan'   => '<span class="badge badge-warning">Dalam Perbaikan</span>',
+            'sudah_diperbaiki'  => '<span class="badge badge-info">Sudah Diperbaiki</span>',
+        ];
+
+        return $badges[$status] ?? '<span class="badge badge-secondary">'.ucfirst($status).'</span>';
+    }
+
+    /**
+     * Accessor: Harga Terformat Rp
+     */
+    public function getHargaFormattedAttribute(): string
+    {
+        return 'Rp ' . number_format($this->harga, 0, ',', '.');
     }
 
     /**

@@ -67,15 +67,9 @@
                                 <td>{{ $loop->iteration + ($pengajuan->currentPage() - 1) * $pengajuan->perPage() }}</td>
                                 <td>{{ $item->nomor_pengajuan ?? '-' }}</td>
                                 <td><strong>{{ $item->nama_aset }}</strong></td>
-                                <td>Rp {{ number_format($item->estimasi_harga, 0, ',', '.') }}</td>
+                                <td>{{ $item->estimasi_harga_formatted }}</td>
                                 <td>{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d/m/Y') }}</td>
-                                <td>
-                                    @if($item->status == 'diajukan')
-                                        <span class="badge badge-warning">Menunggu Persetujuan</span>
-                                    @elseif($item->status == 'ditolak')
-                                        <span class="badge badge-danger">Ditolak</span>
-                                    @endif
-                                </td>
+                                <td>{!! $item->status_badge !!}</td>
                                 <td>{{ $item->pengaju->name ?? '-' }}</td>
                                 <td>
                                     {{-- Tombol Lihat --}}
@@ -98,9 +92,10 @@
                                     {{-- Tombol Hapus --}}
                                     <button type="button" class="btn btn-xs btn-danger" 
                                             data-toggle="modal" 
-                                            data-target="#modalHapusPengajuan"
+                                            data-target="#modalHapus"
                                             data-id="{{ $item->id }}"
                                             data-nama="{{ $item->nama_aset }}"
+                                            data-url="{{ route('manajemenasetdanasrama.pengajuan.destroy', $item->id) }}"
                                             title="Hapus">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -144,6 +139,8 @@
         </div>
     </div>
 </div>
+
+@include('manajemenasetdanasrama::partials.modal-delete', ['id' => 'modalHapus', 'title' => 'Hapus Pengajuan Aset'])
 
 {{-- MODAL TAMBAH PENGAJUAN --}}
 <div class="modal fade" id="modalTambahPengajuan" tabindex="-1" role="dialog" aria-labelledby="modalTambahPengajuanLabel" aria-hidden="true">
@@ -232,34 +229,6 @@
     </div>
 </div>
 
-{{-- MODAL HAPUS PENGAJUAN --}}
-<div class="modal fade" id="modalHapusPengajuan" tabindex="-1" role="dialog" aria-labelledby="modalHapusPengajuanLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <form id="formHapusPengajuan" action="" method="POST">
-                @csrf
-                @method('DELETE')
-                <div class="modal-header bg-danger">
-                    <h5 class="modal-title text-white" id="modalHapusPengajuanLabel">Hapus Pengajuan Aset</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p>Apakah Anda yakin ingin menghapus pengajuan <strong id="hapus_nama_aset"></strong>?</p>
-                    <div class="form-group">
-                        <label for="alasan_hapus">Alasan Penghapusan <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="alasan_hapus" name="alasan_hapus" rows="3" required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-danger">Hapus</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 {{-- MODAL DETAIL PENGAJUAN (LIHAT) --}}
 <div class="modal fade" id="modalDetailPengajuan" tabindex="-1" role="dialog" aria-labelledby="modalDetailPengajuanLabel" aria-hidden="true">
@@ -396,18 +365,6 @@
             modal.find('#formEditPengajuan').attr('action', url);
         });
 
-        // Hapus modal - set id dan nama
-        $('#modalHapusPengajuan').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget);
-            var id = button.data('id');
-            var nama = button.data('nama');
-
-            var modal = $(this);
-            modal.find('#hapus_nama_aset').text(nama);
-            var url = '{{ route("manajemenasetdanasrama.pengajuan.destroy", ":id") }}';
-            url = url.replace(':id', id);
-            modal.find('#formHapusPengajuan').attr('action', url);
-        });
 
         // Tombol Lihat - fetch data via AJAX dan tampilkan di modal
         $('.btn-lihat').on('click', function() {

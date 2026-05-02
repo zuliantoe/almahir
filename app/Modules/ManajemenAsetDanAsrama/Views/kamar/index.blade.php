@@ -54,12 +54,9 @@
                                 <td>{{ $loop->iteration + ($kamar->currentPage() - 1) * $kamar->perPage() }}</td>
                                 <td><strong>{{ $item->nama_kamar }}</strong></td>
                                 <td>{{ $item->kapasitas }} orang</td>
-                                <td>
-                                    <span class="badge badge-{{ $item->penghuni_count >= $item->kapasitas ? 'danger' : 'success' }}">
-                                        {{ $item->penghuni_count }} orang
-                                    </span>
-                                </td>
-                                <td>{{ $item->kapasitas - $item->penghuni_count }} orang</td>
+                                <td>{{ $item->terisi }} orang</td>
+                                <td>{{ $item->sisa }} orang</td>
+                                <td>{!! $item->status_kapasitas_badge !!}</td>
                                 <td>{{ Str::limit($item->deskripsi ?? '-', 50) }}</td>
                                 <td>
                                     <button type="button" class="btn btn-xs btn-warning"

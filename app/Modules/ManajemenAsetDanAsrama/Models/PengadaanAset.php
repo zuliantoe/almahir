@@ -66,4 +66,27 @@ class PengadaanAset extends Model
     {
         return $query->where('status', 'batal');
     }
+
+    /**
+     * Accessor: Status Badge HTML
+     */
+    public function getStatusBadgeAttribute(): string
+    {
+        $status = $this->status;
+        $badges = [
+            'dipesan' => '<span class="badge badge-warning">Dipesan</span>',
+            'datang'  => '<span class="badge badge-success">Barang Datang</span>',
+            'batal'   => '<span class="badge badge-danger">Dibatalkan</span>',
+        ];
+
+        return $badges[$status] ?? '<span class="badge badge-secondary">'.ucfirst($status).'</span>';
+    }
+
+    /**
+     * Accessor: Biaya Riil Terformat Rp
+     */
+    public function getBiayaRiilFormattedAttribute(): string
+    {
+        return 'Rp ' . number_format($this->biaya_riil, 0, ',', '.');
+    }
 }

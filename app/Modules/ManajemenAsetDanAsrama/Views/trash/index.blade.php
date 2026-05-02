@@ -34,13 +34,13 @@
                     <table class="table table-bordered table-hover table-striped">
                         <thead>
                             <tr>
-                                <th>No</th>
-                                <th>Kode Aset</th>
+                                <th width="50">No</th>
+                                <th width="120">Kode Aset</th>
                                 <th>Nama Aset</th>
                                 <th>Alasan Hapus</th>
-                                <th>Dihapus Oleh</th>
-                                <th>Tanggal Hapus</th>
-                                <th width="180">Aksi</th>
+                                <th width="150">Dihapus Oleh</th>
+                                <th width="150">Tanggal Hapus</th>
+                                <th width="150">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -56,7 +56,7 @@
                                     <form action="{{ route('manajemenasetdanasrama.trash.restore', ['type' => 'aset', 'id' => $item->id]) }}" method="POST" style="display:inline">
                                         @csrf
                                         <button type="submit" class="btn btn-xs btn-success" title="Pulihkan">
-                                            <i class="fas fa-undo"></i> Pulihkan
+                                            <i class="fas fa-undo"></i>
                                         </button>
                                     </form>
                                     <button type="button" class="btn btn-xs btn-danger"
@@ -66,7 +66,7 @@
                                             data-id="{{ $item->id }}"
                                             data-nama="{{ $item->nama_aset }}"
                                             title="Hapus Permanen">
-                                        <i class="fas fa-trash"></i> Hapus Permanen
+                                        <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
                             </tr>
@@ -74,6 +74,64 @@
                             <tr>
                                 <td colspan="7" class="text-center text-muted">
                                     <i class="fas fa-inbox"></i> Tidak ada aset yang terhapus
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </x-card>
+        </div>
+    </div>
+
+    {{-- Pengajuan Terhapus --}}
+    <div class="row">
+        <div class="col-md-12">
+            <x-card title="Pengajuan Terhapus" icon="fas fa-file-alt">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th width="50">No</th>
+                                <th width="140">Nomor Pengajuan</th>
+                                <th>Nama Aset</th>
+                                <th>Alasan Hapus</th>
+                                <th width="150">Dihapus Oleh</th>
+                                <th width="150">Tanggal Hapus</th>
+                                <th width="150">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($pengajuanTrash as $item)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $item->nomor_pengajuan ?? '-' }}</td>
+                                <td>{{ $item->nama_aset }}</td>
+                                <td>{{ Str::limit($item->alasan_hapus ?? '-', 50) }}</td>
+                                <td>{{ $item->deletedBy->name ?? '-' }}</td>
+                                <td>{{ $item->deleted_at ? $item->deleted_at->format('d/m/Y H:i') : '-' }}</td>
+                                <td>
+                                    <form action="{{ route('manajemenasetdanasrama.trash.restore', ['type' => 'pengajuan', 'id' => $item->id]) }}" method="POST" style="display:inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-xs btn-success" title="Pulihkan">
+                                            <i class="fas fa-undo"></i>
+                                        </button>
+                                    </form>
+                                    <button type="button" class="btn btn-xs btn-danger"
+                                            data-toggle="modal"
+                                            data-target="#modalForceDelete"
+                                            data-type="pengajuan"
+                                            data-id="{{ $item->id }}"
+                                            data-nama="{{ $item->nama_aset }}"
+                                            title="Hapus Permanen">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">
+                                    <i class="fas fa-inbox"></i> Tidak ada pengajuan yang terhapus
                                 </td>
                             </tr>
                             @endforelse

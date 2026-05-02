@@ -59,18 +59,8 @@
                                 <td>{{ $loop->iteration + ($aset->currentPage() - 1) * $aset->perPage() }}</td>
                                 <td><code>{{ $item->kode_aset }}</code></td>
                                 <td><strong>{{ $item->nama_aset }}</strong></td>
-                                <td>Rp {{ number_format($item->harga, 0, ',', '.') }}</td>
-                                <td>
-                                    @if($item->status_kondisi == 'baik')
-                                        <span class="badge badge-success">Baik</span>
-                                    @elseif($item->status_kondisi == 'rusak')
-                                        <span class="badge badge-danger">Rusak</span>
-                                    @elseif($item->status_kondisi == 'dalam_perbaikan')
-                                        <span class="badge badge-warning">Dalam Perbaikan</span>
-                                    @elseif($item->status_kondisi == 'sudah_diperbaiki')
-                                        <span class="badge badge-info">Sudah Diperbaiki</span>
-                                    @endif
-                                </td>
+                                <td>{{ $item->harga_formatted }}</td>
+                                <td>{!! $item->status_badge !!}</td>
                                 <td>{{ $item->tanggal_pengadaan ? \Carbon\Carbon::parse($item->tanggal_pengadaan)->format('d/m/Y') : '-' }}</td>
                                 <td>
                                     <div class="row px-2">
@@ -95,6 +85,7 @@
                                                     data-target="#modalHapus"
                                                     data-id="{{ $item->id }}"
                                                     data-nama="{{ $item->nama_aset }}"
+                                                    data-url="{{ route('manajemenasetdanasrama.aset.destroy', $item->id) }}"
                                                     title="Hapus">
                                                 <i class="fas fa-trash"></i> Hapus
                                             </button>
@@ -135,32 +126,7 @@
     </div>
 </div>
 
-{{-- MODAL HAPUS --}}
-<div class="modal fade" id="modalHapus" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <form id="formHapus" action="" method="POST">
-                @csrf
-                @method('DELETE')
-                <div class="modal-header bg-danger">
-                    <h5 class="modal-title text-white">Hapus Aset</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
-                </div>
-                <div class="modal-body">
-                    <p>Apakah Anda yakin ingin menghapus aset <strong id="hapus_nama"></strong>?</p>
-                    <div class="form-group">
-                        <label for="alasan_hapus">Alasan Penghapusan <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="alasan_hapus" name="alasan_hapus" rows="3" required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-danger">Ya, Hapus</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+@include('manajemenasetdanasrama::partials.modal-delete', ['id' => 'modalHapus', 'title' => 'Hapus Master Aset'])
 
 {{-- MODAL DUPLIKAT --}}
 <div class="modal fade" id="modalDuplikat" tabindex="-1" role="dialog">
@@ -193,13 +159,6 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        $('#modalHapus').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget);
-            var modal = $(this);
-            modal.find('#hapus_nama').text(button.data('nama'));
-            var url = '{{ route("manajemenasetdanasrama.aset.destroy", ":id") }}'.replace(':id', button.data('id'));
-            modal.find('#formHapus').attr('action', url);
-        });
 
         $('#modalDuplikat').on('show.bs.modal', function (event) {
             var button = $(event.relatedTarget);

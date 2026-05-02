@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\ManajemenAsetDanAsrama\Models;
+namespace App\Modules\ManajemenAsetDanAsrama\Models;
 
 use Illuminate\Database\Eloquent\Model;
 

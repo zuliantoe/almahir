@@ -1,15 +1,15 @@
 <?php
 
-namespace Modules\ManajemenAsetDanAsrama\Controllers;
+namespace App\Modules\ManajemenAsetDanAsrama\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-use Modules\ManajemenAsetDanAsrama\Models\PengadaanAset;
-use Modules\ManajemenAsetDanAsrama\Models\PengajuanAset;
-use Modules\ManajemenAsetDanAsrama\Models\Aset;
+use App\Modules\ManajemenAsetDanAsrama\Models\PengadaanAset;
+use App\Modules\ManajemenAsetDanAsrama\Models\PengajuanAset;
+use App\Modules\ManajemenAsetDanAsrama\Models\Aset;
 
-use Modules\ManajemenAsetDanAsrama\Traits\HasNomorOtomatis;
+use App\Modules\ManajemenAsetDanAsrama\Traits\HasNomorOtomatis;
 
 class PengadaanController extends BaseController
 {

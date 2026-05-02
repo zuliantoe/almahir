@@ -1,12 +1,12 @@
 <?php
 
-namespace Modules\ManajemenAsetDanAsrama\Controllers;
+namespace App\Modules\ManajemenAsetDanAsrama\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-use Modules\ManajemenAsetDanAsrama\Models\Pemeliharaan;
-use Modules\ManajemenAsetDanAsrama\Models\Aset;
+use App\Modules\ManajemenAsetDanAsrama\Models\Pemeliharaan;
+use App\Modules\ManajemenAsetDanAsrama\Models\Aset;
 
 class PemeliharaanController extends BaseController
 {

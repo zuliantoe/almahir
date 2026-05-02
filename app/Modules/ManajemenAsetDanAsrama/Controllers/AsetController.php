@@ -1,13 +1,13 @@
 <?php
 
-namespace Modules\ManajemenAsetDanAsrama\Controllers;
+namespace App\Modules\ManajemenAsetDanAsrama\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-use Modules\ManajemenAsetDanAsrama\Models\Aset;
+use App\Modules\ManajemenAsetDanAsrama\Models\Aset;
 
-use Modules\ManajemenAsetDanAsrama\Traits\HasSoftDeleteWithUser;
+use App\Modules\ManajemenAsetDanAsrama\Traits\HasSoftDeleteWithUser;
 
 class AsetController extends BaseController
 {

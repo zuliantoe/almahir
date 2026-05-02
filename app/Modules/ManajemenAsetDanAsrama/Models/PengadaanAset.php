@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\ManajemenAsetDanAsrama\Models;  // UBAH
+namespace App\Modules\ManajemenAsetDanAsrama\Models;  // UBAH
 
 use Illuminate\Database\Eloquent\Model;
 

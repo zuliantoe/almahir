@@ -1,12 +1,12 @@
 <?php
 
-namespace Modules\ManajemenAsetDanAsrama\Controllers;
+namespace App\Modules\ManajemenAsetDanAsrama\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-use Modules\ManajemenAsetDanAsrama\Models\KamarPenghuni;
-use Modules\ManajemenAsetDanAsrama\Models\Kamar;
+use App\Modules\ManajemenAsetDanAsrama\Models\KamarPenghuni;
+use App\Modules\ManajemenAsetDanAsrama\Models\Kamar;
 use Modules\Siswa\Models\Siswa;
 
 class PenghuniController extends BaseController

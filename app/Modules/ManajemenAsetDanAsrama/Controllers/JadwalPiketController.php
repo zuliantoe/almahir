@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\ManajemenAsetDanAsrama\Controllers;
+namespace App\Modules\ManajemenAsetDanAsrama\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-use Modules\ManajemenAsetDanAsrama\Models\JadwalPiket;
+use App\Modules\ManajemenAsetDanAsrama\Models\JadwalPiket;
 use Modules\Siswa\Models\Siswa;
 
 class JadwalPiketController extends BaseController

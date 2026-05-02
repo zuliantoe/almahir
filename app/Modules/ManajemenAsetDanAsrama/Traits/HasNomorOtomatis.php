@@ -1,5 +1,5 @@
 <?php
-namespace Modules\ManajemenAsetDanAsrama\Traits;
+namespace App\Modules\ManajemenAsetDanAsrama\Traits;
 
 use Illuminate\Support\Facades\DB;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\ManajemenAsetDanAsrama\Models;  // SUDAH BENAR
+namespace App\Modules\ManajemenAsetDanAsrama\Models;  // SUDAH BENAR
 
 use Illuminate\Database\Eloquent\Model;
 use Modules\Siswa\Models\Siswa;  // Gunakan Modules\Siswa...

@@ -22,12 +22,11 @@ class SiswaController extends Controller
      */
     public function index(): View
     {
-        $siswa = Siswa::latest()->paginate(10);
-
+        $siswas = \Modules\Siswa\Models\Siswa::with('kelas')->orderBy('nama')->get();
         return view('siswa::index', [
             'title' => 'Data Siswa',
             'breadcrumb' => 'Siswa / Daftar',
-            'siswa' => $siswa,
+            'siswas' => $siswas,
         ]);
     }
 

@@ -10,6 +10,16 @@
             @method('PUT')
 
             <div class="form-group">
+                <label for="kelas_id">Kelas</label>
+                <select name="kelas_id" id="kelas_id" class="form-control" required>
+                    <option value="">Pilih Kelas</option>
+                    @foreach($kelas as $kelasItem)
+                        <option value="{{ $kelasItem->id }}" {{ old('kelas_id', $presensi->siswa?->kelas_id) == $kelasItem->id ? 'selected' : '' }}>{{ $kelasItem->nama_kelas }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label for="id_siswa">Siswa</label>
                 <select name="id_siswa" id="id_siswa" class="form-control" required>
                     <option value="">Pilih Siswa</option>
@@ -86,4 +96,112 @@
         </form>
     </x-card>
 </div>
-@endsection
+
+@push('scripts')
+<script>
+const siswasData = @json($siswas);
+const jadwalsData = @json($jadwals);
+
+function getStudentOptions() {
+    const kelasId = document.getElementById('kelas_id').value;
+    if (!kelasId) {
+        return '<option value="">-- Pilih Kelas terlebih dahulu --</option>';
+    }
+
+    const siswaList = siswasData.filter(siswa => siswa.kelas_id == kelasId);
+    if (siswaList.length === 0) {
+        return '<option value="">-- Tidak ada siswa di kelas ini --</option>';
+    }
+
+    let options = '<option value="">-- Pilih Siswa --</option>';
+    siswaList.forEach(siswa => {
+        options += `<option value="${siswa.id}">${siswa.nama}</option>`;
+    });
+    return options;
+}
+
+function getMapelOptions() {
+    const guruId = document.getElementById('id_guru').value;
+    if (!guruId) {
+        return '<option value="">-- Pilih Guru terlebih dahulu --</option>';
+    }
+
+    const mapelIds = new Set();
+    let options = '<option value="">-- Pilih Mata Pelajaran --</option>';
+    jadwalsData.forEach(jadwal => {
+        if (jadwal.guru_id == guruId && jadwal.mata_pelajaran && jadwal.mata_pelajaran.id && !mapelIds.has(jadwal.mata_pelajaran.id)) {
+            mapelIds.add(jadwal.mata_pelajaran.id);
+            options += `<option value="${jadwal.mata_pelajaran.id}">${jadwal.mata_pelajaran.nama}</option>`;
+        }
+    });
+
+    if (mapelIds.size === 0) {
+        return '<option value="">-- Guru belum mengajar mata pelajaran apa pun --</option>';
+    }
+
+    return options;
+}
+
+function getJadwalOptions() {
+    const kelasId = document.getElementById('kelas_id').value;
+    const guruId = document.getElementById('id_guru').value;
+    if (!kelasId || !guruId) {
+        return '<option value="">-- Pilih kelas dan guru terlebih dahulu --</option>';
+    }
+
+    const filtered = jadwalsData.filter(jadwal => jadwal.kelas_id == kelasId && jadwal.guru_id == guruId);
+    if (filtered.length === 0) {
+        return '<option value="">-- Tidak ada jadwal untuk kelas dan guru ini --</option>';
+    }
+
+    let options = '<option value="">-- Pilih Jadwal Pelajaran --</option>';
+    filtered.forEach(jadwal => {
+        const time = `${jadwal.hari} - ${jadwal.jamawal.substring(0,5)} - ${jadwal.jamakhir.substring(0,5)}`;
+        options += `<option value="${jadwal.id}">${time}</option>`;
+    });
+    return options;
+}
+
+function updateStudentOptions() {
+    const siswa = document.getElementById('id_siswa');
+    const currentValue = siswa.value;
+    siswa.innerHTML = getStudentOptions();
+    if (currentValue) {
+        siswa.value = currentValue;
+    }
+}
+
+function updateMapelOptions() {
+    const mapel = document.getElementById('id_mapel');
+    const currentValue = mapel.value;
+    mapel.innerHTML = getMapelOptions();
+    if (currentValue) {
+        mapel.value = currentValue;
+    }
+}
+
+function updateJadwalOptions() {
+    const jadwal = document.getElementById('id_jadwal_pelajaran');
+    const currentValue = jadwal.value;
+    jadwal.innerHTML = getJadwalOptions();
+    if (currentValue) {
+        jadwal.value = currentValue;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateStudentOptions();
+    updateMapelOptions();
+    updateJadwalOptions();
+
+    document.getElementById('kelas_id').addEventListener('change', function() {
+        updateStudentOptions();
+        updateJadwalOptions();
+    });
+    document.getElementById('id_guru').addEventListener('change', function() {
+        updateMapelOptions();
+        updateJadwalOptions();
+    });
+});
+</script>
+@endpush

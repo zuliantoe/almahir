@@ -77,8 +77,7 @@ class Siswa extends Model
      */
     public function kelas()
     {
-        // TODO: Define relationship when Kelas model is created
-        // return $this->belongsTo(Kelas::class, 'kelas_id');
+        return $this->belongsTo(\App\Modules\Akademik\Models\Kelas::class, 'kelas_id');
     }
 
     /**

@@ -7,10 +7,10 @@
 
     <title>@yield('title', 'SIAKAD') - {{ config('app.name', 'SIAKAD') }}</title>
 
-    {{-- Google Fonts: Inter untuk Typografi Modern & Premium --}}
+    {{-- Google Fonts: Outfit --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     {{-- Font Awesome 5 --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -21,43 +21,164 @@
     {{-- Premium UI Styles --}}
     <link rel="stylesheet" href="{{ asset('css/premium-ui.css') }}">
 
+    {{-- Animate.css --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
     {{-- Custom Styles --}}
     @stack('styles')
     
     <style>
-        /* Typography System */
-        body, h1, h2, h3, h4, h5, h6, p, a, span, button, input, select, textarea, .nav-link {
-            font-family: 'Inter', sans-serif !important;
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --info-color: #4895ef;
+            --card-radius: 16px;
+            --btn-radius: 10px;
         }
 
-        /* Custom styles for SIAKAD */
-        .sidebar-dark-primary .nav-sidebar>.nav-item>.nav-link.active {
-            background-color: #007bff;
-            box-shadow: 0 4px 6px -1px rgba(0, 123, 255, 0.2), 0 2px 4px -1px rgba(0, 123, 255, 0.1);
+        body {
+            font-family: 'Outfit', sans-serif !important;
+            background-color: #f8f9fc;
         }
         
+        .main-sidebar {
+            background-color: #1e1e2d !important;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.05);
+        }
+
+        .nav-sidebar .nav-link {
+            border-radius: 12px;
+            margin-bottom: 5px;
+            padding: 10px 15px;
+            font-weight: 500;
+        }
+
+        .nav-sidebar .nav-link.active {
+            background-color: var(--primary-color) !important;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+        }
+
         .content-wrapper {
-            min-height: calc(100vh - 57px - 57px);
+            background-color: #f8f9fc;
+            padding-top: 20px;
         }
-        
-        .card-title {
+
+        .card {
+            border: none;
+            border-radius: var(--card-radius);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid #f1f3f9;
+            padding: 1.25rem;
+        }
+
+        .btn {
+            border-radius: var(--btn-radius);
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .form-control, select.form-control {
+            border-radius: 10px;
+            padding: 12px 15px !important;
+            height: auto !important;
+            border: 1px solid #e1e5ef;
+            color: #4e5e7a;
+            font-weight: 500;
+        }
+
+        select.form-control {
+            padding-right: 45px !important; 
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234e5e7a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1.25rem center;
+            background-size: 1.2em;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.1);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.4);
+        }
+
+        .badge {
+            border-radius: 8px;
+            padding: 6px 12px;
             font-weight: 600;
         }
-        
-        /* Code snippet styling for UI Guide */
-        .code-snippet {
-            background: #2d3748;
-            color: #e2e8f0;
-            padding: 1rem;
-            border-radius: 0.375rem;
-            font-family: 'Fira Code', 'Consolas', monospace;
-            font-size: 0.875rem;
-            overflow-x: auto;
+
+        /* Table Styling */
+        .table thead th {
+            background-color: #f1f3f9;
+            border-top: none;
+            color: #4e5e7a;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
         }
-        
-        .code-snippet .tag { color: #63b3ed; }
-        .code-snippet .attr { color: #fbd38d; }
-        .code-snippet .value { color: #68d391; }
+
+        .table td {
+            vertical-align: middle;
+            color: #4e5e7a;
+            font-weight: 500;
+        }
+
+        .brand-link {
+            border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+            padding: 1.5rem 1rem !important;
+        }
+
+        .brand-text {
+            font-weight: 700 !important;
+            letter-spacing: 1px;
+        }
+
+        .content-header h1 {
+            font-weight: 700;
+            color: #1e1e2d;
+        }
+
+        /* SweetAlert Custom Styling */
+        .swal2-popup {
+            border-radius: 20px !important;
+            font-family: 'Outfit', sans-serif !important;
+            padding: 2rem !important;
+        }
+        .swal2-title {
+            font-weight: 700 !important;
+            color: #1e1e2d !important;
+        }
+        .swal2-styled.swal2-confirm {
+            border-radius: 10px !important;
+            padding: 10px 30px !important;
+            font-weight: 600 !important;
+        }
+        .swal2-icon {
+            border-width: 3px !important;
+        }
     </style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -126,21 +247,23 @@
                     icon: 'success',
                     title: 'Berhasil!',
                     text: "{{ session('success') }}",
-                    timer: 3000,
-                    showConfirmButton: true,
-                    confirmButtonText: 'OK',
-                    confirmButtonColor: '#3085d6',
-                    position: 'center',
-                    timerProgressBar: true
+                    confirmButtonColor: 'var(--primary-color)',
+                    timer: 2500,
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInDown'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutUp'
+                    }
                 });
             @endif
 
             @if(session('error'))
                 Swal.fire({
                     icon: 'error',
-                    title: 'Kesalahan',
+                    title: 'Oops...',
                     text: "{{ session('error') }}",
-                    confirmButtonColor: '#d33',
+                    confirmButtonColor: '#ef233c',
                 });
             @endif
 

@@ -4,94 +4,154 @@
 
 @section('content')
 <div class="container-fluid">
-    @if(session('success'))
-        <x-alert type="success" :message="session('success')" dismissible />
-    @endif
-    @if(session('error'))
-        <x-alert type="danger" :message="session('error')" dismissible />
-    @endif
+    {{-- Notifikasi otomatis via SweetAlert2 (Global Handler) --}}
 
-    <x-card title="Daftar Penilaian Tahfidz" icon="fas fa-book-reader">
-        <x-slot name="tools">
-            <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.create') }}" class="btn btn-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Tambah
-            </a>
-        </x-slot>
-
-        <div class="table-responsive">
-            <table class="table table-hover table-striped table-bordered">
-                <thead class="thead-dark">
-                    <tr>
-                        <th>No</th>
-                        <th>Siswa</th>
-                        <th>Kelas</th>
-                        <th>Surat</th>
-                        <th>Ayat</th>
-                        <th>Guru</th>
-                        <th>Nilai</th>
-                        <th class="text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($penilaianTahfidzs as $index => $item)
-                    <tr>
-                        <td>{{ ($penilaianTahfidzs->currentPage()-1)*$penilaianTahfidzs->perPage()+$index+1 }}</td>
-                        <td>{{ $item->siswa->nama ?? '-' }}</td>
-                        <td>{{ $item->kelas->nama_kelas ?? '-' }}</td>
-                        <td>{{ $item->surat_awal }} - {{ $item->surat_akhir }}</td>
-                        <td>{{ $item->ayat_awal }} - {{ $item->ayat_akhir }}</td>
-                        <td>{{ $item->guru->nama ?? '-' }}</td>
-                        <td>{{ $item->nilai }}</td>
-                        <td class="text-center">
-                            <div class="btn-group btn-group-sm" role="group">
-                                <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.show', $item->id) }}" class="btn btn-success">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.edit', $item->id) }}" class="btn btn-info">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button class="btn btn-danger" onclick="hapusData('{{ route('penilaiandanpresensi.penilaiantahfidz.destroy', $item->id) }}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="8" class="text-center py-5 text-muted">
-                            <i class="fas fa-inbox fa-3x mb-3"></i><br>
-                            Belum ada data.
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <x-slot name="footer">
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="text-muted">
-                    Menampilkan <strong>{{ $penilaianTahfidzs->count() }}</strong> dari <strong>{{ $penilaianTahfidzs->total() }}</strong> data
-                </span>
-                <nav>{{ $penilaianTahfidzs->links() }}</nav>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="border-radius: 20px; background: linear-gradient(135deg, #ffc107 0%, #ffe066 100%);">
+                <div class="card-body p-4 text-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="font-weight-bold mb-1"><i class="fas fa-quran mr-2"></i> Penilaian Tahfidz</h3>
+                        <p class="mb-0 opacity-75">Pemantauan progres hafalan dan capaian santri</p>
+                    </div>
+                    @if(auth()->user()->ref_type !== \Modules\Siswa\Models\Siswa::class)
+                    <div class="ml-auto text-right">
+                        <div class="badge badge-warning mb-2 p-2 shadow-sm" style="border-radius: 10px;">
+                            <i class="fas fa-calendar-check mr-1"></i> TA: {{ $activeTahunAjaran->tahunajaran ?? '-' }}
+                        </div>
+                        <br>
+                        <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.create') }}" class="btn btn-light text-warning px-4 font-weight-bold shadow-sm" style="border-radius: 50px;">
+                            <i class="fas fa-plus-circle mr-2"></i> INPUT SETORAN
+                        </a>
+                    </div>
+                    @endif
+                </div>
             </div>
-        </x-slot>
-    </x-card>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px;">
+        <div class="card-header bg-white py-3 border-0">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 font-weight-bold text-warning"><i class="fas fa-filter mr-2"></i> Filter Setoran</h5>
+                <button type="button" class="btn btn-light btn-sm" data-toggle="collapse" data-target="#filterTahfidz">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+        <div id="filterTahfidz" class="collapse show">
+            <div class="card-body pt-0">
+                <form method="GET" class="row">
+                    <div class="col-md-5 mb-2">
+                        <label class="small font-weight-bold text-muted">CARI SURAH</label>
+                        <input type="text" name="surah" class="form-control" placeholder="Contoh: Al-Baqarah" value="{{ request('surah') }}">
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <label class="small font-weight-bold text-muted">STATUS CAPAIAN</label>
+                        <select name="status_capaian" class="form-control">
+                            <option value="">Semua Status</option>
+                            <option value="Lolos" {{ request('status_capaian') == 'Lolos' ? 'selected' : '' }}>Lolos</option>
+                            <option value="Tidak Lolos" {{ request('status_capaian') == 'Tidak Lolos' ? 'selected' : '' }}>Tidak Lolos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mt-auto mb-2">
+                        <button type="submit" class="btn btn-warning btn-block font-weight-bold">
+                            <i class="fas fa-search mr-1"></i> Terapkan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="border-radius: 20px; overflow: hidden;">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead style="background: #fffcf0;">
+                        <tr>
+                            <th class="border-0 px-4">Santri & Kelas</th>
+                            <th class="border-0">Setoran (Surah/Ayat)</th>
+                            <th class="border-0">Tanggal</th>
+                            <th class="border-0 text-center">Nilai</th>
+                            <th class="border-0 text-center">Status</th>
+                            <th class="border-0 text-center px-4">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($penilaianTahfidzs as $item)
+                        <tr>
+                            <td class="px-4">
+                                <div class="font-weight-bold text-dark">{{ $item->siswa->nama ?? '-' }}</div>
+                                <span class="badge badge-outline-warning text-warning border-warning" style="font-size: 0.7rem; border: 1px solid;">
+                                    {{ $item->siswa->kelas->nama_kelas ?? '-' }}
+                                </span>
+                            </td>
+                            <td>
+                                @if($item->surat_awal == $item->surat_akhir && $item->ayat_awal == $item->ayat_akhir)
+                                    <div class="text-dark font-weight-bold">{{ $item->surat_awal }}</div>
+                                    <small class="text-muted">Ayat {{ $item->ayat_awal }}</small>
+                                @else
+                                    <div class="text-dark font-weight-bold">{{ $item->surat_awal }} ({{ $item->ayat_awal }})</div>
+                                    <small class="text-muted"><i class="fas fa-long-arrow-alt-right mx-1"></i> {{ $item->surat_akhir }} ({{ $item->ayat_akhir }})</small>
+                                @endif
+                            </td>
+                            <td>
+                                <div class="text-muted"><i class="far fa-calendar-alt mr-1"></i> {{ $item->tanggal ? $item->tanggal->format('d M Y') : '-' }}</div>
+                                <small class="text-muted">Guru: {{ $item->guru->nama ?? '-' }}</small>
+                            </td>
+                            <td class="text-center">
+                                <div class="h5 mb-0 font-weight-bold text-warning">{{ $item->nilai }}</div>
+                            </td>
+                            <td class="text-center">
+                                @if($item->status_capaian == 'Lolos')
+                                    <span class="badge badge-success px-3 py-2 shadow-sm" style="border-radius: 10px;">
+                                        <i class="fas fa-check-circle mr-1"></i> Lolos
+                                    </span>
+                                @else
+                                    <span class="badge badge-danger px-3 py-2 shadow-sm" style="border-radius: 10px;">
+                                        <i class="fas fa-times-circle mr-1"></i> Tidak Lolos
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="text-center px-4">
+                                <div class="btn-group shadow-sm" style="border-radius: 10px; overflow: hidden;">
+                                    <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.show', $item->id) }}" class="btn btn-light btn-sm text-warning" title="Lihat">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    @if(auth()->user()->ref_type !== \Modules\Siswa\Models\Siswa::class)
+                                    <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.edit', $item->id) }}" class="btn btn-light btn-sm text-info" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{{ route('penilaiandanpresensi.penilaiantahfidz.destroy', $item->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-light btn-sm text-danger btn-delete" title="Hapus">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <i class="fas fa-quran fa-3x mb-3 d-block opacity-20 text-warning"></i>
+                                <p class="text-muted">Belum ada data setoran tahfidz.</p>
+                                @if(auth()->user()->ref_type !== \Modules\Siswa\Models\Siswa::class)
+                                    <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.create') }}" class="btn btn-warning btn-sm mt-2 font-weight-bold">Input Setoran Pertama</a>
+                                @endif
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div class="px-4 py-3">
+                {{ $penilaianTahfidzs->links() }}
+            </div>
+        </div>
+    </div>
 </div>
-
-<form id="deleteForm" method="POST" style="display:none;">
-    @csrf
-    @method('DELETE')
-</form>
-
-@push('scripts')
-<script>
-function hapusData(url){
-    if(confirm('Hapus data ini?')){
-        document.getElementById('deleteForm').action=url;
-        document.getElementById('deleteForm').submit();
-    }
-}
-</script>
-@endpush
 @endsection

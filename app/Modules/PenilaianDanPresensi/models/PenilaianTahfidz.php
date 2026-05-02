@@ -24,6 +24,7 @@ class PenilaianTahfidz extends Model
         'ayat_akhir',
         'id_guru',
         'nilai',
+        'status_capaian',
     ];
 
     protected $casts = [

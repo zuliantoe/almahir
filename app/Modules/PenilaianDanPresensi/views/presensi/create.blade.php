@@ -27,14 +27,39 @@
                 <small class="form-text text-muted">Fokus pada field ini dan scan kartu siswa</small>
             </div>
 
-            {{-- Siswa Section --}}
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="kelas_id">Kelas</label>
+                        <select name="kelas_id" id="kelas_id" class="form-control" required>
+                            <option value="">-- Pilih Kelas --</option>
+                            @foreach($kelas as $kelasItem)
+                                <option value="{{ $kelasItem->id }}">{{ $kelasItem->nama_kelas }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Metode Input</label>
+                        <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+                            <label class="btn btn-outline-primary active w-50">
+                                <input type="radio" name="input_type" value="single" checked> Per Siswa
+                            </label>
+                            <label class="btn btn-outline-primary w-50">
+                                <input type="radio" name="input_type" value="bulk"> Masal (Satu Kelas)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Siswa Section (Single) --}}
+            <div id="single-input-container">
             <div class="form-group">
                 <label for="id_siswa">Siswa</label>
                 <select name="id_siswa" id="id_siswa" class="form-control" required>
-                    <option value="">-- Pilih Siswa --</option>
-                    @foreach($siswas as $siswa)
-                        <option value="{{ $siswa->id }}">{{ $siswa->nama }}</option>
-                    @endforeach
+                    <option value="">-- Pilih Kelas terlebih dahulu --</option>
                 </select>
                 <div id="siswa_info" class="alert alert-success mt-2" style="display: none;">
                     <small id="siswa_nama"></small>
@@ -56,10 +81,7 @@
             <div class="form-group">
                 <label for="id_mapel">Mata Pelajaran</label>
                 <select name="id_mapel" id="id_mapel" class="form-control" required>
-                    <option value="">-- Pilih Mata Pelajaran --</option>
-                    @foreach($mapels as $mapel)
-                        <option value="{{ $mapel->id }}">{{ $mapel->nama ?? $mapel->name ?? 'Mapel '.$mapel->id }}</option>
-                    @endforeach
+                    <option value="">-- Pilih Guru terlebih dahulu --</option>
                 </select>
             </div>
 
@@ -67,10 +89,7 @@
             <div class="form-group">
                 <label for="id_jadwal_pelajaran">Jadwal Pelajaran</label>
                 <select name="id_jadwal_pelajaran" id="id_jadwal_pelajaran" class="form-control" required>
-                    <option value="">-- Pilih Jadwal Pelajaran --</option>
-                    @foreach($jadwals as $jadwal)
-                        <option value="{{ $jadwal->id }}">{{ $jadwal->hari }} - {{ \Carbon\Carbon::parse($jadwal->jamawal)->format('H:i') }} - {{ \Carbon\Carbon::parse($jadwal->jamakhir)->format('H:i') }}</option>
-                    @endforeach
+                    <option value="">-- Pilih Guru dan Kelas terlebih dahulu --</option>
                 </select>
             </div>
 
@@ -80,16 +99,38 @@
                 <input type="time" name="jam" id="jam" class="form-control" value="{{ date('H:i') }}" required>
             </div>
 
-            {{-- Status Section --}}
-            <div class="form-group">
-                <label for="status">Status</label>
-                <select name="status" id="status" class="form-control" required>
-                    <option value="">-- Pilih Status --</option>
-                    <option value="Hadir">✓ Hadir</option>
-                    <option value="Izin">⊘ Izin</option>
-                    <option value="Sakit">✕ Sakit</option>
-                    <option value="Alpha">✗ Alpha</option>
-                </select>
+                {{-- Status Section --}}
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select name="status" id="status" class="form-control" required>
+                        <option value="">-- Pilih Status --</option>
+                        <option value="Hadir">✓ Hadir</option>
+                        <option value="Izin">⊘ Izin</option>
+                        <option value="Sakit">✕ Sakit</option>
+                        <option value="Alpha">✗ Alpha</option>
+                    </select>
+                </div>
+            </div>
+
+            {{-- Bulk Input Table (Hidden by default) --}}
+            <div id="bulk-input-container" class="d-none">
+                <div class="table-responsive bg-white rounded shadow-sm mb-4">
+                    <table class="table table-hover mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th width="50">No</th>
+                                <th>Santri</th>
+                                <th width="300">
+                                    Status 
+                                    <button type="button" id="btn-hadir-semua" class="btn btn-xs btn-outline-success ml-2">Hadir Semua</button>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="bulk-siswa-body">
+                            {{-- Populated by JS --}}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {{-- Kategori Section --}}
@@ -163,5 +204,199 @@ document.getElementById('scan_id').addEventListener('change', function() {
         this.disabled = false;
     });
 });
+
+(function() {
+    const siswasData = @json($siswas);
+    const jadwalsData = @json($jadwals);
+
+    function getStudentOptions() {
+        const kelasId = document.getElementById('kelas_id').value;
+        if (!kelasId) {
+            return '<option value="">-- Pilih Kelas terlebih dahulu --</option>';
+        }
+
+        const filteredSiswas = siswasData.filter(siswa => siswa.kelas_id == kelasId);
+        if (filteredSiswas.length === 0) {
+            return '<option value="">-- Tidak ada siswa di kelas ini --</option>';
+        }
+
+        let options = '<option value="">-- Pilih Siswa --</option>';
+        filteredSiswas.forEach(siswa => {
+            options += `<option value="${siswa.id}">${siswa.nama}</option>`;
+        });
+        return options;
+    }
+
+    function getMapelOptions() {
+        const guruId = document.getElementById('id_guru').value;
+        if (!guruId) {
+            return '<option value="">-- Pilih Guru terlebih dahulu --</option>';
+        }
+
+        const usedMapelIds = new Set();
+        let options = '<option value="">-- Pilih Mata Pelajaran --</option>';
+
+        jadwalsData.forEach(jadwal => {
+            if (jadwal.guru_id == guruId && jadwal.mata_pelajaran && jadwal.mata_pelajaran.id && !usedMapelIds.has(jadwal.mata_pelajaran.id)) {
+                usedMapelIds.add(jadwal.mata_pelajaran.id);
+                options += `<option value="${jadwal.mata_pelajaran.id}">${jadwal.mata_pelajaran.nama}</option>`;
+            }
+        });
+
+        if (usedMapelIds.size === 0) {
+            return '<option value="">-- Guru belum mengajar mata pelajaran apa pun --</option>';
+        }
+
+        return options;
+    }
+
+    function getJadwalOptions() {
+        const kelasId = document.getElementById('kelas_id').value;
+        const guruId = document.getElementById('id_guru').value;
+        if (!kelasId || !guruId) {
+            return '<option value="">-- Pilih kelas dan guru terlebih dahulu --</option>';
+        }
+
+        const filtered = jadwalsData.filter(jadwal => jadwal.kelas_id == kelasId && jadwal.guru_id == guruId);
+        if (filtered.length === 0) {
+            return '<option value="">-- Tidak ada jadwal untuk kelas dan guru ini --</option>';
+        }
+
+        let options = '<option value="">-- Pilih Jadwal Pelajaran --</option>';
+        filtered.forEach(jadwal => {
+            const time = `${jadwal.hari} - ${jadwal.jamawal.substring(0,5)} - ${jadwal.jamakhir.substring(0,5)}`;
+            options += `<option value="${jadwal.id}">${time}</option>`;
+        });
+        return options;
+    }
+
+    function updateStudentOptions() {
+        const siswa = document.getElementById('id_siswa');
+        const currentValue = siswa.value;
+        siswa.innerHTML = getStudentOptions();
+        if (currentValue) {
+            siswa.value = currentValue;
+        }
+    }
+
+    function updateMapelOptions() {
+        const mapel = document.getElementById('id_mapel');
+        const currentValue = mapel.value;
+        mapel.innerHTML = getMapelOptions();
+        if (currentValue) {
+            mapel.value = currentValue;
+        }
+    }
+
+    function updateJadwalOptions() {
+        const jadwal = document.getElementById('id_jadwal_pelajaran');
+        const currentValue = jadwal.value;
+        jadwal.innerHTML = getJadwalOptions();
+        if (currentValue) {
+            jadwal.value = currentValue;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateStudentOptions();
+        updateMapelOptions();
+        updateJadwalOptions();
+
+        document.getElementById('kelas_id').addEventListener('change', function() {
+            updateStudentOptions();
+            updateJadwalOptions();
+            if ($('input[name="input_type"]:checked').val() === 'bulk') {
+                populateBulkTable();
+            }
+        });
+        document.getElementById('id_guru').addEventListener('change', function() {
+            updateMapelOptions();
+            updateJadwalOptions();
+        });
+
+        $('input[name="input_type"]').on('change', function() {
+            if ($(this).val() === 'bulk') {
+                $('#single-input-container').addClass('d-none');
+                $('#bulk-input-container').removeClass('d-none');
+                $('#id_siswa, #status').prop('required', false);
+                populateBulkTable();
+            } else {
+                $('#single-input-container').removeClass('d-none');
+                $('#bulk-input-container').addClass('d-none');
+                $('#id_siswa, #status').prop('required', true);
+            }
+        });
+
+        function populateBulkTable() {
+            const kelasId = document.getElementById('kelas_id').value;
+            const body = document.getElementById('bulk-siswa-body');
+            body.innerHTML = '';
+
+            if (!kelasId) return;
+
+            const filtered = siswasData.filter(s => s.kelas_id == kelasId);
+            filtered.forEach((siswa, index) => {
+                body.innerHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>
+                            <div class="font-weight-bold">${siswa.nama}</div>
+                            <input type="hidden" name="bulk_penilaian[${index}][id_siswa]" value="${siswa.id}">
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+                                <label class="btn btn-outline-success btn-sm w-25 active">
+                                    <input type="radio" name="bulk_penilaian[${index}][status]" value="Hadir" checked> H
+                                </label>
+                                <label class="btn btn-outline-warning btn-sm w-25">
+                                    <input type="radio" name="bulk_penilaian[${index}][status]" value="Izin"> I
+                                </label>
+                                <label class="btn btn-outline-info btn-sm w-25">
+                                    <input type="radio" name="bulk_penilaian[${index}][status]" value="Sakit"> S
+                                </label>
+                                <label class="btn btn-outline-danger btn-sm w-25">
+                                    <input type="radio" name="bulk_penilaian[${index}][status]" value="Alpha"> A
+                                </label>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        $('#btn-hadir-semua').on('click', function() {
+            $('input[value="Hadir"]').closest('label').click();
+        });
+    });
+})();
 </script>
+@endpush
+
+@push('styles')
+<style>
+    .form-control {
+        border-radius: 0.5rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    .form-control:focus {
+        border-color: #17a2b8;
+        box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
+    }
+    .btn {
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    label {
+        font-weight: 600;
+        color: #495057;
+    }
+    .alert-info {
+        border-left: 4px solid #117a8b;
+        border-radius: 0.5rem;
+    }
+</style>
 @endpush

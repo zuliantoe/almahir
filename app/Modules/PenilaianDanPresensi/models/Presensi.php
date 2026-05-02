@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Guru\Models\Guru;
 use Modules\Siswa\Models\Siswa;
+use App\Modules\Akademik\Models\MataPelajaran;
+use App\Modules\Akademik\Models\JadwalPelajaran;
 
 class Presensi extends Model
 {
@@ -37,5 +39,15 @@ class Presensi extends Model
     public function guru()
     {
         return $this->belongsTo(Guru::class, 'id_guru');
+    }
+
+    public function mataPelajaran()
+    {
+        return $this->belongsTo(MataPelajaran::class, 'id_mapel');
+    }
+
+    public function jadwalPelajaran()
+    {
+        return $this->belongsTo(JadwalPelajaran::class, 'id_jadwal_pelajaran');
     }
 }

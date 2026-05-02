@@ -21,10 +21,12 @@ class PenilaianAkademik extends Model
         'id_mapel',
         'id_tahun_ajaran',
         'nilai',
+        'kkm',
     ];
 
     protected $casts = [
         'nilai' => 'integer',
+        'kkm' => 'integer',
     ];
 
     // Relationships

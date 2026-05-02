@@ -12,211 +12,196 @@
         <x-alert type="danger" :message="session('error')" dismissible />
     @endif
 
-    <x-card title="Daftar Presensi" icon="fas fa-calendar-check">
-        <x-slot name="tools">
-            <a href="{{ route('penilaiandanpresensi.presensi.create') }}" class="btn btn-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Tambah Presensi
-            </a>
-        </x-slot>
-
-        {{-- Stats Summary --}}
-        <div class="row mb-4">
-            <div class="col-md-2 col-sm-6">
-                <div class="small-box bg-success">
-                    <div class="inner">
-                        <h3>{{ $presensis->where('status', 'Hadir')->count() }}</h3>
-                        <p>Hadir</p>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="border-radius: 20px; background: linear-gradient(135deg, #4361ee 0%, #4895ef 100%);">
+                <div class="card-body p-4 text-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="font-weight-bold mb-1"><i class="fas fa-calendar-check mr-2"></i> Daftar Presensi</h3>
+                        <p class="mb-0 opacity-75">Rekapitulasi kehadiran santri secara real-time</p>
                     </div>
-                    <div class="icon">
-                        <i class="fas fa-check"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2 col-sm-6">
-                <div class="small-box bg-warning">
-                    <div class="inner">
-                        <h3>{{ $presensis->where('status', 'Izin')->count() }}</h3>
-                        <p>Izin</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-hand-paper"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2 col-sm-6">
-                <div class="small-box bg-info">
-                    <div class="inner">
-                        <h3>{{ $presensis->where('status', 'Sakit')->count() }}</h3>
-                        <p>Sakit</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-heartbeat"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2 col-sm-6">
-                <div class="small-box bg-danger">
-                    <div class="inner">
-                        <h3>{{ $presensis->where('status', 'Alpha')->count() }}</h3>
-                        <p>Alpha</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-times"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2 col-sm-6">
-                <div class="small-box bg-primary">
-                    <div class="inner">
-                        <h3>{{ $presensis->total() }}</h3>
-                        <p>Total</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-list"></i>
+                    <div class="ml-auto text-right">
+                        <div class="badge badge-light p-2 mb-2 shadow-sm text-primary" style="border-radius: 10px; font-weight: 800;">
+                            <i class="fas fa-calendar-check mr-1"></i> TA: {{ $activeTahunAjaran->tahunajaran ?? '-' }}
+                        </div>
+                        <br>
+                        <div class="bg-white px-4 py-2 text-primary font-weight-bold shadow-sm" style="border-radius: 50px; opacity: 0.9; display: inline-block;">
+                            <i class="fas fa-chart-pie mr-1"></i> Mode Rekapan
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        {{-- Filter Section --}}
-        <div class="card card-outline card-info mb-3">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-filter mr-2"></i> Filter Data
-                </h3>
+    {{-- Stats Summary --}}
+    <div class="row mb-4">
+        <div class="col-md-2 col-6 mb-3">
+            <div class="card border-0 shadow-sm text-center h-100" style="border-radius: 15px; background: #fff;">
+                <div class="card-body p-3">
+                    <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: rgba(40, 167, 69, 0.1);">
+                        <i class="fas fa-check text-success"></i>
+                    </div>
+                    <h3 class="font-weight-bold text-dark mb-0">{{ $stats['Hadir'] }}</h3>
+                    <p class="text-muted small mb-0">Hadir</p>
+                </div>
             </div>
-            <div class="card-body">
-                <form method="GET" class="form-inline">
-                    <div class="form-group mr-2">
-                        <label for="status_filter" class="mr-2">Status:</label>
-                        <select name="status" id="status_filter" class="form-control">
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <div class="card border-0 shadow-sm text-center h-100" style="border-radius: 15px; background: #fff;">
+                <div class="card-body p-3">
+                    <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: rgba(255, 193, 7, 0.1);">
+                        <i class="fas fa-hand-paper text-warning"></i>
+                    </div>
+                    <h3 class="font-weight-bold text-dark mb-0">{{ $stats['Izin'] }}</h3>
+                    <p class="text-muted small mb-0">Izin</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <div class="card border-0 shadow-sm text-center h-100" style="border-radius: 15px; background: #fff;">
+                <div class="card-body p-3">
+                    <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: rgba(23, 162, 184, 0.1);">
+                        <i class="fas fa-heartbeat text-info"></i>
+                    </div>
+                    <h3 class="font-weight-bold text-dark mb-0">{{ $stats['Sakit'] }}</h3>
+                    <p class="text-muted small mb-0">Sakit</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <div class="card border-0 shadow-sm text-center h-100" style="border-radius: 15px; background: #fff;">
+                <div class="card-body p-3">
+                    <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: rgba(220, 53, 69, 0.1);">
+                        <i class="fas fa-times text-danger"></i>
+                    </div>
+                    <h3 class="font-weight-bold text-dark mb-0">{{ $stats['Alpha'] }}</h3>
+                    <p class="text-muted small mb-0">Alpha</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-12 mb-3">
+            <div class="card border-0 shadow-sm text-center h-100" style="border-radius: 15px; background: linear-gradient(135deg, #1e1e2d 0%, #33334d 100%);">
+                <div class="card-body p-3 text-white d-flex align-items-center justify-content-center">
+                    <div class="text-left mr-4">
+                        <p class="mb-0 opacity-75 small">Total Data</p>
+                        <h2 class="font-weight-bold mb-0">{{ $stats['total'] }}</h2>
+                    </div>
+                    <i class="fas fa-database fa-3x opacity-20"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px;">
+        <div class="card-header bg-white py-3 border-0">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 font-weight-bold"><i class="fas fa-filter mr-2 text-primary"></i> Filter Presensi</h5>
+                <button type="button" class="btn btn-light btn-sm" data-toggle="collapse" data-target="#filterBody">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+        <div id="filterBody" class="collapse show">
+            <div class="card-body pt-0">
+                <form method="GET" class="row">
+                    <div class="col-md-3 mb-2">
+                        <select name="status" class="form-control select2-modern">
                             <option value="">Semua Status</option>
-                            <option value="Hadir">Hadir</option>
-                            <option value="Izin">Izin</option>
-                            <option value="Sakit">Sakit</option>
-                            <option value="Alpha">Alpha</option>
+                            <option value="Hadir" {{ request('status') == 'Hadir' ? 'selected' : '' }}>Hadir</option>
+                            <option value="Izin" {{ request('status') == 'Izin' ? 'selected' : '' }}>Izin</option>
+                            <option value="Sakit" {{ request('status') == 'Sakit' ? 'selected' : '' }}>Sakit</option>
+                            <option value="Alpha" {{ request('status') == 'Alpha' ? 'selected' : '' }}>Alpha</option>
                         </select>
                     </div>
-                    <div class="form-group mr-2">
-                        <label for="kategori_filter" class="mr-2">Kategori:</label>
-                        <select name="kategori" id="kategori_filter" class="form-control">
+                    <div class="col-md-3 mb-2">
+                        <select name="kategori" class="form-control select2-modern">
                             <option value="">Semua Kategori</option>
-                            <option value="Sekolah">Sekolah</option>
-                            <option value="Pengajian">Pengajian</option>
-                            <option value="Ekstrakurikuler">Ekstrakurikuler</option>
+                            <option value="Sekolah" {{ request('kategori') == 'Sekolah' ? 'selected' : '' }}>Sekolah</option>
+                            <option value="Pengajian" {{ request('kategori') == 'Pengajian' ? 'selected' : '' }}>Pengajian</option>
+                            <option value="Ekstrakurikuler" {{ request('kategori') == 'Ekstrakurikuler' ? 'selected' : '' }}>Ekstrakurikuler</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-sm btn-info">
-                        <i class="fas fa-search mr-1"></i> Cari
-                    </button>
+                    <div class="col-md-3 mb-2">
+                        <input type="date" name="tanggal" class="form-control" value="{{ request('tanggal', date('Y-m-d')) }}" placeholder="Tanggal">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fas fa-search mr-1"></i> Terapkan Filter
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
+    </div>
 
-        {{-- Table Section --}}
-        <div class="table-responsive">
-            <table class="table table-hover table-striped table-bordered">
-                <thead class="thead-dark">
-                    <tr>
-                        <th style="width: 5%">No</th>
-                        <th style="width: 15%">Siswa</th>
-                        <th style="width: 12%">Guru</th>
-                        <th style="width: 12%">Mata Pelajaran</th>
-                        <th style="width: 8%">Jam</th>
-                        <th style="width: 10%">Status</th>
-                        <th style="width: 10%">Kategori</th>
-                        <th style="width: 12%">Tanggal</th>
-                        <th class="text-center" style="width: 16%;">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($presensis as $index => $item)
-                    <tr>
-                        <td>{{ ($presensis->currentPage() - 1) * $presensis->perPage() + $index + 1 }}</td>
-                        <td>
-                            <strong>{{ $item->siswa->nama ?? '-' }}</strong>
-                            @if($item->scan_id)
-                                <br>
-                                <small class="text-muted">ID: {{ $item->scan_id }}</small>
-                            @endif
-                        </td>
-                        <td>{{ $item->guru->nama ?? '-' }}</td>
-                        <td>{{ $mapels->get($item->id_mapel)->nama ?? $mapels->get($item->id_mapel)->name ?? $item->id_mapel ?? '-' }}</td>
-                        <td>
-                            <i class="fas fa-clock mr-1 text-info"></i>
-                            {{ \Carbon\Carbon::parse($item->jam)->format('H:i') }}
-                        </td>
-                        <td>
-                            @if($item->status == 'Hadir')
-                                <span class="badge badge-success">
-                                    <i class="fas fa-check mr-1"></i> {{ $item->status }}
+    <div class="card border-0 shadow-sm" style="border-radius: 20px; overflow: hidden;">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th class="border-0 px-4">Siswa</th>
+                            <th class="border-0">Mata Pelajaran</th>
+                            <th class="border-0">Jam</th>
+                            <th class="border-0">Status</th>
+                            <th class="border-0">Kategori</th>
+                            <th class="border-0 px-4">Tanggal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($presensis as $item)
+                        <tr>
+                            <td class="px-4">
+                                <div class="font-weight-bold text-dark">{{ $item->siswa->nama ?? '-' }}</div>
+                                 <span class="badge badge-outline-primary text-primary border-primary" style="font-size: 0.7rem; border: 1px solid;">
+                                    {{ $item->siswa->kelas->nama_kelas ?? '-' }}
                                 </span>
-                            @elseif($item->status == 'Izin')
-                                <span class="badge badge-warning">
-                                    <i class="fas fa-hand-paper mr-1"></i> {{ $item->status }}
-                                </span>
-                            @elseif($item->status == 'Sakit')
-                                <span class="badge badge-info">
-                                    <i class="fas fa-heartbeat mr-1"></i> {{ $item->status }}
-                                </span>
-                            @else
-                                <span class="badge badge-danger">
-                                    <i class="fas fa-times mr-1"></i> {{ $item->status }}
-                                </span>
-                            @endif
-                        </td>
-                        <td>
-                            <span class="badge badge-secondary">{{ $item->kategori }}</span>
-                        </td>
-                        <td>
-                            <small>{{ $item->created_at->locale('id')->translatedFormat('d M Y H:i') }}</small>
-                        </td>
-                        <td class="text-center">
-                            <div class="btn-group btn-group-sm" role="group">
-                                <a href="{{ route('penilaiandanpresensi.presensi.show', $item->id) }}"
-                                   class="btn btn-success" title="Lihat Detail" data-toggle="tooltip">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ route('penilaiandanpresensi.presensi.edit', $item->id) }}"
-                                   class="btn btn-info" title="Edit" data-toggle="tooltip">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button class="btn btn-danger" 
-                                        title="Hapus" 
-                                        data-toggle="tooltip"
-                                        onclick="hapusData('{{ route('penilaiandanpresensi.presensi.destroy', $item->id) }}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="9" class="text-center text-muted py-5">
-                            <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                            <strong>Belum ada data presensi.</strong><br>
-                            <a href="{{ route('penilaiandanpresensi.presensi.create') }}" class="btn btn-primary btn-sm mt-2">
-                                <i class="fas fa-plus mr-1"></i> Tambah Presensi Pertama
-                            </a>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        
-        {{-- Footer with Pagination --}}
-        <x-slot name="footer">
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="text-muted">
-                    Menampilkan <strong>{{ $presensis->count() }}</strong> dari <strong>{{ $presensis->total() }}</strong> data
-                </span>
-                <nav>
-                    {{ $presensis->links() }}
-                </nav>
+                            </td>
+                            <td>
+                                <div class="text-dark font-weight-500">{{ $mapels->get($item->id_mapel)->nama ?? '-' }}</div>
+                                <small class="text-muted">{{ $item->guru->nama ?? '-' }}</small>
+                            </td>
+                            <td>
+                                <span class="badge badge-light px-2 py-1"><i class="far fa-clock mr-1"></i> {{ \Carbon\Carbon::parse($item->jam)->format('H:i') }}</span>
+                            </td>
+                            <td>
+                                @php
+                                    $statusClasses = [
+                                        'Hadir' => 'badge-success',
+                                        'Izin' => 'badge-warning',
+                                        'Sakit' => 'badge-info',
+                                        'Alpha' => 'badge-danger',
+                                    ];
+                                    $class = $statusClasses[$item->status] ?? 'badge-secondary';
+                                @endphp
+                                <span class="badge {{ $class }} px-3 py-1" style="border-radius: 6px; min-width: 70px;">{{ $item->status }}</span>
+                            </td>
+                            <td><span class="text-muted small font-weight-bold">{{ strtoupper($item->kategori) }}</span></td>
+                            <td class="px-4">
+                                <div class="text-dark" style="font-size: 0.85rem;">{{ $item->created_at->format('d M Y') }}</div>
+                                <small class="text-muted">{{ $item->created_at->format('H:i') }}</small>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <i class="fas fa-inbox fa-3x mb-3 d-block opacity-20"></i>
+                                <p class="text-muted">Belum ada data presensi siswa hari ini.</p>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-        </x-slot>
-    </x-card>
+        </div>
+        <div class="card-footer bg-white py-3 border-0">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted small">Menampilkan <strong>{{ $presensis->count() }}</strong> data</span>
+                {{ $presensis->links() }}
+            </div>
+        </div>
+    </div>
 </div>
 
 {{-- Delete Confirmation Modal --}}

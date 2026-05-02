@@ -105,9 +105,9 @@ Route::middleware(['auth'])->group(function () {
 | Penilaian dan Presensi Dashboard (UNIFIED)
 |--------------------------------------------------------------------------
 */
-use Modules\PenilaianDanPresensi\Controllers\DashboardController;
+use Modules\PenilaianDanPresensi\Controllers\DashboardController as PenilaianDashboardController;
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/penilaian', [DashboardController::class, 'index'])->name('penilaian.dashboard');
+    Route::get('/penilaian', [PenilaianDashboardController::class, 'index'])->name('penilaian.dashboard');
 });
 

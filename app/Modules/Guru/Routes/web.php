@@ -2,6 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Guru\Controllers\GuruController;
+use Modules\Guru\Controllers\GuruDashboardController;
+
+Route::middleware(['auth', 'role:GURU'])->group(function () {
+    Route::get('/dashboard', [GuruDashboardController::class, 'index'])->name('dashboard');
+});
 
 Route::middleware('auth')->group(function () {
     // Resource routes - names will be auto-prefixed by ModuleServiceProvider

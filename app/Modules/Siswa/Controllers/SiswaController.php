@@ -37,10 +37,13 @@ class SiswaController extends Controller
     public function create(): View
     {
         $tahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::orderBy('id', 'desc')->get();
+        $pendaftaranDiterima = \Modules\Pendaftaran\Models\Pendaftaran::where('status', 'diterima')->get();
+
         return view('siswa::create', [
             'title' => 'Tambah Siswa Baru',
             'breadcrumb' => 'Siswa / Tambah',
             'tahunAjaran' => $tahunAjaran,
+            'pendaftaranDiterima' => $pendaftaranDiterima,
         ]);
     }
 
@@ -59,9 +62,14 @@ class SiswaController extends Controller
             'telepon' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',
             'tahun_masuk' => 'nullable|integer',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         $validated['status'] = 'aktif'; // default status for new student
+
+        if ($request->hasFile('foto')) {
+            $validated['foto'] = $request->file('foto')->store('siswa/foto', 'public');
+        }
 
         // Siswa::create($validated);
         Siswa::create($validated);
@@ -116,9 +124,18 @@ class SiswaController extends Controller
             'alamat' => 'nullable|string',
             'tahun_masuk' => 'nullable|integer',
             'status' => 'nullable|in:aktif,lulus,keluar,cuti',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         $siswa = Siswa::findOrFail($id);
+
+        if ($request->hasFile('foto')) {
+            if ($siswa->foto && \Illuminate\Support\Facades\Storage::disk('public')->exists($siswa->foto)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($siswa->foto);
+            }
+            $validated['foto'] = $request->file('foto')->store('siswa/foto', 'public');
+        }
+
         $siswa->update($validated);
         
         return redirect()->route('siswa.index')

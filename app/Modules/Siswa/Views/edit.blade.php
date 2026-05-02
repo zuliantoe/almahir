@@ -147,14 +147,12 @@
 
                     <div class="form-group">
                         <label>Foto Siswa</label>
-                        @if($siswa->foto)
-                            <div class="mb-2">
-                                <img src="{{ asset('storage/' . $siswa->foto) }}" alt="Foto Siswa" class="img-thumbnail" style="max-height: 150px;">
-                            </div>
-                        @endif
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input" name="foto" id="foto" accept="image/*">
+                        <div class="custom-file mb-2">
+                            <input type="file" class="custom-file-input" name="foto" id="foto" accept="image/*" onchange="previewImage(this)">
                             <label class="custom-file-label" for="foto">Ubah foto...</label>
+                        </div>
+                        <div class="mb-2 text-center" id="preview-container">
+                            <img id="foto-preview" src="{{ $siswa->foto ? asset('storage/' . $siswa->foto) : 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%221%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%228%22%20r%3D%225%22%2F%3E%3Cpath%20d%3D%22M20%2021a8%208%200%200%200-16%200%22%2F%3E%3C%2Fsvg%3E' }}" alt="Foto Siswa" class="img-thumbnail" style="max-height: 200px; width: 150px; object-fit: cover; background-color: #f8f9fa;">
                         </div>
                         <small class="text-muted">Format: JPG, PNG. Maks: 2MB</small>
                     </div>
@@ -183,5 +181,19 @@
         var fileName = e.target.files[0]?.name || 'Pilih file...';
         this.nextElementSibling.innerText = fileName;
     });
+
+    // Image preview function
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            
+            reader.onload = function(e) {
+                document.getElementById('foto-preview').src = e.target.result;
+                document.getElementById('preview-container').classList.remove('d-none');
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
 </script>
 @endpush

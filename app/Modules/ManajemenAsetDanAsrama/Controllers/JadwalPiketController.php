@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use App\Modules\ManajemenAsetDanAsrama\Models\JadwalPiket;
+use App\Modules\ManajemenAsetDanAsrama\Models\Kamar;
 use Modules\Siswa\Models\Siswa;
 
 class JadwalPiketController extends BaseController
@@ -32,7 +33,7 @@ class JadwalPiketController extends BaseController
                     ->paginate(15)
                     ->withQueryString();
         
-        $kamar = \App\Modules\ManajemenAsetDanAsrama\Models\Kamar::all();
+        $kamar = Kamar::all();
 
         return view('manajemenasetdanasrama::jadwal-piket.index', [
             'title'  => 'Jadwal Piket Asrama',
@@ -47,7 +48,7 @@ class JadwalPiketController extends BaseController
     public function create(): View
     {
         $siswa = Siswa::all();
-        $kamar = \App\Modules\ManajemenAsetDanAsrama\Models\Kamar::all();
+        $kamar = Kamar::all();
         
         return view('manajemenasetdanasrama::jadwal-piket.create', [
             'title' => 'Tambah Jadwal Piket',
@@ -77,7 +78,7 @@ class JadwalPiketController extends BaseController
     {
         $jadwal = JadwalPiket::findOrFail($id);
         $siswa = Siswa::all();
-        $kamar = \App\Modules\ManajemenAsetDanAsrama\Models\Kamar::all();
+        $kamar = Kamar::all();
         
         return view('manajemenasetdanasrama::jadwal-piket.edit', [
             'title'  => 'Edit Jadwal Piket',

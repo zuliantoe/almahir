@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Modules\PegawaiManager\Models\TypePegawai;
+use Illuminate\Support\Facades\Cache;
 
 class TypePegawaiController extends Controller
 {
@@ -43,6 +44,7 @@ class TypePegawaiController extends Controller
         ]);
 
         TypePegawai::create($validated);
+        Cache::forget('all_type_pegawai');
 
         return redirect()->route('pegawaimanager.types.index')
             ->with('success', 'Tipe pegawai berhasil ditambahkan.');
@@ -73,6 +75,7 @@ class TypePegawaiController extends Controller
         ]);
 
         $type->update($validated);
+        Cache::forget('all_type_pegawai');
 
         return redirect()->route('pegawaimanager.types.index')
             ->with('success', 'Tipe pegawai berhasil diperbarui.');
@@ -92,6 +95,7 @@ class TypePegawaiController extends Controller
         }
 
         $type->delete();
+        Cache::forget('all_type_pegawai');
 
         return redirect()->route('pegawaimanager.types.index')
             ->with('success', 'Tipe pegawai berhasil dihapus.');

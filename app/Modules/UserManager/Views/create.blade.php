@@ -7,7 +7,15 @@
     <form action="{{ route('users.store') }}" method="POST" id="createUserForm">
         @csrf
         
-        <x-card title="Informasi User" icon="fas fa-user-plus">
+        <div class="card border-0 shadow-lg mb-4" style="border-radius: 15px; overflow: hidden;">
+            <div class="card-header gradient-primary border-0 p-4">
+                <h3 class="card-title text-white font-weight-bold mb-0">
+                    <i class="fas fa-user-plus mr-2"></i> Tambah User Baru
+                </h3>
+            </div>
+            
+            <div class="card-body p-4 bg-light">
+                <div class="glass-card p-4">
             <div class="row">
                 <div class="col-md-6">
                     <x-input label="Nama Lengkap" name="name" placeholder="Masukkan nama lengkap" :value="old('name')" required />
@@ -31,14 +39,14 @@
                 <div class="row">
                     @foreach($roles as $role)
                         <div class="col-md-4">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input role-checkbox" 
+                            <div class="form-check p-3 bg-white rounded border shadow-sm mb-2 hover-elevate">
+                                <input type="checkbox" class="form-check-input role-checkbox ml-1 mt-2" 
                                        name="roles[]" value="{{ $role->id }}" 
                                        id="role_{{ $role->id }}"
                                        data-role-name="{{ $role->name }}"
                                        {{ in_array($role->id, old('roles', [])) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="role_{{ $role->id }}">
-                                    {{ $role->display_name }} <small class="text-muted">({{ $role->name }})</small>
+                                <label class="form-check-label ml-4 font-weight-bold" for="role_{{ $role->id }}">
+                                    {{ $role->display_name }} <br><span class="badge badge-light text-muted">{{ $role->name }}</span>
                                 </label>
                             </div>
                         </div>
@@ -50,15 +58,15 @@
             </div>
 
             {{-- Dynamic Data Linking Section --}}
-            <div id="dataLinkingSection" class="form-group" style="display: none;">
-                <label><i class="fas fa-link mr-1"></i> Link ke Data <span class="text-muted">(Opsional)</span></label>
-                <select name="ref_id" id="refIdSelect" class="form-control">
+            <div id="dataLinkingSection" class="form-group p-4 bg-info-light rounded border border-info mb-4" style="display: none; border-left-width: 5px !important; background: rgba(23, 162, 184, 0.05);">
+                <label class="font-weight-bold text-info"><i class="fas fa-link mr-1"></i> Link ke Data <span class="text-muted font-weight-normal">(Opsional)</span></label>
+                <select name="ref_id" id="refIdSelect" class="form-control rounded-pill px-3 shadow-sm" style="border: 1px solid #17a2b8;">
                     <option value="">-- Pilih data untuk di-link --</option>
                 </select>
                 <input type="hidden" name="ref_type" id="refTypeInput" value="">
-                <small class="form-text text-muted">
-                    <i class="fas fa-info-circle"></i> 
-                    Link user ke data <span id="linkableType"></span> yang belum memiliki akun login
+                <small class="form-text mt-2 text-info">
+                    <i class="fas fa-info-circle mr-1"></i> 
+                    Fungsi ini akan menghubungkan user ke data <b id="linkableType" class="text-uppercase"></b> yang belum memiliki akun login.
                 </small>
             </div>
 
@@ -73,14 +81,19 @@
                 @enderror
             </div>
 
-            <hr>
+            <hr class="mt-4 mb-4">
             <div class="d-flex justify-content-between">
-                <a href="{{ route('users.index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left mr-1"></i> Kembali
+                <a href="{{ route('users.index') }}" class="btn btn-secondary rounded-pill px-4 py-2 shadow-sm btn-animate font-weight-bold">
+                    <i class="fas fa-arrow-left mr-1"></i> Kembali ke Daftar
                 </a>
-                <x-btn type="submit" variant="primary" icon="fas fa-save">Simpan</x-btn>
+                <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 shadow-sm btn-animate gradient-primary border-0 font-weight-bold">
+                    <i class="fas fa-save mr-2"></i> Simpan User
+                </button>
             </div>
-        </x-card>
+            
+                </div>
+            </div>
+        </div>
     </form>
 </div>
 @endsection

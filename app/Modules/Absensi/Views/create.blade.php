@@ -6,11 +6,17 @@
 <div class="container-fluid">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <x-card title="Presensi Mandiri" icon="fas fa-fingerprint" class="shadow-lg border-0">
-                
+            <div class="card border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+                <div class="card-header gradient-primary border-0 p-4">
+                    <h3 class="card-title text-white font-weight-bold mb-0">
+                        <i class="fas fa-fingerprint mr-2"></i> Presensi Mandiri
+                    </h3>
+                </div>
+                <div class="card-body p-4 bg-light">
+                    <div class="glass-card p-4">
                 <div class="text-center py-4">
                     <h5 class="text-muted mb-1">{{ now()->translatedFormat('l, d F Y') }}</h5>
-                    <div id="realtime-clock" class="display-4 font-weight-bold text-primary mb-4">00:00:00</div>
+                    <div id="realtime-clock" class="display-4 font-weight-bold mb-4" style="color: #0d6efd; text-shadow: 0 0 10px rgba(13, 110, 253, 0.3);">00:00:00</div>
                     
                     <div class="p-3 mb-4 bg-light rounded-lg border">
                         <div class="d-flex align-items-center justify-content-center">
@@ -38,7 +44,7 @@
                                 <textarea name="keterangan" class="form-control" rows="2" placeholder="Contoh: Bekerja dari rumah, atau keterangan lainnya..."></textarea>
                             </div>
 
-                            <button type="submit" class="btn btn-primary btn-lg btn-block rounded-pill py-3 shadow">
+                            <button type="submit" class="btn btn-primary btn-lg btn-block rounded-pill py-3 shadow btn-animate gradient-primary border-0 font-weight-bold">
                                 <i class="fas fa-sign-in-alt mr-2"></i> KLIK UNTUK ABSEN MASUK
                             </button>
                         </form>
@@ -59,7 +65,7 @@
                             <input type="hidden" name="lat" id="lat">
                             <input type="hidden" name="long" id="long">
 
-                            <button type="submit" class="btn btn-danger btn-lg btn-block rounded-pill py-3 shadow">
+                            <button type="submit" class="btn btn-danger btn-lg btn-block rounded-pill py-3 shadow btn-animate border-0 font-weight-bold" style="background: linear-gradient(135deg, #dc3545, #c82333);">
                                 <i class="fas fa-sign-out-alt mr-2"></i> KLIK UNTUK ABSEN PULANG
                             </button>
                         </form>
@@ -80,8 +86,8 @@
                         </div>
                     @endif
                 </div>
-
-            </x-card>
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -22,6 +22,8 @@ class Perizinan extends Model
         'alasan',
         'bukti',
         'status',
+        'keterangan_admin',
+        'approved_by',
     ];
 
     protected $casts = [

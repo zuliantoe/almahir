@@ -7,48 +7,76 @@
 
     {{-- Stats Cards --}}
     <div class="row">
-        <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box shadow-sm border-0">
-                <span class="info-box-icon bg-info elevation-1 text-white"><i class="fas fa-users"></i></span>
-                <div class="info-box-content">
-                    <span class="info-box-text text-uppercase text-muted small font-weight-bold">Total Pegawai</span>
-                    <span class="info-box-number h4 font-weight-bolder mb-0">{{ $stats['total'] }}</span>
+        <div class="col-12 col-sm-6 col-md-3 mb-4">
+            <div class="glass-card hover-elevate p-3 border-0 h-100" style="border-left: 5px solid #17a2b8 !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-uppercase text-muted small font-weight-bold">Total Pegawai</span>
+                        <div class="h3 font-weight-bolder mb-0 text-dark">{{ $stats['total'] }}</div>
+                    </div>
+                    <div class="bg-info-light rounded-circle p-3 text-info" style="background: rgba(23, 162, 184, 0.1);">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box shadow-sm border-0">
-                <span class="info-box-icon bg-success elevation-1 text-white"><i class="fas fa-check-circle"></i></span>
-                <div class="info-box-content">
-                    <span class="info-box-text text-uppercase text-muted small font-weight-bold">Hadir</span>
-                    <span class="info-box-number h4 font-weight-bolder mb-0">{{ $stats['hadir'] }}</span>
+        <div class="col-12 col-sm-6 col-md-3 mb-4">
+            <div class="glass-card hover-elevate p-3 border-0 h-100" style="border-left: 5px solid #28a745 !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-uppercase text-muted small font-weight-bold">Hadir Fisik</span>
+                        <div class="h3 font-weight-bolder mb-0 text-success">{{ $stats['hadir'] }}</div>
+                    </div>
+                    <div class="bg-success-light rounded-circle p-3 text-success" style="background: rgba(40, 167, 69, 0.1);">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box shadow-sm border-0">
-                <span class="info-box-icon bg-warning elevation-1 text-white"><i class="fas fa-envelope-open-text"></i></span>
-                <div class="info-box-content">
-                    <span class="info-box-text text-uppercase text-muted small font-weight-bold">Izin / Sakit</span>
-                    <span class="info-box-number h4 font-weight-bolder mb-0">{{ $stats['izin'] }}</span>
+        <div class="col-12 col-sm-6 col-md-3 mb-4">
+            <div class="glass-card hover-elevate p-3 border-0 h-100" style="border-left: 5px solid #ffc107 !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-uppercase text-muted small font-weight-bold">Izin / Sakit</span>
+                        <div class="h3 font-weight-bolder mb-0 text-warning">{{ $stats['izin'] }}</div>
+                    </div>
+                    <div class="bg-warning-light rounded-circle p-3 text-warning" style="background: rgba(255, 193, 7, 0.1);">
+                        <i class="fas fa-envelope-open-text fa-2x"></i>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box shadow-sm border-0">
-                <span class="info-box-icon bg-danger elevation-1 text-white"><i class="fas fa-user-times"></i></span>
-                <div class="info-box-content">
-                    <span class="info-box-text text-uppercase text-muted small font-weight-bold">Tanpa Keterangan</span>
-                    <span class="info-box-number h4 font-weight-bolder mb-0">{{ $stats['alpa'] }}</span>
+        <div class="col-12 col-sm-6 col-md-3 mb-4">
+            <div class="glass-card hover-elevate p-3 border-0 h-100" style="border-left: 5px solid #dc3545 !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-uppercase text-muted small font-weight-bold">Tanpa Keterangan</span>
+                        <div class="h3 font-weight-bolder mb-0 text-danger">{{ $stats['alpa'] }}</div>
+                    </div>
+                    <div class="bg-danger-light rounded-circle p-3 text-danger" style="background: rgba(220, 53, 69, 0.1);">
+                        <i class="fas fa-user-times fa-2x"></i>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <x-card title="Daftar Kehadiran: {{ \Carbon\Carbon::parse($selectedDate)->translatedFormat('d F Y') }}" icon="fas fa-calendar-alt">
+    <div class="card border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+        <div class="card-header gradient-primary border-0 p-4">
+            <h3 class="card-title text-white font-weight-bold mb-0 mt-1">
+                <i class="fas fa-calendar-alt mr-2"></i> Daftar Kehadiran: {{ \Carbon\Carbon::parse($selectedDate)->translatedFormat('d F Y') }}
+            </h3>
+            <div class="card-tools">
+                <a href="{{ route('absensi.manage.export', ['date' => $selectedDate, 'search' => request('search')]) }}" class="btn btn-light text-success btn-sm rounded-pill px-4 shadow-sm btn-animate font-weight-bold">
+                    <i class="fas fa-file-excel mr-1"></i> Export Laporan (CSV)
+                </a>
+            </div>
+        </div>
+        
+        <div class="card-body p-4 bg-light">
         
         {{-- Filters --}}
-        <div class="p-3 mb-4 bg-light rounded border shadow-xs">
+        <div class="glass-card p-3 mb-4">
             <form action="{{ route('absensi.manage.index') }}" method="GET">
                 <div class="row align-items-end">
                     <div class="col-md-4">
@@ -64,7 +92,7 @@
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <button type="submit" class="btn btn-primary btn-block shadow-sm">
+                        <button type="submit" class="btn btn-primary btn-animate btn-block rounded-pill shadow-sm">
                             <i class="fas fa-search mr-1"></i> Cari & Filter
                         </button>
                     </div>
@@ -73,9 +101,9 @@
         </div>
 
         {{-- Table --}}
-        <div class="table-responsive">
-            <table class="table table-hover table-striped border">
-                <thead class="thead-dark text-center">
+        <div class="table-responsive bg-white rounded shadow-sm border-0">
+            <table class="table table-premium table-hover mb-0">
+                <thead class="bg-light text-center">
                     <tr>
                         <th style="width: 50px;">No</th>
                         <th class="text-left">Pegawai</th>
@@ -136,10 +164,12 @@
             </table>
         </div>
 
-        <div class="mt-3">
+        <div class="mt-4">
             {{ $rekap->links() }}
         </div>
-    </x-card>
+        
+        </div>
+    </div>
 </div>
 
 <style>

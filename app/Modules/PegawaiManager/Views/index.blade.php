@@ -10,16 +10,27 @@
     <x-card title="Daftar Pegawai" icon="fas fa-users">
 
         <x-slot name="tools">
-            <a href="{{ route('pegawaimanager.export') }}" class="btn btn-success btn-sm rounded-pill px-3 shadow-sm mr-2" title="Unduh data dalam format CSV/Excel">
+            @can('guru.create')
+            <a href="{{ route('pegawaimanager.import') }}" class="btn btn-warning btn-sm rounded-pill px-3 shadow-sm mr-2 btn-animate font-weight-bold text-dark" title="Import data masal dari CSV">
+                <i class="fas fa-cloud-upload-alt mr-1"></i> Import CSV
+            </a>
+            @endcan
+
+            @can('guru.view')
+            <a href="{{ route('pegawaimanager.export') }}" class="btn btn-success btn-sm rounded-pill px-3 shadow-sm mr-2 btn-animate" title="Unduh data dalam format CSV/Excel">
                 <i class="fas fa-file-excel mr-1"></i> Export Data
             </a>
-            <a href="{{ route('pegawaimanager.create') }}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+            @endcan
+            
+            @can('guru.create')
+            <a href="{{ route('pegawaimanager.create') }}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm btn-animate gradient-primary border-0">
                 <i class="fas fa-plus mr-1"></i> Tambah Pegawai
             </a>
+            @endcan
         </x-slot>
 
-        {{-- Filter & Search Section: Standard SIAKAD Layout --}}
-        <div class="p-3 mb-4 bg-light rounded border shadow-sm">
+        {{-- Filter & Search Section: Glassmorphism Layout --}}
+        <div class="p-4 mb-4 glass-card">
             <form action="{{ route('pegawaimanager.index') }}" method="GET">
                 <div class="row align-items-end">
                     
@@ -64,11 +75,11 @@
 
                     {{-- Tombol --}}
                     <div class="col-lg-2 col-md-2 d-flex">
-                        <button type="submit" class="btn btn-primary btn-sm flex-fill mr-1 shadow-sm">
+                        <button type="submit" class="btn btn-primary btn-sm flex-fill mr-1 shadow-sm btn-animate gradient-primary border-0">
                             <i class="fas fa-search"></i>
                         </button>
-                        <a href="{{ route('pegawaimanager.index') }}" class="btn btn-default btn-sm shadow-sm" title="Kembali ke awal">
-                            <i class="fas fa-sync-alt"></i>
+                        <a href="{{ route('pegawaimanager.index') }}" class="btn btn-default btn-sm shadow-sm btn-animate bg-white" title="Kembali ke awal">
+                            <i class="fas fa-sync-alt text-muted"></i>
                         </a>
                     </div>
 
@@ -76,11 +87,11 @@
             </form>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive mt-2">
 
-            <table class="table table-hover table-striped">
+            <table class="table table-hover table-premium">
 
-                <thead class="thead-dark">
+                <thead>
                     <tr>
                         <th style="width: 50px;" class="text-center">No</th>
                         <th>Identitas Pegawai</th>
@@ -125,28 +136,35 @@
                         <td class="text-center py-3">
                             <div class="d-flex justify-content-center">
                                 <a href="{{ route('pegawaimanager.show', $item->id) }}"
-                                   class="btn btn-outline-primary btn-sm mx-1 shadow-sm px-2"
+                                   class="btn btn-outline-primary btn-sm mx-1 shadow-sm px-2 btn-animate rounded-circle"
+                                   style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;"
                                    title="Lihat Detail Profil">
                                     <i class="fas fa-eye"></i>
                                 </a>
 
+                                @can('guru.edit')
                                 <a href="{{ route('pegawaimanager.edit', $item->id) }}"
-                                   class="btn btn-outline-info btn-sm mx-1 shadow-sm px-2"
+                                   class="btn btn-outline-info btn-sm mx-1 shadow-sm px-2 btn-animate rounded-circle"
+                                   style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;"
                                    title="Edit Data">
                                     <i class="fas fa-edit"></i>
                                 </a>
+                                @endcan
 
+                                @if(auth()->user()->hasRole(['SUPER_ADMIN', 'STAF_TU']))
                                 <form action="{{ route('pegawaimanager.destroy', $item->id) }}"
                                       method="POST"
                                       class="d-inline">
                                     @csrf
                                     @method('DELETE')
                                     <button type="button"
-                                            class="btn btn-outline-danger btn-sm mx-1 shadow-sm px-2 btn-delete"
+                                            class="btn btn-outline-danger btn-sm mx-1 shadow-sm px-2 btn-delete btn-animate rounded-circle"
+                                            style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;"
                                             title="Hapus Data">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </form>
+                                @endif
                             </div>
                         </td>
 
@@ -166,7 +184,9 @@
                             @else
                                 <h5 class="font-weight-bold mb-1">Daftar Pegawai Masih Kosong</h5>
                                 <p class="small">Silakan tambahkan data pegawai pertama Anda untuk memulai.</p>
+                                @can('guru.create')
                                 <a href="{{ route('pegawaimanager.create') }}" class="btn btn-primary btn-sm mt-2 rounded-pill px-4">Tambah Pegawai</a>
+                                @endcan
                             @endif
                         </td>
                     </tr>

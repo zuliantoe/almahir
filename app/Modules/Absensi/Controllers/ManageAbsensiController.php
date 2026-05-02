@@ -21,29 +21,74 @@ class ManageAbsensiController extends Controller
         $date = $request->date ?: Carbon::today()->toDateString();
         $carbonDate = Carbon::parse($date);
         
-        // 1. Ambil semua pegawai aktif
         $pegawaiQuery = Pegawai::with(['typePegawai', 'user']);
 
         if ($request->search) {
             $pegawaiQuery->where('nama', 'like', "%{$request->search}%");
         }
 
-        $allPegawai = $pegawaiQuery->get();
+        // ==========================================
+        // 1. PENGHITUNGAN STATISTIK (LEVEL DATABASE)
+        // ==========================================
+        $totalPegawai = (clone $pegawaiQuery)->count();
+        
+        $izinQuery = Perizinan::where('status', 'disetujui')
+            ->whereDate('tanggal_mulai', '<=', $date)
+            ->whereDate('tanggal_selesai', '>=', $date);
 
-        // 2. Ambil data absensi hari tersebut
-        $absensiHariIni = Absensi::whereDate('tanggal', $date)->get()->keyBy('pegawai_id');
+        $absensiQuery = Absensi::whereDate('tanggal', $date);
 
-        // 3. Ambil data perizinan yang disetujui untuk hari tersebut
+        // Filter stats jika ada pencarian nama spesifik
+        if ($request->search) {
+            $pegawaiIds = (clone $pegawaiQuery)->pluck('id');
+            $userIds = (clone $pegawaiQuery)->pluck('user_id');
+            $izinQuery->whereIn('user_id', $userIds);
+            $absensiQuery->whereIn('pegawai_id', $pegawaiIds);
+        }
+
+        $izinCount = $izinQuery->count();
+        $absensiCount = $absensiQuery->count();
+
+        $alpaCount = 0;
+        if (!$carbonDate->isWeekend()) {
+            $alpaCount = $totalPegawai - $absensiCount - $izinCount;
+            if ($alpaCount < 0) $alpaCount = 0;
+        }
+
+        $stats = [
+            'total' => $totalPegawai,
+            'hadir' => $absensiCount,
+            'izin'  => $izinCount,
+            'alpa'  => $alpaCount,
+        ];
+
+        // ==========================================
+        // 2. PAGINATION & PENGAMBILAN DATA (SQL LEVEL)
+        // ==========================================
+        $perPage = 10;
+        $paginatedPegawai = $pegawaiQuery->paginate($perPage)->withQueryString();
+
+        // 3. Ambil data relasi HANYA untuk 10 data di halaman ini
+        $idsOnPage = $paginatedPegawai->pluck('id');
+        $userIdsOnPage = $paginatedPegawai->pluck('user_id');
+
+        $absensiHariIni = Absensi::whereDate('tanggal', $date)
+            ->whereIn('pegawai_id', $idsOnPage)
+            ->get()
+            ->keyBy('pegawai_id');
+
         $perizinanHariIni = Perizinan::where('status', 'disetujui')
             ->whereDate('tanggal_mulai', '<=', $date)
             ->whereDate('tanggal_selesai', '>=', $date)
+            ->whereIn('user_id', $userIdsOnPage)
             ->get()
-            ->keyBy('user_id'); // user_id di tabel ini adalah id pegawai
+            ->keyBy('user_id');
 
-        // 4. Gabungkan data
-        $rekap = $allPegawai->map(function($p) use ($absensiHariIni, $perizinanHariIni, $carbonDate) {
+        // 4. Modifikasi map collection yang akan dilempar ke View
+        $rekapItems = $paginatedPegawai->getCollection()->map(function($p) use ($absensiHariIni, $perizinanHariIni, $carbonDate) {
             $absensi = $absensiHariIni->get($p->id);
-            $izin = $perizinanHariIni->get($p->id);
+            // Perbaikan logic sebelumnya: menggunakan user_id bukan id pegawai untuk tabel Perizinan
+            $izin = $perizinanHariIni->get($p->user_id);
 
             $status = 'ALPA';
             $color = 'danger';
@@ -74,30 +119,96 @@ class ManageAbsensiController extends Controller
             ];
         });
 
-        // Pagination Manual (Simple)
-        $perPage = 10;
-        $page = $request->get('page', 1);
-        $paginatedItems = new \Illuminate\Pagination\LengthAwarePaginator(
-            $rekap->forPage($page, $perPage),
-            $rekap->count(),
-            $perPage,
-            $page,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
-
-        // Stats
-        $stats = [
-            'total' => $allPegawai->count(),
-            'hadir' => $rekap->whereIn('status', ['TEPAT WAKTU', 'TERLAMBAT'])->count(),
-            'izin' => $rekap->whereIn('status', ['IZIN', 'SAKIT', 'CUTI', 'DINAS LUAR'])->count(),
-            'alpa' => $rekap->where('status', 'ALPA')->count(),
-        ];
+        // Pakukan ulang item ke object pagination Paginator
+        $paginatedPegawai->setCollection($rekapItems);
 
         return view('absensi::manage.index', [
             'title' => 'Monitoring Kehadiran Pegawai',
-            'rekap' => $paginatedItems,
+            'rekap' => $paginatedPegawai,
             'stats' => $stats,
             'selectedDate' => $date
         ]);
+    }
+
+    /**
+     * Export attendance records to CSV.
+     */
+    public function export(Request $request)
+    {
+        $date = $request->date ?: Carbon::today()->toDateString();
+        $carbonDate = Carbon::parse($date);
+        
+        $pegawaiQuery = Pegawai::with(['typePegawai']);
+
+        if ($request->search) {
+            $pegawaiQuery->where('nama', 'like', "%{$request->search}%");
+        }
+
+        $pegawais = $pegawaiQuery->get();
+        $ids = $pegawais->pluck('id');
+        $userIds = $pegawais->pluck('user_id');
+
+        $absensiHariIni = Absensi::whereDate('tanggal', $date)
+            ->whereIn('pegawai_id', $ids)
+            ->get()
+            ->keyBy('pegawai_id');
+
+        $perizinanHariIni = Perizinan::where('status', 'disetujui')
+            ->whereDate('tanggal_mulai', '<=', $date)
+            ->whereDate('tanggal_selesai', '>=', $date)
+            ->whereIn('user_id', $userIds)
+            ->get()
+            ->keyBy('user_id');
+
+        $filename = "Laporan_Absensi_{$date}.csv";
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $callback = function() use ($pegawais, $absensiHariIni, $perizinanHariIni, $carbonDate) {
+            $file = fopen('php://output', 'w');
+            
+            // Tambahkan BOM agar Excel membaca UTF-8 dengan benar
+            fputs($file, "\xEF\xBB\xBF");
+            
+            fputcsv($file, ['No', 'Nama Pegawai', 'Tipe Pegawai', 'Jam Masuk', 'Jam Pulang', 'Status Kehadiran'], ';');
+
+            foreach ($pegawais as $index => $p) {
+                $absensi = $absensiHariIni->get($p->id);
+                $izin = $perizinanHariIni->get($p->user_id);
+
+                $status = 'ALPA';
+                $jamMasuk = '-';
+                $jamPulang = '-';
+
+                if ($absensi) {
+                    $status = $absensi->status;
+                    $jamMasuk = $absensi->jam_masuk ? Carbon::parse($absensi->jam_masuk)->format('H:i') : '-';
+                    $jamPulang = $absensi->jam_pulang ? Carbon::parse($absensi->jam_pulang)->format('H:i') : '-';
+                } elseif ($izin) {
+                    $status = strtoupper($izin->jenis_izin);
+                } elseif ($carbonDate->isWeekend()) {
+                    $status = 'LIBUR';
+                }
+
+                fputcsv($file, [
+                    $index + 1,
+                    $p->nama,
+                    $p->typePegawai->nama_type ?? 'Pegawai',
+                    $jamMasuk,
+                    $jamPulang,
+                    $status
+                ], ';');
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

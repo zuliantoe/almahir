@@ -22,19 +22,20 @@ $title = $message ?: $slot;
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         if (typeof Swal !== 'undefined') {
-            const Toast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
+            const AlertModal = Swal.mixin({
+                position: 'center',
+                showConfirmButton: true,
+                confirmButtonText: 'Tutup',
+                confirmButtonColor: '#3085d6',
                 timer: 4000,
                 timerProgressBar: true,
-                didOpen: (toast) => {
-                    toast.addEventListener('mouseenter', Swal.stopTimer)
-                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                didOpen: (popup) => {
+                    popup.addEventListener('mouseenter', Swal.stopTimer)
+                    popup.addEventListener('mouseleave', Swal.resumeTimer)
                 }
             });
 
-            Toast.fire({
+            AlertModal.fire({
                 icon: '{{ $swalType }}',
                 title: '{!! addslashes($title) !!}'
             });

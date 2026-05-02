@@ -18,19 +18,31 @@ Route::middleware(['auth'])->group(function () {
     // Dashboard Pegawai
     Route::get('/dashboard', [\Modules\PegawaiManager\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
-    // Type Pegawai CRUD
+    // Type Pegawai CRUD - Hanya yang memiliki hak edit guru yang bisa mengelola jabatan
     // Diletakkan SEBELUM Pegawai CRUD agar kata 'types' tidak ditangkap oleh parameter {id}
-    Route::resource('types', TypePegawaiController::class)->names('types');
+    Route::resource('types', TypePegawaiController::class)
+        ->middleware('permission:guru.edit')
+        ->names('types');
 
     // Export Laporan Pegawai
-    Route::get('/export', [PegawaiManagerController::class, 'export'])->name('export');
+    Route::get('/export', [PegawaiManagerController::class, 'export'])
+        ->middleware('permission:guru.view')
+        ->name('export');
+
+    // Import Data Pegawai
+    Route::get('/import', [PegawaiManagerController::class, 'importForm'])
+        ->middleware('permission:guru.create')
+        ->name('import');
+    Route::post('/import', [PegawaiManagerController::class, 'processImport'])
+        ->middleware('permission:guru.create')
+        ->name('process_import');
 
     // Pegawai CRUD
-    Route::get('/', [PegawaiManagerController::class, 'index'])->name('index');
-    Route::get('/create', [PegawaiManagerController::class, 'create'])->name('create');
-    Route::post('/', [PegawaiManagerController::class, 'store'])->name('store');
-    Route::get('/{id}', [PegawaiManagerController::class, 'show'])->name('show');
-    Route::get('/{id}/edit', [PegawaiManagerController::class, 'edit'])->name('edit');
-    Route::put('/{id}', [PegawaiManagerController::class, 'update'])->name('update');
-    Route::delete('/{id}', [PegawaiManagerController::class, 'destroy'])->name('destroy');
+    Route::get('/', [PegawaiManagerController::class, 'index'])->middleware('permission:guru.view')->name('index');
+    Route::get('/create', [PegawaiManagerController::class, 'create'])->middleware('permission:guru.create')->name('create');
+    Route::post('/', [PegawaiManagerController::class, 'store'])->middleware('permission:guru.create')->name('store');
+    Route::get('/{id}', [PegawaiManagerController::class, 'show'])->middleware('permission:guru.view')->name('show');
+    Route::get('/{id}/edit', [PegawaiManagerController::class, 'edit'])->middleware('permission:guru.edit')->name('edit');
+    Route::put('/{id}', [PegawaiManagerController::class, 'update'])->middleware('permission:guru.edit')->name('update');
+    Route::delete('/{id}', [PegawaiManagerController::class, 'destroy'])->middleware('role:SUPER_ADMIN,STAF_TU')->name('destroy');
 });

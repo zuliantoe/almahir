@@ -7,8 +7,10 @@
 
     <title>@yield('title', 'SIAKAD') - {{ config('app.name', 'SIAKAD') }}</title>
 
-    {{-- Google Fonts --}}
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    {{-- Google Fonts: Inter untuk Typografi Modern & Premium --}}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     {{-- Font Awesome 5 --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -16,13 +18,22 @@
     {{-- AdminLTE 3 CSS --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     
+    {{-- Premium UI Styles --}}
+    <link rel="stylesheet" href="{{ asset('css/premium-ui.css') }}">
+
     {{-- Custom Styles --}}
     @stack('styles')
     
     <style>
+        /* Typography System */
+        body, h1, h2, h3, h4, h5, h6, p, a, span, button, input, select, textarea, .nav-link {
+            font-family: 'Inter', sans-serif !important;
+        }
+
         /* Custom styles for SIAKAD */
         .sidebar-dark-primary .nav-sidebar>.nav-item>.nav-link.active {
             background-color: #007bff;
+            box-shadow: 0 4px 6px -1px rgba(0, 123, 255, 0.2), 0 2px 4px -1px rgba(0, 123, 255, 0.1);
         }
         
         .content-wrapper {
@@ -116,9 +127,10 @@
                     title: 'Berhasil!',
                     text: "{{ session('success') }}",
                     timer: 3000,
-                    showConfirmButton: false,
-                    toast: true,
-                    position: 'top-end',
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6',
+                    position: 'center',
                     timerProgressBar: true
                 });
             @endif

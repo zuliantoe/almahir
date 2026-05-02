@@ -50,24 +50,50 @@
                         <th style="width: 150px">Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {{-- Sample data - replace with actual data --}}
-                    <tr>
-                        <td colspan="7" class="text-center text-muted">
-                            <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                            Belum ada data siswa. 
-                            <a href="{{ route('siswa.create') }}">Tambah siswa pertama</a>
-                        </td>
-                    </tr>
+                    @forelse($siswa as $index => $s)
+                        <tr>
+                            <td>{{ $siswa->firstItem() + $index }}</td>
+                            <td>{{ $s->nis }}</td>
+                            <td>{{ $s->nama }}</td>
+                            <td>{{ $s->email }}</td>
+                            <td>{{ $s->kelas_id ?? '-' }}</td>
+                            <td>
+                                <span class="badge badge-{{ $s->status === 'aktif' ? 'success' : 'secondary' }}">
+                                    {{ ucfirst($s->status) }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ route('siswa.edit', $s->id) }}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{{ route('siswa.destroy', $s->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                Belum ada data siswa. 
+                                <a href="{{ route('siswa.create') }}">Tambah siswa pertama</a>
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
 
-        {{-- Pagination would go here --}}
         <x-slot name="footer">
             <div class="d-flex justify-content-between align-items-center">
-                <span class="text-muted">Menampilkan 0 dari 0 data</span>
-                {{-- {{ $siswa->links() }} --}}
+                <span class="text-muted">
+                    Menampilkan {{ $siswa->firstItem() ?? 0 }} - {{ $siswa->lastItem() ?? 0 }} dari {{ $siswa->total() }} data
+                </span>
+                {{ $siswa->links() }}
             </div>
         </x-slot>
     </x-card>

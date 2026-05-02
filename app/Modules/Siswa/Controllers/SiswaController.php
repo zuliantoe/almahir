@@ -5,6 +5,7 @@ namespace Modules\Siswa\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Modules\Siswa\Models\Siswa;
 
 /**
  * SiswaController
@@ -21,9 +22,12 @@ class SiswaController extends Controller
      */
     public function index(): View
     {
+        $siswa = Siswa::latest()->paginate(10);
+
         return view('siswa::index', [
             'title' => 'Data Siswa',
             'breadcrumb' => 'Siswa / Daftar',
+            'siswa' => $siswa,
         ]);
     }
 
@@ -32,9 +36,11 @@ class SiswaController extends Controller
      */
     public function create(): View
     {
+        $tahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::orderBy('id', 'desc')->get();
         return view('siswa::create', [
             'title' => 'Tambah Siswa Baru',
             'breadcrumb' => 'Siswa / Tambah',
+            'tahunAjaran' => $tahunAjaran,
         ]);
     }
 
@@ -48,11 +54,17 @@ class SiswaController extends Controller
             'nis' => 'required|string|max:20|unique:siswa,nis',
             'email' => 'required|email|unique:siswa,email',
             'tanggal_lahir' => 'required|date',
+            'tempat_lahir' => 'nullable|string|max:255',
+            'jenis_kelamin' => 'nullable|in:L,P',
+            'telepon' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',
+            'tahun_masuk' => 'nullable|integer',
         ]);
 
-        // TODO: Store the student data
+        $validated['status'] = 'aktif'; // default status for new student
+
         // Siswa::create($validated);
+        Siswa::create($validated);
 
         return redirect()->route('siswa.index')
             ->with('success', 'Siswa berhasil ditambahkan.');
@@ -63,11 +75,12 @@ class SiswaController extends Controller
      */
     public function show(string $id): View
     {
-        // TODO: Fetch the student by ID
+        $siswa = Siswa::findOrFail($id);
+        
         return view('siswa::show', [
             'title' => 'Detail Siswa',
             'breadcrumb' => 'Siswa / Detail',
-            'siswa' => null, // Replace with actual data
+            'siswa' => $siswa,
         ]);
     }
 
@@ -76,11 +89,14 @@ class SiswaController extends Controller
      */
     public function edit(string $id): View
     {
-        // TODO: Fetch the student by ID
+        $siswa = Siswa::findOrFail($id);
+        $tahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::orderBy('id', 'desc')->get();
+        
         return view('siswa::edit', [
             'title' => 'Edit Siswa',
             'breadcrumb' => 'Siswa / Edit',
-            'siswa' => null, // Replace with actual data
+            'siswa' => $siswa,
+            'tahunAjaran' => $tahunAjaran,
         ]);
     }
 
@@ -91,13 +107,19 @@ class SiswaController extends Controller
     {
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
-            'nis' => 'required|string|max:20',
-            'email' => 'required|email',
+            'nis' => 'required|string|max:20|unique:siswa,nis,' . $id,
+            'email' => 'required|email|unique:siswa,email,' . $id,
             'tanggal_lahir' => 'required|date',
+            'tempat_lahir' => 'nullable|string|max:255',
+            'jenis_kelamin' => 'nullable|in:L,P',
+            'telepon' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',
+            'tahun_masuk' => 'nullable|integer',
+            'status' => 'nullable|in:aktif,lulus,keluar,cuti',
         ]);
 
-        // TODO: Update the student data
+        $siswa = Siswa::findOrFail($id);
+        $siswa->update($validated);
         
         return redirect()->route('siswa.index')
             ->with('success', 'Data siswa berhasil diperbarui.');
@@ -108,7 +130,8 @@ class SiswaController extends Controller
      */
     public function destroy(string $id)
     {
-        // TODO: Delete the student
+        $siswa = Siswa::findOrFail($id);
+        $siswa->delete();
         
         return redirect()->route('siswa.index')
             ->with('success', 'Siswa berhasil dihapus.');

@@ -10,7 +10,8 @@ class PendaftaranController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pendaftaran::query();
+        // Hanya tampilkan pendaftaran yang belum menjadi siswa (aktif = 0)
+        $query = Pendaftaran::query()->where('aktif', 0);
 
         // Default ke 'pending' jika status kosong atau tidak ada
         $currentStatus = $request->status ?: 'pending';

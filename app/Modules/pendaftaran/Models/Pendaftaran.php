@@ -31,6 +31,7 @@ class Pendaftaran extends Model
         'tanggal_daftar',
         'tanggal_diterima',
         'catatan',
+        'aktif',
     ];
 
     public function siswa()

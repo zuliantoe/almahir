@@ -20,6 +20,7 @@
 @section('content')
     <form action="{{ route('siswa.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
+        <input type="hidden" name="pendaftaran_id" id="hidden_pendaftaran_id" value="">
         
         @if(isset($pendaftaranDiterima) && $pendaftaranDiterima->count() > 0)
         <div class="row mb-3">
@@ -223,6 +224,17 @@
                 // Update select
                 var jkSelect = document.querySelector('select[name="jenis_kelamin"]');
                 jkSelect.value = selected.getAttribute('data-jenis_kelamin') || '';
+
+                // Add or update hidden input for pendaftaran_id
+                var hiddenInput = document.getElementById('hidden_pendaftaran_id');
+                if (hiddenInput) {
+                    hiddenInput.value = selected.value;
+                }
+            } else {
+                var hiddenInput = document.getElementById('hidden_pendaftaran_id');
+                if (hiddenInput) {
+                    hiddenInput.value = '';
+                }
             }
         });
     }

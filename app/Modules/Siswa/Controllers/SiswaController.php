@@ -37,7 +37,9 @@ class SiswaController extends Controller
     public function create(): View
     {
         $tahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::orderBy('id', 'desc')->get();
-        $pendaftaranDiterima = \Modules\Pendaftaran\Models\Pendaftaran::where('status', 'diterima')->get();
+        $pendaftaranDiterima = \Modules\Pendaftaran\Models\Pendaftaran::where('status', 'diterima')
+                                                                        ->where('aktif', 0)
+                                                                        ->get();
 
         return view('siswa::create', [
             'title' => 'Tambah Siswa Baru',
@@ -73,6 +75,13 @@ class SiswaController extends Controller
 
         // Siswa::create($validated);
         Siswa::create($validated);
+
+        if ($request->filled('pendaftaran_id')) {
+            $pendaftaran = \Modules\Pendaftaran\Models\Pendaftaran::find($request->pendaftaran_id);
+            if ($pendaftaran) {
+                $pendaftaran->update(['aktif' => 1]);
+            }
+        }
 
         return redirect()->route('siswa.index')
             ->with('success', 'Siswa berhasil ditambahkan.');

@@ -96,6 +96,7 @@ Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
         Route::put('{id}', [JadwalPiketController::class, 'update'])->name('update');
         Route::delete('{id}', [JadwalPiketController::class, 'destroy'])->name('destroy');
         Route::post('{id}/selesai', [JadwalPiketController::class, 'selesai'])->name('selesai');
+        Route::post('auto-generate', [JadwalPiketController::class, 'autoGenerate'])->name('auto-generate');
     });
     
     // Kerusakan

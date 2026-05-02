@@ -31,10 +31,13 @@ class PengadaanController extends BaseController
                             ->latest()
                             ->get();
 
+        $kamar = \App\Modules\ManajemenAsetDanAsrama\Models\Kamar::all();
+
         return view('manajemenasetdanasrama::pengadaan.index', [
             'title'          => 'Data Pengadaan Aset',
             'pengadaan'      => $pengadaan,
             'menungguProses' => $menungguProses,
+            'kamar'          => $kamar,
         ]);
     }
 
@@ -89,6 +92,7 @@ class PengadaanController extends BaseController
             'tanggal_datang'  => 'required|date',
             'kode_aset'       => 'required|string|unique:aset,kode_aset',
             'nama_aset'       => 'required|string|max:255',
+            'kamar_id'        => 'required|exists:kamar,id',
             'kondisi'         => 'nullable|string',
             'deskripsi_aset'  => 'nullable|string',
         ]);
@@ -116,9 +120,10 @@ class PengadaanController extends BaseController
             'kondisi'            => $request->kondisi,
             'deskripsi_aset'     => $request->deskripsi_aset,
             'pengadaan_id'       => $pengadaan->id,
+            'kamar_id'           => $request->kamar_id,
         ]);
 
         return redirect()->route('manajemenasetdanasrama.aset.index')
-            ->with('success', 'Aset berhasil ditambahkan ke master aset.');
+            ->with('success', 'Aset berhasil ditambahkan ke master aset beserta lokasi kamarnya.');
     }
 }

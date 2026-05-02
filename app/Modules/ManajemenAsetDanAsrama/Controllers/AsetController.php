@@ -49,10 +49,12 @@ class AsetController extends BaseController
     public function edit(string $id): View
     {
         $aset = Aset::findOrFail($id);
+        $kamar = \App\Modules\ManajemenAsetDanAsrama\Models\Kamar::all();
         
         return view('manajemenasetdanasrama::aset.edit', [
             'title' => 'Edit Aset',
             'aset'  => $aset,
+            'kamar' => $kamar,
         ]);
     }
 
@@ -62,15 +64,38 @@ class AsetController extends BaseController
     public function update(Request $request, string $id): RedirectResponse
     {
         $aset = Aset::findOrFail($id);
+        $oldStatus = $aset->status_kondisi;
         
         $validated = $request->validate([
             'nama_aset'       => 'required|string|max:255',
+            'kamar_id'        => 'required|exists:kamar,id',
             'status_kondisi'  => 'required|in:baik,rusak,dalam_perbaikan,sudah_diperbaiki',
             'kondisi'         => 'nullable|string',
             'deskripsi_aset'  => 'nullable|string',
         ]);
 
         $aset->update($validated);
+
+        // Fase 3: Auto-Maintenance Engine
+        // Jika status diubah dari selain 'rusak' menjadi 'rusak'
+        if ($oldStatus !== 'rusak' && $validated['status_kondisi'] === 'rusak') {
+            // Cek apakah sudah ada kerusakan belum ditangani untuk aset ini
+            $existingKerusakan = \App\Modules\ManajemenAsetDanAsrama\Models\Kerusakan::where('aset_id', $aset->id)
+                ->where('status_penanganan', 'belum_ditangani')
+                ->exists();
+
+            if (!$existingKerusakan) {
+                \App\Modules\ManajemenAsetDanAsrama\Models\Kerusakan::create([
+                    'aset_id'           => $aset->id,
+                    'tanggal_lapor'     => now(),
+                    'pelapor'           => auth()->user()->name ?? 'Sistem Otomatis',
+                    'deskripsi_kerusakan'=> 'Otomatis dicatat oleh sistem karena status aset diubah menjadi rusak.',
+                    'tingkat_kerusakan' => 'sedang', // Default level
+                    'status_penanganan' => 'belum_ditangani',
+                    'catatan'           => null,
+                ]);
+            }
+        }
 
         return redirect()->route('manajemenasetdanasrama.aset.index')
             ->with('success', 'Data aset berhasil diperbarui.');

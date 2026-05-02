@@ -219,6 +219,15 @@
                         <input type="text" class="form-control" id="selesai_nama_input" name="nama_aset" required readonly>
                     </div>
                     <div class="form-group">
+                        <label for="kamar_id">Pilih Kamar (Lokasi Penempatan) <span class="text-danger">*</span></label>
+                        <select class="form-control" id="kamar_id" name="kamar_id" required>
+                            <option value="">-- Pilih Kamar --</option>
+                            @foreach($kamar as $k)
+                            <option value="{{ $k->id }}">{{ $k->nama_kamar }} (Kapasitas: {{ $k->kapasitas }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label for="kondisi">Kondisi Saat Diterima</label>
                         <textarea class="form-control" id="kondisi" name="kondisi" rows="2" placeholder="Contoh: Baik, sesuai spesifikasi"></textarea>
                     </div>

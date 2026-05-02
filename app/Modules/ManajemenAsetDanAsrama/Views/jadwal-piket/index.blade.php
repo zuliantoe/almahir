@@ -24,45 +24,63 @@
     @if(session('error'))
         <x-alert type="danger" :message="session('error')" dismissible />
     @endif
+    @if(session('warning'))
+        <x-alert type="warning" :message="session('warning')" dismissible />
+    @endif
 
     <div class="row">
         <div class="col-md-12">
             <x-card title="Daftar Jadwal Piket" icon="fas fa-calendar-alt">
                 <x-slot name="tools">
+                    <button type="button" class="btn btn-sm btn-info mr-2" data-toggle="modal" data-target="#modalAutoGenerate">
+                        <i class="fas fa-robot mr-1"></i> Auto-Generate
+                    </button>
                     <a href="{{ route('manajemenasetdanasrama.jadwal-piket.create') }}" class="btn btn-sm btn-primary">
                         <i class="fas fa-plus mr-1"></i> Tambah Jadwal
                     </a>
                 </x-slot>
 
                 <div class="card-body border-bottom">
-                    <form action="{{ route('manajemenasetdanasrama.jadwal-piket.index') }}" method="GET" class="row">
-                        <div class="col-md-3 mb-2">
-                            <select name="bulan" class="form-control form-control-sm">
-                                <option value="">-- Semua Bulan --</option>
-                                @php
-                                    $namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                                @endphp
-                                @foreach($namaBulan as $idx => $nama)
-                                    <option value="{{ $idx + 1 }}" {{ request('bulan') == ($idx + 1) ? 'selected' : '' }}>{{ $nama }}</option>
-                                @endforeach
-                            </select>
+                    <form action="{{ route('manajemenasetdanasrama.jadwal-piket.index') }}" method="GET">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="kamar_id">Filter Kamar</label>
+                                    <select class="form-control" id="kamar_id" name="kamar_id">
+                                        <option value="">Semua Kamar</option>
+                                        @foreach($kamar as $k)
+                                            <option value="{{ $k->id }}" {{ request('kamar_id') == $k->id ? 'selected' : '' }}>
+                                                {{ $k->nama_kamar }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="tanggal_mulai">Dari Tanggal</label>
+                                    <input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai" value="{{ request('tanggal_mulai') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="tanggal_selesai">Sampai Tanggal</label>
+                                    <input type="date" class="form-control" id="tanggal_selesai" name="tanggal_selesai" value="{{ request('tanggal_selesai') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <div class="form-group w-100">
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fas fa-search"></i> Filter
+                                    </button>
+                                    @if(request()->hasAny(['kamar_id', 'tanggal_mulai', 'tanggal_selesai']))
+                                        <a href="{{ route('manajemenasetdanasrama.jadwal-piket.index') }}" class="btn btn-default btn-block mt-2">
+                                            Reset
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-3 mb-2">
-                            <select name="pekan" class="form-control form-control-sm">
-                                <option value="">-- Semua Pekan --</option>
-                                @for($i = 1; $i <= 5; $i++)
-                                    <option value="{{ $i }}" {{ request('pekan') == $i ? 'selected' : '' }}>Pekan {{ $i }}</option>
-                                @endfor
-                            </select>
-                        </div>
-                        <div class="col-md-2 mb-2">
-                            <button type="submit" class="btn btn-sm btn-primary btn-block"><i class="fas fa-search"></i> Filter</button>
-                        </div>
-                        @if(request()->hasAny(['bulan', 'pekan']))
-                        <div class="col-md-2 mb-2">
-                            <a href="{{ route('manajemenasetdanasrama.jadwal-piket.index') }}" class="btn btn-sm btn-secondary btn-block">Reset</a>
-                        </div>
-                        @endif
                     </form>
                 </div>
 
@@ -71,39 +89,34 @@
                         <thead>
                             <tr>
                                 <th width="50">No</th>
-                                <th width="120">Bulan</th>
-                                <th width="90">Pekan</th>
-                                <th width="100">Hari</th>
-                                <th>Tempat</th>
-                                <th>Siswa</th>
-                                <th width="90">Status</th>
-                                <th width="130">Aksi</th>
+                                <th>Kamar</th>
+                                <th>Tanggal</th>
+                                <th>Nama Santri</th>
+                                <th>Status</th>
+                                <th width="150">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                                $namaBulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                            @endphp
                             @forelse($jadwal as $item)
                             <tr>
                                 <td>{{ $loop->iteration + ($jadwal->currentPage() - 1) * $jadwal->perPage() }}</td>
-                                <td>{{ $namaBulan[$item->bulan] ?? $item->bulan }}</td>
-                                <td>Pekan {{ $item->pekan }}</td>
-                                <td>{{ $item->hari }}</td>
-                                <td>{{ Str::limit($item->tempat, 30) }}</td>
-                                <td><strong>{{ $item->siswa->nama ?? '-' }}</strong></td>
+                                <td>{{ $item->kamar->nama_kamar ?? '-' }}</td>
                                 <td>
-                                    @if($item->status == 'belum')
-                                        <span class="badge badge-warning">Belum</span>
-                                    @elseif($item->status == 'sudah')
-                                        <span class="badge badge-success">Sudah</span>
+                                    <strong>{{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('l, d F Y') }}</strong>
+                                </td>
+                                <td>{{ $item->siswa->nama ?? '-' }}</td>
+                                <td>
+                                    @if($item->status == 'sudah')
+                                        <span class="badge badge-success"><i class="fas fa-check-circle"></i> Selesai</span>
+                                    @else
+                                        <span class="badge badge-warning"><i class="fas fa-clock"></i> Belum</span>
                                     @endif
                                 </td>
                                 <td>
                                     @if($item->status == 'belum')
-                                    <form action="{{ route('manajemenasetdanasrama.jadwal-piket.selesai', $item->id) }}" method="POST" style="display:inline">
+                                    <form action="{{ route('manajemenasetdanasrama.jadwal-piket.selesai', $item->id) }}" method="POST" class="d-inline">
                                         @csrf
-                                        <button type="submit" class="btn btn-xs btn-success" title="Tandai Selesai">
+                                        <button type="submit" class="btn btn-xs btn-success" title="Tandai Selesai" onclick="return confirm('Tandai piket ini selesai?')">
                                             <i class="fas fa-check"></i>
                                         </button>
                                     </form>
@@ -111,13 +124,6 @@
                                     <a href="{{ route('manajemenasetdanasrama.jadwal-piket.edit', $item->id) }}" class="btn btn-xs btn-warning" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button type="button" class="btn btn-xs btn-danger"
-                                            data-toggle="modal"
-                                            data-target="#modalHapus"
-                                            data-id="{{ $item->id }}"
-                                            data-nama="{{ $item->hari }} - {{ $item->siswa->nama ?? '' }}"
-                                            title="Hapus">
-                                        <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
                             </tr>
@@ -159,14 +165,60 @@
                 </div>
                 <div class="modal-body">
                     <p>Apakah Anda yakin ingin menghapus jadwal piket <strong id="hapus_nama"></strong>?</p>
-                    <div class="form-group">
-                        <label for="alasan_hapus">Alasan Penghapusan <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="alasan_hapus" name="alasan_hapus" rows="3" placeholder="Masukkan alasan penghapusan..." required></textarea>
-                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-danger">Ya, Hapus</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL AUTO GENERATE --}}
+<div class="modal fade" id="modalAutoGenerate" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form action="{{ route('manajemenasetdanasrama.jadwal-piket.auto-generate') }}" method="POST">
+                @csrf
+                <div class="modal-header bg-primary">
+                    <h5 class="modal-title text-white"><i class="fas fa-robot mr-1"></i> Auto-Generate Jadwal Piket</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Sistem akan membuat jadwal piket secara adil (Round Robin) berdasarkan jumlah santri di kamar.</p>
+                    <div class="form-group">
+                        <label>Pilih Kamar <span class="text-danger">*</span></label>
+                        <select class="form-control" name="kamar_id" required>
+                            <option value="">-- Pilih Kamar --</option>
+                            @foreach($kamar as $k)
+                                <option value="{{ $k->id }}">{{ $k->nama_kamar }} ({{ $k->penghuni()->whereNull('tanggal_keluar')->count() }} Santri)</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Dari Tanggal <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" name="tanggal_mulai" value="{{ date('Y-m-d') }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Sampai Tanggal <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" name="tanggal_selesai" value="{{ date('Y-m-d', strtotime('+7 days')) }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Orang per Hari <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="person_per_day" value="1" min="1" required>
+                        <small class="text-muted">Berapa orang yang piket dalam satu hari untuk kamar tersebut.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-cogs mr-1"></i> Generate</button>
                 </div>
             </form>
         </div>

@@ -20,6 +20,18 @@ class Kamar extends Model
         return $this->hasMany(KamarPenghuni::class, 'kamar_id');
     }
 
+    // Relasi: 1 kamar punya banyak aset
+    public function aset()
+    {
+        return $this->hasMany(Aset::class, 'kamar_id');
+    }
+
+    // Relasi: 1 kamar punya banyak jadwal piket
+    public function jadwalPiket()
+    {
+        return $this->hasMany(JadwalPiket::class, 'kamar_id');
+    }
+
     /**
      * Accessor: Jumlah Terisi
      */

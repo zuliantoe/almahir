@@ -1,12 +1,21 @@
 {{-- Main Sidebar Container --}}
-<aside class="main-sidebar sidebar-dark-primary elevation-4">
+@php
+    $isAcademicRole = Auth::check() && (Auth::user()->hasRole('GURU') || Auth::user()->hasRole('SISWA'));
+    $sidebarClass = $isAcademicRole ? 'sidebar-dark-info' : 'sidebar-dark-primary';
+    $homeUrl = $isAcademicRole ? route('akademik.index') : url('/');
+@endphp
+<aside class="main-sidebar {{ $sidebarClass }} elevation-4">
     {{-- Brand Logo --}}
-    <a href="{{ url('/') }}" class="brand-link">
+    <a href="{{ $homeUrl }}" class="brand-link">
         <img src="https://adminlte.io/themes/v3/dist/img/AdminLTELogo.png" 
              alt="SIAKAD Logo" 
              class="brand-image img-circle elevation-3" 
              style="opacity: .8">
-        <span class="brand-text font-weight-light"><strong>SI</strong>AKAD</span>
+        @if($isAcademicRole)
+            <span class="brand-text font-weight-light"><strong>SI</strong>AKAD <small class="text-white-50">Akademik</small></span>
+        @else
+            <span class="brand-text font-weight-light"><strong>SI</strong>AKAD</span>
+        @endif
     </a>
 
     {{-- Sidebar --}}
@@ -20,6 +29,15 @@
             </div>
             <div class="info">
                 <a href="#" class="d-block">{{ Auth::user()->name ?? 'Guest' }}</a>
+                @if($isAcademicRole)
+                    <small class="text-white-50">
+                        @if(Auth::user()->hasRole('GURU'))
+                            <i class="fas fa-chalkboard-teacher mr-1"></i>Guru / Pengajar
+                        @else
+                            <i class="fas fa-user-graduate mr-1"></i>Santri / Siswa
+                        @endif
+                    </small>
+                @endif
             </div>
         </div>
 
@@ -27,13 +45,15 @@
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                 
-                {{-- Dashboard - Available to all --}}
+                {{-- Dashboard - HIDDEN for Guru/Siswa since they have their own dashboard --}}
+                @if(!$isAcademicRole)
                 <li class="nav-item">
                     <a href="{{ url('/') }}" class="nav-link {{ request()->is('/') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-tachometer-alt"></i>
                         <p>Dashboard</p>
                     </a>
                 </li>
+                @endif
 
                 {{-- 
                 |--------------------------------------------------------------------------
@@ -142,10 +162,10 @@
 
                 {{-- 
                 |--------------------------------------------------------------------------
-                | DEVELOPER (Development only)
+                | DEVELOPER (SUPER_ADMIN + debug mode only)
                 |--------------------------------------------------------------------------
                 --}}
-                @if(config('app.debug'))
+                @if(config('app.debug') && Auth::check() && Auth::user()->hasRole('SUPER_ADMIN'))
                 <li class="nav-header">DEVELOPER</li>
                 
                 {{-- UI Guide --}}
@@ -154,6 +174,27 @@
                         <i class="nav-icon fas fa-palette"></i>
                         <p>UI Style Guide</p>
                     </a>
+                </li>
+                @endif
+
+                {{-- Logout for Guru and Siswa at the bottom --}}
+                @if($isAcademicRole)
+                <li class="nav-header">AKUN</li>
+                <li class="nav-item">
+                    <a href="{{ route('profile.edit') }}" class="nav-link {{ request()->is('profile*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-user-circle"></i>
+                        <p>Profil Saya</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('logout') }}" class="nav-link"
+                       onclick="event.preventDefault(); document.getElementById('logout-form-sidebar').submit();">
+                        <i class="nav-icon fas fa-sign-out-alt"></i>
+                        <p>Keluar</p>
+                    </a>
+                    <form id="logout-form-sidebar" action="{{ route('logout') }}" method="POST" style="display: none;">
+                        @csrf
+                    </form>
                 </li>
                 @endif
 

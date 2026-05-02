@@ -6,7 +6,7 @@
  */
 return [
     'header' => 'KEHADIRAN',
-    'roles'  => ['SUPER_ADMIN', 'GURU', 'STAFF'], // Roles allowed to see this menu
+    'roles'  => ['SUPER_ADMIN', 'STAFF'],
     'order'  => 20,
     'items'  => [
         [
@@ -14,18 +14,22 @@ return [
             'icon'  => 'fas fa-fingerprint',
             'route' => 'absensi.create',
             'match' => 'absensi/scan',
+            'roles' => ['SUPER_ADMIN', 'STAFF'],
         ],
         [
             'label' => 'Riwayat Absensi',
             'icon'  => 'fas fa-history',
             'route' => 'absensi.index',
             'match' => 'absensi',
+            'roles' => ['SUPER_ADMIN', 'STAFF'],
         ],
         [
             'label' => 'Monitoring Kehadiran',
             'icon'  => 'fas fa-desktop',
             'route' => 'absensi.manage.index',
             'match' => 'absensi/manage*',
+            'roles' => ['SUPER_ADMIN', 'STAFF'],
         ],
     ],
 ];
+

@@ -23,6 +23,8 @@ class UpdateJenisKegiatanRequest extends FormRequest
                     ->ignore($this->route('jenis_kegiatan')->id),
             ],
             'deskripsi' => 'nullable|string|max:500',
+            'is_kbm' => 'boolean',
+
         ];
     }
 

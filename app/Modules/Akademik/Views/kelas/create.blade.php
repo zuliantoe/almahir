@@ -23,38 +23,32 @@
 
                     <div class="row">
                         <div class="col-md-6">
-                            <x-input label="Nama Kelas" name="namakelas" 
-                                     :value="old('namakelas')" 
+                            <x-input label="Kode Kelas" name="kode_kelas" 
+                                     :value="old('kode_kelas')" 
+                                     placeholder="Contoh: KLS-X-IPA1" />
+                        </div>
+                        <div class="col-md-6">
+                            <x-input label="Nama Kelas" name="nama_kelas" 
+                                     :value="old('nama_kelas')" 
                                      placeholder="Contoh: X IPA 1" required />
                         </div>
 
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Jenjang <span class="text-danger">*</span></label>
-                                <select name="jenjang" class="form-control @error('jenjang') is-invalid @enderror" required>
-                                    <option value="">-- Pilih Jenjang --</option>
-                                    <option value="X" {{ old('jenjang') == 'X' ? 'selected' : '' }}>Kelas X</option>
-                                    <option value="XI" {{ old('jenjang') == 'XI' ? 'selected' : '' }}>Kelas XI</option>
-                                    <option value="XII" {{ old('jenjang') == 'XII' ? 'selected' : '' }}>Kelas XII</option>
-                                </select>
-                                @error('jenjang') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                        </div>
-
-                        <div class="col-md-12">
-                            <div class="form-group">
-                                <label>Wali Kelas</label>
-                                <select name="guru_id" class="form-control @error('guru_id') is-invalid @enderror">
-                                    <option value="">-- Pilih Guru Wali Kelas --</option>
-                                    @foreach($guru ?? [] as $g)
-                                        <option value="{{ $g->id }}" {{ old('guru_id') == $g->id ? 'selected' : '' }}>
-                                            {{ $g->nama }}
+                                <label>Tingkat <span class="text-danger">*</span></label>
+                                <select name="tingkat_id" class="form-control @error('tingkat_id') is-invalid @enderror" required>
+                                    <option value="">-- Pilih Tingkat --</option>
+                                    @foreach($tingkat ?? [] as $t)
+                                        <option value="{{ $t->id }}" {{ old('tingkat_id') == $t->id ? 'selected' : '' }}>
+                                            {{ $t->nama_tingkat }}
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('guru_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                @error('tingkat_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
+
+
                     </div>
 
                     <hr>

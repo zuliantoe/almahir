@@ -14,11 +14,67 @@ use Illuminate\View\View;
  */
 class AkademikController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request): View
     {
+        $user = auth()->user();
+
+        // 1. Context Guru
+        if ($user && $user->hasRole('GURU')) {
+            $guru = $user->ref;
+            $today = \Carbon\Carbon::now()->locale('id')->translatedFormat('l');
+
+            $jadwalHariIni = \App\Modules\Akademik\Models\JadwalPelajaran::with(['mataPelajaran', 'rombel'])
+                ->where('guru_id', $guru?->id)
+                ->where('hari', $today)
+                ->orderBy('jamke')
+                ->get();
+
+            $jadwalMingguan = \App\Modules\Akademik\Models\JadwalPelajaran::with(['mataPelajaran', 'rombel'])
+                ->where('guru_id', $guru?->id)
+                ->orderBy('hari')
+                ->orderBy('jamke')
+                ->get();
+
+            $kalender = \App\Modules\Akademik\Models\KalenderAkademik::whereDate('tanggal_awal', '>=', now()->subDays(7)) // fetch recent and future cal items
+                ->orderBy('tanggal_awal')
+                ->take(5)
+                ->get();
+
+            return view('akademik::dashboards.guru', compact('jadwalHariIni', 'jadwalMingguan', 'kalender', 'today'));
+        }
+
+        // 2. Context Siswa
+        if ($user && $user->hasRole('SISWA')) {
+            $siswa = $user->ref;
+            $rombelSiswa = \App\Modules\Akademik\Models\RombelSiswa::with('rombel')->where('siswa_id', $siswa?->id)->first();
+            $rombelId = $rombelSiswa?->rombel_id;
+            $today = \Carbon\Carbon::now()->locale('id')->translatedFormat('l');
+
+            $jadwalHariIni = collect();
+            $jadwalMingguan = collect();
+            if ($rombelId) {
+                $jadwalHariIni = \App\Modules\Akademik\Models\JadwalPelajaran::with(['mataPelajaran', 'guru'])
+                    ->where('rombel_id', $rombelId)
+                    ->where('hari', $today)
+                    ->orderBy('jamke')
+                    ->get();
+
+                $jadwalMingguan = \App\Modules\Akademik\Models\JadwalPelajaran::with(['mataPelajaran', 'guru'])
+                    ->where('rombel_id', $rombelId)
+                    ->orderBy('hari')
+                    ->orderBy('jamke')
+                    ->get();
+            }
+
+            $kalender = \App\Modules\Akademik\Models\KalenderAkademik::whereDate('tanggal_awal', '>=', now()->subDays(7))
+                ->orderBy('tanggal_awal')
+                ->take(5)
+                ->get();
+
+            return view('akademik::dashboards.siswa', compact('jadwalHariIni', 'jadwalMingguan', 'kalender', 'today', 'rombelSiswa'));
+        }
+
+        // Default Admin / Staff Context
         $totalSiswa = \Modules\Siswa\Models\Siswa::count();
         $totalGuru = \Modules\Guru\Models\Guru::count();
         $totalKelas = \App\Modules\Akademik\Models\Kelas::count();

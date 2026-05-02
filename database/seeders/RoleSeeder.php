@@ -53,6 +53,14 @@ class RoleSeeder extends Seeder
                 'absensi.view', 
             ],
         ],
+        [
+            'name' => 'SISWA',
+            'display_name' => 'Siswa / Santri',
+            'description' => 'Student role with limited access to schedules and grades.',
+            'permissions' => [
+                'jadwal.view', 'nilai.view', 'absensi.view'
+            ],
+        ],
     ];
 
     /**

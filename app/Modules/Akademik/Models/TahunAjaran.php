@@ -19,9 +19,16 @@ class TahunAjaran extends Model
         return $this->hasMany(KalenderAkademik::class, 'tahunajaran_id');
     }
 
-    public function jadwalPelajaran(): HasMany
+    public function jadwalPelajaran()
     {
-        return $this->hasMany(JadwalPelajaran::class, 'tahunajaran_id');
+        return $this->hasManyThrough(
+            JadwalPelajaran::class,
+            Rombel::class,
+            'tahunajaran_id', // Foreign key on rombel table
+            'rombel_id',      // Foreign key on jadwal_pelajaran table
+            'id',             // Local key on tahun_ajaran table
+            'id'              // Local key on rombel table
+        );
     }
 
     public function kurikulum(): HasMany

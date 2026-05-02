@@ -45,10 +45,17 @@ class MenuRegistry
         }
 
         if ($existingIndex !== null) {
-            // Merge items and roles into existing header group
+            // Ensure items inherit roles from the registration if not explicitly defined
+            $mergedItems = array_map(function($item) use ($roles) {
+                if (empty($item['roles'])) {
+                    $item['roles'] = $roles;
+                }
+                return $item;
+            }, $items);
+
             $this->menus[$existingIndex]['items'] = array_merge(
                 $this->menus[$existingIndex]['items'],
-                $items
+                $mergedItems
             );
             // Merge roles (union)
             $this->menus[$existingIndex]['roles'] = array_unique(array_merge(
@@ -61,11 +68,19 @@ class MenuRegistry
                 $order
             );
         } else {
+            // Ensure items inherit roles from the registration if not explicitly defined
+            $processedItems = array_map(function($item) use ($roles) {
+                if (empty($item['roles'])) {
+                    $item['roles'] = $roles;
+                }
+                return $item;
+            }, $items);
+
             $this->menus[] = [
                 'header' => $header,
                 'roles'  => $roles,
                 'order'  => $order,
-                'items'  => $items,
+                'items'  => $processedItems,
             ];
         }
     }
@@ -95,12 +110,47 @@ class MenuRegistry
             return [];
         }
 
-        return array_values(array_filter($this->getMenus(), function ($menu) use ($user) {
-            // If no roles specified, show to all authenticated users
-            if (empty($menu['roles'])) {
-                return true;
+        $filteredMenus = [];
+
+        foreach ($this->getMenus() as $menu) {
+            // Check top-level role
+            if (!empty($menu['roles']) && !$user->hasRole($menu['roles'])) {
+                continue;
             }
-            return $user->hasRole($menu['roles']);
-        }));
+
+            if (!empty($menu['items'])) {
+                $filteredItems = [];
+                foreach ($menu['items'] as $item) {
+                    if (!empty($item['roles']) && !$user->hasRole($item['roles'])) {
+                        continue;
+                    }
+
+                    if (!empty($item['children'])) {
+                        $filteredChildren = array_filter($item['children'], function ($child) use ($user) {
+                            if (empty($child['roles'])) {
+                                return true;
+                            }
+                            return $user->hasRole($child['roles']);
+                        });
+                        
+                        if (empty($filteredChildren)) {
+                            continue; // Skip item if all children are filtered out
+                        }
+                        $item['children'] = array_values($filteredChildren);
+                    }
+
+                    $filteredItems[] = $item;
+                }
+
+                if (empty($filteredItems)) {
+                    continue; // Skip section if all items are filtered out
+                }
+                $menu['items'] = $filteredItems;
+            }
+
+            $filteredMenus[] = $menu;
+        }
+
+        return $filteredMenus;
     }
 }

@@ -30,9 +30,17 @@
 
                     <div class="form-group text-dark">
                         <label>Deskripsi</label>
-                        <textarea name="deskripsi" rows="4" class="form-control @error('deskripsi') is-invalid @enderror" placeholder="Tambahkan deskripsi kegiatan (opsional)">{{ old('deskripsi', $jenisKegiatan->deskripsi) }}</textarea>
+                        <textarea name="deskripsi" rows="3" class="form-control @error('deskripsi') is-invalid @enderror" placeholder="Tambahkan deskripsi kegiatan (opsional)">{{ old('deskripsi', $jenisKegiatan->deskripsi) }}</textarea>
                         @error('deskripsi') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        <small class="text-muted">Maksimal 500 karakter.</small>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label class="d-block">Status Kegiatan Belajar Mengajar (KBM)</label>
+                        <div class="custom-control custom-switch">
+                            <input type="hidden" name="is_kbm" value="0">
+                            <input type="checkbox" class="custom-control-input" id="is_kbm" name="is_kbm" value="1" {{ old('is_kbm', $jenisKegiatan->is_kbm) ? 'checked' : '' }}>
+                            <label class="custom-control-label" for="is_kbm">Aktifkan KBM (Jika aktif, jadwal pelajaran tetap berjalan)</label>
+                        </div>
                     </div>
 
                     <hr>

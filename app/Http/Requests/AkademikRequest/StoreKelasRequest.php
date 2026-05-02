@@ -14,22 +14,20 @@ class StoreKelasRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama' => [
-                'required',
-                'string',
-                'max:255',
-                'unique:kelas,nama',
-            ],
+            'nama_kelas' => 'required|string|max:255|unique:kelas,nama_kelas',
+            'guru_id'    => 'nullable|string', // UUID
+            'kode_kelas' => 'nullable|string|max:50',
+            'tingkat_id' => 'nullable|integer|exists:tingkat,id',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'nama.required' => 'Nama kelas harus diisi.',
-            'nama.string'   => 'Nama kelas harus berupa teks.',
-            'nama.max'      => 'Nama kelas maksimal 255 karakter.',
-            'nama.unique'   => 'Nama kelas sudah digunakan.',
+            'nama_kelas.required' => 'Nama kelas harus diisi.',
+            'nama_kelas.string'   => 'Nama kelas harus berupa teks.',
+            'nama_kelas.max'      => 'Nama kelas maksimal 255 karakter.',
+            'nama_kelas.unique'   => 'Nama kelas sudah digunakan.',
         ];
     }
 }

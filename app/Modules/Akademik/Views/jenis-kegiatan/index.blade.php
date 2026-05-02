@@ -12,9 +12,11 @@
     <div class="row mb-3">
         <div class="col-12 d-flex justify-content-between align-items-center">
             <h1 class="h3 mb-0 text-gray-800">Manajemen Jenis Kegiatan</h1>
+            @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
             <x-btn :href="route('akademik.jenis-kegiatan.create')" icon="fas fa-plus">
                 Tambah Kegiatan
             </x-btn>
+            @endif
         </div>
     </div>
 
@@ -48,8 +50,12 @@
                         <th width="5%" class="text-center">No</th>
                         <th width="200px">Jenis Kegiatan</th>
                         <th>Deskripsi Singkat</th>
+                        <th width="120px" class="text-center">Status KBM</th>
                         <th width="200px" class="text-center">Total Penggunaan</th>
+
+                        @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
                         <th width="150px" class="text-center">Aksi</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -63,6 +69,13 @@
                             {{ Str::limit($item->deskripsi ?? '-', 100) }}
                         </td>
                         <td class="text-center">
+                            @if($item->is_kbm)
+                                <span class="badge badge-success"><i class="fas fa-check-circle"></i> KBM Aktif</span>
+                            @else
+                                <span class="badge badge-danger"><i class="fas fa-times-circle"></i> Non-KBM</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
                             @if(($item->kalender_akademik_count ?? $item->kalenderAkademik->count()) > 0)
                                 <span class="badge badge-success px-3 py-2">
                                     {{ $item->kalender_akademik_count ?? $item->kalenderAkademik->count() }} Kegiatan
@@ -71,6 +84,7 @@
                                 <span class="text-muted">-</span>
                             @endif
                         </td>
+                        @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
                         <td class="text-center">
                             <div class="btn-group">
                                 <x-btn :href="route('akademik.jenis-kegiatan.show', $item->id)" size="sm" class="btn-info" title="Detail">
@@ -79,16 +93,16 @@
                                 <x-btn :href="route('akademik.jenis-kegiatan.edit', $item->id)" size="sm" class="btn-warning" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </x-btn>
-                                <x-btn size="sm" class="btn-danger" title="Hapus" onclick="confirmDelete('{{ $item->id }}')">
-                                    <i class="fas fa-trash"></i>
-                                </x-btn>
+                                <form action="{{ route('akademik.jenis-kegiatan.destroy', $item->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <x-btn type="submit" size="sm" class="btn-danger btn-delete" title="Hapus">
+                                        <i class="fas fa-trash"></i>
+                                    </x-btn>
+                                </form>
                             </div>
-
-                            <form id="delete-form-{{ $item->id }}" action="{{ route('akademik.jenis-kegiatan.destroy', $item->id) }}" method="POST" style="display: none;">
-                                @csrf
-                                @method('DELETE')
-                            </form>
                         </td>
+                        @endif
                     </tr>
                     @empty
                     <tr>
@@ -111,28 +125,3 @@
 </div>
 @endsection
 
-@push('js')
-<script>
-function confirmDelete(id) {
-    Swal.fire({
-        title: 'Konfirmasi Hapus',
-        text: "Apakah Anda yakin ingin menghapus data ini?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#e3342f',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Ya, Hapus!',
-        cancelButtonText: 'Batal',
-        customClass: {
-            confirmButton: 'btn btn-danger mx-1',
-            cancelButton: 'btn btn-secondary mx-1'
-        },
-        buttonsStyling: false
-    }).then((result) => {
-        if (result.isConfirmed) {
-            document.getElementById('delete-form-' + id).submit();
-        }
-    });
-}
-</script>
-@endpush

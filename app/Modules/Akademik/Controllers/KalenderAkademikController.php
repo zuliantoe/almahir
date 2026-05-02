@@ -14,6 +14,15 @@ class KalenderAkademikController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->ajax() || $request->wantsJson()) {
+            return $this->events($request);
+        }
+
+        if ($request->has('view') && $request->view == 'calendar') {
+            $jenisKegiatanList = JenisKegiatan::orderBy('jeniskegiatan')->get();
+            return view('akademik::kalender-akademik.calendar', compact('jenisKegiatanList'));
+        }
+
         $kalenderAkademik = KalenderAkademik::query()
             ->with(['tahunAjaran', 'jenisKegiatan'])
             ->when($request->filled('tahunajaran_id'), function ($query) use ($request) {
@@ -28,6 +37,67 @@ class KalenderAkademikController extends Controller
 
         $tahunAjarans = TahunAjaran::all();
         return view('akademik::kalender-akademik.index', compact('kalenderAkademik', 'tahunAjarans'));
+    }
+
+    public function events(Request $request)
+    {
+        $start = $request->get('start');
+        $end = $request->get('end');
+
+        $colorPalette = [
+            '#007bff', // primary (blue)
+            '#17a2b8', // info (teal)
+            '#28a745', // success (green)
+            '#ffc107', // warning (yellow)
+            '#dc3545', // danger (red)
+            '#6610f2', // indigo
+            '#fd7e14', // orange
+            '#e83e8c', // pink
+            '#20c997', // teal
+            '#6c757d', // secondary (gray)
+        ];
+
+        $events = KalenderAkademik::query()
+            ->with(['jenisKegiatan'])
+            ->where(function($query) use ($start, $end) {
+                $query->whereBetween('tanggal_awal', [$start, $end])
+                      ->orWhereBetween('tanggal_akhir', [$start, $end])
+                      ->orWhere(function($q) use ($start, $end) {
+                          $q->where('tanggal_awal', '<=', $start)
+                            ->where('tanggal_akhir', '>=', $end);
+                      });
+            })
+            ->get();
+
+        $formattedEvents = $events->map(function ($event) use ($colorPalette) {
+            $isKbm = optional($event->jenisKegiatan)->is_kbm ?? true;
+            
+            if (!$isKbm) {
+                $color = '#dc3545'; // Danger/Red for Non-KBM
+            } else {
+                $colorIndex = ($event->kegiatan_id - 1) % count($colorPalette);
+                $color = $colorPalette[$colorIndex];
+            }
+
+            return [
+                'id'          => $event->id,
+                'title'       => $event->nama_kegiatan,
+                'start'       => $event->tanggal_awal,
+                'end'         => date('Y-m-d', strtotime($event->tanggal_akhir . ' +1 day')),
+                'color'       => $color,
+                'borderColor' => $color,
+                'textColor'   => '#ffffff',
+                'extendedProps' => [
+                    'jenis'     => $event->jenisKegiatan ? $event->jenisKegiatan->jeniskegiatan : '-',
+                    'is_kbm'    => $isKbm,
+                    'deskripsi' => $event->deskripsi,
+                    'color'     => $color,
+                ]
+            ];
+        });
+
+
+        return response()->json($formattedEvents);
     }
 
     public function create()

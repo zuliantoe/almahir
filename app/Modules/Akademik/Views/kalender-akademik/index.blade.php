@@ -12,9 +12,16 @@
     <div class="row mb-3">
         <div class="col-12 d-flex justify-content-between align-items-center">
             <h1 class="h3 mb-0 text-gray-800">Kalender Akademik</h1>
-            <x-btn :href="route('akademik.kalender-akademik.create')" icon="fas fa-plus">
-                Tambah Kegiatan
-            </x-btn>
+            <div class="btn-group">
+                <x-btn :href="route('akademik.kalender-akademik.index', ['view' => 'calendar'])" class="btn-outline-primary" icon="fas fa-calendar-alt">
+                    Mode Kalender
+                </x-btn>
+                @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
+                <x-btn :href="route('akademik.kalender-akademik.create')" icon="fas fa-plus" class="ml-2">
+                    Tambah Kegiatan
+                </x-btn>
+                @endif
+            </div>
         </div>
     </div>
 
@@ -60,18 +67,32 @@
                         <th>Jenis</th>
                         <th>Tanggal Mulai</th>
                         <th>Tanggal Selesai</th>
+                        @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
                         <th width="150px" class="text-center">Aksi</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($kalenderAkademik as $item)
                     <tr>
                         <td class="text-center">{{ $loop->iteration + ($kalenderAkademik->currentPage() - 1) * $kalenderAkademik->perPage() }}</td>
-                        <td>{{ $item->tahunAjaran->tahunajaran }} ({{ $item->tahunAjaran->semester }})</td>
+                        <td>
+                            {{ $item->tahunAjaran->tahunajaran }}
+                            @if($item->tahunAjaran->semester)
+                                ({{ $item->tahunAjaran->semester }})
+                            @endif
+                        </td>
                         <td><strong>{{ $item->nama_kegiatan }}</strong></td>
-                        <td><span class="badge badge-secondary">{{ $item->jenisKegiatan->jeniskegiatan }}</span></td>
+                        <td>
+                            <span class="badge badge-secondary">{{ $item->jenisKegiatan->jeniskegiatan }}</span>
+                            @if(!$item->jenisKegiatan->is_kbm)
+                                <span class="badge badge-danger ml-1" title="Hari ini diliburkan/tidak ada KBM">Non-KBM</span>
+                            @endif
+                        </td>
+
                         <td><i class="far fa-calendar-alt mr-1"></i> {{ date('d/m/Y', strtotime($item->tanggal_awal)) }}</td>
                         <td><i class="far fa-calendar-check mr-1"></i> {{ date('d/m/Y', strtotime($item->tanggal_akhir)) }}</td>
+                        @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
                         <td class="text-center">
                             <div class="btn-group">
                                 <x-btn :href="route('akademik.kalender-akademik.show', $item->id)" size="sm" class="btn-info" title="Detail">
@@ -80,16 +101,16 @@
                                 <x-btn :href="route('akademik.kalender-akademik.edit', $item->id)" size="sm" class="btn-warning" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </x-btn>
-                                <x-btn size="sm" class="btn-danger" title="Hapus" onclick="confirmDelete('{{ $item->id }}')">
-                                    <i class="fas fa-trash"></i>
-                                </x-btn>
+                                <form action="{{ route('akademik.kalender-akademik.destroy', $item->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <x-btn type="submit" size="sm" class="btn-danger btn-delete" title="Hapus">
+                                        <i class="fas fa-trash"></i>
+                                    </x-btn>
+                                </form>
                             </div>
-                            
-                            <form id="delete-form-{{ $item->id }}" action="{{ route('akademik.kalender-akademik.destroy', $item->id) }}" method="POST" style="display: none;">
-                                @csrf
-                                @method('DELETE')
-                            </form>
                         </td>
+                        @endif
                     </tr>
                     @empty
                     <tr>
@@ -112,28 +133,3 @@
 </div>
 @endsection
 
-@push('js')
-<script>
-function confirmDelete(id) {
-    Swal.fire({
-        title: 'Konfirmasi Hapus',
-        text: "Apakah Anda yakin ingin menghapus kegiatan ini?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#e3342f',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Ya, Hapus!',
-        cancelButtonText: 'Batal',
-        customClass: {
-            confirmButton: 'btn btn-danger btn-modern mx-1',
-            cancelButton: 'btn btn-secondary btn-modern mx-1'
-        },
-        buttonsStyling: false
-    }).then((result) => {
-        if (result.isConfirmed) {
-            document.getElementById('delete-form-' + id).submit();
-        }
-    });
-}
-</script>
-@endpush

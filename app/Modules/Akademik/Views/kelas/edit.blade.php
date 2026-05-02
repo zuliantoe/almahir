@@ -22,11 +22,32 @@
                     @csrf
                     @method('PUT')
 
-                    <x-input label="Nama Kelas" name="nama" :value="old('nama', $kelas->nama)" required />
-                    
-                    <x-alert type="info">
-                        <i class="fas fa-info-circle mr-1"></i> Untuk mengedit Jenjang atau Wali Kelas, masuk ke pengaturan tingkat lanjut kelas.
-                    </x-alert>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <x-input label="Kode Kelas" name="kode_kelas" :value="old('kode_kelas', $kelas->kode_kelas)" />
+                        </div>
+                        <div class="col-md-6">
+                            <x-input label="Nama Kelas" name="nama_kelas" :value="old('nama_kelas', $kelas->nama_kelas)" required />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Tingkat <span class="text-danger">*</span></label>
+                                <select name="tingkat_id" class="form-control @error('tingkat_id') is-invalid @enderror" required>
+                                    <option value="">-- Pilih Tingkat --</option>
+                                    @foreach($tingkat ?? [] as $t)
+                                        <option value="{{ $t->id }}" {{ old('tingkat_id', $kelas->tingkat_id) == $t->id ? 'selected' : '' }}>
+                                            {{ $t->nama_tingkat }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('tingkat_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                    </div>
+
 
                     <hr>
 

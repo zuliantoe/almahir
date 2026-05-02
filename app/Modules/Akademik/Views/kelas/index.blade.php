@@ -12,9 +12,11 @@
     <div class="row mb-3">
         <div class="col-12 d-flex justify-content-between align-items-center">
             <h1 class="h3 mb-0 text-gray-800">Manajemen Kelas</h1>
+            @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
             <x-btn :href="route('akademik.kelas.create')" icon="fas fa-plus">
                 Tambah Kelas Baru
             </x-btn>
+            @endif
         </div>
     </div>
 
@@ -25,23 +27,24 @@
                 <thead>
                     <tr>
                         <th width="5%" class="text-center">No</th>
+                        <th>Kode</th>
                         <th>Nama Kelas</th>
-                        <th class="text-center">Total Jadwal</th>
-                        <th class="text-center">Total Kurikulum</th>
+                        <th class="text-center">Tingkat</th>
+                        @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
                         <th width="150px" class="text-center">Aksi</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($kelas as $k)
                         <tr>
                             <td class="text-center">{{ $loop->iteration }}</td>
-                            <td><strong>{{ $k->nama }}</strong></td>
+                            <td><code>{{ $k->kode_kelas ?? '-' }}</code></td>
+                            <td><strong>{{ $k->nama_kelas }}</strong></td>
                             <td class="text-center">
-                                <span class="badge badge-info">{{ $k->jadwal_pelajaran_count ?? 0 }}</span>
+                                <span class="badge badge-info">{{ $k->tingkat->nama_tingkat ?? '-' }}</span>
                             </td>
-                            <td class="text-center">
-                                <span class="badge badge-primary">{{ $k->kurikulum_count ?? 0 }}</span>
-                            </td>
+                            @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
                             <td class="text-center">
                                 <div class="btn-group">
                                     <x-btn :href="route('akademik.kelas.show', $k->id)" size="sm" class="btn-info" title="Detail">
@@ -50,20 +53,20 @@
                                     <x-btn :href="route('akademik.kelas.edit', $k->id)" size="sm" class="btn-warning" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </x-btn>
-                                    <x-btn size="sm" class="btn-danger" title="Hapus" onclick="confirmDelete('{{ $k->id }}')">
-                                        <i class="fas fa-trash"></i>
-                                    </x-btn>
+                                    <form action="{{ route('akademik.kelas.destroy', $k->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <x-btn type="submit" size="sm" class="btn-danger btn-delete" title="Hapus">
+                                            <i class="fas fa-trash"></i>
+                                        </x-btn>
+                                    </form>
                                 </div>
-
-                                <form id="delete-form-{{ $k->id }}" action="{{ route('akademik.kelas.destroy', $k->id) }}" method="POST" style="display: none;">
-                                    @csrf
-                                    @method('DELETE')
-                                </form>
                             </td>
+                            @endif
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
+                            <td colspan="6" class="text-center py-5 text-muted">
                                 <i class="fas fa-school fa-2x mb-3"></i><br>
                                 Belum ada data kelas.
                             </td>
@@ -75,29 +78,3 @@
     </x-card>
 </div>
 @endsection
-
-@push('js')
-<script>
-function confirmDelete(id) {
-    Swal.fire({
-        title: 'Konfirmasi Hapus',
-        text: "Yakin hapus data jadwal kelas ini?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#e3342f',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Ya, Hapus!',
-        cancelButtonText: 'Batal',
-        customClass: {
-            confirmButton: 'btn btn-danger mx-1',
-            cancelButton: 'btn btn-secondary mx-1'
-        },
-        buttonsStyling: false
-    }).then((result) => {
-        if (result.isConfirmed) {
-            document.getElementById('delete-form-' + id).submit();
-        }
-    });
-}
-</script>
-@endpush

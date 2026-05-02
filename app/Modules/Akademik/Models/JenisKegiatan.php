@@ -11,7 +11,12 @@ class JenisKegiatan extends Model
     use HasFactory;
 
     protected $table = 'jenis_kegiatan';
-    protected $fillable = ['jeniskegiatan','deskripsi'];
+    protected $fillable = ['jeniskegiatan', 'is_kbm', 'deskripsi'];
+
+    protected $casts = [
+        'is_kbm' => 'boolean',
+    ];
+
 
     public function kalenderAkademik():HasMany
     {

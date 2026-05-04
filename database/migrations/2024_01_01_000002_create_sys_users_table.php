@@ -35,6 +35,9 @@ return new class extends Migration
             $table->enum('account_status', ['active', 'inactive'])->default('active');
             $table->timestamp('last_login_at')->nullable();
             $table->string('last_login_ip', 45)->nullable();
+            
+            // Polymorphic link to Guru/Siswa/Staff (Using UUID)
+            $table->nullableUuidMorphs('ref');
 
             $table->timestamps();
             $table->softDeletes();

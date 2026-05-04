@@ -14,7 +14,7 @@ class KamarController extends BaseController
      */
     public function index(Request $request): View
     {
-        $kamar = Kamar::withCount('penghuni')->paginate(15);
+        $kamar = Kamar::with(['penghuni.siswa'])->paginate(15);
         
         return view('manajemenasetdanasrama::kamar.index', [
             'title' => 'Data Kamar',

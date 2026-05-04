@@ -52,7 +52,18 @@
                             @forelse($kamar as $item)
                             <tr>
                                 <td>{{ $loop->iteration + ($kamar->currentPage() - 1) * $kamar->perPage() }}</td>
-                                <td><strong>{{ $item->nama_kamar }}</strong></td>
+                                <td>
+                                    <strong>{{ $item->nama_kamar }}</strong>
+                                    <div class="mt-1">
+                                        @forelse($item->penghuni as $p)
+                                            <span class="badge badge-light border text-dark mb-1" style="font-weight: 400;">
+                                                <i class="fas fa-user-circle mr-1"></i> {{ $p->siswa->nama ?? 'N/A' }}
+                                            </span>
+                                        @empty
+                                            <small class="text-muted italic">Belum ada penghuni</small>
+                                        @endforelse
+                                    </div>
+                                </td>
                                 <td>{{ $item->kapasitas }} orang</td>
                                 <td>{{ $item->terisi }} orang</td>
                                 <td>{{ $item->sisa }} orang</td>

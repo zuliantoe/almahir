@@ -41,7 +41,7 @@ class TahunAjaranController extends Controller
 
             // Jika status aktif, nonaktifkan yang lain
             if ($data['status']) {
-                TahunAjaran::where('status', true)->update(['status' => false]);
+                TahunAjaran::where('status', 1)->update(['status' => 0]);
             }
 
             TahunAjaran::create($data);
@@ -73,9 +73,9 @@ class TahunAjaranController extends Controller
         $data['status'] = $request->boolean('status');
 
         if ($data['status']) {
-            TahunAjaran::where('status', true)
+            TahunAjaran::where('status', 1)
                 ->where('id', '!=', $tahunAjaran->id)
-                ->update(['status' => false]);
+                ->update(['status' => 0]);
         }
 
         $tahunAjaran->update($data);

@@ -29,10 +29,17 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => 'required|email',
+        $request->validate([
+            'login' => 'required|string',
             'password' => 'required',
         ]);
+
+        $login_type = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        $credentials = [
+            $login_type => $request->login,
+            'password' => $request->password,
+        ];
 
         $remember = $request->boolean('remember');
 
@@ -49,12 +56,20 @@ class AuthController extends Controller
             if (Auth::user()->hasRole('SUPER_ADMIN')) {
                 return redirect()->intended(route('users.index'));
             }
+            
+            if (Auth::user()->hasRole('GURU')) {
+                return redirect()->intended(route('guru.dashboard'));
+            }
+            
+            if (Auth::user()->hasRole('SISWA')) {
+                return redirect()->intended(route('siswa.dashboard'));
+            }
 
             return redirect()->intended(route('dashboard'));
         }
 
         throw ValidationException::withMessages([
-            'email' => __('The provided credentials do not match our records.'),
+            'login' => __('The provided credentials do not match our records.'),
         ]);
     }
 

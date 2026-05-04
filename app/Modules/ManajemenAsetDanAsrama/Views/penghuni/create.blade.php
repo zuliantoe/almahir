@@ -33,10 +33,10 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="kamar_id">Kamar <span class="text-danger">*</span></label>
-                                <select class="form-control @error('kamar_id') is-invalid @enderror" id="kamar_id" name="kamar_id" required>
+                                <select class="form-control select2 @error('kamar_id') is-invalid @enderror" id="kamar_id" name="kamar_id" required>
                                     <option value="">-- Pilih Kamar --</option>
                                     @foreach($kamar as $k)
-                                        <option value="{{ $k->id }}" {{ old('kamar_id') == $k->id ? 'selected' : '' }}>
+                                        <option value="{{ $k->id }}" {{ (old('kamar_id') ?? $selectedKamarId) == $k->id ? 'selected' : '' }}>
                                             {{ $k->nama_kamar }} (Kapasitas: {{ $k->kapasitas }})
                                         </option>
                                     @endforeach
@@ -46,18 +46,33 @@
                                 @enderror
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label for="siswa_id">Siswa <span class="text-danger">*</span></label>
-                                <select class="form-control @error('siswa_id') is-invalid @enderror" id="siswa_id" name="siswa_id" required>
+                                <select class="form-control select2 @error('siswa_id') is-invalid @enderror" id="siswa_id" name="siswa_id" required>
                                     <option value="">-- Pilih Siswa --</option>
                                     @foreach($siswa as $s)
                                         <option value="{{ $s->id }}" {{ old('siswa_id') == $s->id ? 'selected' : '' }}>
-                                            {{ $s->nama }}
+                                            {{ $s->nama }} (NIS: {{ $s->nis }})
                                         </option>
                                     @endforeach
                                 </select>
                                 @error('siswa_id')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="jabatan">Jabatan <span class="text-danger">*</span></label>
+                                <select class="form-control @error('jabatan') is-invalid @enderror" id="jabatan" name="jabatan" required>
+                                    <option value="Anggota" {{ old('jabatan') == 'Anggota' ? 'selected' : '' }}>Anggota</option>
+                                    @if(!$hasKetua)
+                                        <option value="Ketua Kamar" {{ old('jabatan') == 'Ketua Kamar' ? 'selected' : '' }}>Ketua Kamar</option>
+                                    @endif
+                                    <option value="Wakil Ketua Kamar" {{ old('jabatan') == 'Wakil Ketua Kamar' ? 'selected' : '' }}>Wakil Ketua</option>
+                                </select>
+                                @error('jabatan')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
@@ -107,3 +122,29 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css">
+<style>
+    .select2-container--bootstrap4 .select2-selection--single {
+        height: calc(2.25rem + 12px) !important;
+    }
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+        line-height: calc(2.25rem + 10px) !important;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({
+            theme: 'bootstrap4',
+            placeholder: "-- Pilih --",
+            allowClear: true
+        });
+    });
+</script>
+@endpush

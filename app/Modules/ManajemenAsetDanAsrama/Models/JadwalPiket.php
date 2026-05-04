@@ -10,13 +10,21 @@ class JadwalPiket extends Model
     protected $table = 'jadwal_piket';
 
     protected $fillable = [
-        'bulan',
-        'pekan',
-        'hari',
-        'tempat',
+        'kamar_id',
+        'tanggal',
         'siswa_id',
         'status',
     ];
+
+    protected $casts = [
+        'tanggal' => 'date',
+    ];
+
+    // Relasi: jadwal piket milik 1 kamar
+    public function kamar()
+    {
+        return $this->belongsTo(Kamar::class, 'kamar_id');
+    }
 
     // Relasi: jadwal piket milik 1 siswa
     public function siswa()

@@ -36,15 +36,40 @@ class PenghuniController extends BaseController
     /**
      * Show the form for creating a new penghuni.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         $kamar = Kamar::all();
-        $siswa = Siswa::all();
+        
+        // Ambil santri yang AKTIF dan BELUM punya kamar (atau sudah keluar dari kamar lama)
+        $siswa = Siswa::aktif()
+            ->whereDoesntHave('kamarPenghuni', function($q) {
+                $q->where(function($query) {
+                    $query->whereNull('tanggal_keluar')
+                          ->orWhere('tanggal_keluar', '>', now());
+                });
+            })
+            ->orderBy('nama')
+            ->get();
+            
+        $selectedKamarId = $request->query('kamar_id');
+        
+        // Cek apakah kamar ini sudah punya ketua
+        $hasKetua = false;
+        if ($selectedKamarId) {
+            $hasKetua = KamarPenghuni::where('kamar_id', $selectedKamarId)
+                ->where('jabatan', 'Ketua Kamar')
+                ->where(function($q) {
+                    $q->whereNull('tanggal_keluar')
+                      ->orWhere('tanggal_keluar', '>', now());
+                })->exists();
+        }
         
         return view('manajemenasetdanasrama::penghuni.create', [
             'title' => 'Tambah Penghuni Kamar',
             'kamar' => $kamar,
             'siswa' => $siswa,
+            'selectedKamarId' => $selectedKamarId,
+            'hasKetua' => $hasKetua,
         ]);
     }
 
@@ -54,34 +79,45 @@ class PenghuniController extends BaseController
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'kamar_id'      => 'required|exists:kamar,id',
-            'siswa_id'      => 'required|exists:siswa,id',
-            'tanggal_masuk' => 'required|date',
-            'tanggal_keluar'=> 'nullable|date|after:tanggal_masuk',
-            'keterangan'    => 'nullable|string',
+            'kamar_id'       => 'required|exists:kamar,id',
+            'siswa_id'       => 'required|exists:siswa,id',
+            'jabatan'        => 'required|string',
+            'tanggal_masuk'  => 'required|date',
+            'tanggal_keluar' => 'nullable|date|after_or_equal:tanggal_masuk',
+            'keterangan'     => 'nullable|string',
         ]);
 
-        // Cek apakah siswa sudah aktif di kamar manapun
-        $isAktif = KamarPenghuni::where('siswa_id', $validated['siswa_id'])
-            ->where(function($query) {
+        // CEK 1: Apakah santri ini sedang aktif di kamar lain?
+        $isAktifDiKamarLain = KamarPenghuni::where('siswa_id', $request->siswa_id)
+            ->where(function ($query) {
                 $query->whereNull('tanggal_keluar')
                       ->orWhere('tanggal_keluar', '>', now());
-            })->exists();
+            })
+            ->exists();
 
-        if ($isAktif) {
-            return back()->withInput()->with('error', 'Siswa ini masih terdaftar aktif di kamar. Silakan isi tanggal keluar pada data sebelumnya terlebih dahulu.');
+        if ($isAktifDiKamarLain) {
+            return redirect()->back()->withInput()->with('error', 'Siswa ini masih terdaftar aktif di kamar lain. Silakan checkout (isi tanggal keluar) dari kamar sebelumnya terlebih dahulu.');
         }
 
-        // Cek kapasitas kamar
-        $kamar = Kamar::findOrFail($validated['kamar_id']);
+        // Otomatisasi Keterangan berdasarkan Jabatan
+        $jabatan = $request->jabatan;
+        $keteranganManual = $request->keterangan;
+        $validated['keterangan'] = $keteranganManual ? "{$jabatan} - {$keteranganManual}" : $jabatan;
+
+        // CEK 2: Apakah kamar masih ada sisa kapasitas?
+        $kamar = Kamar::findOrFail($request->kamar_id);
         if ($kamar->sisa <= 0) {
-            return back()->withInput()->with('error', 'Kamar ini sudah penuh (Kapasitas: ' . $kamar->kapasitas . ').');
+            return redirect()->back()->withInput()->with('error', 'Kapasitas kamar ini sudah penuh.');
         }
 
         KamarPenghuni::create($validated);
 
-        return redirect()->route('manajemenasetdanasrama.penghuni.index')
-            ->with('success', 'Penghuni berhasil ditambahkan.');
+        // Regenerate jadwal piket kamar masa depan (Auto-Update)
+        $piketService = new \App\Modules\ManajemenAsetDanAsrama\Services\JadwalPiketService();
+        $piketService->regenerateFutureJadwal($request->kamar_id);
+
+        return redirect()->route('manajemenasetdanasrama.kamar.show', $request->kamar_id)
+            ->with('success', 'Penghuni kamar berhasil ditambahkan.');
     }
 
     /**
@@ -91,13 +127,23 @@ class PenghuniController extends BaseController
     {
         $penghuni = KamarPenghuni::findOrFail($id);
         $kamar = Kamar::all();
-        $siswa = Siswa::all();
+        $siswa = Siswa::aktif()->orderBy('nama')->get();
+        
+        // Cek apakah kamar ini sudah punya ketua (selain penghuni ini sendiri)
+        $hasKetua = KamarPenghuni::where('kamar_id', $penghuni->kamar_id)
+            ->where('id', '!=', $id)
+            ->where('jabatan', 'Ketua Kamar')
+            ->where(function($q) {
+                $q->whereNull('tanggal_keluar')
+                  ->orWhere('tanggal_keluar', '>', now());
+            })->exists();
         
         return view('manajemenasetdanasrama::penghuni.edit', [
             'title'    => 'Edit Penghuni Kamar',
             'penghuni' => $penghuni,
             'kamar'    => $kamar,
             'siswa'    => $siswa,
+            'hasKetua' => $hasKetua,
         ]);
     }
 
@@ -109,38 +155,65 @@ class PenghuniController extends BaseController
         $penghuni = KamarPenghuni::findOrFail($id);
         
         $validated = $request->validate([
-            'kamar_id'      => 'required|exists:kamar,id',
-            'siswa_id'      => 'required|exists:siswa,id',
-            'tanggal_masuk' => 'required|date',
-            'tanggal_keluar'=> 'nullable|date|after:tanggal_masuk',
-            'keterangan'    => 'nullable|string',
+            'kamar_id'       => 'required|exists:kamar,id',
+            'siswa_id'       => 'required|exists:siswa,id',
+            'jabatan'        => 'required|string',
+            'tanggal_masuk'  => 'required|date',
+            'tanggal_keluar' => 'nullable|date|after_or_equal:tanggal_masuk',
+            'keterangan'     => 'nullable|string',
         ]);
 
-        // Jika mengubah siswa, pastikan siswa baru tidak aktif di tempat lain
-        if ($penghuni->siswa_id !== $validated['siswa_id']) {
-            $isAktif = KamarPenghuni::where('siswa_id', $validated['siswa_id'])
-                ->where(function($query) {
-                    $query->whereNull('tanggal_keluar')
-                          ->orWhere('tanggal_keluar', '>', now());
-                })->exists();
+        // Jika kamar berubah, lakukan validasi ganda
+        if ($penghuni->kamar_id != $request->kamar_id || $penghuni->siswa_id != $request->siswa_id) {
+             // CEK 1: Apakah santri aktif di kamar lain (selain record ini)?
+             $isAktifDiKamarLain = KamarPenghuni::where('siswa_id', $request->siswa_id)
+             ->where('id', '!=', $id)
+             ->where(function ($query) {
+                 $query->whereNull('tanggal_keluar')
+                       ->orWhere('tanggal_keluar', '>', now());
+             })
+             ->exists();
 
-            if ($isAktif) {
-                return back()->withInput()->with('error', 'Siswa yang dipilih masih terdaftar aktif di kamar lain.');
+            if ($isAktifDiKamarLain) {
+                return redirect()->back()->withInput()->with('error', 'Siswa ini masih terdaftar aktif di kamar lain.');
             }
-        }
 
-        // Jika mengubah kamar, pastikan kamar baru masih ada slot
-        if ($penghuni->kamar_id !== $validated['kamar_id']) {
-            $kamarBaru = Kamar::findOrFail($validated['kamar_id']);
+            // CEK 2: Kapasitas kamar baru
+            $kamarBaru = Kamar::findOrFail($request->kamar_id);
             if ($kamarBaru->sisa <= 0) {
-                return back()->withInput()->with('error', 'Kamar tujuan sudah penuh.');
+                return redirect()->back()->withInput()->with('error', 'Kapasitas kamar baru sudah penuh.');
             }
         }
 
+        // Otomatisasi Keterangan berdasarkan Jabatan (untuk Update)
+        $jabatan = $request->jabatan;
+        $keteranganManual = $request->keterangan;
+        
+        // Bersihkan prefix jabatan lama jika ada (agar tidak double saat diupdate terus menerus)
+        $cleanKeterangan = $keteranganManual;
+        $prefixes = ['Ketua Kamar - ', 'Wakil Ketua Kamar - ', 'Anggota - ', 'Ketua Kamar', 'Wakil Ketua Kamar', 'Anggota'];
+        foreach ($prefixes as $prefix) {
+            if (str_starts_with($cleanKeterangan, $prefix)) {
+                $cleanKeterangan = str_replace($prefix, '', $cleanKeterangan);
+                break;
+            }
+        }
+        $cleanKeterangan = ltrim($cleanKeterangan, ' -');
+        
+        $validated['keterangan'] = $cleanKeterangan ? "{$jabatan} - {$cleanKeterangan}" : $jabatan;
+
+        $oldKamarId = $penghuni->kamar_id;
         $penghuni->update($validated);
 
-        return redirect()->route('manajemenasetdanasrama.penghuni.index')
-            ->with('success', 'Penghuni berhasil diperbarui.');
+        // Regenerate jadwal piket (Auto-Update)
+        $piketService = new \App\Modules\ManajemenAsetDanAsrama\Services\JadwalPiketService();
+        $piketService->regenerateFutureJadwal($penghuni->kamar_id);
+        if ($oldKamarId != $penghuni->kamar_id) {
+            $piketService->regenerateFutureJadwal($oldKamarId);
+        }
+
+        return redirect()->route('manajemenasetdanasrama.kamar.show', $penghuni->kamar_id)
+            ->with('success', 'Data penghuni berhasil diperbarui.');
     }
 
     /**
@@ -149,9 +222,14 @@ class PenghuniController extends BaseController
     public function destroy(string $id): RedirectResponse
     {
         $penghuni = KamarPenghuni::findOrFail($id);
+        $kamarId = $penghuni->kamar_id;
         $penghuni->delete();
 
+        // Regenerate jadwal piket
+        $piketService = new \App\Modules\ManajemenAsetDanAsrama\Services\JadwalPiketService();
+        $piketService->regenerateFutureJadwal($kamarId);
+
         return redirect()->route('manajemenasetdanasrama.penghuni.index')
-            ->with('success', 'Penghuni berhasil dihapus.');
+            ->with('success', 'Penghuni kamar berhasil dihapus dan jadwal piket disesuaikan.');
     }
 }

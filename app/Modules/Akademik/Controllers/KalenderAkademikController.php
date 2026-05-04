@@ -14,7 +14,7 @@ class KalenderAkademikController extends Controller
 {
     public function index(Request $request)
     {
-        if ($request->ajax() || $request->wantsJson()) {
+        if ($request->ajax() || $request->wantsJson() || $request->has('view_json')) {
             return $this->events($request);
         }
 
@@ -57,44 +57,47 @@ class KalenderAkademikController extends Controller
             '#6c757d', // secondary (gray)
         ];
 
+        $activeYear = TahunAjaran::where('status', 1)->first();
+
         $events = KalenderAkademik::query()
             ->with(['jenisKegiatan'])
-            ->where(function($query) use ($start, $end) {
-                $query->whereBetween('tanggal_awal', [$start, $end])
-                      ->orWhereBetween('tanggal_akhir', [$start, $end])
-                      ->orWhere(function($q) use ($start, $end) {
-                          $q->where('tanggal_awal', '<=', $start)
-                            ->where('tanggal_akhir', '>=', $end);
-                      });
+            ->when($activeYear, function($query) use ($activeYear) {
+                return $query->where('tahunajaran_id', $activeYear->id);
             })
             ->get();
 
-        $formattedEvents = $events->map(function ($event) use ($colorPalette) {
-            $isKbm = optional($event->jenisKegiatan)->is_kbm ?? true;
+        $formattedEvents = $events->map(function ($event) {
+            $jenis = $event->jenisKegiatan;
+            $isKbm = $jenis ? $jenis->is_kbm : true;
+            $color = ($jenis && $jenis->warna) ? $jenis->warna : '#007bff';
             
-            if (!$isKbm) {
-                $color = '#dc3545'; // Danger/Red for Non-KBM
-            } else {
-                $colorIndex = ($event->kegiatan_id - 1) % count($colorPalette);
-                $color = $colorPalette[$colorIndex];
+            if (!$isKbm && (!$jenis || !$jenis->warna)) {
+                $color = '#dc3545';
             }
+
+            // Pastikan tanggal valid sebelum diformat
+            $start = $event->tanggal_awal ? $event->tanggal_awal->format('Y-m-d') : null;
+            $end = $event->tanggal_akhir ? $event->tanggal_akhir->addDay()->format('Y-m-d') : $start;
+
+            if (!$start) return null; // Skip jika tidak ada tanggal
 
             return [
                 'id'          => $event->id,
-                'title'       => $event->nama_kegiatan,
-                'start'       => $event->tanggal_awal,
-                'end'         => date('Y-m-d', strtotime($event->tanggal_akhir . ' +1 day')),
+                'title'       => ($jenis ? '[' . $jenis->jeniskegiatan . '] ' : '') . $event->nama_kegiatan,
+                'start'       => $start,
+                'end'         => $end,
                 'color'       => $color,
                 'borderColor' => $color,
                 'textColor'   => '#ffffff',
+                'allDay'      => true,
                 'extendedProps' => [
-                    'jenis'     => $event->jenisKegiatan ? $event->jenisKegiatan->jeniskegiatan : '-',
+                    'jenis'     => $jenis ? $jenis->jeniskegiatan : '-',
                     'is_kbm'    => $isKbm,
                     'deskripsi' => $event->deskripsi,
                     'color'     => $color,
                 ]
             ];
-        });
+        })->filter()->values();
 
 
         return response()->json($formattedEvents);
@@ -165,5 +168,51 @@ class KalenderAkademikController extends Controller
                 ->route('akademik.kalender-akademik.index')
                 ->with('error', 'Gagal menghapus data: ' . $e->getMessage());
         }
+    }
+
+    public function exportIcal()
+    {
+        $activeYear = TahunAjaran::where('status', 1)->first();
+        
+        $events = KalenderAkademik::with('jenisKegiatan')
+            ->when($activeYear, function($query) use ($activeYear) {
+                return $query->where('tahunajaran_id', $activeYear->id);
+            })
+            ->get();
+
+        $ics = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//Almahir//Academic Calendar//ID',
+            'X-WR-CALNAME:Kalender Akademik Almahir',
+            'X-WR-TIMEZONE:Asia/Jakarta',
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH',
+        ];
+
+        foreach ($events as $event) {
+            $start = date('Ymd\THis\Z', strtotime($event->tanggal_awal . ' 00:00:00'));
+            // Google and others treat the end date as exclusive for all-day events
+            $end = date('Ymd\THis\Z', strtotime($event->tanggal_akhir . ' 23:59:59'));
+
+            $jenisLabel = $event->jenisKegiatan ? '[' . $event->jenisKegiatan->jeniskegiatan . '] ' : '';
+
+            $ics[] = 'BEGIN:VEVENT';
+            $ics[] = 'UID:' . $event->id . '@almahir';
+            $ics[] = 'DTSTAMP:' . date('Ymd\THis\Z');
+            $ics[] = 'DTSTART;VALUE=DATE:' . date('Ymd', strtotime($event->tanggal_awal));
+            $ics[] = 'DTEND;VALUE=DATE:' . date('Ymd', strtotime($event->tanggal_akhir . ' +1 day'));
+            $ics[] = 'SUMMARY:' . $jenisLabel . $event->nama_kegiatan;
+            $ics[] = 'DESCRIPTION:' . ($event->deskripsi ?: 'Agenda Akademik Sekolah');
+            $ics[] = 'LOCATION:Sekolah Almahir';
+            $ics[] = 'STATUS:CONFIRMED';
+            $ics[] = 'END:VEVENT';
+        }
+
+        $ics[] = 'END:VCALENDAR';
+
+        return response(implode("\r\n", $ics))
+            ->header('Content-Type', 'text/calendar; charset=utf-8')
+            ->header('Content-Disposition', 'attachment; filename="kalender_akademik_almahir.ics"');
     }
 }

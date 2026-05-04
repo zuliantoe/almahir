@@ -23,6 +23,7 @@ class Aset extends Model
         'kondisi',
         'deskripsi_aset',
         'pengadaan_id',
+        'kamar_id',
         'deleted_by',
         'alasan_hapus',
     ];
@@ -50,11 +51,19 @@ class Aset extends Model
     }
 
     /**
-     * Relasi: 1 aset berasal dari 1 pengadaan
+     * Get the pengadaan that owns the aset.
      */
     public function pengadaan()
     {
         return $this->belongsTo(PengadaanAset::class, 'pengadaan_id');
+    }
+
+    /**
+     * Get the kamar that owns the aset.
+     */
+    public function kamar()
+    {
+        return $this->belongsTo(Kamar::class, 'kamar_id');
     }
 
     /**

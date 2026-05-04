@@ -43,7 +43,10 @@ Route::middleware(['web', 'auth', \Modules\Akademik\Middleware\ReadOnlyRoleMiddl
     Route::resource('mata-pelajaran', MataPelajaranController::class);
     Route::resource('jadwal-pelajaran', JadwalPelajaranController::class);
     Route::resource('kalender-akademik', KalenderAkademikController::class);
+    Route::get('kalender-akademik-events-data', [KalenderAkademikController::class, 'events'])->name('kalender-akademik.events');
     Route::resource('kurikulum', KurikulumController::class);
     Route::resource('rombel', RombelController::class);
-
 });
+
+// Public route for Calendar Sync (iCal) - Must be outside 'auth' so Google can fetch it
+Route::get('/kalender-akademik-export/ical', [KalenderAkademikController::class, 'exportIcal'])->name('kalender-akademik.export-ical');

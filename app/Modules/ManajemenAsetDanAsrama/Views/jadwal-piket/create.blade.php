@@ -32,57 +32,23 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="bulan">Bulan <span class="text-danger">*</span></label>
-                                <select class="form-control @error('bulan') is-invalid @enderror" id="bulan" name="bulan" required>
-                                    <option value="">-- Pilih Bulan --</option>
-                                    @php
-                                        $namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                                    @endphp
-                                    @foreach($namaBulan as $idx => $nama)
-                                        <option value="{{ $idx + 1 }}" {{ old('bulan') == ($idx + 1) ? 'selected' : '' }}>{{ $nama }}</option>
+                                <label for="kamar_id">Pilih Kamar <span class="text-danger">*</span></label>
+                                <select class="form-control @error('kamar_id') is-invalid @enderror" id="kamar_id" name="kamar_id" required>
+                                    <option value="">-- Pilih Kamar --</option>
+                                    @foreach($kamar as $k)
+                                        <option value="{{ $k->id }}" {{ old('kamar_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kamar }}</option>
                                     @endforeach
                                 </select>
-                                @error('bulan')
+                                @error('kamar_id')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="pekan">Pekan <span class="text-danger">*</span></label>
-                                <select class="form-control @error('pekan') is-invalid @enderror" id="pekan" name="pekan" required>
-                                    <option value="">-- Pilih Pekan --</option>
-                                    @for($i = 1; $i <= 5; $i++)
-                                        <option value="{{ $i }}" {{ old('pekan') == $i ? 'selected' : '' }}>Pekan {{ $i }}</option>
-                                    @endfor
-                                </select>
-                                @error('pekan')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="hari">Hari <span class="text-danger">*</span></label>
-                                <select class="form-control @error('hari') is-invalid @enderror" id="hari" name="hari" required>
-                                    <option value="">-- Pilih Hari --</option>
-                                    @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'] as $hari)
-                                        <option value="{{ $hari }}" {{ old('hari') == $hari ? 'selected' : '' }}>{{ $hari }}</option>
-                                    @endforeach
-                                </select>
-                                @error('hari')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="tempat">Tempat <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('tempat') is-invalid @enderror" id="tempat" name="tempat" value="{{ old('tempat') }}" placeholder="Contoh: Masjid, Halaman, Kamar Mandi" required>
-                                @error('tempat')
+                                <label for="tanggal">Tanggal Piket <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control @error('tanggal') is-invalid @enderror" id="tanggal" name="tanggal" value="{{ old('tanggal') }}" required>
+                                @error('tanggal')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>

@@ -126,18 +126,28 @@ class AcademicDummySeeder extends Seeder
                 );
             }
 
-            // 10. Jadwal Pelajaran (Contoh 3 Jadwal per Rombel)
+            // 10. Jadwal Pelajaran (Setiap Guru mengajar matpel spesifik secara lengkap)
             $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
-            for ($j = 0; $j < 3; $j++) {
-                JadwalPelajaran::updateOrCreate(
-                    ['rombel_id' => $rombel->id, 'hari' => $hariList[$j % count($hariList)], 'jamke' => $j + 1],
-                    [
-                        'jamawal' => str_pad(7 + $j, 2, '0', STR_PAD_LEFT) . ':30:00',
-                        'jamakhir' => str_pad(8 + $j, 2, '0', STR_PAD_LEFT) . ':30:00',
-                        'mapel_id' => $mapelObjects[$j % count($mapelObjects)]->id,
-                        'guru_id' => $guruObjects[$j % count($guruObjects)]->id
-                    ]
-                );
+            foreach ($mapelObjects as $mIdx => $mapel) {
+                // Berbagi matpel ke guru agar data lebih padat
+                $guru = $guruObjects[$mIdx % count($guruObjects)];
+                
+                // Tambahkan di beberapa hari agar jadwal terlihat nyata
+                for($d = 0; $d < 2; $d++) {
+                    JadwalPelajaran::updateOrCreate(
+                        [
+                            'rombel_id' => $rombel->id, 
+                            'mapel_id' => $mapel->id, 
+                            'hari' => $hariList[($mIdx + $d) % count($hariList)]
+                        ],
+                        [
+                            'jamke' => $mIdx + 1,
+                            'jamawal' => str_pad(7 + $mIdx, 2, '0', STR_PAD_LEFT) . ':30:00',
+                            'jamakhir' => str_pad(8 + $mIdx, 2, '0', STR_PAD_LEFT) . ':30:00',
+                            'guru_id' => $guru->id
+                        ]
+                    );
+                }
             }
         }
 

@@ -77,8 +77,7 @@ class Siswa extends Model
      */
     public function kelas()
     {
-        // TODO: Define relationship when Kelas model is created
-        // return $this->belongsTo(Kelas::class, 'kelas_id');
+        return $this->belongsTo(\App\Modules\Akademik\Models\Kelas::class, 'kelas_id');
     }
 
     /**
@@ -97,8 +96,15 @@ class Siswa extends Model
         return 'NIS-' . $this->nis;
     }
     public function pendaftaran()
-{
-    return $this->belongsTo(\Modules\Pendaftaran\Models\Pendaftaran::class);
-}
+    {
+        return $this->belongsTo(\Modules\Pendaftaran\Models\Pendaftaran::class);
+    }
 
+    /**
+     * Relationship to KamarPenghuni (Dormitory)
+     */
+    public function kamarPenghuni()
+    {
+        return $this->hasMany(\App\Modules\ManajemenAsetDanAsrama\Models\KamarPenghuni::class, 'siswa_id');
+    }
 }

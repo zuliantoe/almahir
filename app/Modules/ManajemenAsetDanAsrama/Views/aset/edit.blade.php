@@ -45,6 +45,19 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="kamar_id">Lokasi Penempatan (Kamar) <span class="text-danger">*</span></label>
+                        <select class="form-control @error('kamar_id') is-invalid @enderror" id="kamar_id" name="kamar_id" required>
+                            <option value="">-- Pilih Kamar --</option>
+                            @foreach($kamar as $k)
+                            <option value="{{ $k->id }}" {{ old('kamar_id', $aset->kamar_id) == $k->id ? 'selected' : '' }}>{{ $k->nama_kamar }}</option>
+                            @endforeach
+                        </select>
+                        @error('kamar_id')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
                         <label for="status_kondisi">Status Kondisi <span class="text-danger">*</span></label>
                         <select class="form-control @error('status_kondisi') is-invalid @enderror" id="status_kondisi" name="status_kondisi" required>
                             <option value="baik" {{ old('status_kondisi', $aset->status_kondisi) == 'baik' ? 'selected' : '' }}>Baik</option>

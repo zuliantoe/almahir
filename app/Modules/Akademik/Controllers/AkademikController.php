@@ -35,12 +35,18 @@ class AkademikController extends Controller
                 ->orderBy('jamke')
                 ->get();
 
+            $todayDate = \Carbon\Carbon::now()->toDateString();
+            $eventHariIni = \App\Modules\Akademik\Models\KalenderAkademik::with('jenisKegiatan')
+                ->whereDate('tanggal_awal', '<=', $todayDate)
+                ->whereDate('tanggal_akhir', '>=', $todayDate)
+                ->get();
+
             $kalender = \App\Modules\Akademik\Models\KalenderAkademik::whereDate('tanggal_awal', '>=', now()->subDays(7)) // fetch recent and future cal items
                 ->orderBy('tanggal_awal')
                 ->take(5)
                 ->get();
 
-            return view('akademik::dashboards.guru', compact('jadwalHariIni', 'jadwalMingguan', 'kalender', 'today'));
+            return view('akademik::dashboards.guru', compact('jadwalHariIni', 'jadwalMingguan', 'kalender', 'today', 'eventHariIni'));
         }
 
         // 2. Context Siswa
@@ -66,12 +72,18 @@ class AkademikController extends Controller
                     ->get();
             }
 
+            $todayDate = \Carbon\Carbon::now()->toDateString();
+            $eventHariIni = \App\Modules\Akademik\Models\KalenderAkademik::with('jenisKegiatan')
+                ->whereDate('tanggal_awal', '<=', $todayDate)
+                ->whereDate('tanggal_akhir', '>=', $todayDate)
+                ->get();
+
             $kalender = \App\Modules\Akademik\Models\KalenderAkademik::whereDate('tanggal_awal', '>=', now()->subDays(7))
                 ->orderBy('tanggal_awal')
                 ->take(5)
                 ->get();
 
-            return view('akademik::dashboards.siswa', compact('jadwalHariIni', 'jadwalMingguan', 'kalender', 'today', 'rombelSiswa'));
+            return view('akademik::dashboards.siswa', compact('jadwalHariIni', 'jadwalMingguan', 'kalender', 'today', 'rombelSiswa', 'eventHariIni'));
         }
 
         // Default Admin / Staff Context

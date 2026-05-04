@@ -17,6 +17,7 @@ class StoreJenisKegiatanRequest extends FormRequest
             'jeniskegiatan' => 'required|string|max:255',
             'is_kbm' => 'boolean',
             'deskripsi' => 'nullable|string|max:500',
+            'warna' => 'nullable|string|max:7',
         ];
     }
 

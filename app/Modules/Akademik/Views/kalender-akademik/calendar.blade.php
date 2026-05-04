@@ -231,6 +231,9 @@
                     <i class="fas fa-plus"></i> Tambah Kegiatan
                 </a>
                 @endif
+                <button type="button" class="btn-header btn-header-ghost" data-toggle="modal" data-target="#syncModal">
+                    <i class="fas fa-sync"></i> Sinkron ke Google
+                </button>
             </div>
         </div>
     </div>
@@ -239,12 +242,9 @@
     @if(isset($jenisKegiatanList) && count($jenisKegiatanList))
     <div class="legend-bar shadow-sm">
         <span class="legend-title">Keterangan Warna:</span>
-        @php
-        $legendColors = ['#007bff','#17a2b8','#28a745','#ffc107','#dc3545','#6610f2','#fd7e14','#e83e8c','#20c997','#6c757d'];
-        @endphp
-        @foreach($jenisKegiatanList as $i => $jk)
+        @foreach($jenisKegiatanList as $jk)
         <span class="legend-chip">
-            <span class="legend-dot" style="background: {{ $legendColors[$i % count($legendColors)] }};"></span>
+            <span class="legend-dot" style="background: {{ $jk->warna ?: '#6c757d' }};"></span>
             {{ $jk->jeniskegiatan }}
         </span>
         @endforeach
@@ -306,6 +306,11 @@
                 </div>
             </div>
             <div class="modal-footer bg-light border-0">
+                <div class="mr-auto">
+                    <a href="#" id="btnAddToGoogle" target="_blank" class="btn btn-outline-danger btn-sm" title="Tambahkan ke Google Calendar">
+                        <i class="fab fa-google"></i> + Google Calendar
+                    </a>
+                </div>
                 <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Tutup</button>
                 @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
                 <a href="#" id="modalEditBtn" class="btn btn-warning btn-sm">Edit</a>
@@ -315,9 +320,74 @@
         </div>
     </div>
 </div>
+
+{{-- ── Sync to Google Modal ── --}}
+<div class="modal fade" id="syncModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title font-weight-bold"><i class="fas fa-sync mr-2"></i>Sinkronisasi Google Calendar</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle mr-2"></i> Metode ini memungkinkan Google Calendar menarik data otomatis dari aplikasi tanpa perlu login ulang.
+                </div>
+                
+                <div class="text-center mb-4">
+                    <a href="https://www.google.com/calendar/render?cid={{ urlencode(route('akademik.kalender-akademik.export-ical')) }}" 
+                       target="_blank" class="btn btn-danger btn-lg shadow-sm">
+                        <i class="fab fa-google mr-2"></i> Hubungkan ke Google Calendar (Sekali Klik)
+                    </a>
+                    <p class="text-muted small mt-2">Tombol ini akan otomatis membuka Google Calendar Anda.</p>
+                </div>
+
+                <hr>
+
+                <h6><strong>Atau Cara Manual:</strong></h6>
+                <ol class="text-muted mb-4">
+                    <li>Salin link di bawah ini.</li>
+                    <li>Buka <a href="https://calendar.google.com" target="_blank">Google Calendar</a> Anda.</li>
+                    <li>Di sisi kiri, cari bagian <strong>"Kalender lainnya"</strong> (Other calendars).</li>
+                    <li>Klik ikon <strong>+</strong> lalu pilih <strong>"Dari URL"</strong> (From URL).</li>
+                    <li>Tempelkan link yang sudah disalin tadi dan klik <strong>"Tambahkan kalender"</strong>.</li>
+                </ol>
+
+                <div class="form-group mb-0">
+                    <label class="text-xs font-weight-bold text-uppercase">Link Kalender Akademik (iCal URL)</label>
+                    <div class="input-group">
+                        <input type="text" id="icalUrl" class="form-control font-weight-bold bg-light" readonly 
+                               value="{{ route('akademik.kalender-akademik.export-ical') }}">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" onclick="copyIcalUrl()">
+                                <i class="fas fa-copy mr-1"></i> Salin Link
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
+<script>
+function copyIcalUrl() {
+    var copyText = document.getElementById("icalUrl");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(copyText.value);
+    
+    alert("Link berhasil disalin! Silakan tempelkan di Google Calendar Anda.");
+}
+</script>
+
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -331,14 +401,15 @@ document.addEventListener('DOMContentLoaded', function () {
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,listMonth'
+            right: 'multiMonthYear,dayGridMonth,listMonth'
         },
         buttonText: {
             today: 'Hari Ini',
+            year: 'Tahun',
             month: 'Bulan',
             list: 'Daftar'
         },
-        events: '{{ route("akademik.kalender-akademik.index") }}',
+        events: '{{ route("akademik.kalender-akademik.events") }}',
         loading: function (isLoading) {
             loaderEl.style.display = isLoading ? 'flex' : 'none';
         },
@@ -368,6 +439,23 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('modalEditBtn').href = baseUrl + '/' + ev.id + '/edit';
             document.getElementById('modalDetailBtn').href = baseUrl + '/' + ev.id;
             @endif
+
+            // Generate Google Calendar Link
+            var startDate = new Date(ev.start);
+            var endDate = ev.end ? new Date(ev.end) : new Date(ev.start);
+            
+            // Format to YYYYMMDDTHHMMSSZ
+            function formatGoogleDate(date) {
+                return date.toISOString().replace(/-|:|\.\d+/g, '');
+            }
+
+            var googleUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+                '&text=' + encodeURIComponent(ev.title) +
+                '&dates=' + formatGoogleDate(startDate) + '/' + formatGoogleDate(endDate) +
+                '&details=' + encodeURIComponent(props.deskripsi || 'Agenda Akademik Almahir') +
+                '&location=' + encodeURIComponent('Sekolah Almahir');
+
+            document.getElementById('btnAddToGoogle').href = googleUrl;
 
             $('#eventModal').modal('show');
         },

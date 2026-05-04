@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use App\Modules\ManajemenAsetDanAsrama\Models\JadwalPiket;
+use App\Modules\ManajemenAsetDanAsrama\Models\Kamar;
 use Modules\Siswa\Models\Siswa;
 
 class JadwalPiketController extends BaseController
@@ -15,24 +16,29 @@ class JadwalPiketController extends BaseController
      */
     public function index(Request $request): View
     {
-        $query = JadwalPiket::with('siswa');
+        $query = JadwalPiket::with(['siswa', 'kamar']);
 
-        if ($request->filled('bulan')) {
-            $query->where('bulan', $request->bulan);
+        if ($request->filled('kamar_id')) {
+            $query->where('kamar_id', $request->kamar_id);
         }
-        if ($request->filled('pekan')) {
-            $query->where('pekan', $request->pekan);
+        if ($request->filled('tanggal_mulai')) {
+            $query->where('tanggal', '>=', $request->tanggal_mulai);
+        }
+        if ($request->filled('tanggal_selesai')) {
+            $query->where('tanggal', '<=', $request->tanggal_selesai);
         }
 
-        $jadwal = $query->orderBy('bulan')
-                    ->orderBy('pekan')
-                    ->orderBy('hari')
+        $jadwal = $query->orderBy('tanggal', 'desc')
+                    ->orderBy('kamar_id')
                     ->paginate(15)
                     ->withQueryString();
         
+        $kamar = Kamar::all();
+
         return view('manajemenasetdanasrama::jadwal-piket.index', [
-            'title'  => 'Jadwal Piket',
+            'title'  => 'Jadwal Piket Asrama',
             'jadwal' => $jadwal,
+            'kamar'  => $kamar,
         ]);
     }
 
@@ -42,10 +48,12 @@ class JadwalPiketController extends BaseController
     public function create(): View
     {
         $siswa = Siswa::all();
+        $kamar = Kamar::all();
         
         return view('manajemenasetdanasrama::jadwal-piket.create', [
             'title' => 'Tambah Jadwal Piket',
             'siswa' => $siswa,
+            'kamar' => $kamar,
         ]);
     }
 
@@ -70,11 +78,13 @@ class JadwalPiketController extends BaseController
     {
         $jadwal = JadwalPiket::findOrFail($id);
         $siswa = Siswa::all();
+        $kamar = Kamar::all();
         
         return view('manajemenasetdanasrama::jadwal-piket.edit', [
             'title'  => 'Edit Jadwal Piket',
             'jadwal' => $jadwal,
             'siswa'  => $siswa,
+            'kamar'  => $kamar,
         ]);
     }
 
@@ -98,18 +108,14 @@ class JadwalPiketController extends BaseController
     private function getValidationRules(Request $request, ?string $id = null): array
     {
         return [
-            'bulan'    => 'required|integer|between:1,12',
-            'pekan'    => 'required|integer|between:1,5',
-            'hari'     => 'required|string',
-            'tempat'   => 'required|string|max:255',
+            'kamar_id' => 'required|exists:kamar,id',
+            'tanggal'  => 'required|date',
             'siswa_id' => [
                 'required',
                 'exists:siswa,id',
                 \Illuminate\Validation\Rule::unique('jadwal_piket')->where(function ($query) use ($request) {
-                    return $query->where('bulan', $request->bulan)
-                                 ->where('pekan', $request->pekan)
-                                 ->where('hari', $request->hari)
-                                 ->where('tempat', $request->tempat);
+                    return $query->where('kamar_id', $request->kamar_id)
+                                 ->where('tanggal', $request->tanggal);
                 })->ignore($id),
             ],
         ];
@@ -138,5 +144,66 @@ class JadwalPiketController extends BaseController
 
         return redirect()->back()
             ->with('success', 'Status piket diupdate menjadi selesai.');
+    }
+
+    /**
+     * Auto generate jadwal piket (Round Robin)
+     */
+    public function autoGenerate(Request $request)
+    {
+        $request->validate([
+            'kamar_id'       => 'required|exists:kamar,id',
+            'tanggal_mulai'  => 'required|date',
+            'tanggal_selesai'=> 'required|date|after_or_equal:tanggal_mulai',
+            'person_per_day' => 'required|integer|min:1'
+        ]);
+
+        try {
+            $service = new \App\Modules\ManajemenAsetDanAsrama\Services\JadwalPiketService();
+            $generated = $service->generateForKamar(
+                $request->kamar_id,
+                $request->tanggal_mulai,
+                $request->tanggal_selesai,
+                $request->person_per_day
+            );
+
+            if ($generated === 0) {
+                return redirect()->back()->with('warning', 'Tidak ada jadwal yang di-generate (Mungkin tidak ada santri di kamar tersebut, atau jadwal di tanggal tersebut sudah penuh).');
+            }
+
+            return redirect()->back()->with('success', "Berhasil me-generate {$generated} jadwal piket.");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Print printer-friendly version of the schedule.
+     */
+    public function print(Request $request)
+    {
+        $query = JadwalPiket::with(['kamar', 'siswa']);
+
+        if ($request->filled('kamar_id')) {
+            $query->where('kamar_id', $request->kamar_id);
+        }
+
+        if ($request->filled('tanggal_mulai')) {
+            $query->where('tanggal', '>=', $request->tanggal_mulai);
+        }
+
+        if ($request->filled('tanggal_selesai')) {
+            $query->where('tanggal', '<=', $request->tanggal_selesai);
+        }
+
+        $jadwal = $query->orderBy('tanggal', 'asc')->get();
+        $kamar = Kamar::find($request->kamar_id);
+
+        return view('manajemenasetdanasrama::jadwal-piket.print', [
+            'title'  => 'Cetak Jadwal Piket',
+            'jadwal' => $jadwal,
+            'kamar'  => $kamar,
+            'request'=> $request
+        ]);
     }
 }

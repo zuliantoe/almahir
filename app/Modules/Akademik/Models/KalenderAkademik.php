@@ -14,7 +14,7 @@ class KalenderAkademik extends Model
     protected $fillable = ['tahunajaran_id','kegiatan_id','nama_kegiatan','tanggal_awal','tanggal_akhir','deskripsi','status'
     ];
     protected $casts = [
-        'tanggal_mulai'=> 'date',
+        'tanggal_awal'=> 'date',
         'tanggal_akhir'=> 'date',
     ];
     public function tahunAjaran():BelongsTo

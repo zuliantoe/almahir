@@ -36,15 +36,40 @@ class PenghuniController extends BaseController
     /**
      * Show the form for creating a new penghuni.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         $kamar = Kamar::all();
-        $siswa = Siswa::all();
+        
+        // Ambil santri yang AKTIF dan BELUM punya kamar (atau sudah keluar dari kamar lama)
+        $siswa = Siswa::aktif()
+            ->whereDoesntHave('kamarPenghuni', function($q) {
+                $q->where(function($query) {
+                    $query->whereNull('tanggal_keluar')
+                          ->orWhere('tanggal_keluar', '>', now());
+                });
+            })
+            ->orderBy('nama')
+            ->get();
+            
+        $selectedKamarId = $request->query('kamar_id');
+        
+        // Cek apakah kamar ini sudah punya ketua
+        $hasKetua = false;
+        if ($selectedKamarId) {
+            $hasKetua = KamarPenghuni::where('kamar_id', $selectedKamarId)
+                ->where('jabatan', 'Ketua Kamar')
+                ->where(function($q) {
+                    $q->whereNull('tanggal_keluar')
+                      ->orWhere('tanggal_keluar', '>', now());
+                })->exists();
+        }
         
         return view('manajemenasetdanasrama::penghuni.create', [
             'title' => 'Tambah Penghuni Kamar',
             'kamar' => $kamar,
             'siswa' => $siswa,
+            'selectedKamarId' => $selectedKamarId,
+            'hasKetua' => $hasKetua,
         ]);
     }
 
@@ -56,6 +81,7 @@ class PenghuniController extends BaseController
         $validated = $request->validate([
             'kamar_id'       => 'required|exists:kamar,id',
             'siswa_id'       => 'required|exists:siswa,id',
+            'jabatan'        => 'required|string',
             'tanggal_masuk'  => 'required|date',
             'tanggal_keluar' => 'nullable|date|after_or_equal:tanggal_masuk',
             'keterangan'     => 'nullable|string',
@@ -73,9 +99,14 @@ class PenghuniController extends BaseController
             return redirect()->back()->withInput()->with('error', 'Siswa ini masih terdaftar aktif di kamar lain. Silakan checkout (isi tanggal keluar) dari kamar sebelumnya terlebih dahulu.');
         }
 
+        // Otomatisasi Keterangan berdasarkan Jabatan
+        $jabatan = $request->jabatan;
+        $keteranganManual = $request->keterangan;
+        $validated['keterangan'] = $keteranganManual ? "{$jabatan} - {$keteranganManual}" : $jabatan;
+
         // CEK 2: Apakah kamar masih ada sisa kapasitas?
         $kamar = Kamar::findOrFail($request->kamar_id);
-        if ($kamar->sisa_kapasitas <= 0) {
+        if ($kamar->sisa <= 0) {
             return redirect()->back()->withInput()->with('error', 'Kapasitas kamar ini sudah penuh.');
         }
 
@@ -85,8 +116,8 @@ class PenghuniController extends BaseController
         $piketService = new \App\Modules\ManajemenAsetDanAsrama\Services\JadwalPiketService();
         $piketService->regenerateFutureJadwal($request->kamar_id);
 
-        return redirect()->route('manajemenasetdanasrama.penghuni.index')
-            ->with('success', 'Penghuni kamar berhasil ditambahkan dan jadwal piket diperbarui otomatis.');
+        return redirect()->route('manajemenasetdanasrama.kamar.show', $request->kamar_id)
+            ->with('success', 'Penghuni kamar berhasil ditambahkan.');
     }
 
     /**
@@ -96,13 +127,23 @@ class PenghuniController extends BaseController
     {
         $penghuni = KamarPenghuni::findOrFail($id);
         $kamar = Kamar::all();
-        $siswa = Siswa::all();
+        $siswa = Siswa::aktif()->orderBy('nama')->get();
+        
+        // Cek apakah kamar ini sudah punya ketua (selain penghuni ini sendiri)
+        $hasKetua = KamarPenghuni::where('kamar_id', $penghuni->kamar_id)
+            ->where('id', '!=', $id)
+            ->where('jabatan', 'Ketua Kamar')
+            ->where(function($q) {
+                $q->whereNull('tanggal_keluar')
+                  ->orWhere('tanggal_keluar', '>', now());
+            })->exists();
         
         return view('manajemenasetdanasrama::penghuni.edit', [
             'title'    => 'Edit Penghuni Kamar',
             'penghuni' => $penghuni,
             'kamar'    => $kamar,
             'siswa'    => $siswa,
+            'hasKetua' => $hasKetua,
         ]);
     }
 
@@ -116,6 +157,7 @@ class PenghuniController extends BaseController
         $validated = $request->validate([
             'kamar_id'       => 'required|exists:kamar,id',
             'siswa_id'       => 'required|exists:siswa,id',
+            'jabatan'        => 'required|string',
             'tanggal_masuk'  => 'required|date',
             'tanggal_keluar' => 'nullable|date|after_or_equal:tanggal_masuk',
             'keterangan'     => 'nullable|string',
@@ -138,10 +180,27 @@ class PenghuniController extends BaseController
 
             // CEK 2: Kapasitas kamar baru
             $kamarBaru = Kamar::findOrFail($request->kamar_id);
-            if ($kamarBaru->sisa_kapasitas <= 0) {
+            if ($kamarBaru->sisa <= 0) {
                 return redirect()->back()->withInput()->with('error', 'Kapasitas kamar baru sudah penuh.');
             }
         }
+
+        // Otomatisasi Keterangan berdasarkan Jabatan (untuk Update)
+        $jabatan = $request->jabatan;
+        $keteranganManual = $request->keterangan;
+        
+        // Bersihkan prefix jabatan lama jika ada (agar tidak double saat diupdate terus menerus)
+        $cleanKeterangan = $keteranganManual;
+        $prefixes = ['Ketua Kamar - ', 'Wakil Ketua Kamar - ', 'Anggota - ', 'Ketua Kamar', 'Wakil Ketua Kamar', 'Anggota'];
+        foreach ($prefixes as $prefix) {
+            if (str_starts_with($cleanKeterangan, $prefix)) {
+                $cleanKeterangan = str_replace($prefix, '', $cleanKeterangan);
+                break;
+            }
+        }
+        $cleanKeterangan = ltrim($cleanKeterangan, ' -');
+        
+        $validated['keterangan'] = $cleanKeterangan ? "{$jabatan} - {$cleanKeterangan}" : $jabatan;
 
         $oldKamarId = $penghuni->kamar_id;
         $penghuni->update($validated);
@@ -153,8 +212,8 @@ class PenghuniController extends BaseController
             $piketService->regenerateFutureJadwal($oldKamarId);
         }
 
-        return redirect()->route('manajemenasetdanasrama.penghuni.index')
-            ->with('success', 'Data penghuni kamar berhasil diperbarui dan jadwal piket disesuaikan.');
+        return redirect()->route('manajemenasetdanasrama.kamar.show', $penghuni->kamar_id)
+            ->with('success', 'Data penghuni berhasil diperbarui.');
     }
 
     /**

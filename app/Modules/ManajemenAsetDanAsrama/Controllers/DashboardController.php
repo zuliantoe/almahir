@@ -26,7 +26,7 @@ class DashboardController extends BaseController
         $totalKerusakan = Kerusakan::whereHas('aset')->count();
         $totalPemeliharaan = Pemeliharaan::whereHas('aset')->count();
         $totalKamar = Kamar::count();
-        $totalPenghuni = KamarPenghuni::whereHas('kamar')->count();
+        $totalPenghuni = KamarPenghuni::aktif()->count();
         
         $jadwalPiketHariIni = JadwalPiket::with(['siswa', 'kamar'])
                                 ->whereDate('tanggal', date('Y-m-d'))

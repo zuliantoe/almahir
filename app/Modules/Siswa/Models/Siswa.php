@@ -96,8 +96,15 @@ class Siswa extends Model
         return 'NIS-' . $this->nis;
     }
     public function pendaftaran()
-{
-    return $this->belongsTo(\Modules\Pendaftaran\Models\Pendaftaran::class);
-}
+    {
+        return $this->belongsTo(\Modules\Pendaftaran\Models\Pendaftaran::class);
+    }
 
+    /**
+     * Relationship to KamarPenghuni (Dormitory)
+     */
+    public function kamarPenghuni()
+    {
+        return $this->hasMany(\App\Modules\ManajemenAsetDanAsrama\Models\KamarPenghuni::class, 'siswa_id');
+    }
 }

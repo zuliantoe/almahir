@@ -37,11 +37,19 @@ class KamarController extends BaseController
     {
         $kamar = Kamar::findOrFail($id);
         
-        // Ambil daftar penghuni yang sedang aktif di kamar ini
+        // Ambil daftar penghuni yang sedang aktif di kamar ini (Urut: Ketua > Wakil > Anggota)
         $penghuniAktif = $kamar->penghuni()
             ->with('siswa')
-            ->whereNull('tanggal_keluar')
-            ->orWhere('tanggal_keluar', '>', now())
+            ->where(function($query) {
+                $query->whereNull('tanggal_keluar')
+                      ->orWhere('tanggal_keluar', '>', now());
+            })
+            ->orderByRaw("CASE 
+                WHEN jabatan = 'Ketua Kamar' THEN 1 
+                WHEN jabatan = 'Wakil Ketua Kamar' THEN 2 
+                ELSE 3 
+            END ASC")
+            ->orderBy('id', 'asc')
             ->get();
 
         // Ambil riwayat penghuni sebelumnya

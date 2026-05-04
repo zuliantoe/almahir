@@ -5,15 +5,40 @@
 @section('content-header')
 <div class="row mb-2">
     <div class="col-sm-6">
-        <h1 class="m-0">{{ $title }}</h1>
+        <h1 class="m-0" style="font-weight: 700;">{{ $title }}</h1>
     </div>
     <div class="col-sm-6">
         <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="{{ route('manajemenasetdanasrama.index') }}">Manajemen Aset & Asrama</a></li>
-            <li class="breadcrumb-item active">Data Kamar</li>
+            <li class="breadcrumb-item"><a href="{{ route('manajemenasetdanasrama.index') }}">Asrama</a></li>
+            <li class="breadcrumb-item active">Kamar</li>
         </ol>
     </div>
 </div>
+
+<style>
+    .table-compact td {
+        padding: 0.6rem 0.75rem !important;
+        font-size: 0.9rem;
+    }
+    .table-compact thead th {
+        padding: 0.75rem !important;
+        background-color: #f4f6f9;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+    }
+    .btn-xs-custom {
+        padding: 1px 6px !important;
+        font-size: 0.7rem !important;
+        border-radius: 4px !important;
+        margin: 0 2px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 24px;
+        width: 24px;
+    }
+</style>
 @endsection
 
 @section('content')
@@ -38,60 +63,75 @@
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover table-striped">
                         <thead>
-                            <tr>
-                                <th width="50">No</th>
-                                <th width="150">Nama Kamar</th>
-                                <th width="100">Kapasitas</th>
-                                <th width="100">Terisi</th>
-                                <th width="100">Sisa</th>
-                                <th>Deskripsi</th>
-                                <th width="100">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($kamar as $item)
-                            <tr>
-                                <td>{{ $loop->iteration + ($kamar->currentPage() - 1) * $kamar->perPage() }}</td>
-                                <td>
-                                    <strong>{{ $item->nama_kamar }}</strong>
-                                    <div class="mt-1">
-                                        @forelse($item->penghuni as $p)
-                                            <span class="badge badge-light border text-dark mb-1" style="font-weight: 400;">
-                                                <i class="fas fa-user-circle mr-1"></i> {{ $p->siswa->nama ?? 'N/A' }}
-                                            </span>
-                                        @empty
-                                            <small class="text-muted italic">Belum ada penghuni</small>
-                                        @endforelse
-                                    </div>
-                                </td>
-                                <td>{{ $item->kapasitas }} orang</td>
-                                <td>{{ $item->terisi }} orang</td>
-                                <td>{{ $item->sisa }} orang</td>
-                                <td>{!! $item->status_kapasitas_badge !!}</td>
-                                <td>{{ Str::limit($item->deskripsi ?? '-', 50) }}</td>
-                                <td>
-                                    <a href="{{ route('manajemenasetdanasrama.kamar.show', $item->id) }}" class="btn btn-xs btn-info" title="Detail">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-xs btn-warning"
-                                            data-toggle="modal"
-                                            data-target="#modalEditKamar"
-                                            data-id="{{ $item->id }}"
-                                            data-nama="{{ $item->nama_kamar }}"
-                                            data-kapasitas="{{ $item->kapasitas }}"
-                                            data-deskripsi="{{ $item->deskripsi }}"
-                                            title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-xs btn-danger"
-                                            data-toggle="modal"
-                                            data-target="#modalHapusKamar"
-                                            data-id="{{ $item->id }}"
-                                            data-nama="{{ $item->nama_kamar }}"
-                                            title="Hapus">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
+                        <table class="table table-hover table-compact mb-0">
+                            <thead>
+                                <tr>
+                                    <th width="50">No</th>
+                                    <th width="150">Nama Kamar</th>
+                                    <th width="120">Kapasitas</th>
+                                    <th width="150">Status Hunian</th>
+                                    <th>Deskripsi</th>
+                                    <th width="150" class="text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($kamar as $item)
+                                <tr>
+                                    <td class="text-center text-muted">{{ $loop->iteration + ($kamar->currentPage() - 1) * $kamar->perPage() }}</td>
+                                    <td>
+                                        <strong>{{ $item->nama_kamar }}</strong>
+                                        <div class="mt-1">
+                                            @forelse($item->penghuni->take(3) as $p)
+                                                <span class="badge badge-light border text-dark mb-1" style="font-weight: 400; font-size: 0.7rem;">
+                                                    <i class="fas fa-user-circle mr-1 text-primary"></i> {{ Str::words($p->siswa->nama ?? 'N/A', 1, '') }}
+                                                </span>
+                                            @empty
+                                                <small class="text-muted italic">Kosong</small>
+                                            @endforelse
+                                            @if($item->penghuni->count() > 3)
+                                                <span class="badge badge-light border text-muted mb-1" style="font-size: 0.7rem;">+{{ $item->penghuni->count() - 3 }}</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="progress progress-xs" style="height: 6px;">
+                                            @php $percent = $item->kapasitas > 0 ? ($item->terisi / $item->kapasitas) * 100 : 0; @endphp
+                                            <div class="progress-bar {{ $percent >= 100 ? 'bg-danger' : ($percent >= 75 ? 'bg-warning' : 'bg-success') }}" 
+                                                 role="progressbar" style="width: {{ $percent }}%"></div>
+                                        </div>
+                                        <small class="text-muted">{{ $item->terisi }} / {{ $item->kapasitas }} Orang</small>
+                                    </td>
+                                    <td>{!! $item->status_kapasitas_badge !!}</td>
+                                    <td><small class="text-muted">{{ Str::limit($item->deskripsi ?? '-', 60) }}</small></td>
+                                    <td class="text-center">
+                                        @if($item->sisa > 0)
+                                        <a href="{{ route('manajemenasetdanasrama.penghuni.create', ['kamar_id' => $item->id]) }}" 
+                                           class="btn btn-xs-custom btn-success" title="Tambah Penghuni">
+                                            <i class="fas fa-user-plus"></i>
+                                        </a>
+                                        @endif
+                                        <a href="{{ route('manajemenasetdanasrama.kamar.show', $item->id) }}" class="btn btn-xs-custom btn-info" title="Detail">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-xs-custom btn-warning"
+                                                data-toggle="modal"
+                                                data-target="#modalEditKamar"
+                                                data-id="{{ $item->id }}"
+                                                data-nama="{{ $item->nama_kamar }}"
+                                                data-kapasitas="{{ $item->kapasitas }}"
+                                                data-deskripsi="{{ $item->deskripsi }}"
+                                                title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-xs-custom btn-danger"
+                                                data-toggle="modal"
+                                                data-target="#modalHapusKamar"
+                                                data-id="{{ $item->id }}"
+                                                data-nama="{{ $item->nama_kamar }}"
+                                                title="Hapus">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
                             </tr>
                             @empty
                             <tr>

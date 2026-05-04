@@ -105,67 +105,106 @@
 
         <div class="card-body p-4 bg-light">
 
-            {{-- ===== FILTER FORM ===== --}}
-            <div class="glass-card p-3 mb-4 border-0">
+            {{-- ===== FILTER SECTION: PREMIUM GLASSMORPHISM ===== --}}
+            <div class="p-4 mb-4 glass-card border-0 shadow-sm" style="background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(10px); border-radius: 15px;">
                 <form action="{{ route('perizinan.index') }}" method="GET" id="filterForm">
-                    <div class="row align-items-center g-2">
-                        {{-- Bulan --}}
-                        <div class="col-12 col-md-3 mb-2 mb-md-0">
-                            <label class="small font-weight-bold text-muted mb-1"><i class="fas fa-calendar-alt mr-1 text-primary"></i> Bulan Pengajuan</label>
-                            <input type="month" name="bulan" class="form-control border-0 shadow-sm" value="{{ request('bulan') }}" onchange="document.getElementById('filterForm').submit()">
-                        </div>
-                        {{-- Status --}}
-                        <div class="col-12 col-md-2 mb-2 mb-md-0">
-                            <label class="small font-weight-bold text-muted mb-1"><i class="fas fa-tag mr-1 text-warning"></i> Status</label>
-                            <select name="status" class="form-control border-0 shadow-sm" onchange="document.getElementById('filterForm').submit()">
-                                <option value="">Semua Status</option>
-                                <option value="menunggu"  {{ request('status') == 'menunggu'  ? 'selected' : '' }}>Menunggu</option>
-                                <option value="disetujui" {{ request('status') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
-                                <option value="ditolak"   {{ request('status') == 'ditolak'   ? 'selected' : '' }}>Ditolak</option>
-                            </select>
-                        </div>
-                        {{-- Keyword search --}}
-                        <div class="col-12 col-md-5 mb-2 mb-md-0">
-                            <label class="small font-weight-bold text-muted mb-1"><i class="fas fa-search mr-1 text-info"></i> Kata Kunci</label>
-                            <div class="input-group" style="border-radius:50px;overflow:hidden;">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-white border-0 text-muted px-3"><i class="fas fa-search"></i></span>
+                    <div class="row align-items-end g-3">
+                        
+                        {{-- Filter Bulan & Tahun --}}
+                        <div class="col-lg-3 col-md-6">
+                            <div class="form-group mb-0">
+                                <label class="text-xs font-weight-bold ml-1 text-muted"><i class="fas fa-calendar-alt mr-1 text-primary"></i> Periode Pengajuan</label>
+                                <div class="d-flex shadow-sm rounded-pill bg-white overflow-hidden" style="height: 38px;">
+                                    @php
+                                        $selectedMonth = request('bulan') ? \Carbon\Carbon::parse(request('bulan'))->format('m') : '';
+                                        $selectedYear = request('bulan') ? \Carbon\Carbon::parse(request('bulan'))->format('Y') : date('Y');
+                                    @endphp
+                                    <select name="filter_month" class="form-control form-control-sm border-0 bg-transparent px-3" onchange="updateBulanValue()" style="box-shadow: none;">
+                                        <option value="">Bulan</option>
+                                        @for($m=1; $m<=12; $m++)
+                                            <option value="{{ sprintf('%02d', $m) }}" {{ $selectedMonth == sprintf('%02d', $m) ? 'selected' : '' }}>
+                                                {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                                            </option>
+                                        @endfor
+                                    </select>
+                                    <div class="vr bg-light my-2" style="width: 1px;"></div>
+                                    <select name="filter_year" class="form-control form-control-sm border-0 bg-transparent px-2" onchange="updateBulanValue()" style="box-shadow: none; width: 90px;">
+                                        @for($y=date('Y'); $y>=date('Y')-2; $y--)
+                                            <option value="{{ $y }}" {{ $selectedYear == $y ? 'selected' : '' }}>{{ $y }}</option>
+                                        @endfor
+                                    </select>
+                                    <input type="hidden" name="bulan" id="hiddenBulan" value="{{ request('bulan') }}">
                                 </div>
-                                <input type="text" name="search" class="form-control border-0" placeholder="Cari nama, jenis izin..." value="{{ request('search') }}" style="box-shadow:none;">
                             </div>
                         </div>
-                        {{-- Buttons --}}
-                        <div class="col-12 col-md-2">
-                            <label class="small font-weight-bold text-muted mb-1 d-none d-md-block">&nbsp;</label>
-                            <div class="d-flex" style="gap:6px;">
-                                <button type="submit" class="btn btn-info rounded-pill px-3 shadow-sm btn-animate font-weight-bold flex-fill">
+
+                        {{-- Filter Status --}}
+                        <div class="col-lg-2 col-md-6">
+                            <div class="form-group mb-0">
+                                <label class="text-xs font-weight-bold ml-1 text-muted"><i class="fas fa-tag mr-1 text-warning"></i> Status Izin</label>
+                                <select name="status" class="form-control form-control-sm border-0 shadow-sm rounded-pill px-3" 
+                                        onchange="this.form.submit()" style="height: 38px;">
+                                    <option value="">Semua Status</option>
+                                    <option value="menunggu"  {{ request('status') == 'menunggu'  ? 'selected' : '' }}>⌛ Menunggu</option>
+                                    <option value="disetujui" {{ request('status') == 'disetujui' ? 'selected' : '' }}>✅ Disetujui</option>
+                                    <option value="ditolak"   {{ request('status') == 'ditolak'   ? 'selected' : '' }}>❌ Ditolak</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Search Keyword --}}
+                        <div class="col-lg-5 col-md-8">
+                            <div class="form-group mb-0">
+                                <label class="text-xs font-weight-bold ml-1 text-muted"><i class="fas fa-search mr-1 text-info"></i> Cari Kata Kunci</label>
+                                <div class="input-group shadow-sm rounded-pill overflow-hidden bg-white">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-white border-0 text-muted px-3"><i class="fas fa-search"></i></span>
+                                    </div>
+                                    <input type="text" name="search" class="form-control border-0" 
+                                           placeholder="Cari nama pegawai atau alasan izin..." 
+                                           value="{{ request('search') }}" style="height: 38px; box-shadow: none;">
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Actions --}}
+                        <div class="col-lg-2 col-md-4">
+                            <div class="d-flex" style="gap: 8px;">
+                                <button type="submit" class="btn btn-primary btn-sm flex-fill rounded-pill shadow-sm btn-animate gradient-primary border-0 font-weight-bold" style="height: 38px;">
                                     <i class="fas fa-filter mr-1"></i> Filter
                                 </button>
-                                <a href="{{ route('perizinan.index') }}" class="btn btn-outline-secondary rounded-pill px-3" title="Reset filter">
-                                    <i class="fas fa-undo"></i>
+                                <a href="{{ route('perizinan.index') }}" class="btn btn-light btn-sm rounded-circle shadow-sm btn-animate border" 
+                                   title="Reset Filter" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-sync-alt text-muted"></i>
                                 </a>
                             </div>
                         </div>
+
                     </div>
-                    {{-- Active filter badges --}}
+
+                    {{-- Active Filter Badges --}}
                     @if(request('search') || request('bulan') || request('status'))
-                    <div class="mt-2 pt-2 border-top d-flex align-items-center flex-wrap" style="gap:6px;">
-                        <small class="text-muted mr-1">Filter aktif:</small>
+                    <div class="mt-3 pt-3 border-top d-flex align-items-center flex-wrap" style="gap: 8px;">
+                        <span class="text-xs font-weight-bold text-muted mr-1">Filter Aktif:</span>
                         @if(request('bulan'))
-                            <span class="badge badge-primary rounded-pill px-3 py-1">
-                                <i class="fas fa-calendar-alt mr-1"></i> {{ \Carbon\Carbon::parse(request('bulan'))->translatedFormat('F Y') }}
+                            <span class="badge badge-light border rounded-pill px-3 py-2 text-primary shadow-xs">
+                                <i class="fas fa-calendar-day mr-1"></i> {{ \Carbon\Carbon::parse(request('bulan'))->translatedFormat('F Y') }}
+                                <a href="{{ request()->fullUrlWithQuery(['bulan' => null]) }}" class="ml-1 text-danger"><i class="fas fa-times-circle"></i></a>
                             </span>
                         @endif
                         @if(request('status'))
-                            <span class="badge badge-warning rounded-pill px-3 py-1">
-                                <i class="fas fa-tag mr-1"></i> {{ ucfirst(request('status')) }}
+                            <span class="badge badge-light border rounded-pill px-3 py-2 text-warning shadow-xs">
+                                <i class="fas fa-clock mr-1"></i> {{ ucfirst(request('status')) }}
+                                <a href="{{ request()->fullUrlWithQuery(['status' => null]) }}" class="ml-1 text-danger"><i class="fas fa-times-circle"></i></a>
                             </span>
                         @endif
                         @if(request('search'))
-                            <span class="badge badge-info rounded-pill px-3 py-1">
-                                <i class="fas fa-search mr-1"></i> "{{ request('search') }}"
+                            <span class="badge badge-light border rounded-pill px-3 py-2 text-info shadow-xs">
+                                <i class="fas fa-quote-left mr-1"></i> {{ request('search') }}
+                                <a href="{{ request()->fullUrlWithQuery(['search' => null]) }}" class="ml-1 text-danger"><i class="fas fa-times-circle"></i></a>
                             </span>
                         @endif
+                        <a href="{{ route('perizinan.index') }}" class="text-xs text-danger font-weight-bold ml-2"><u>Bersihkan Semua</u></a>
                     </div>
                     @endif
                 </form>
@@ -298,4 +337,20 @@
 .table-warning-soft { background-color: rgba(255,193,7,.06); }
 .opacity-4 { opacity: .4; }
 </style>
+
+<script>
+    function updateBulanValue() {
+        const month = document.querySelector('select[name="filter_month"]').value;
+        const year = document.querySelector('select[name="filter_year"]').value;
+        const hiddenInput = document.getElementById('hiddenBulan');
+        
+        if (month && year) {
+            hiddenInput.value = `${year}-${month}`;
+            document.getElementById('filterForm').submit();
+        } else if (!month) {
+            hiddenInput.value = '';
+            document.getElementById('filterForm').submit();
+        }
+    }
+</script>
 @endsection

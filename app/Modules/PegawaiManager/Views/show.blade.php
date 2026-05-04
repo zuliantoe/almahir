@@ -75,6 +75,44 @@
                 </div>
             </div>
 
+            {{-- Statistik Izin & Cuti Tahunan --}}
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px; overflow: hidden;">
+                <div class="card-header bg-white p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 font-weight-bold text-dark"><i class="fas fa-file-alt text-primary mr-2"></i> Rekap Izin & Cuti <span class="text-primary">({{ now()->year }})</span></h5>
+                    <a href="{{ route('perizinan.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 btn-animate">
+                        <i class="fas fa-external-link-alt mr-1"></i> Lihat Semua
+                    </a>
+                </div>
+                <div class="card-body p-4 bg-light">
+                    <div class="row text-center">
+                        <div class="col-3">
+                            <div class="p-3 bg-white rounded shadow-sm hover-elevate h-100" style="border-top: 3px solid #007bff;">
+                                <h3 class="font-weight-bold text-primary mb-1">{{ $izinStats['total'] ?? 0 }}</h3>
+                                <span class="text-muted small font-weight-bold">Total</span>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-3 bg-white rounded shadow-sm hover-elevate h-100" style="border-top: 3px solid #28a745;">
+                                <h3 class="font-weight-bold text-success mb-1">{{ $izinStats['disetujui'] ?? 0 }}</h3>
+                                <span class="text-muted small font-weight-bold">Disetujui</span>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-3 bg-white rounded shadow-sm hover-elevate h-100" style="border-top: 3px solid #ffc107;">
+                                <h3 class="font-weight-bold text-warning mb-1">{{ $izinStats['menunggu'] ?? 0 }}</h3>
+                                <span class="text-muted small font-weight-bold">Menunggu</span>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-3 bg-white rounded shadow-sm hover-elevate h-100" style="border-top: 3px solid #dc3545;">
+                                <h3 class="font-weight-bold text-danger mb-1">{{ $izinStats['ditolak'] ?? 0 }}</h3>
+                                <span class="text-muted small font-weight-bold">Ditolak</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
                 <div class="card-header bg-white p-3 border-bottom">
                     <h5 class="mb-0 font-weight-bold text-dark"><i class="fas fa-info-circle text-primary mr-2"></i> Detail Informasi Pegawai</h5>
@@ -111,6 +149,27 @@
                                         <i class="fas fa-calendar-check fa-fw"></i>
                                     </div>
                                     <span class="h6 mb-0">{{ $pegawai->tanggal_masuk ? $pegawai->tanggal_masuk->format('d F Y') : '-' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="p-3 bg-white rounded border-left border-warning shadow-sm h-100 hover-elevate">
+                                <h6 class="text-muted small text-uppercase font-weight-bold mb-2">Masa Kerja</h6>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle p-2 mr-3 text-warning" style="background: #fff3cd;">
+                                        <i class="fas fa-hourglass-half fa-fw"></i>
+                                    </div>
+                                    @if($pegawai->tanggal_masuk)
+                                        @php $mk = \Carbon\Carbon::parse($pegawai->tanggal_masuk)->diff(now()); @endphp
+                                        <div>
+                                            <span class="h6 mb-0 font-weight-bold text-dark">
+                                                {{ $mk->y > 0 ? $mk->y.' Tahun ' : '' }}{{ $mk->m > 0 ? $mk->m.' Bulan ' : '' }}{{ $mk->d }} Hari
+                                            </span>
+                                            <small class="d-block text-muted">sejak {{ $pegawai->tanggal_masuk->format('d M Y') }}</small>
+                                        </div>
+                                    @else
+                                        <span class="h6 mb-0 text-muted">Belum diatur</span>
+                                    @endif
                                 </div>
                             </div>
                         </div>

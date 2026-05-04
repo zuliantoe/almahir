@@ -43,11 +43,11 @@ class PegawaiManagerController extends Controller
             $query->where('type_pegawai_id', $request->type);
         }
 
-        // Filter: System Role
+        // Filter: System Role — using scopeWithRole() defined in User model
         if ($request->has('role') && $request->role != '') {
             $roleName = $request->role;
             $query->whereHas('user', function($q) use ($roleName) {
-                $q->role($roleName);
+                $q->withRole($roleName);
             });
         }
 
@@ -153,10 +153,18 @@ class PegawaiManagerController extends Controller
                 ->count(),
         ];
 
+        $izinStats = [
+            'total'     => $pegawai->perizinans()->whereYear('created_at', $currentYear)->count(),
+            'disetujui' => $pegawai->perizinans()->whereYear('created_at', $currentYear)->where('status', 'disetujui')->count(),
+            'menunggu'  => $pegawai->perizinans()->whereYear('created_at', $currentYear)->where('status', 'menunggu')->count(),
+            'ditolak'   => $pegawai->perizinans()->whereYear('created_at', $currentYear)->where('status', 'ditolak')->count(),
+        ];
+
         return view('pegawaimanager::show', [
-            'title' => 'Detail Profil Pegawai',
-            'pegawai' => $pegawai,
+            'title'        => 'Detail Profil Pegawai',
+            'pegawai'      => $pegawai,
             'absensiStats' => $absensiStats,
+            'izinStats'    => $izinStats,
         ]);
     }
 

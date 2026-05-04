@@ -97,6 +97,7 @@
                         <th>Identitas Pegawai</th>
                         <th class="text-center">Hak Akses Sistem</th>
                         <th class="text-center">Kategori / Tipe</th>
+                        <th class="text-center">Status Akun</th>
                         <th class="text-center" style="width: 150px;">Aksi</th>
                     </tr>
                 </thead>
@@ -131,6 +132,19 @@
                             <span class="badge badge-info-soft px-3 py-1 text-primary" style="font-weight: 600; border-radius: 8px; background-color: #e3f2fd;">
                                 {{ $item->typePegawai->nama_type ?? '-' }}
                             </span>
+                        </td>
+
+                        <td class="text-center">
+                            @php $status = $item->user->account_status ?? 'inactive'; @endphp
+                            @if($status === 'active')
+                                <span class="badge px-3 py-2" style="background: rgba(40,167,69,0.1); color: #1e7e34; border-radius: 20px; font-weight: 600;" title="Akun aktif dan dapat login">
+                                    <i class="fas fa-circle mr-1" style="font-size: 0.45rem; vertical-align: middle;"></i> Aktif
+                                </span>
+                            @else
+                                <span class="badge px-3 py-2" style="background: rgba(220,53,69,0.1); color: #c82333; border-radius: 20px; font-weight: 600;" title="Akun nonaktif, tidak dapat login">
+                                    <i class="fas fa-circle mr-1" style="font-size: 0.45rem; vertical-align: middle;"></i> Nonaktif
+                                </span>
+                            @endif
                         </td>
 
                         <td class="text-center py-3">
@@ -173,7 +187,7 @@
                     @empty
 
                     <tr>
-                        <td colspan="5" class="text-center text-muted py-5 bg-white">
+                        <td colspan="6" class="text-center text-muted py-5 bg-white">
                             <div class="mb-3">
                                 <i class="fas fa-search-minus fa-4x text-gray-300"></i>
                             </div>

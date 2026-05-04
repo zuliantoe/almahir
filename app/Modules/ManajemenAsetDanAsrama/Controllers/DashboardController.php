@@ -28,6 +28,11 @@ class DashboardController extends BaseController
         $totalKamar = Kamar::count();
         $totalPenghuni = KamarPenghuni::aktif()->count();
         
+        // Tambahan data detail asrama
+        $totalKapasitas = Kamar::sum('kapasitas');
+        $kamarPenuh = Kamar::all()->filter(fn($k) => $k->sisa <= 0)->count();
+        $sisaKapasitas = $totalKapasitas - $totalPenghuni;
+
         $jadwalPiketHariIni = JadwalPiket::with(['siswa', 'kamar'])
                                 ->whereDate('tanggal', date('Y-m-d'))
                                 ->where('status', 'belum')
@@ -42,7 +47,7 @@ class DashboardController extends BaseController
         ];
         
         return view('manajemenasetdanasrama::index', [
-            'title'             => 'Dashboard Manajemen Aset & Asrama',
+            'title'             => 'Manajemen Aset & Asrama',
             'totalAset'         => $totalAset,
             'totalPengajuan'    => $totalPengajuan,
             'totalPengadaan'    => $totalPengadaan,
@@ -50,6 +55,9 @@ class DashboardController extends BaseController
             'totalPemeliharaan' => $totalPemeliharaan,
             'totalKamar'        => $totalKamar,
             'totalPenghuni'     => $totalPenghuni,
+            'totalKapasitas'    => $totalKapasitas,
+            'kamarPenuh'        => $kamarPenuh,
+            'sisaKapasitas'     => $sisaKapasitas,
             'jadwalPiketHariIni'=> $jadwalPiketHariIni,
             'asetByStatus'      => $asetByStatus,
         ]);

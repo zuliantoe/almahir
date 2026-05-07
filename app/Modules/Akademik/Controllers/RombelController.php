@@ -2,12 +2,15 @@
 
 namespace Modules\Akademik\Controllers;
 
+use App\Http\Requests\AkademikRequest\StoreRombelRequest;
+use App\Http\Requests\AkademikRequest\UpdateRombelRequest;
 use App\Modules\Akademik\Models\Kelas;
 use App\Modules\Akademik\Models\Rombel;
 use App\Modules\Akademik\Models\RombelSiswa;
 use App\Modules\Akademik\Models\TahunAjaran;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Modules\Guru\Models\Guru;
 use Modules\Siswa\Models\Siswa;
 
@@ -24,39 +27,44 @@ class RombelController extends Controller
         $kelas = Kelas::all();
         $gurus = Guru::all();
         $siswas = Siswa::aktif()->get();
-        $tahun_ajaran = TahunAjaran::aktif()->get();
+        
+        // Smart Filter: Hanya ambil tahun aktif, 1 tahun sebelum, dan 1 tahun sesudah
+        $currentYear = TahunAjaran::where('status', 1)->first();
+        if ($currentYear) {
+            $tahun_ajaran = TahunAjaran::where('id', '>=', $currentYear->id - 1)
+                                       ->orderBy('id', 'asc')
+                                       ->limit(3)
+                                       ->get();
+        } else {
+            $tahun_ajaran = TahunAjaran::orderBy('id', 'desc')->limit(3)->get();
+        }
         
         return view('akademik::rombel.create', compact('kelas', 'gurus', 'siswas', 'tahun_ajaran'));
     }
 
-    public function store(Request $request)
+    public function store(StoreRombelRequest $request)
     {
-        $request->validate([
-            'nama_rombel' => 'required|string|max:255',
-            'kelas_id' => 'required|exists:kelas,id',
-            'tahunajaran_id' => 'required|exists:tahun_ajaran,id',
-            'guru_id' => 'required|exists:guru,id',
-            'keterangan' => 'nullable|string',
-            'siswa_ids' => 'required|array',
-            'siswa_ids.*' => 'exists:siswa,id'
-        ]);
+        DB::beginTransaction();
+        try {
+            $rombel = Rombel::create($request->only([
+                'nama_rombel', 'kelas_id', 'tahunajaran_id', 'guru_id', 'keterangan'
+            ]));
 
-        $rombel = Rombel::create([
-            'nama_rombel' => $request->nama_rombel,
-            'kelas_id' => $request->kelas_id,
-            'tahunajaran_id' => $request->tahunajaran_id,
-            'guru_id' => $request->guru_id,
-            'keterangan' => $request->keterangan
-        ]);
-
-        foreach ($request->siswa_ids as $siswa_id) {
-            RombelSiswa::create([
+            $siswaData = collect($request->siswa_ids)->map(fn($id) => [
                 'rombel_id' => $rombel->id,
-                'siswa_id' => $siswa_id
-            ]);
-        }
+                'siswa_id' => $id,
+                'created_at' => now(),
+                'updated_at' => now()
+            ])->toArray();
 
-        return redirect()->route('akademik.rombel.index')->with('success', 'Rombel berhasil dibuat');
+            RombelSiswa::insert($siswaData);
+
+            DB::commit();
+            return redirect()->route('akademik.rombel.index')->with('success', 'Rombel berhasil dibuat');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     public function show(Rombel $rombel)
@@ -70,42 +78,51 @@ class RombelController extends Controller
         $kelas = Kelas::all();
         $gurus = Guru::all();
         $siswas = Siswa::aktif()->get();
-        $tahun_ajaran = TahunAjaran::all();
+        
+        // Smart Filter: Sama seperti create, tapi pastikan tahun rombel saat ini juga muncul
+        $currentYear = TahunAjaran::where('status', 1)->first();
+        $query = TahunAjaran::query();
+        
+        if ($currentYear) {
+            $query->where('id', '>=', $currentYear->id - 1)->limit(5); // Kasih range lebih dikit buat edit
+        }
+        
+        // Pastikan tahun yang sedang diedit TETAP muncul di list
+        $tahun_ajaran = $query->orWhere('id', $rombel->tahunajaran_id)
+                             ->orderBy('id', 'asc')
+                             ->get();
+
         $selected_siswas = $rombel->riwayatSiswa->pluck('siswa_id')->toArray();
 
         return view('akademik::rombel.edit', compact('rombel', 'kelas', 'gurus', 'siswas', 'tahun_ajaran', 'selected_siswas'));
     }
 
-    public function update(Request $request, Rombel $rombel)
+    public function update(UpdateRombelRequest $request, Rombel $rombel)
     {
-        $request->validate([
-            'nama_rombel' => 'required|string|max:255',
-            'kelas_id' => 'required|exists:kelas,id',
-            'tahunajaran_id' => 'required|exists:tahun_ajaran,id',
-            'guru_id' => 'required|exists:guru,id',
-            'keterangan' => 'nullable|string',
-            'siswa_ids' => 'required|array',
-            'siswa_ids.*' => 'exists:siswa,id'
-        ]);
+        DB::beginTransaction();
+        try {
+            $rombel->update($request->only([
+                'nama_rombel', 'kelas_id', 'tahunajaran_id', 'guru_id', 'keterangan'
+            ]));
 
-        $rombel->update([
-            'nama_rombel' => $request->nama_rombel,
-            'kelas_id' => $request->kelas_id,
-            'tahunajaran_id' => $request->tahunajaran_id,
-            'guru_id' => $request->guru_id,
-            'keterangan' => $request->keterangan
-        ]);
-
-        // Sync students
-        $rombel->riwayatSiswa()->delete();
-        foreach ($request->siswa_ids as $siswa_id) {
-            RombelSiswa::create([
+            // Sync students
+            $rombel->riwayatSiswa()->delete();
+            
+            $siswaData = collect($request->siswa_ids)->map(fn($id) => [
                 'rombel_id' => $rombel->id,
-                'siswa_id' => $siswa_id
-            ]);
-        }
+                'siswa_id' => $id,
+                'created_at' => now(),
+                'updated_at' => now()
+            ])->toArray();
 
-        return redirect()->route('akademik.rombel.index')->with('success', 'Rombel berhasil diupdate');
+            RombelSiswa::insert($siswaData);
+
+            DB::commit();
+            return redirect()->route('akademik.rombel.index')->with('success', 'Rombel berhasil diupdate');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     public function destroy(Rombel $rombel)

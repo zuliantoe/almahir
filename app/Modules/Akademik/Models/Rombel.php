@@ -42,6 +42,18 @@ class Rombel extends Model
         return $this->hasMany(RombelSiswa::class, 'rombel_id');
     }
 
+    public function siswa()
+    {
+        return $this->belongsToMany(\Modules\Siswa\Models\Siswa::class, 'rombel_siswa', 'rombel_id', 'siswa_id')
+            ->withPivot('status')
+            ->withTimestamps();
+    }
+
+    public function aktifSiswa()
+    {
+        return $this->siswa()->wherePivot('status', 'aktif');
+    }
+
     public function jadwalPelajaran(): HasMany
     {
         return $this->hasMany(JadwalPelajaran::class, 'rombel_id');

@@ -119,4 +119,79 @@ class MataPelajaranController extends Controller
         return redirect()->route('akademik.mata-pelajaran.index')
             ->with('success', 'Mata pelajaran berhasil dihapus.');
     }
+
+    /**
+     * Import Mata Pelajaran from CSV
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:csv,txt|max:2048'
+        ]);
+
+        $file = $request->file('file');
+        $handle = fopen($file->getRealPath(), 'r');
+        
+        // Skip header
+        fgetcsv($handle);
+
+        $imported = 0;
+        $skipped = 0;
+
+        while (($data = fgetcsv($handle, 1000, ',')) !== FALSE) {
+            // Data format: kode, nama, kategori_id
+            if (count($data) >= 3) {
+                MataPelajaran::updateOrCreate(
+                    ['kode' => $data[0]],
+                    [
+                        'nama' => $data[1],
+                        'kategori_id' => $data[2]
+                    ]
+                );
+                $imported++;
+            } else {
+                $skipped++;
+            }
+        }
+
+        fclose($handle);
+
+        return redirect()->route('akademik.mata-pelajaran.index')
+            ->with('success', "Berhasil mengimpor $imported data. (Gagal: $skipped)");
+    }
+
+    /**
+     * Bulk Store Mata Pelajaran
+     */
+    public function bulkStore(Request $request)
+    {
+        $request->validate([
+            'subjects' => 'required|array|min:1',
+            'subjects.*.kode' => 'required|string|max:50',
+            'subjects.*.nama' => 'required|string|max:255',
+            'subjects.*.kategori_id' => 'required|exists:kategori_pelajaran,id',
+        ]);
+
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            $count = 0;
+            foreach ($request->subjects as $subject) {
+                MataPelajaran::updateOrCreate(
+                    ['kode' => $subject['kode']],
+                    [
+                        'nama' => $subject['nama'],
+                        'kategori_id' => $subject['kategori_id']
+                    ]
+                );
+                $count++;
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+            return redirect()->route('akademik.mata-pelajaran.index')
+                ->with('success', "Berhasil menyimpan $count mata pelajaran sekaligus.");
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return redirect()->back()->withInput()->with('error', 'Gagal simpan massal: ' . $e->getMessage());
+        }
+    }
 }

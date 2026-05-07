@@ -17,6 +17,35 @@
         </div>
     </div>
 
+    {{-- Filter Tahun Ajaran --}}
+    <x-card class="mb-4 shadow-sm border-left-primary">
+        <form action="{{ route('akademik.jadwal-pelajaran.index') }}" method="GET" class="row align-items-center">
+            <div class="col-md-4">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-calendar-check fa-2x text-primary mr-3"></i>
+                    <div>
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Tahun Ajaran Aktif</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ $activeTahunAjaran ? $activeTahunAjaran->tahunajaran . ' - ' . $activeTahunAjaran->semester : 'Belum Ditentukan' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <select name="tahun_ajaran_id" class="form-control" onchange="this.form.submit()">
+                    @foreach($tahunAjarans as $ta)
+                        <option value="{{ $ta->id }}" {{ ($activeTahunAjaran && $activeTahunAjaran->id == $ta->id) ? 'selected' : '' }}>
+                            Tahun Ajaran: {{ $ta->tahunajaran }} - {{ $ta->semester }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <x-btn type="submit" class="btn-primary w-100">Ganti Tahun</x-btn>
+            </div>
+        </form>
+    </x-card>
+
     @if($rawJadwal->isEmpty())
         <x-card type="info" outline>
             <div class="text-center py-5">

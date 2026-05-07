@@ -129,8 +129,44 @@
             </x-card>
         </div>
 
-        {{-- Right Column: Recent Activities --}}
+        {{-- Right Column: Notifications & Recent Activities --}}
         <div class="col-md-4">
+            {{-- Upcoming Events Notification --}}
+            <x-card title="Agenda Akademik Terdekat" icon="fas fa-bell" type="warning" outline>
+                <div class="list-group list-group-flush mb-2">
+                    @forelse($upcomingEvents ?? [] as $event)
+                        <div class="list-group-item px-0 py-2 border-bottom">
+                            <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                                <h6 class="mb-0 font-weight-bold text-truncate" style="max-width: 70%;" title="{{ $event->nama_kegiatan }}">
+                                    @if($event->jenisKegiatan?->is_kbm == 0)
+                                        <i class="fas fa-exclamation-circle text-danger mr-1" title="Libur / Non KBM"></i>
+                                    @else
+                                        <i class="fas fa-calendar-day text-success mr-1"></i>
+                                    @endif
+                                    {{ $event->nama_kegiatan }}
+                                </h6>
+                                <small class="text-muted font-weight-bold">
+                                    {{ \Carbon\Carbon::parse($event->tanggal_awal)->diffForHumans() }}
+                                </small>
+                            </div>
+                            <small class="text-muted d-block">
+                                <i class="far fa-clock mr-1"></i> 
+                                {{ \Carbon\Carbon::parse($event->tanggal_awal)->translatedFormat('d M Y') }}
+                                @if($event->tanggal_awal != $event->tanggal_akhir)
+                                 - {{ \Carbon\Carbon::parse($event->tanggal_akhir)->translatedFormat('d M Y') }}
+                                @endif
+                            </small>
+                        </div>
+                    @empty
+                        <div class="text-center p-3 text-muted">
+                            <i class="fas fa-calendar-check fa-2x mb-2 text-light"></i>
+                            <p class="mb-0 small">Tidak ada agenda dalam 30 hari ke depan.</p>
+                        </div>
+                    @endforelse
+                </div>
+                <a href="{{ route('akademik.kalender-akademik.index') }}" class="btn btn-block btn-sm btn-outline-warning mt-2">Lihat Kalender Penuh</a>
+            </x-card>
+
             <x-card title="Baru Saja Bergabung" icon="fas fa-history" type="info" outline>
                 <div class="nav-tabs-custom">
                     <ul class="nav nav-tabs mb-3" id="recent-tab" role="tablist">

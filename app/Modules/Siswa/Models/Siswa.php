@@ -100,6 +100,18 @@ class Siswa extends Model
         return $this->belongsTo(\Modules\Pendaftaran\Models\Pendaftaran::class);
     }
 
+    public function rombel()
+    {
+        return $this->belongsToMany(\App\Modules\Akademik\Models\Rombel::class, 'rombel_siswa', 'siswa_id', 'rombel_id')
+            ->withPivot('status')
+            ->withTimestamps();
+    }
+
+    public function currentRombel()
+    {
+        return $this->rombel()->wherePivot('status', 'aktif')->latest()->first();
+    }
+
     /**
      * Relationship to KamarPenghuni (Dormitory)
      */

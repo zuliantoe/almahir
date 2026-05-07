@@ -32,7 +32,7 @@
     <x-card title="Filter Jadwal" icon="fas fa-filter" outline collapsible>
         <form action="{{ route('akademik.jadwal-pelajaran.index') }}" method="GET">
             <div class="row align-items-end">
-                <div class="col-md-4 mb-3">
+                <div class="col-md-3 mb-3">
                     <label>Rombel / Kelas</label>
                     <select name="rombel_id" class="form-control">
                         <option value="">— Semua Rombel —</option>
@@ -43,7 +43,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3 mb-3">
+                <div class="col-md-2 mb-3">
                     <label>Hari</label>
                     <select name="hari" class="form-control">
                         <option value="">— Semua Hari —</option>
@@ -53,11 +53,20 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-3">
-                    <label>Guru Pengajar</label>
-                    <select name="guru_id" class="form-control">
-                        <option value="">— Semua Guru —</option>
-                        @foreach($gurus as $g)
-                            <option value="{{ $g->id }}" {{ request('guru_id') == $g->id ? 'selected' : '' }}>{{ $g->nama }}</option>
+                    <label>Mata Pelajaran</label>
+                    <select name="mapel_id" class="form-control">
+                        <option value="">— Semua Mapel —</option>
+                        @foreach($mapels as $m)
+                            <option value="{{ $m->id }}" {{ request('mapel_id') == $m->id ? 'selected' : '' }}>{{ $m->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label>Tahun Ajaran</label>
+                    <select name="tahun_ajaran_id" class="form-control">
+                        <option value="">— Semua Tahun —</option>
+                        @foreach($tahunAjarans as $ta)
+                            <option value="{{ $ta->id }}" {{ request('tahun_ajaran_id') == $ta->id ? 'selected' : '' }}>{{ $ta->tahunajaran }} - {{ $ta->semester }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -65,6 +74,15 @@
                     <x-btn type="submit" class="btn-primary w-100" icon="fas fa-search">
                         Filter
                     </x-btn>
+                </div>
+                <div class="col-md-12 mb-3">
+                    <label>Guru Pengajar</label>
+                    <select name="guru_id" class="form-control">
+                        <option value="">— Semua Guru —</option>
+                        @foreach($gurus as $g)
+                            <option value="{{ $g->id }}" {{ request('guru_id') == $g->id ? 'selected' : '' }}>{{ $g->nama }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
         </form>

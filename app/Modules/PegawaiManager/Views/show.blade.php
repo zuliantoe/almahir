@@ -36,6 +36,15 @@
                             <b>Tipe Pegawai</b> <span class="badge badge-light px-2 py-1 text-dark">{{ $pegawai->typePegawai->nama_type ?? '-' }}</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center" style="background: transparent; border-color: rgba(255,255,255,0.2); color: white;">
+                            <b>Status Akun</b> 
+                            @php $status = $pegawai->user->account_status ?? 'inactive'; @endphp
+                            @if($status === 'active')
+                                <span class="badge badge-success px-2 py-1"><i class="fas fa-check-circle mr-1"></i> Aktif</span>
+                            @else
+                                <span class="badge badge-danger px-2 py-1"><i class="fas fa-times-circle mr-1"></i> Nonaktif</span>
+                            @endif
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center" style="background: transparent; border-color: rgba(255,255,255,0.2); color: white;">
                             <b>Terdaftar Sejak</b> <span>{{ $pegawai->created_at->format('d/m/Y') }}</span>
                         </li>
                     </ul>
@@ -59,16 +68,22 @@
                 </div>
                 <div class="card-body p-4 bg-light">
                     <div class="row text-center">
-                        <div class="col-6">
+                        <div class="col-md-4 mb-3">
                             <div class="p-3 bg-white rounded border-bottom border-success shadow-sm hover-elevate h-100">
                                 <h2 class="font-weight-bold text-success mb-1">{{ $absensiStats['hadir'] ?? 0 }}</h2>
                                 <span class="text-muted small text-uppercase font-weight-bold"><i class="fas fa-check-circle mr-1"></i> Total Hadir</span>
                             </div>
                         </div>
-                        <div class="col-6">
+                        <div class="col-md-4 mb-3">
                             <div class="p-3 bg-white rounded border-bottom border-warning shadow-sm hover-elevate h-100">
                                 <h2 class="font-weight-bold text-warning mb-1">{{ $absensiStats['terlambat'] ?? 0 }}</h2>
-                                <span class="text-muted small text-uppercase font-weight-bold"><i class="fas fa-clock mr-1"></i> Total Terlambat</span>
+                                <span class="text-muted small text-uppercase font-weight-bold"><i class="fas fa-clock mr-1"></i> Terlambat</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3 bg-white rounded border-bottom border-info shadow-sm hover-elevate h-100">
+                                <h2 class="font-weight-bold text-info mb-1">{{ $absensiStats['izin'] ?? 0 }}</h2>
+                                <span class="text-muted small text-uppercase font-weight-bold"><i class="fas fa-file-invoice mr-1"></i> Total Perizinan</span>
                             </div>
                         </div>
                     </div>
@@ -79,34 +94,44 @@
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px; overflow: hidden;">
                 <div class="card-header bg-white p-3 border-bottom d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 font-weight-bold text-dark"><i class="fas fa-file-alt text-primary mr-2"></i> Rekap Izin & Cuti <span class="text-primary">({{ now()->year }})</span></h5>
-                    <a href="{{ route('perizinan.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 btn-animate">
-                        <i class="fas fa-external-link-alt mr-1"></i> Lihat Semua
+                    <a href="{{ route('perizinan.index', ['pegawai_id' => $pegawai->id]) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 btn-animate">
+                        <i class="fas fa-external-link-alt mr-1"></i> Lihat Detail
                     </a>
                 </div>
                 <div class="card-body p-4 bg-light">
-                    <div class="row text-center">
-                        <div class="col-3">
-                            <div class="p-3 bg-white rounded shadow-sm hover-elevate h-100" style="border-top: 3px solid #007bff;">
-                                <h3 class="font-weight-bold text-primary mb-1">{{ $izinStats['total'] ?? 0 }}</h3>
-                                <span class="text-muted small font-weight-bold">Total</span>
+                    <div class="row text-center mb-3">
+                        <div class="col-md-5">
+                            <div class="p-3 gradient-primary text-white rounded shadow-sm hover-elevate h-100 d-flex flex-column justify-content-center">
+                                <div class="small text-uppercase font-weight-bold opacity-8 mb-1">Sisa Jatah Cuti/Izin</div>
+                                <h2 class="font-weight-bold mb-0">{{ $izinStats['sisa_cuti'] }} <span class="h6 mb-0">Hari</span></h2>
                             </div>
                         </div>
-                        <div class="col-3">
-                            <div class="p-3 bg-white rounded shadow-sm hover-elevate h-100" style="border-top: 3px solid #28a745;">
-                                <h3 class="font-weight-bold text-success mb-1">{{ $izinStats['disetujui'] ?? 0 }}</h3>
-                                <span class="text-muted small font-weight-bold">Disetujui</span>
-                            </div>
-                        </div>
-                        <div class="col-3">
-                            <div class="p-3 bg-white rounded shadow-sm hover-elevate h-100" style="border-top: 3px solid #ffc107;">
-                                <h3 class="font-weight-bold text-warning mb-1">{{ $izinStats['menunggu'] ?? 0 }}</h3>
-                                <span class="text-muted small font-weight-bold">Menunggu</span>
-                            </div>
-                        </div>
-                        <div class="col-3">
-                            <div class="p-3 bg-white rounded shadow-sm hover-elevate h-100" style="border-top: 3px solid #dc3545;">
-                                <h3 class="font-weight-bold text-danger mb-1">{{ $izinStats['ditolak'] ?? 0 }}</h3>
-                                <span class="text-muted small font-weight-bold">Ditolak</span>
+                        <div class="col-md-7">
+                            <div class="row g-2">
+                                <div class="col-3">
+                                    <div class="p-2 bg-white rounded shadow-sm border-top border-primary h-100">
+                                        <div class="h5 font-weight-bold text-primary mb-0">{{ $izinStats['total'] }} <small>Hr</small></div>
+                                        <div class="text-xs text-muted">Total</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="p-2 bg-white rounded shadow-sm border-top border-success h-100">
+                                        <div class="h5 font-weight-bold text-success mb-0">{{ $izinStats['disetujui'] }} <small>Hr</small></div>
+                                        <div class="text-xs text-muted">Setuju</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="p-2 bg-white rounded shadow-sm border-top border-warning h-100">
+                                        <div class="h5 font-weight-bold text-warning mb-0">{{ $izinStats['menunggu'] }} <small>Hr</small></div>
+                                        <div class="text-xs text-muted">Tunggu</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="p-2 bg-white rounded shadow-sm border-top border-danger h-100">
+                                        <div class="h5 font-weight-bold text-danger mb-0">{{ $izinStats['ditolak'] }} <small>Hr</small></div>
+                                        <div class="text-xs text-muted">Tolak</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

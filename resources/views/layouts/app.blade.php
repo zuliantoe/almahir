@@ -179,6 +179,103 @@
         .swal2-icon {
             border-width: 3px !important;
         }
+
+        /* Global Image Preview Modal */
+        #imagePreviewModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #imagePreviewModal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .preview-container {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .preview-image-wrapper {
+            overflow: auto;
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            background: #fff;
+            cursor: grab;
+        }
+
+        .preview-image-wrapper:active {
+            cursor: grabbing;
+        }
+
+        #previewImage {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 100%;
+            display: block;
+            margin: auto;
+        }
+
+        .preview-controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px 25px;
+            border-radius: 50px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .preview-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .preview-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .preview-close {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .preview-close:hover {
+            transform: rotate(90deg);
+        }
     </style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -213,6 +310,22 @@
         <aside class="control-sidebar control-sidebar-dark">
             {{-- Control sidebar content goes here --}}
         </aside>
+    </div>
+
+    {{-- Global Image Preview Modal --}}
+    <div id="imagePreviewModal">
+        <div class="preview-container animate__animated animate__zoomIn animate__faster">
+            <span class="preview-close" onclick="closeImagePreview()">&times;</span>
+            <div class="preview-image-wrapper">
+                <img id="previewImage" src="" alt="Preview">
+            </div>
+            <div class="preview-controls">
+                <button class="preview-btn" onclick="zoomImage(0.2)" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+                <button class="preview-btn" onclick="zoomImage(-0.2)" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+                <button class="preview-btn" onclick="rotateImage()" title="Rotate"><i class="fas fa-sync-alt"></i></button>
+                <button class="preview-btn" id="downloadPreview" title="Download"><i class="fas fa-download"></i></button>
+            </div>
+        </div>
     </div>
 
     {{-- jQuery --}}
@@ -304,6 +417,106 @@
                     }
                 });
             });
+
+            // Global Logout Confirmation
+            $(document).on('click', '.btn-logout', function(e) {
+                e.preventDefault();
+                let element = $(this);
+                let form = element.closest('form');
+                
+                // If it's a link (like in sidebar) that isn't inside a form
+                if (form.length === 0) {
+                    form = $('#logout-form-sidebar');
+                }
+
+                Swal.fire({
+                    title: 'Yakin ingin keluar?',
+                    text: "Sesi Anda akan berakhir dan Anda harus login kembali untuk masuk.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Keluar!',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+
+            // Status Cuti/Izin Notification
+            @auth
+                @if(auth()->user()->pegawai && $leave = auth()->user()->pegawai->isOnLeave())
+                    Swal.fire({
+                        title: 'Status: Sedang Cuti/Izin',
+                        html: `Halo <strong>{{ auth()->user()->name }}</strong>, Anda sedang dalam masa <strong>{{ strtoupper($leave->jenis_izin) }}</strong> hingga tanggal <strong>{{ \Carbon\Carbon::parse($leave->tanggal_selesai)->format('d/m/Y') }}</strong>. <br><br> <small class="text-muted">Selamat beristirahat/bertugas!</small>`,
+                        icon: 'info',
+                        confirmButtonText: 'Mengerti',
+                        confirmButtonColor: 'var(--primary-color)',
+                        backdrop: `rgba(0,0,123,0.1)`
+                    });
+                @endif
+            @endauth
+        });
+
+        // Global Image Preview Logic
+        let currentScale = 1;
+        let currentRotation = 0;
+
+        function openImagePreview(src) {
+            const modal = document.getElementById('imagePreviewModal');
+            const img = document.getElementById('previewImage');
+            const downloadBtn = document.getElementById('downloadPreview');
+            
+            img.src = src;
+            img.style.transform = `scale(1) rotate(0deg)`;
+            currentScale = 1;
+            currentRotation = 0;
+            
+            downloadBtn.onclick = function() {
+                const link = document.createElement('a');
+                link.href = src;
+                link.download = 'lampiran-bukti-' + new Date().getTime();
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        }
+
+        function closeImagePreview() {
+            const modal = document.getElementById('imagePreviewModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function zoomImage(delta) {
+            currentScale = Math.max(0.5, Math.min(3, currentScale + delta));
+            updateImageTransform();
+        }
+
+        function rotateImage() {
+            currentRotation += 90;
+            updateImageTransform();
+        }
+
+        function updateImageTransform() {
+            const img = document.getElementById('previewImage');
+            img.style.transform = `scale(${currentScale}) rotate(${currentRotation}deg)`;
+        }
+
+        // Close on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeImagePreview();
+        });
+
+        // Close on click outside
+        document.getElementById('imagePreviewModal').addEventListener('click', function(e) {
+            if (e.target === this) closeImagePreview();
         });
     </script>
 </body>

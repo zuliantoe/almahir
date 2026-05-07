@@ -57,7 +57,7 @@
                                     <label class="jenis-card d-block text-center p-3 rounded border cursor-pointer {{ old('jenis_izin') == $j['val'] ? 'selected' : '' }}"
                                            style="cursor:pointer;transition:all .2s;" onclick="selectJenis('{{ $j['val'] }}')">
                                         <input type="radio" name="jenis_izin" value="{{ $j['val'] }}"
-                                               id="jenis_{{ $j['val'] }}" style="display:none;"
+                                               id="jenis_{{ str_replace(' ', '_', $j['val']) }}" style="display:none;"
                                                {{ old('jenis_izin') == $j['val'] ? 'checked' : '' }}>
                                         <i class="fas {{ $j['icon'] }} fa-2x mb-2 d-block" style="color:{{ $j['color'] }};"></i>
                                         <span class="small font-weight-bold text-dark">{{ $j['label'] }}</span>
@@ -199,16 +199,26 @@
 <script>
 // Pilih jenis izin via card
 function selectJenis(val) {
+    // Reset semua kartu
     document.querySelectorAll('.jenis-card').forEach(el => {
         el.style.background = '';
         el.style.borderColor = '';
         el.style.boxShadow = '';
+        el.classList.remove('selected');
     });
-    const card = document.querySelector(`#jenis_${val.replace(' ', '_')}`).closest('.jenis-card');
-    card.style.background = '#e8f4fd';
-    card.style.borderColor = '#007bff';
-    card.style.boxShadow = '0 0 0 3px rgba(0,123,255,.2)';
-    document.querySelector(`#jenis_${val.replace(' ', '_')}`).checked = true;
+
+    // Cari radio berdasarkan value (bukan ID) — ini lebih aman
+    const radio = document.querySelector(`input[name="jenis_izin"][value="${val}"]`);
+    if (radio) {
+        radio.checked = true;
+        const card = radio.closest('.jenis-card');
+        if (card) {
+            card.style.background = '#e8f4fd';
+            card.style.borderColor = '#007bff';
+            card.style.boxShadow = '0 0 0 3px rgba(0,123,255,.2)';
+            card.classList.add('selected');
+        }
+    }
 
     // tampilkan peringatan cuti jika perlu
     hitungDurasi();
@@ -229,12 +239,14 @@ function hitungDurasi() {
 
             const jenis = document.querySelector('input[name="jenis_izin"]:checked');
             const warnEl = document.getElementById('warnCuti');
-            if (jenis && jenis.value === 'cuti' && diff > sisaCuti) {
-                warnEl.textContent = `⚠ Melebihi sisa cuti Anda (${sisaCuti} hari)!`;
+            if (jenis && (jenis.value === 'cuti' || jenis.value === 'izin') && diff > sisaCuti) {
+                warnEl.textContent = `⚠ Melebihi sisa cuti/izin Anda (${sisaCuti} hari)!`;
                 warnEl.style.display = '';
             } else {
                 warnEl.style.display = 'none';
             }
+        } else {
+            document.getElementById('infoDurasi').style.display = 'none';
         }
     }
 }
@@ -253,10 +265,74 @@ function previewFile(input) {
     }
 }
 
-// Init selected state dari old value
+// Form submit dengan validasi client-side
 document.addEventListener('DOMContentLoaded', function() {
+    // Init selected state dari old value
     const checked = document.querySelector('input[name="jenis_izin"]:checked');
     if (checked) selectJenis(checked.value);
+
+    // Intercept form submit
+    document.getElementById('formPengajuan').addEventListener('submit', function(e) {
+        const jenis = document.querySelector('input[name="jenis_izin"]:checked');
+
+        if (!jenis) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Jenis Perizinan Belum Dipilih',
+                text: 'Silakan pilih salah satu jenis perizinan (Izin, Sakit, Cuti, atau Dinas Luar) terlebih dahulu.',
+                confirmButtonColor: '#4361ee'
+            });
+            return false;
+        }
+
+        const mulai = document.getElementById('tgl_mulai').value;
+        const selesai = document.getElementById('tgl_selesai').value;
+
+        if (!mulai || !selesai) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Tanggal Belum Lengkap',
+                text: 'Silakan isi Tanggal Mulai dan Tanggal Selesai.',
+                confirmButtonColor: '#4361ee'
+            });
+            return false;
+        }
+
+        const d1 = new Date(mulai), d2 = new Date(selesai);
+        if (d2 < d1) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Tanggal Tidak Valid',
+                text: 'Tanggal Selesai tidak boleh lebih awal dari Tanggal Mulai.',
+                confirmButtonColor: '#d33'
+            });
+            return false;
+        }
+
+        // Cek kuota cuti/izin di client side
+        const sisaCuti = {{ $sisaCuti ?? 999 }};
+        if ((jenis.value === 'cuti' || jenis.value === 'izin') && sisaCuti < 999) {
+            const diff = Math.round((d2 - d1) / 86400000) + 1;
+            if (diff > sisaCuti) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kuota Tidak Mencukupi',
+                    html: `Sisa jatah cuti/izin Anda tahun ini adalah <strong>${sisaCuti} hari</strong>, namun Anda mengajukan <strong>${diff} hari</strong>.`,
+                    confirmButtonColor: '#d33'
+                });
+                return false;
+            }
+        }
+
+        // Semua valid, tampilkan loading
+        const btn = document.getElementById('btnSubmit');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Mengirim...';
+    });
 });
 </script>
 <style>

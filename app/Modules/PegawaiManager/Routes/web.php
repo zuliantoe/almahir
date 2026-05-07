@@ -44,5 +44,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/{id}', [PegawaiManagerController::class, 'show'])->middleware('permission:guru.view')->name('show');
     Route::get('/{id}/edit', [PegawaiManagerController::class, 'edit'])->middleware('permission:guru.edit')->name('edit');
     Route::put('/{id}', [PegawaiManagerController::class, 'update'])->middleware('permission:guru.edit')->name('update');
+    Route::patch('/{id}/toggle-status', [PegawaiManagerController::class, 'toggleStatus'])
+        ->middleware('role:SUPER_ADMIN,STAF_TU')
+        ->name('toggle-status');
     Route::delete('/{id}', [PegawaiManagerController::class, 'destroy'])->middleware('role:SUPER_ADMIN,STAF_TU')->name('destroy');
 });

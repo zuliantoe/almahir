@@ -164,6 +164,7 @@
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 @endcan
+                                
 
                                 @if(auth()->user()->hasRole(['SUPER_ADMIN', 'STAF_TU']))
                                 <form action="{{ route('pegawaimanager.destroy', $item->id) }}"
@@ -229,3 +230,10 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    });
+</script>
+@endpush

@@ -61,4 +61,35 @@ class Pegawai extends Model
     {
         return $this->hasMany(\Modules\Absensi\Models\Absensi::class, 'pegawai_id');
     }
+
+    /**
+     * Hitung sisa jatah cuti tersedia (Total - Pending)
+     */
+    public function getAvailableQuota(): int
+    {
+        $currentYear = date('Y');
+        $pendingDays = \Modules\Perizinan\Models\Perizinan::where('user_id', $this->id)
+            ->whereIn('jenis_izin', ['cuti', 'izin'])
+            ->where('status', 'menunggu')
+            ->whereYear('tanggal_mulai', $currentYear)
+            ->get()
+            ->sum(function($izin) {
+                return \Carbon\Carbon::parse($izin->tanggal_mulai)->diffInDays(\Carbon\Carbon::parse($izin->tanggal_selesai)) + 1;
+            });
+            
+        return max(0, $this->sisa_cuti - (int)$pendingDays);
+    }
+
+    /**
+     * Cek apakah pegawai sedang dalam masa cuti/izin yang disetujui hari ini
+     */
+    public function isOnLeave(): ?\Modules\Perizinan\Models\Perizinan
+    {
+        $today = date('Y-m-d');
+        return $this->perizinans()
+            ->where('status', 'disetujui')
+            ->whereDate('tanggal_mulai', '<=', $today)
+            ->whereDate('tanggal_selesai', '>=', $today)
+            ->first();
+    }
 }

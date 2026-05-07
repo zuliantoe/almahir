@@ -18,6 +18,7 @@ use Illuminate\Support\Str;
 use Modules\PegawaiManager\Requests\StorePegawaiRequest;
 use Modules\PegawaiManager\Requests\UpdatePegawaiRequest;
 use Illuminate\Support\Facades\Cache;
+use Carbon\Carbon;
 
 class PegawaiManagerController extends Controller
 {
@@ -144,20 +145,41 @@ class PegawaiManagerController extends Controller
             'hadir' => $pegawai->absensis()
                 ->whereMonth('tanggal', $currentMonth)
                 ->whereYear('tanggal', $currentYear)
-                ->where('status', 'HADIR')
+                ->whereIn('status', ['TEPAT WAKTU', 'TERLAMBAT'])
                 ->count(),
             'terlambat' => $pegawai->absensis()
                 ->whereMonth('tanggal', $currentMonth)
                 ->whereYear('tanggal', $currentYear)
                 ->where('status', 'TERLAMBAT')
                 ->count(),
+            'izin' => $pegawai->perizinans()
+                ->where('status', 'disetujui')
+                ->where(function($q) use ($currentMonth, $currentYear) {
+                    $q->where(function($q2) use ($currentMonth, $currentYear) {
+                        $q2->whereMonth('tanggal_mulai', $currentMonth)
+                           ->whereYear('tanggal_mulai', $currentYear);
+                    })->orWhere(function($q2) use ($currentMonth, $currentYear) {
+                        $q2->whereMonth('tanggal_selesai', $currentMonth)
+                           ->whereYear('tanggal_selesai', $currentYear);
+                    });
+                })
+                ->count(), // Ubah menjadi count (Total Perizinan)
         ];
 
         $izinStats = [
-            'total'     => $pegawai->perizinans()->whereYear('created_at', $currentYear)->count(),
-            'disetujui' => $pegawai->perizinans()->whereYear('created_at', $currentYear)->where('status', 'disetujui')->count(),
-            'menunggu'  => $pegawai->perizinans()->whereYear('created_at', $currentYear)->where('status', 'menunggu')->count(),
-            'ditolak'   => $pegawai->perizinans()->whereYear('created_at', $currentYear)->where('status', 'ditolak')->count(),
+            'total'     => $pegawai->perizinans()->whereYear('created_at', $currentYear)->get()->sum(function($i) {
+                return Carbon::parse($i->tanggal_mulai)->diffInDays(Carbon::parse($i->tanggal_selesai)) + 1;
+            }),
+            'disetujui' => $pegawai->perizinans()->whereYear('created_at', $currentYear)->where('status', 'disetujui')->get()->sum(function($i) {
+                return Carbon::parse($i->tanggal_mulai)->diffInDays(Carbon::parse($i->tanggal_selesai)) + 1;
+            }),
+            'menunggu'  => $pegawai->perizinans()->whereYear('created_at', $currentYear)->where('status', 'menunggu')->get()->sum(function($i) {
+                return Carbon::parse($i->tanggal_mulai)->diffInDays(Carbon::parse($i->tanggal_selesai)) + 1;
+            }),
+            'ditolak'   => $pegawai->perizinans()->whereYear('created_at', $currentYear)->where('status', 'ditolak')->get()->sum(function($i) {
+                return Carbon::parse($i->tanggal_mulai)->diffInDays(Carbon::parse($i->tanggal_selesai)) + 1;
+            }),
+            'sisa_cuti' => $pegawai->getAvailableQuota(),
         ];
 
         return view('pegawaimanager::show', [
@@ -262,6 +284,27 @@ class PegawaiManagerController extends Controller
             DB::rollBack();
             return redirect()->route('pegawaimanager.index')
                 ->with('error', 'Terjadi kesalahan saat menghapus data: ' . $e->getMessage());
+        }
+    }
+
+    public function toggleStatus(string $id): RedirectResponse
+    {
+        $pegawai = Pegawai::with('user')->findOrFail($id);
+        $user = $pegawai->user;
+
+        if (!$user) {
+            return redirect()->back()->with('error', 'Akun user tidak ditemukan untuk pegawai ini.');
+        }
+
+        try {
+            $newStatus = $user->account_status === 'active' ? 'inactive' : 'active';
+            $user->update(['account_status' => $newStatus]);
+
+            $statusText = $newStatus === 'active' ? 'diaktifkan' : 'dinonaktifkan';
+            
+            return redirect()->back()->with('success', "Akun pegawai {$pegawai->nama} berhasil {$statusText}.");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 

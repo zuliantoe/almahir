@@ -221,6 +221,7 @@
                             @endif
                             <th class="border-0 text-muted font-weight-bold align-middle">Jenis</th>
                             <th class="border-0 text-muted font-weight-bold align-middle">Periode & Durasi</th>
+                            <th class="border-0 text-muted font-weight-bold align-middle text-center">Bukti</th>
                             <th class="border-0 text-muted font-weight-bold align-middle text-center">Status</th>
                             <th class="border-0 text-muted font-weight-bold align-middle text-center">Aksi</th>
                         </tr>
@@ -276,6 +277,23 @@
                                 </span>
                             </td>
                             <td class="align-middle text-center py-3">
+                                @if($item->bukti)
+                                    <div class="d-inline-block position-relative attachment-trigger" 
+                                         onclick="openImagePreview('{{ Storage::url($item->bukti) }}')"
+                                         style="cursor: pointer; width: 45px; height: 45px;">
+                                        <img src="{{ Storage::url($item->bukti) }}" 
+                                             class="img-thumbnail w-100 h-100 object-fit-cover shadow-sm hover-scale" 
+                                             style="border-radius: 8px; object-fit: cover;">
+                                        <div class="position-absolute bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                                             style="width: 18px; height: 18px; bottom: -5px; right: -5px; font-size: 0.6rem; border: 2px solid #fff;">
+                                            <i class="fas fa-search"></i>
+                                        </div>
+                                    </div>
+                                @else
+                                    <span class="text-muted small"><i class="fas fa-minus"></i></span>
+                                @endif
+                            </td>
+                            <td class="align-middle text-center py-3">
                                 @if($item->status == 'menunggu')
                                     <span class="badge badge-warning px-3 py-2 rounded-pill shadow-sm" style="font-size:.78rem;">
                                         <i class="fas fa-clock mr-1"></i> Menunggu
@@ -298,7 +316,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="{{ $isAdmin ? 6 : 5 }}" class="text-center py-5">
+                            <td colspan="{{ $isAdmin ? 7 : 6 }}" class="text-center py-5">
                                 <div class="text-muted">
                                     <i class="fas fa-folder-open fa-3x mb-3 d-block opacity-4"></i>
                                     <strong>Tidak ada data perizinan</strong>
@@ -336,6 +354,9 @@
 <style>
 .table-warning-soft { background-color: rgba(255,193,7,.06); }
 .opacity-4 { opacity: .4; }
+.hover-scale { transition: transform 0.2s ease; }
+.hover-scale:hover { transform: scale(1.15); z-index: 10; }
+.object-fit-cover { object-fit: cover; }
 </style>
 
 <script>

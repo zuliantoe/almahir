@@ -143,7 +143,7 @@
                         @if(Route::has('logout'))
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="btn btn-danger btn-block btn-sm py-2 font-weight-bold">
+                                <button type="submit" class="btn btn-danger btn-block btn-sm py-2 font-weight-bold btn-logout">
                                     <i class="fas fa-sign-out-alt mr-1"></i> LOGOUT
                                 </button>
                             </form>

@@ -407,8 +407,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('logout') }}" class="nav-link"
-                       onclick="event.preventDefault(); document.getElementById('logout-form-sidebar').submit();">
+                    <a href="{{ route('logout') }}" class="nav-link btn-logout">
                         <i class="nav-icon fas fa-sign-out-alt"></i>
                         <p>Keluar</p>
                     </a>

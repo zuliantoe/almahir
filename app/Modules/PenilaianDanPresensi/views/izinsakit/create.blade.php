@@ -19,11 +19,11 @@
             </div>
 
             <div class="form-group">
-                <label for="kelas_id">Kelas <span class="text-danger">*</span></label>
-                <select name="kelas_id" id="kelas_id" class="form-control" required>
-                    <option value="">-- Pilih Kelas --</option>
-                    @foreach($kelas as $k)
-                        <option value="{{ $k->id }}" {{ old('kelas_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
+                <label for="rombel_id">Rombel <span class="text-danger">*</span></label>
+                <select name="rombel_id" id="rombel_id" class="form-control select2" required>
+                    <option value="">-- Pilih Rombel --</option>
+                    @foreach($rombels as $r)
+                        <option value="{{ $r->id }}" {{ old('rombel_id') == $r->id ? 'selected' : '' }}>{{ $r->nama_rombel }}</option>
                     @endforeach
                 </select>
             </div>

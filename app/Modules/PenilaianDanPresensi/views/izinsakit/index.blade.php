@@ -33,11 +33,11 @@
         <div class="card-body pt-0">
             <form method="GET" class="row">
                 <div class="col-md-2 mb-2">
-                    <label class="small font-weight-bold text-muted">KELAS</label>
-                    <select name="kelas_id" class="form-control">
-                        <option value="">Semua Kelas</option>
-                        @foreach($kelasList as $kelas)
-                            <option value="{{ $kelas->id }}" {{ request('kelas_id') == $kelas->id ? 'selected' : '' }}>{{ $kelas->nama_kelas }}</option>
+                    <label class="small font-weight-bold text-muted">ROMBEL</label>
+                    <select name="rombel_id" class="form-control select2-modern">
+                        <option value="">Semua Rombel</option>
+                        @foreach($rombels as $rombel)
+                            <option value="{{ $rombel->id }}" {{ request('rombel_id') == $rombel->id ? 'selected' : '' }}>{{ $rombel->nama_rombel }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -90,7 +90,7 @@
                         <tr>
                             <td class="px-4">
                                 <div class="font-weight-bold text-dark">{{ $item->siswa->nama ?? '-' }}</div>
-                                <span class="badge badge-outline-danger text-danger border-danger" style="font-size: 0.7rem; border: 1px solid;">{{ $item->rombel->nama_kelas ?? '-' }}</span>
+                                <span class="badge badge-outline-danger text-danger border-danger" style="font-size: 0.7rem; border: 1px solid;">{{ $item->rombel->nama_rombel ?? $item->rombel->nama_kelas ?? '-' }}</span>
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">

@@ -30,6 +30,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [PenilaianAkademikController::class, 'index'])->name('index');
         Route::get('/create', [PenilaianAkademikController::class, 'create'])->name('create');
         Route::get('/history', [PenilaianAkademikController::class, 'history'])->name('history');
+        Route::get('/get-siswa-by-rombel/{rombelId}', [PenilaianAkademikController::class, 'getSiswaByRombel'])->name('get-siswa-by-rombel');
+        Route::get('/get-kkm/{rombelId}/{mapelId}', [PenilaianAkademikController::class, 'getKkm'])->name('get-kkm');
         Route::post('/', [PenilaianAkademikController::class, 'store'])->name('store');
         
         // Export & Raport Routes

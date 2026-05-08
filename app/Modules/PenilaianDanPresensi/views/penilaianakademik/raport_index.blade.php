@@ -20,11 +20,11 @@
         <div class="card-body p-4">
             <form method="GET" class="row align-items-end">
                 <div class="col-md-4 mb-2">
-                    <label class="small font-weight-bold text-muted text-uppercase mb-2">PILIH KELAS</label>
-                    <select name="kelas_id" class="form-control" style="border-radius: 12px; height: 50px; border: 1px solid #e0e0e0;">
-                        <option value="">Semua Kelas</option>
-                        @foreach($kelas as $k)
-                            <option value="{{ $k->id }}" {{ request('kelas_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
+                    <label class="small font-weight-bold text-muted text-uppercase mb-2">PILIH ROMBEL</label>
+                    <select name="rombel_id" class="form-control" style="border-radius: 12px; height: 50px; border: 1px solid #e0e0e0;">
+                        <option value="">Semua Rombel</option>
+                        @foreach($rombels as $r)
+                            <option value="{{ $r->id }}" {{ request('rombel_id') == $r->id ? 'selected' : '' }}>{{ $r->nama_rombel }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -62,7 +62,7 @@
                                 <div class="font-weight-bold text-dark" style="font-size: 1.05rem;">{{ $s->nama }}</div>
                             </td>
                             <td class="py-4">
-                                <span class="text-muted">{{ $s->kelas->nama_kelas ?? '-' }}</span>
+                                <span class="text-muted">{{ $s->rombelSiswa->where('status', 'aktif')->first()->rombel->nama_rombel ?? $s->kelas->nama_kelas ?? '-' }}</span>
                             </td>
                             <td class="py-4">
                                 <span class="text-muted" style="letter-spacing: 1px;">{{ $s->nis ?? '-' }}</span>

@@ -9,7 +9,8 @@ use Illuminate\View\View;
 use Modules\PenilaianDanPresensi\Models\PenilaianTahfidz;
 use Modules\Guru\Models\Guru as ModelsGuru;
 use Modules\Siswa\Models\Siswa as ModelsSiswa;
-use App\Modules\Akademik\Models\kelas as AkademikKelas;
+use App\Modules\Akademik\Models\Kelas as AkademikKelas;
+use App\Modules\Akademik\Models\Rombel;
 use App\Modules\Akademik\Models\TahunAjaran;
 
 /**
@@ -34,14 +35,17 @@ class PenilaianTahfidzController extends Controller
         }
 
         // Apply filters
+        if ($request->filled('rombel_id')) {
+            $rombelId = $request->rombel_id;
+            $query->whereHas('siswa.rombelSiswa', function($rq) use ($rombelId) {
+                $rq->where('rombel_id', $rombelId)->where('status', 'aktif');
+            });
+        }
+        
+        // Support legacy filter
         if ($request->filled('kelas_id')) {
             $kelasId = $request->kelas_id;
-            $query->where(function($q) use ($kelasId) {
-                $q->where('kelas_id', $kelasId)
-                  ->orWhereHas('siswa.rombelSiswa.rombel', function($rq) use ($kelasId) {
-                      $rq->where('kelas_id', $kelasId);
-                  });
-            });
+            $query->where('kelas_id', $kelasId);
         }
 
         if ($request->filled('tahunajaran_id')) {
@@ -61,14 +65,14 @@ class PenilaianTahfidzController extends Controller
         }
 
         $penilaianTahfidzs = $query->latest()->paginate(10);
-        $kelasList = AkademikKelas::orderBy('nama_kelas')->get();
+        $rombels = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0)->orderBy('nama_rombel')->get();
         $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
 
         return view('penilaiandanpresensi::penilaian-tahfidz.index', [
             'title' => 'Daftar Penilaian Tahfidz',
             'penilaianTahfidzs' => $penilaianTahfidzs,
             'activeTahunAjaran' => $activeTahunAjaran,
-            'kelasList' => $kelasList,
+            'rombels' => $rombels,
             'tahunAjarans' => $tahunAjarans,
             'userRole' => auth()->user()->ref_type,
         ]);
@@ -83,17 +87,22 @@ class PenilaianTahfidzController extends Controller
         $isGuru = $user->ref_type === ModelsGuru::class;
         $loggedGuruId = $isGuru ? $user->ref_id : null;
 
-        $kelas = AkademikKelas::orderBy('nama_kelas')->get();
+        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+        
+        $rombelQuery = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0);
+        if ($isGuru) {
+            $rombelQuery->where('wali_kelas_id', $loggedGuruId);
+        }
+        $rombels = $rombelQuery->orderBy('nama_rombel')->get();
+
         $gurus = ModelsGuru::orderBy('nama')->get();
         $siswas = ModelsSiswa::with('kelas')->orderBy('nama')->get();
-        
-        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
 
         return view('penilaiandanpresensi::penilaian-tahfidz.create', [
             'title' => 'Tambah Penilaian Tahfidz',
             'siswas' => $siswas,
             'gurus' => $gurus,
-            'kelas' => $kelas,
+            'rombels' => $rombels,
             'activeTahunAjaran' => $activeTahunAjaran,
             'isGuru' => $isGuru,
             'loggedGuruId' => $loggedGuruId,

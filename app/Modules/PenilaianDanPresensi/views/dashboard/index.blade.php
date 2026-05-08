@@ -40,7 +40,7 @@
                                 <p class="lead text-muted mb-4">أهلاً وسهلاً، <strong>{{ auth()->user()->name }}</strong>. Mari kita mulai hari ini dengan semangat dan ikhlas untuk mendidik generasi rabbani.</p>
                                 <div class="d-flex flex-wrap">
                                     <a href="{{ route('penilaiandanpresensi.presensi.index') }}" class="btn btn-primary btn-lg px-4 mr-3 mb-2 shadow-sm" style="border-radius: 50px;">
-                                        <i class="fas fa-list-check mr-2"></i> Rekap Presensi
+                                        <i class="fas fa-user-check mr-2"></i> Input Presensi
                                     </a>
                                     <a href="{{ route('penilaiandanpresensi.penilaianakademik.create') }}" class="btn btn-outline-primary btn-lg px-4 mb-2" style="border-radius: 50px;">
                                         <i class="fas fa-edit mr-2"></i> Input Nilai

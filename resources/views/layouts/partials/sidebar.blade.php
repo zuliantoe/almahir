@@ -179,25 +179,13 @@
                     |--------------------------------------------------------------------------
                     --}}
 
-                    {{-- Dashboard - HIDDEN for Guru/Siswa since they have their own dashboard --}}
-                    @if(!$isAcademicRole)
+                    {{-- Dashboard --}}
                     <li class="nav-item">
-                        @php
-                            $dashboardUrl = url('/');
-                            if (Auth::check()) {
-                                if (Auth::user()->ref_type === \Modules\Siswa\Models\Siswa::class) {
-                                    $dashboardUrl = route('siswa.dashboard');
-                                } elseif (Auth::user()->ref_type === \Modules\Guru\Models\Guru::class) {
-                                    $dashboardUrl = route('guru.dashboard');
-                                }
-                            }
-                        @endphp
-                        <a href="{{ $dashboardUrl }}" class="nav-link {{ request()->is('/') || request()->routeIs('siswa.dashboard') || request()->routeIs('guru.dashboard') ? 'active' : '' }}">
+                        <a href="{{ url('/') }}" class="nav-link {{ request()->is('/') || request()->is('akademik') || request()->is('guru/dashboard') || request()->is('siswa/dashboard') || request()->is('penilaiandanpresensi') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-tachometer-alt"></i>
                             <p>Dashboard</p>
                         </a>
                     </li>
-                    @endif
 
                     {{-- PORTAL SISWA --}}
                     @if(Auth::check() && Auth::user()->ref_type === \Modules\Siswa\Models\Siswa::class)

@@ -8,9 +8,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Modules\PenilaianDanPresensi\Models\IzinSakit;
 use Modules\Siswa\Models\Siswa as ModelsSiswa;
-use App\Modules\Akademik\Models\kelas as AkademikKelas;
+use App\Modules\Akademik\Models\Kelas as AkademikKelas;
+use App\Modules\Akademik\Models\Rombel;
 use App\Modules\Akademik\Models\MataPelajaran;
 use App\Modules\Akademik\Models\JadwalPelajaran;
+use App\Modules\Akademik\Models\RombelSiswa;
 
 /**
  * IzinSakitController
@@ -65,18 +67,17 @@ class IzinSakitController extends Controller
         }
         $siswa = ModelsSiswa::find($user->ref_id);
 
-        // Fetch subjects associated with student's class (rombel) and active academic year
-        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
-        
+        // Find student's active rombel
+        $activeRombel = RombelSiswa::where('siswa_id', $siswa->id)
+            ->where('status', 'aktif')
+            ->whereHas('rombel', function($q) use ($activeTA) {
+                $q->where('tahunajaran_id', $activeTA->id ?? 0);
+            })->first();
+        $rombelId = $activeRombel ? $activeRombel->rombel_id : null;
+
         $jadwalsQuery = JadwalPelajaran::with('mataPelajaran')
-            ->where('rombel_id', $siswa->kelas_id);
+            ->where('rombel_id', $rombelId);
             
-        if ($activeTA) {
-            $jadwalsQuery->whereHas('rombel', function($q) use ($activeTA) {
-                $q->where('tahunajaran_id', $activeTA->id);
-            });
-        }
-        
         $jadwals = $jadwalsQuery->get();
             
         $mapels = $jadwals->pluck('mataPelajaran')->filter()->unique('id');
@@ -113,8 +114,16 @@ class IzinSakitController extends Controller
             'bukti_foto' => 'nullable|image|max:2048',
         ]);
 
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        
+        $activeRombel = RombelSiswa::where('siswa_id', $siswa->id)
+            ->where('status', 'aktif')
+            ->whereHas('rombel', function($q) use ($activeTA) {
+                $q->where('tahunajaran_id', $activeTA->id ?? 0);
+            })->first();
+
         $validated['siswa_id'] = $siswa->id;
-        $validated['kelas_id'] = $siswa->kelas_id ?? 1;
+        $validated['kelas_id'] = $activeRombel ? $activeRombel->rombel_id : ($siswa->kelas_id ?? 1);
 
         if ($validated['tipe_izin'] === 'Per Matpel') {
             $validated['tgl_selesai'] = $validated['tgl_mulai']; // Force single day
@@ -159,8 +168,15 @@ class IzinSakitController extends Controller
         $query = IzinSakit::with(['siswa', 'rombel']);
 
         // Apply filters
+        if ($request->filled('rombel_id')) {
+            $query->where('kelas_id', $request->rombel_id);
+        }
+
         if ($request->filled('kelas_id')) {
-            $query->where('kelas_id', $request->kelas_id);
+            $kelasId = $request->kelas_id;
+            $query->whereHas('rombel', function($q) use ($kelasId) {
+                $q->where('kelas_id', $kelasId);
+            });
         }
 
         if ($request->filled('jenis')) {
@@ -183,13 +199,13 @@ class IzinSakitController extends Controller
             ->paginate(15);
 
         $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
-        $kelasList = AkademikKelas::orderBy('nama_kelas')->get();
+        $rombels = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0)->orderBy('nama_rombel')->get();
 
         return view('penilaiandanpresensi::izinsakit.index', [
             'title' => 'Konfirmasi Izin & Sakit',
             'izinSakits' => $izinSakits,
             'activeTahunAjaran' => $activeTahunAjaran,
-            'kelasList' => $kelasList,
+            'rombels' => $rombels,
         ]);
     }
 
@@ -202,13 +218,14 @@ class IzinSakitController extends Controller
             return redirect()->route('penilaiandanpresensi.izinsakit.siswa.create');
         }
 
-        $kelas = AkademikKelas::orderBy('nama_kelas')->get();
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        $rombels = Rombel::where('tahunajaran_id', $activeTA->id ?? 0)->orderBy('nama_rombel')->get();
         $siswas = ModelsSiswa::orderBy('nama')->get();
 
         return view('penilaiandanpresensi::izinsakit.create', [
             'title' => 'Tambah Izin Sakit',
             'siswas' => $siswas,
-            'kelas' => $kelas,
+            'rombels' => $rombels,
         ]);
     }
 
@@ -219,7 +236,7 @@ class IzinSakitController extends Controller
     {
         $validated = $request->validate([
             'siswa_id' => 'required|exists:siswa,id',
-            'kelas_id' => 'required|exists:kelas,id',
+            'rombel_id' => 'required|exists:rombel,id',
             'jenis' => 'required|string|max:255',
             'tipe_izin' => 'nullable|string|in:Harian,Per Matpel',
             'mapel_id' => 'nullable|exists:mata_pelajaran,id',
@@ -244,6 +261,7 @@ class IzinSakitController extends Controller
         $validated['semester'] = $activeTA->semester ?? null;
         $validated['author_id'] = auth()->id();
 
+        $validated['kelas_id'] = $request->rombel_id;
         IzinSakit::create($validated);
 
         return redirect()->route('penilaiandanpresensi.izinsakit.index')
@@ -273,14 +291,15 @@ class IzinSakitController extends Controller
         }
 
         $izinSakit = IzinSakit::findOrFail($id);
-        $kelas = AkademikKelas::orderBy('nama_kelas')->get();
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        $rombels = Rombel::where('tahunajaran_id', $activeTA->id ?? 0)->orderBy('nama_rombel')->get();
         $siswas = ModelsSiswa::orderBy('nama')->get();
 
         return view('penilaiandanpresensi::izinsakit.edit', [
             'title' => 'Edit Izin Sakit',
             'izinSakit' => $izinSakit,
             'siswas' => $siswas,
-            'kelas' => $kelas,
+            'rombels' => $rombels,
         ]);
     }
 
@@ -295,7 +314,7 @@ class IzinSakitController extends Controller
 
         $validated = $request->validate([
             'siswa_id' => 'required|exists:siswa,id',
-            'kelas_id' => 'required|exists:kelas,id',
+            'rombel_id' => 'required|exists:rombel,id',
             'jenis' => 'required|string|max:255',
             'tipe_izin' => 'nullable|string|in:Harian,Per Matpel',
             'mapel_id' => 'nullable|exists:mata_pelajaran,id',
@@ -330,6 +349,7 @@ class IzinSakitController extends Controller
         }
 
         $izinSakit = IzinSakit::findOrFail($id);
+        $validated['kelas_id'] = $request->rombel_id;
         $izinSakit->update($validated);
 
         return redirect()->route('penilaiandanpresensi.izinsakit.index')

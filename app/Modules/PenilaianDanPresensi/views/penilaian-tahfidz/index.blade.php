@@ -44,11 +44,11 @@
                 <form method="GET" class="row">
                     @if(auth()->user()->ref_type !== \Modules\Siswa\Models\Siswa::class)
                     <div class="col-md-2 mb-2">
-                        <label class="small font-weight-bold text-muted">KELAS</label>
-                        <select name="kelas_id" class="form-control">
-                            <option value="">Semua Kelas</option>
-                            @foreach($kelasList as $kelas)
-                                <option value="{{ $kelas->id }}" {{ request('kelas_id') == $kelas->id ? 'selected' : '' }}>{{ $kelas->nama_kelas }}</option>
+                        <label class="small font-weight-bold text-muted">ROMBEL</label>
+                        <select name="rombel_id" class="form-control select2-modern">
+                            <option value="">Semua Rombel</option>
+                            @foreach($rombels as $rombel)
+                                <option value="{{ $rombel->id }}" {{ request('rombel_id') == $rombel->id ? 'selected' : '' }}>{{ $rombel->nama_rombel }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -104,7 +104,7 @@
                             <td class="px-4">
                                 <div class="font-weight-bold text-dark">{{ $item->siswa->nama ?? '-' }}</div>
                                 <span class="badge badge-outline-warning text-warning border-warning" style="font-size: 0.7rem; border: 1px solid;">
-                                    {{ $item->siswa->kelas->nama_kelas ?? '-' }}
+                                    {{ $item->siswa->rombelSiswa->where('status', 'aktif')->first()->rombel->nama_rombel ?? $item->siswa->kelas->nama_kelas ?? '-' }}
                                 </span>
                             </td>
                             <td>

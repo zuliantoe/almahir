@@ -21,9 +21,7 @@ class AkademikController extends Controller
         $todayDate = \Carbon\Carbon::now()->toDateString();
 
         // 1. Context Guru
-        if ($user && $user->hasRole('GURU')) {
-            return redirect()->route('guru.dashboard');
-        }
+        // No forced redirect, allow Guru to see the main Academic Overview
 
         // 2. Context Siswa
         if ($user && $user->hasRole('SISWA')) {

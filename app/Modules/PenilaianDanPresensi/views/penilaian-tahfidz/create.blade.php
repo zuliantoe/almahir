@@ -60,16 +60,18 @@
                         </div>
 
                         <div class="row mb-4 p-3 bg-white shadow-sm mx-1" style="border-radius: 12px; border-left: 5px solid #ffc107;">
-                            <!-- Kelas Section -->
+                            <!-- Rombel Section -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="kelas_id" class="font-weight-bold text-dark">Pilih Kelas <span class="text-danger">*</span></label>
-                                    <select name="kelas_id" id="kelas_id" class="form-control" required>
-                                        <option value="">-- Pilih Kelas --</option>
-                                        @foreach($kelas as $k)
-                                            <option value="{{ $k->id }}" {{ old('kelas_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
+                                    <label for="rombel_id" class="font-weight-bold text-dark">Pilih Rombel <span class="text-danger">*</span></label>
+                                    <select name="rombel_id" id="rombel_id" class="form-control select2" required>
+                                        <option value="">-- Pilih Rombel --</option>
+                                        @foreach($rombels as $r)
+                                            <option value="{{ $r->id }}" {{ old('rombel_id') == $r->id ? 'selected' : '' }}>{{ $r->nama_rombel }}</option>
                                         @endforeach
                                     </select>
+                                    {{-- Keep hidden kelas_id for legacy DB support if needed, or update controller --}}
+                                    <input type="hidden" name="kelas_id" id="kelas_id">
                                 </div>
                             </div>
 
@@ -220,28 +222,43 @@
     const oldIdSiswa = "{{ old('siswa_id') }}";
 
     function updateSiswaOptions() {
-        const kelasId = document.getElementById('kelas_id').value;
+        const rombelId = document.getElementById('rombel_id').value;
         const siswaSelect = document.getElementById('siswa_id');
         
-        siswaSelect.innerHTML = '<option value="">-- Pilih Santri --</option>';
+        siswaSelect.innerHTML = '<option value="">-- Memuat Santri... --</option>';
         
-        if (!kelasId) {
-            siswaSelect.innerHTML = '<option value="">-- Pilih Kelas Terlebih Dahulu --</option>';
+        if (!rombelId) {
+            siswaSelect.innerHTML = '<option value="">-- Pilih Rombel Terlebih Dahulu --</option>';
             return;
         }
 
-        const filteredSiswas = siswasData.filter(siswa => siswa.kelas_id == kelasId);
-        
-        if (filteredSiswas.length === 0) {
-            siswaSelect.innerHTML = '<option value="">-- Tidak ada santri di kelas ini --</option>';
-            return;
-        }
-
-        filteredSiswas.forEach(siswa => {
-            const isSelected = (siswa.id == oldIdSiswa) ? 'selected' : '';
-            siswaSelect.innerHTML += `<option value="${siswa.id}" ${isSelected}>${siswa.nama}</option>`;
-        });
+        // Fetch students via AJAX (using the same endpoint we created for PenilaianAkademik)
+        fetch(`/penilaiandanpresensi/penilaianakademik/get-siswa-by-rombel/${rombelId}`)
+            .then(response => response.json())
+            .then(data => {
+                siswaSelect.innerHTML = '<option value="">-- Pilih Santri --</option>';
+                if (data.length === 0) {
+                    siswaSelect.innerHTML = '<option value="">-- Tidak ada santri aktif di rombel ini --</option>';
+                    return;
+                }
+                
+                data.forEach(siswa => {
+                    const isSelected = (siswa.id == oldIdSiswa) ? 'selected' : '';
+                    siswaSelect.innerHTML += `<option value="${siswa.id}" ${isSelected}>${siswa.nama}</option>`;
+                });
+                
+                // Update hidden kelas_id if needed for backend
+                if (data.length > 0 && data[0].kelas_id) {
+                    document.getElementById('kelas_id').value = data[0].kelas_id;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                siswaSelect.innerHTML = '<option value="">-- Gagal memuat data --</option>';
+            });
     }
+
+    document.getElementById('rombel_id').addEventListener('change', updateSiswaOptions);
 
     document.addEventListener('DOMContentLoaded', function() {
         const juzMapping = {
@@ -353,9 +370,8 @@
             }
         });
 
-        document.getElementById('kelas_id').addEventListener('change', updateSiswaOptions);
-        
-        if (document.getElementById('kelas_id').value) {
+        // Trigger initial load if old value exists
+        if (document.getElementById('rombel_id').value) {
             updateSiswaOptions();
         }
 

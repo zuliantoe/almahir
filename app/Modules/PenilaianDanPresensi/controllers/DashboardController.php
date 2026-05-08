@@ -31,7 +31,7 @@ class DashboardController extends Controller
             
             // Presensi Stats for this student
             $presensiSiswa = Presensi::where('siswa_id', $siswa?->id)
-                ->whereMonth('created_at', now()->month)
+                ->where('tahunajaran_id', $activeTA->id ?? 0)
                 ->get();
             
             $statsPresensi = [
@@ -49,6 +49,7 @@ class DashboardController extends Controller
                 ->get();
             
             $penilaianTahfidz = PenilaianTahfidz::where('siswa_id', $siswa?->id)
+                ->where('tahunajaran_id', $activeTA->id ?? 0)
                 ->latest()
                 ->take(5)
                 ->get();
@@ -67,8 +68,9 @@ class DashboardController extends Controller
         if ($user->hasRole('GURU')) {
             $guru = $user->ref;
             
-            // Stats for Guru's classes
+            // Stats for Guru's classes in active TA
             $todayPresensi = Presensi::where('guru_id', $guru?->id)
+                ->where('tahunajaran_id', $activeTA->id ?? 0)
                 ->whereDate('created_at', $today)
                 ->get();
             
@@ -80,6 +82,7 @@ class DashboardController extends Controller
             ];
 
             $pendingIzin = IzinSakit::with(['siswa', 'rombel'])
+                ->where('tahunajaran_id', $activeTA->id ?? 0)
                 ->where('status', 'Pending')
                 ->latest()
                 ->take(5)
@@ -87,6 +90,7 @@ class DashboardController extends Controller
 
             $recentPenilaianAkademik = PenilaianAkademik::with(['siswa', 'mataPelajaran'])
                 ->where('guru_id', $guru?->id)
+                ->where('tahunajaran_id', $activeTA->id ?? 0)
                 ->latest()
                 ->take(5)
                 ->get();
@@ -102,7 +106,7 @@ class DashboardController extends Controller
             ]);
         }
 
-        $todayPresensi = Presensi::whereDate('created_at', today())->get();
+        $todayPresensi = Presensi::where('tahunajaran_id', $activeTA->id ?? 0)->whereDate('created_at', today())->get();
         $statsPresensi = [
             'hadir' => $todayPresensi->where('status', 'Hadir')->count(),
             'izin' => $todayPresensi->where('status', 'Izin')->count(),
@@ -111,13 +115,14 @@ class DashboardController extends Controller
         ];
 
         $pendingIzin = IzinSakit::with(['siswa', 'rombel'])
+            ->where('tahunajaran_id', $activeTA->id ?? 0)
             ->where('status', 'Pending')
             ->latest()
             ->take(5)
             ->get();
 
-        $recentPenilaianAkademik = PenilaianAkademik::with(['siswa', 'mataPelajaran'])->latest()->take(5)->get();
-        $recentPenilaianTahfidz = PenilaianTahfidz::with(['siswa'])->latest()->take(5)->get();
+        $recentPenilaianAkademik = PenilaianAkademik::with(['siswa', 'mataPelajaran'])->where('tahunajaran_id', $activeTA->id ?? 0)->latest()->take(5)->get();
+        $recentPenilaianTahfidz = PenilaianTahfidz::with(['siswa'])->where('tahunajaran_id', $activeTA->id ?? 0)->latest()->take(5)->get();
 
         return view('penilaiandanpresensi::dashboard.index', [
                 'title' => 'Dashboard Penilaian & Presensi',

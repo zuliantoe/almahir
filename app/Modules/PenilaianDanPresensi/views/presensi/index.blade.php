@@ -117,10 +117,10 @@
                 <form method="GET" class="row">
                     @if(auth()->user()->ref_type !== \Modules\Siswa\Models\Siswa::class)
                     <div class="col-md-2 mb-2">
-                        <select name="kelas_id" class="form-control select2-modern">
-                            <option value="">Semua Kelas</option>
-                            @foreach($kelasList as $kelas)
-                                <option value="{{ $kelas->id }}" {{ request('kelas_id') == $kelas->id ? 'selected' : '' }}>{{ $kelas->nama_kelas }}</option>
+                        <select name="rombel_id" class="form-control select2-modern">
+                            <option value="">Semua Rombel</option>
+                            @foreach($rombels as $rombel)
+                                <option value="{{ $rombel->id }}" {{ request('rombel_id') == $rombel->id ? 'selected' : '' }}>{{ $rombel->nama_rombel }}</option>
                             @endforeach
                         </select>
                     </div>

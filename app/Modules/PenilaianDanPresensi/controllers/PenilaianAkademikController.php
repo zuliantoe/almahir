@@ -11,6 +11,9 @@ use Modules\PenilaianDanPresensi\Models\PenilaianAkademik;
 use Modules\Siswa\Models\Siswa as ModelsSiswa;
 use Modules\Guru\Models\Guru as ModelsGuru;
 use App\Modules\Akademik\Models\Kelas;
+use App\Modules\Akademik\Models\Rombel;
+use App\Modules\Akademik\Models\RombelSiswa;
+use App\Modules\Akademik\Models\Kurikulum;
 use App\Modules\Akademik\Models\JadwalPelajaran;
 use App\Modules\Akademik\Models\MataPelajaran;
 use App\Modules\Akademik\Models\TahunAjaran;
@@ -41,8 +44,11 @@ class PenilaianAkademikController extends Controller
         // Filter for Guru: they only see students in their class (if they are Wali Kelas)
         if (auth()->user()->ref_type === ModelsGuru::class) {
             $guruId = auth()->user()->ref_id;
-            $mySiswaIds = ModelsSiswa::whereHas('rombelSiswa.rombel', function($q) use ($guruId) {
-                $q->where('wali_kelas_id', $guruId);
+            $mySiswaIds = ModelsSiswa::whereHas('rombelSiswa', function($q) use ($guruId) {
+                $q->where('status', 'aktif')
+                  ->whereHas('rombel', function($rq) use ($guruId) {
+                      $rq->where('wali_kelas_id', $guruId);
+                  });
             })->pluck('id');
             
             // If they are a wali kelas, restrict to their students
@@ -58,13 +64,10 @@ class PenilaianAkademikController extends Controller
         }
 
         // Apply dynamic filters
-        if ($request->filled('kelas_id')) {
-            $kelasId = $request->kelas_id;
-            $query->whereHas('siswa', function($q) use ($kelasId) {
-                $q->where('kelas_id', $kelasId)
-                  ->orWhereHas('rombelSiswa.rombel', function($rq) use ($kelasId) {
-                      $rq->where('kelas_id', $kelasId);
-                  });
+        if ($request->filled('rombel_id')) {
+            $rombelId = $request->rombel_id;
+            $query->whereHas('siswa.rombelSiswa', function($q) use ($rombelId) {
+                $q->where('rombel_id', $rombelId)->where('status', 'aktif');
             });
         }
 
@@ -86,24 +89,17 @@ class PenilaianAkademikController extends Controller
         }
 
         $penilaianAkademiks = $query->latest()->paginate(10);
-        $allMapels = MataPelajaran::orderBy('nama')->get()
-            ->map(function($m) {
-                $m->nama = trim($m->nama);
-                // Simple normalization
-                if (str_contains(strtolower($m->nama), 'tahfidz')) $m->nama = 'Tahfidz Al-Qur\'an';
-                if (strtolower($m->nama) == 'fiqih') $m->nama = 'Fiqih';
-                if (str_contains(strtolower($m->nama), 'ipa')) $m->nama = 'IPA (Ilmu Pengetahuan Alam)';
-                return $m;
-            })->unique('nama')->values();
+        $allMapels = MataPelajaran::with('kategori')->orderBy('nama')->get();
         $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
-        $kelasList = Kelas::orderBy('nama_kelas')->get();
+        $rombels = Rombel::where('tahunajaran_id', $request->tahunajaran_id ?? (TahunAjaran::where('status', 'aktif')->first()->id ?? 0))
+            ->orderBy('nama_rombel')->get();
 
         return view('penilaiandanpresensi::penilaianakademik.index', [
             'title' => 'Daftar Penilaian Akademik',
             'penilaianAkademiks' => $penilaianAkademiks,
             'allMapels' => $allMapels,
             'tahunAjarans' => $tahunAjarans,
-            'kelasList' => $kelasList,
+            'rombels' => $rombels,
         ]);
     }
 
@@ -116,42 +112,41 @@ class PenilaianAkademikController extends Controller
             abort(403, 'Akses ditolak. Santri tidak diperbolehkan menginput nilai.');
         }
 
-        $kelas = Kelas::orderBy('nama_kelas')->get();
         $user = auth()->user();
         $isGuru = $user->ref_type === ModelsGuru::class;
         $loggedGuruId = $isGuru ? $user->ref_id : null;
 
-        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first();
-        if (!$activeTahunAjaran) {
-            $activeTahunAjaran = TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+
+        // Get Rombels for the active year
+        $rombelQuery = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0);
+        if ($isGuru) {
+            $rombelQuery->where(function($q) use ($loggedGuruId) {
+                $q->where('wali_kelas_id', $loggedGuruId)
+                  ->orWhereHas('jadwalPelajaran', function($jq) use ($loggedGuruId) {
+                      $jq->where('guru_id', $loggedGuruId);
+                  });
+            });
         }
+        $rombels = $rombelQuery->orderBy('nama_rombel')->get();
 
         $gurus = ModelsGuru::orderBy('nama')->get();
         $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
         
-        // Show ALL mapels for better usability in demo/setup phase
-        $mapels = MataPelajaran::with('kategori')->orderBy('nama')->get()
-            ->map(function($m) {
-                $m->nama = trim($m->nama);
-                if (str_contains(strtolower($m->nama), 'tahfidz')) $m->nama = 'Tahfidz Al-Qur\'an';
-                if (strtolower($m->nama) == 'fiqih') $m->nama = 'Fiqih';
-                if (str_contains(strtolower($m->nama), 'ipa')) $m->nama = 'IPA (Ilmu Pengetahuan Alam)';
-                return $m;
-            })->unique('nama')->values();
-
-        $siswas = ModelsSiswa::orderBy('nama')->get();
-        $jadwals = JadwalPelajaran::with(['mataPelajaran.kategori'])->get();
-        $allMapels = $mapels;
+        // Subject selection
+        if ($isGuru) {
+            $myMapelIds = JadwalPelajaran::where('guru_id', $loggedGuruId)->pluck('mapel_id')->unique();
+            $mapels = MataPelajaran::whereIn('id', $myMapelIds)->with('kategori')->orderBy('nama')->get();
+        } else {
+            $mapels = MataPelajaran::with('kategori')->orderBy('nama')->get();
+        }
 
         return view('penilaiandanpresensi::penilaianakademik.create', [
             'title' => 'Tambah Penilaian Akademik',
-            'kelas' => $kelas,
-            'siswas' => $siswas,
+            'rombels' => $rombels,
             'gurus' => $gurus,
             'mapels' => $mapels,
-            'allMapels' => $allMapels,
             'tahunAjarans' => $tahunAjarans,
-            'jadwals' => $jadwals,
             'activeTahunAjaran' => $activeTahunAjaran,
             'isGuru' => $isGuru,
             'loggedGuruId' => $loggedGuruId,
@@ -167,7 +162,7 @@ class PenilaianAkademikController extends Controller
             abort(403, 'Akses ditolak.');
         }
         $request->validate([
-            'kelas_id' => 'required|exists:kelas,id',
+            'rombel_id' => 'required|exists:rombel,id',
             'guru_id' => 'required|exists:guru,id',
             'mapel_id' => 'required|exists:mata_pelajaran,id',
             'tahunajaran_id' => 'required|exists:tahun_ajaran,id',
@@ -404,24 +399,35 @@ class PenilaianAkademikController extends Controller
         $isGuru = $user->ref_type && str_contains($user->ref_type, 'Guru');
         $loggedGuruId = $user->ref_id;
 
-        // Determine which classes this user can see for the dropdown
-        $kelasQuery = Kelas::orderBy('nama_kelas');
+        // Determine which rombels this user can see for the dropdown
+        $rombelsQuery = \App\Modules\Akademik\Models\Rombel::where('tahunajaran_id', $activeTA->id ?? 0)->orderBy('nama_rombel');
         if (!$isAdmin && $isGuru) {
-            // Only classes where this guru is Wali Kelas
-            $myRombelIds = \App\Modules\Akademik\Models\Rombel::where('wali_kelas_id', $loggedGuruId)->pluck('kelas_id');
-            $kelasQuery->whereIn('id', $myRombelIds);
+            // Only rombels where this guru is Wali Kelas
+            $rombelsQuery->where('wali_kelas_id', $loggedGuruId);
         }
-        $kelas = $kelasQuery->get();
+        $rombels = $rombelsQuery->get();
 
-        $query = ModelsSiswa::with(['kelas']);
+        $query = ModelsSiswa::query();
         
         // Filter based on user role and selection
-        if ($request->filled('kelas_id')) {
-            $query->where('kelas_id', $request->kelas_id);
+        if ($request->filled('rombel_id')) {
+            $rombelId = $request->rombel_id;
+            $query->whereHas('rombelSiswa', function($q) use ($rombelId) {
+                $q->where('rombel_id', $rombelId)->where('status', 'aktif');
+            });
         } elseif (!$isAdmin && $isGuru) {
-            // If Guru and no specific class selected, show students from ALL classes they manage
-            $myRombelIds = \App\Modules\Akademik\Models\Rombel::where('wali_kelas_id', $loggedGuruId)->pluck('kelas_id');
-            $query->whereIn('kelas_id', $myRombelIds);
+            // If Guru and no specific rombel selected, show students from ALL rombels they manage
+            $myRombelIds = $rombels->pluck('id');
+            $query->whereHas('rombelSiswa', function($q) use ($myRombelIds) {
+                $q->whereIn('rombel_id', $myRombelIds)->where('status', 'aktif');
+            });
+        } else {
+            // Default: show students in ANY active rombel for the TA
+            $query->whereHas('rombelSiswa', function($q) use ($activeTA) {
+                $q->where('status', 'aktif')->whereHas('rombel', function($rq) use ($activeTA) {
+                    $rq->where('tahunajaran_id', $activeTA->id ?? 0);
+                });
+            });
         }
 
         $siswas = $query->paginate(15);
@@ -434,7 +440,7 @@ class PenilaianAkademikController extends Controller
 
         return view('penilaiandanpresensi::penilaianakademik.raport_index', [
             'title' => 'Cetak Raport',
-            'kelas' => $kelas,
+            'rombels' => $rombels,
             'siswas' => $siswas,
             'activeTA' => $activeTA,
             'notes' => $notes,
@@ -481,15 +487,23 @@ class PenilaianAkademikController extends Controller
         $siswa = ModelsSiswa::with(['kelas'])->findOrFail($id);
         $activeTA = TahunAjaran::where('status', 'aktif')->first();
         
+        // Determine the student's Rombel for the active academic year
+        $activeRombel = \App\Modules\Akademik\Models\RombelSiswa::where('siswa_id', $siswa->id)
+            ->where('status', 'aktif')
+            ->whereHas('rombel', function($q) use ($activeTA) {
+                $q->where('tahunajaran_id', $activeTA->id ?? 0);
+            })->first();
+        $rombelId = $activeRombel ? $activeRombel->rombel_id : 0;
+
         // Get all assessments for this student in the active TA
         $scores = PenilaianAkademik::with(['mataPelajaran.kategori'])
             ->where('siswa_id', $siswa->id)
             ->where('tahunajaran_id', $activeTA->id ?? 0)
             ->get();
 
-        // Get class-wide assessments to calculate Class Average (Rerata Kelas)
-        $classScores = PenilaianAkademik::whereHas('siswa', function($q) use ($siswa) {
-                $q->where('kelas_id', $siswa->kelas_id);
+        // Get class-wide assessments (same Rombel) to calculate Class Average (Rerata Kelas)
+        $classScores = PenilaianAkademik::whereHas('siswa.rombelSiswa', function($q) use ($rombelId) {
+                $q->where('rombel_id', $rombelId)->where('status', 'aktif');
             })
             ->where('tahunajaran_id', $activeTA->id ?? 0)
             ->get()
@@ -633,6 +647,29 @@ class PenilaianAkademikController extends Controller
             ->get();
 
         return response()->json($history);
+    }
+
+    /**
+     * Get students by Rombel (AJAX)
+     */
+    public function getSiswaByRombel($rombelId): JsonResponse
+    {
+        $rombel = Rombel::with('aktifSiswa')->findOrFail($rombelId);
+        return response()->json($rombel->aktifSiswa);
+    }
+
+    /**
+     * Get KKM for a subject in a specific Rombel (AJAX)
+     */
+    public function getKkm($rombelId, $mapelId): JsonResponse
+    {
+        $rombel = Rombel::findOrFail($rombelId);
+        $kkm = Kurikulum::where('mapel_id', $mapelId)
+            ->where('tahunajaran_id', $rombel->tahunajaran_id)
+            ->where('kelas_id', $rombel->kelas_id)
+            ->value('kkm') ?? 75;
+            
+        return response()->json(['kkm' => $kkm]);
     }
 }
 

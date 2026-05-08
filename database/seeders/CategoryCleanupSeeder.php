@@ -20,11 +20,17 @@ class CategoryCleanupSeeder extends Seeder
             'Bahasa Arab', 
             'Tahfidz', 
             'Fiqih', 
+            'Fiqih Ibadah',
             'Aqidah', 
+            'Aqidah Akhlak',
             'Tarikh', 
             'Hadits', 
             'Tahfidz Al-Quran',
-            'Tahfidz Al-Qur\'an'
+            'Tahfidz Al-Qur\'an',
+            'Imla',
+            'Mutun',
+            'Adab',
+            'Sirah'
         ];
         
         // 1. Move religious subjects to Diniyyah

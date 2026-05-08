@@ -2,7 +2,8 @@
 
 namespace Modules\PenilaianDanPresensi\Models;
 
-use App\Modules\Akademik\Models\kelas as AkademikKelas;
+use App\Modules\Akademik\Models\Kelas as AkademikKelas;
+use App\Modules\Akademik\Models\Rombel;
 use App\Modules\Akademik\Models\MataPelajaran;
 use App\Modules\Akademik\Models\JadwalPelajaran;
 use Illuminate\Database\Eloquent\Model;
@@ -48,7 +49,7 @@ class IzinSakit extends Model
 
     public function rombel()
     {
-        return $this->belongsTo(AkademikKelas::class, 'kelas_id');
+        return $this->belongsTo(Rombel::class, 'kelas_id');
     }
 
     // Alias for backward compatibility

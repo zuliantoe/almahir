@@ -45,8 +45,10 @@ class PresensiController extends Controller
 
         $hariIni = date('N'); // 1 = Senin, 7 = Minggu
         
-        // Get the actual rombel_id from RombelSiswa
-        $rombelSiswa = \App\Modules\Akademik\Models\RombelSiswa::where('siswa_id', $siswa->id)->first();
+        // Get the actual rombel_id from RombelSiswa (Active only)
+        $rombelSiswa = \App\Modules\Akademik\Models\RombelSiswa::where('siswa_id', $siswa->id)
+            ->where('status', 'aktif')
+            ->first();
         $rombelId = $rombelSiswa ? $rombelSiswa->rombel_id : null;
         
         // Fetch schedule for today. Filtering by active academic year.
@@ -157,7 +159,9 @@ class PresensiController extends Controller
 
         // Auto-detect if missing (e.g. scanning student ID instead of session QR)
         if (!$jadwalId) {
-            $rombelSiswa = \App\Modules\Akademik\Models\RombelSiswa::where('siswa_id', $siswa->id)->first();
+            $rombelSiswa = \App\Modules\Akademik\Models\RombelSiswa::where('siswa_id', $siswa->id)
+                ->where('status', 'aktif')
+                ->first();
             if ($rombelSiswa) {
                 $now = date('H:i');
                 $today = date('N');
@@ -296,19 +300,24 @@ class PresensiController extends Controller
             $statsQuery->where('kategori', $request->kategori);
         }
         
+        if ($request->filled('rombel_id')) {
+            $rombelId = $request->rombel_id;
+            $query->whereHas('siswa.rombelSiswa', function($q) use ($rombelId) {
+                $q->where('rombel_id', $rombelId)->where('status', 'aktif');
+            });
+            $statsQuery->whereHas('siswa.rombelSiswa', function($q) use ($rombelId) {
+                $q->where('rombel_id', $rombelId)->where('status', 'aktif');
+            });
+        }
+        
+        // Support legacy kelas_id if needed
         if ($request->filled('kelas_id')) {
             $kelasId = $request->kelas_id;
-            $query->whereHas('siswa', function($q) use ($kelasId) {
-                $q->where('kelas_id', $kelasId)
-                  ->orWhereHas('rombelSiswa.rombel', function($rq) use ($kelasId) {
-                      $rq->where('kelas_id', $kelasId);
-                  });
+            $query->whereHas('siswa.kelas', function($q) use ($kelasId) {
+                $q->where('id', $kelasId);
             });
-            $statsQuery->whereHas('siswa', function($q) use ($kelasId) {
-                $q->where('kelas_id', $kelasId)
-                  ->orWhereHas('rombelSiswa.rombel', function($rq) use ($kelasId) {
-                      $rq->where('kelas_id', $kelasId);
-                  });
+            $statsQuery->whereHas('siswa.kelas', function($q) use ($kelasId) {
+                $q->where('id', $kelasId);
             });
         }
 
@@ -343,7 +352,7 @@ class PresensiController extends Controller
         ];
 
         $mapels = MataPelajaran::orderBy('nama')->get()->keyBy('id');
-        $kelasList = Kelas::orderBy('nama_kelas')->get();
+        $rombels = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0)->orderBy('nama_rombel')->get();
         $jadwals = JadwalPelajaran::orderBy('hari')->get()->keyBy('id');
 
         $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
@@ -352,7 +361,7 @@ class PresensiController extends Controller
             'presensis' => $presensis,
             'stats' => $stats,
             'mapels' => $mapels,
-            'kelasList' => $kelasList,
+            'rombels' => $rombels,
             'jadwals' => $jadwals,
             'activeTahunAjaran' => $activeTahunAjaran,
         ]);

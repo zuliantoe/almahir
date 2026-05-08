@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
         if (class_exists(\App\Modules\Akademik\Database\Seeders\SpecificAcademicSeeder::class)) {
             $this->call(\App\Modules\Akademik\Database\Seeders\SpecificAcademicSeeder::class);
         }
+        $this->call(JadwalPelajaranSeeder::class);
 
         // 4. Assignments
         $this->call(AssignStudentsToRombelSeeder::class);

@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('pegawai', function (Blueprint $table) {
-            $table->softDeletes();
+        Schema::table('pemasukans', function (Blueprint $table) {
+            $table->decimal('jumlah', 28, 2)->change();
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('pegawai', function (Blueprint $table) {
-            $table->dropSoftDeletes();
+        Schema::table('pemasukans', function (Blueprint $table) {
+            $table->decimal('jumlah', 15, 2)->change();
         });
     }
 };

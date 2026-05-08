@@ -431,6 +431,11 @@
                 </li>
                 @endif
 
+                {{-- Keuangan Menu --}}
+                @if(Auth::check() && (request()->is('keuangan*') || request()->is('*/keuangan*')))
+                    @include('keuangan::partials.menu')
+                @endif
+
             </ul>
         </nav>
     </div>

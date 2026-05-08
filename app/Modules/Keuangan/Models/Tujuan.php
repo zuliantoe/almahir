@@ -9,4 +9,9 @@ class Tujuan extends Model
     protected $table = 'tujuans';
 
     protected $fillable = ['nama'];
+
+    public function pengeluarans()
+    {
+        return $this->hasMany(Pengeluaran::class);
+    }
 }

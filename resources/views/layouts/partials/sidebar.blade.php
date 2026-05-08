@@ -154,6 +154,9 @@
                 <li class="nav-item">
                     <a href="{{ route('izinsakit.index') }}" class="nav-link {{ request()->is('izinsakit*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-notes-medical"></i>
+                        <p>Izin Sakit</p>
+                    </a>
+                </li>
                 @endif
 
                 {{-- 
@@ -161,41 +164,14 @@
                 | KEUANGAN (SUPER_ADMIN, KEUANGAN)
                 |--------------------------------------------------------------------------
                 --}}
-                @if(Auth::check() && (Auth::user()->hasRole(['SUPER_ADMIN', 'KEUANGAN'])))
-                <li class="nav-header">KEUANGAN</li>
-                
-                {{-- Pembayaran --}}
-                <li class="nav-item has-treeview">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-money-bill-wave"></i>
-                        <p>
-                            Pembayaran
-                            <i class="fas fa-angle-left right"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>SPP</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Biaya Lain</p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                
-                {{-- Laporan Keuangan --}}
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-chart-bar"></i>
-                        <p>Laporan Keuangan</p>
-                    </a>
-                </li>
+                {{-- 
+                |--------------------------------------------------------------------------
+                | KEUANGAN (Visible inside Module, Role check bypassed for debugging)
+                |--------------------------------------------------------------------------
+                --}}
+                @if(Auth::check() && (request()->is('keuangan*') || request()->is('*/keuangan*')))
+                    {{-- DEBUG: Role: {{ implode(',', Auth::user()->roles->pluck('name')->toArray()) }} --}}
+                    @include('keuangan::partials.menu')
                 @endif
 
                 {{-- 

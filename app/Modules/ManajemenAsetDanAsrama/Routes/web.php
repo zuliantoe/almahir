@@ -103,6 +103,8 @@ Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
         Route::delete('{id}', [JadwalPiketController::class, 'destroy'])->name('destroy');
         Route::post('{id}/selesai', [JadwalPiketController::class, 'selesai'])->name('selesai');
         Route::post('auto-generate', [JadwalPiketController::class, 'autoGenerate'])->name('auto-generate');
+        Route::post('bulk-store', [JadwalPiketController::class, 'bulkStore'])->name('bulk-store');
+        Route::delete('destroy-day/{date}', [JadwalPiketController::class, 'destroyDay'])->name('destroy-day');
         Route::post('reset', [JadwalPiketController::class, 'resetAll'])->name('reset');
         Route::get('print', [JadwalPiketController::class, 'print'])->name('print');
     });

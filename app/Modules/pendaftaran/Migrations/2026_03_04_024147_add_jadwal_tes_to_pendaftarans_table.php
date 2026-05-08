@@ -11,21 +11,23 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('seleksis', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('pendaftaran_id')->constrained('pendaftarans')->onDelete('cascade');
+        if (!Schema::hasTable('seleksis')) {
+            Schema::create('seleksis', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('pendaftaran_id')->constrained('pendaftarans')->onDelete('cascade');
 
-            $table->string('nama_tes');
-            $table->date('tanggal');
-            $table->time('jam');
-            $table->string('pengampu')->nullable();
-            $table->string('metode'); // offline / online
-            $table->string('lokasi')->nullable();
-            $table->string('link')->nullable();
-            $table->integer('nilai')->nullable();
+                $table->string('nama_tes');
+                $table->date('tanggal');
+                $table->time('jam');
+                $table->string('pengampu')->nullable();
+                $table->string('metode'); // offline / online
+                $table->string('lokasi')->nullable();
+                $table->string('link')->nullable();
+                $table->integer('nilai')->nullable();
 
-            $table->timestamps();
-        });
+                $table->timestamps();
+            });
+        }
     }
 
     /**

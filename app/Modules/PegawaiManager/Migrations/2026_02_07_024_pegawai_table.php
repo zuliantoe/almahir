@@ -11,23 +11,22 @@ return new class extends Migration
         Schema::create('pegawai', function (Blueprint $table) {
             $table->uuid('id')->primary();
 
+            $table->uuid('user_id')->unique(); // 🔥 penting untuk 1-1
+
             $table->string('nama');
             $table->uuid('type_pegawai_id');
-
-            $table->string('no_hp', 20)->nullable();
-            $table->string('email')->unique();
-
+            $table->string('no_hp')->nullable();
+            $table->string('email')->nullable();
             $table->text('alamat')->nullable();
-            $table->date('tanggal_masuk');
-
+            $table->date('tanggal_masuk')->nullable();
             $table->string('foto')->nullable();
 
             $table->timestamps();
 
-            $table->foreign('type_pegawai_id')
-                  ->references('id')
-                  ->on('type_pegawai')
-                  ->onDelete('restrict');
+            $table->foreign('user_id')
+                ->references('id')
+                ->on('sys_users')
+                ->onDelete('cascade');
         });
     }
 

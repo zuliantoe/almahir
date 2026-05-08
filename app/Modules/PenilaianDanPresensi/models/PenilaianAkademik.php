@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Guru\Models\Guru;
 use Modules\Siswa\Models\Siswa;
+use App\Modules\Akademik\Models\MataPelajaran;
+use App\Modules\Akademik\Models\TahunAjaran;
 
 class PenilaianAkademik extends Model
 {
@@ -19,10 +21,12 @@ class PenilaianAkademik extends Model
         'id_mapel',
         'id_tahun_ajaran',
         'nilai',
+        'kkm',
     ];
 
     protected $casts = [
         'nilai' => 'integer',
+        'kkm' => 'integer',
     ];
 
     // Relationships
@@ -34,5 +38,15 @@ class PenilaianAkademik extends Model
     public function guru()
     {
         return $this->belongsTo(Guru::class, 'id_guru');
+    }
+
+    public function mataPelajaran()
+    {
+        return $this->belongsTo(MataPelajaran::class, 'id_mapel');
+    }
+
+    public function tahunAjaran()
+    {
+        return $this->belongsTo(TahunAjaran::class, 'id_tahun_ajaran');
     }
 }

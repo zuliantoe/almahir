@@ -10,11 +10,11 @@ use Modules\Auth\Controllers\AuthController;
 |--------------------------------------------------------------------------
 */
 
+use App\Http\Controllers\DashboardController;
+
 // Dashboard / Home (requires auth)
 Route::middleware('auth')->group(function () {
-    Route::get('/', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 });
 
 /*
@@ -29,9 +29,27 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
 
-// Authenticated routes (logout)
+// Authenticated routes
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // Notifications
+    Route::get('/notifications/read-all', function() {
+        auth()->user()->unreadNotifications->markAsRead();
+        return redirect()->back()->with('success', 'Semua notifikasi telah ditandai dibaca.');
+    })->name('notifications.readAll');
+
+    Route::get('/notifications/{id}/read', function($id) {
+        $notification = auth()->user()->notifications()->findOrFail($id);
+        $notification->markAsRead();
+        return redirect($notification->data['url'] ?? url('/'));
+    })->name('notifications.read');
+
+    // User Profile
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/avatar', [\App\Http\Controllers\ProfileController::class, 'updateAvatar'])->name('profile.update-avatar');
+    Route::put('/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('password.update');
 });
 
 /*
@@ -62,4 +80,34 @@ Route::middleware(['auth', 'role:SUPER_ADMIN'])->group(function () {
 if (config('app.debug') && class_exists(\App\Http\Controllers\DevController::class)) {
     Route::get('/dev/ui-guide', [\App\Http\Controllers\DevController::class, 'uiGuide'])->name('dev.ui-guide');
 }
+
+/*
+|--------------------------------------------------------------------------
+| Presensi Routes (SHORT PREFIX)
+|--------------------------------------------------------------------------
+*/
+use Modules\PenilaianDanPresensi\Controllers\PresensiController;
+
+Route::middleware(['auth'])->group(function () {
+    Route::prefix('presensi')->name('presensi.')->group(function () {
+        Route::get('/', [PresensiController::class, 'index'])->name('index');
+        Route::get('/create', [PresensiController::class, 'create'])->name('create');
+        Route::post('/', [PresensiController::class, 'store'])->name('store');
+        Route::get('/{id}', [PresensiController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [PresensiController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [PresensiController::class, 'update'])->name('update');
+        Route::delete('/{id}', [PresensiController::class, 'destroy'])->name('destroy');
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Penilaian dan Presensi Dashboard (UNIFIED)
+|--------------------------------------------------------------------------
+*/
+use Modules\PenilaianDanPresensi\Controllers\DashboardController as PenilaianDashboardController;
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/penilaian', [PenilaianDashboardController::class, 'index'])->name('penilaian.dashboard');
+});
 

@@ -53,4 +53,12 @@ class Guru extends Model
     {
         return $query->where('status', 'aktif');
     }
+
+    /**
+     * Get the schedules associated with this teacher.
+     */
+    public function jadwalPelajaran()
+    {
+        return $this->hasMany(\App\Modules\Akademik\Models\JadwalPelajaran::class, 'guru_id');
+    }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Services\PermissionRegistry;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * RolePermissionController
@@ -65,6 +66,8 @@ class RolePermissionController extends Controller
             'is_system' => false,
         ]);
 
+        Cache::forget('all_roles');
+
         return redirect()->route('rolepermission.index')
             ->with('success', "Role '{$role->display_name}' berhasil dibuat.");
     }
@@ -113,6 +116,7 @@ class RolePermissionController extends Controller
         }
 
         $role->update($updateData);
+        Cache::forget('all_roles');
 
         return redirect()->route('rolepermission.index')
             ->with('success', "Role '{$role->display_name}' berhasil diperbarui.");
@@ -139,6 +143,7 @@ class RolePermissionController extends Controller
 
         $roleName = $role->display_name;
         $role->delete();
+        Cache::forget('all_roles');
 
         return redirect()->route('rolepermission.index')
             ->with('success', "Role '{$roleName}' berhasil dihapus.");

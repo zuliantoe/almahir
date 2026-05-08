@@ -5,22 +5,50 @@ namespace App\Modules\Akademik\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property string $tahunajaran
+ * @property string $semester
+ * @property bool $status
+ * @property string|null $keterangan
+ */
 class TahunAjaran extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'tahun_ajaran';
-    protected $fillable = ['tahun_ajaran', 'status'];
+    protected $fillable = ['tahunajaran', 'semester', 'status', 'keterangan'];
+
+    protected static function booted()
+    {
+        static::saving(function ($tahunAjaran) {
+            if ($tahunAjaran->status) {
+                $query = static::where('status', 1);
+                if ($tahunAjaran->exists) {
+                    $query->where('id', '!=', $tahunAjaran->id);
+                }
+                $query->update(['status' => 0]);
+            }
+        });
+    }
 
     public function kalenderAkademik(): HasMany
     {
         return $this->hasMany(KalenderAkademik::class, 'tahunajaran_id');
     }
 
-    public function jadwalPelajaran(): HasMany
+    public function jadwalPelajaran()
     {
-        return $this->hasMany(JadwalPelajaran::class, 'tahunajaran_id');
+        return $this->hasManyThrough(
+            JadwalPelajaran::class,
+            Rombel::class,
+            'tahunajaran_id', // Foreign key on rombel table
+            'rombel_id',      // Foreign key on jadwal_pelajaran table
+            'id',             // Local key on tahun_ajaran table
+            'id'              // Local key on rombel table
+        );
     }
 
     public function kurikulum(): HasMany
@@ -36,5 +64,14 @@ class TahunAjaran extends Model
     public function scopeAktif($query)
     {
         return $query->where('status', true);
+    }
+
+    /**
+     * Get the current active academic year
+     * Accessible from any module: \App\Modules\Akademik\Models\TahunAjaran::current()
+     */
+    public static function current()
+    {
+        return self::aktif()->first();
     }
 }

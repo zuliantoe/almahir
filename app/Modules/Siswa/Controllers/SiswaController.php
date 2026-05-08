@@ -5,6 +5,7 @@ namespace Modules\Siswa\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Modules\Siswa\Models\Siswa;
 
 /**
  * SiswaController
@@ -21,9 +22,11 @@ class SiswaController extends Controller
      */
     public function index(): View
     {
+        $siswas = \Modules\Siswa\Models\Siswa::with('kelas')->orderBy('nama')->get();
         return view('siswa::index', [
             'title' => 'Data Siswa',
             'breadcrumb' => 'Siswa / Daftar',
+            'siswas' => $siswas,
         ]);
     }
 
@@ -32,9 +35,16 @@ class SiswaController extends Controller
      */
     public function create(): View
     {
+        $tahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::orderBy('id', 'desc')->get();
+        $pendaftaranDiterima = \Modules\Pendaftaran\Models\Pendaftaran::where('status', 'diterima')
+                                                                        ->where('aktif', 0)
+                                                                        ->get();
+
         return view('siswa::create', [
             'title' => 'Tambah Siswa Baru',
             'breadcrumb' => 'Siswa / Tambah',
+            'tahunAjaran' => $tahunAjaran,
+            'pendaftaranDiterima' => $pendaftaranDiterima,
         ]);
     }
 
@@ -48,11 +58,29 @@ class SiswaController extends Controller
             'nis' => 'required|string|max:20|unique:siswa,nis',
             'email' => 'required|email|unique:siswa,email',
             'tanggal_lahir' => 'required|date',
+            'tempat_lahir' => 'nullable|string|max:255',
+            'jenis_kelamin' => 'nullable|in:L,P',
+            'telepon' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',
+            'tahun_masuk' => 'nullable|integer',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        // TODO: Store the student data
+        $validated['status'] = 'aktif'; // default status for new student
+
+        if ($request->hasFile('foto')) {
+            $validated['foto'] = $request->file('foto')->store('siswa/foto', 'public');
+        }
+
         // Siswa::create($validated);
+        Siswa::create($validated);
+
+        if ($request->filled('pendaftaran_id')) {
+            $pendaftaran = \Modules\Pendaftaran\Models\Pendaftaran::find($request->pendaftaran_id);
+            if ($pendaftaran) {
+                $pendaftaran->update(['aktif' => 1]);
+            }
+        }
 
         return redirect()->route('siswa.index')
             ->with('success', 'Siswa berhasil ditambahkan.');
@@ -63,11 +91,12 @@ class SiswaController extends Controller
      */
     public function show(string $id): View
     {
-        // TODO: Fetch the student by ID
+        $siswa = Siswa::findOrFail($id);
+        
         return view('siswa::show', [
             'title' => 'Detail Siswa',
             'breadcrumb' => 'Siswa / Detail',
-            'siswa' => null, // Replace with actual data
+            'siswa' => $siswa,
         ]);
     }
 
@@ -76,11 +105,14 @@ class SiswaController extends Controller
      */
     public function edit(string $id): View
     {
-        // TODO: Fetch the student by ID
+        $siswa = Siswa::findOrFail($id);
+        $tahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::orderBy('id', 'desc')->get();
+        
         return view('siswa::edit', [
             'title' => 'Edit Siswa',
             'breadcrumb' => 'Siswa / Edit',
-            'siswa' => null, // Replace with actual data
+            'siswa' => $siswa,
+            'tahunAjaran' => $tahunAjaran,
         ]);
     }
 
@@ -91,13 +123,28 @@ class SiswaController extends Controller
     {
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
-            'nis' => 'required|string|max:20',
-            'email' => 'required|email',
+            'nis' => 'required|string|max:20|unique:siswa,nis,' . $id,
+            'email' => 'required|email|unique:siswa,email,' . $id,
             'tanggal_lahir' => 'required|date',
+            'tempat_lahir' => 'nullable|string|max:255',
+            'jenis_kelamin' => 'nullable|in:L,P',
+            'telepon' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',
+            'tahun_masuk' => 'nullable|integer',
+            'status' => 'nullable|in:aktif,lulus,keluar,cuti',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        // TODO: Update the student data
+        $siswa = Siswa::findOrFail($id);
+
+        if ($request->hasFile('foto')) {
+            if ($siswa->foto && \Illuminate\Support\Facades\Storage::disk('public')->exists($siswa->foto)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($siswa->foto);
+            }
+            $validated['foto'] = $request->file('foto')->store('siswa/foto', 'public');
+        }
+
+        $siswa->update($validated);
         
         return redirect()->route('siswa.index')
             ->with('success', 'Data siswa berhasil diperbarui.');
@@ -108,7 +155,8 @@ class SiswaController extends Controller
      */
     public function destroy(string $id)
     {
-        // TODO: Delete the student
+        $siswa = Siswa::findOrFail($id);
+        $siswa->delete();
         
         return redirect()->route('siswa.index')
             ->with('success', 'Siswa berhasil dihapus.');

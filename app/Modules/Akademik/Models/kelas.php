@@ -4,48 +4,42 @@ namespace App\Modules\Akademik\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Modules\Siswa\Models\Siswa;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Guru\Models\Guru;
 
-class kelas extends Model
+
+class Kelas extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
-    protected $table='kelas';
+    protected $table = 'kelas';
+
     protected $fillable = [
-        'nama_kelas',
         'kode_kelas',
-        'jenjang',
-        'guru_id',
-        'kapasitas',
-        'keterangan',
-        'status'
+        'nama_kelas',
+        'tingkat_id',
     ];
 
-    public function walikelas():BelongsTo
+    public function tingkat()
     {
-        return $this->belongsTo(Guru::class,'guru_id');
+        return $this->belongsTo(Tingkat::class, 'tingkat_id');
     }
 
 
-    public function jadwalPelajaran():HasMany
+    public function rombel()
     {
-        return $this->hasMany(JadwalPelajaran::class,'kelas_id');
+        return $this->hasMany(Rombel::class, 'kelas_id');
     }
 
-    public function kurikulum():HasMany
+    public function kurikulum()
     {
-        return $this->hasMany(Kurikulum::class,'kelas_id');
+        return $this->hasMany(Kurikulum::class, 'kelas_id');
     }
 
-    public function romberl():HasMany
+    public function jadwalPelajaran()
     {
-        return $this->hasMany(Siswa::class,Rombel::class,'kelas_id','id','siswa_id');
-    }
-
-    public function scopeAktif($query)
-    {
-        return $query->where('status','aktif');
+        // Based on the latest ERD, jadwal_pelajaran belongs to Rombel, 
+        // but if we want to get them through Kelas, we use hasManyThrough
+        return $this->hasManyThrough(JadwalPelajaran::class, Rombel::class, 'kelas_id', 'rombel_id');
     }
 }

@@ -8,10 +8,49 @@ use Modules\Pendaftaran\Models\Pendaftaran;
 
 class PendaftaranController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $pendaftaran = Pendaftaran::latest()->get();
-        return view('pendaftaran::index', compact('pendaftaran'));
+        // Hanya tampilkan pendaftaran yang belum menjadi siswa (aktif = 0)
+        $query = Pendaftaran::query()->where('aktif', 0);
+
+        // Default ke 'pending' jika status kosong atau tidak ada
+        $currentStatus = $request->status ?: 'pending';
+
+        if ($currentStatus !== 'all') {
+            $query->where('status', $currentStatus);
+        }
+
+        $data = $query->orderBy('tanggal_daftar', 'desc')->get()->groupBy(function($item) {
+            $date = \Carbon\Carbon::parse($item->tanggal_daftar)->startOfDay();
+            $today = \Carbon\Carbon::today();
+
+            if ($date->equalTo($today)) {
+                return 'Hari Ini';
+            } elseif ($date->equalTo($today->copy()->subDay())) {
+                return 'Kemarin';
+            } elseif ($date->greaterThanOrEqualTo($today->copy()->startOfWeek())) {
+                return 'Minggu Ini';
+            } elseif ($date->greaterThanOrEqualTo($today->copy()->startOfMonth())) {
+                return 'Bulan Ini';
+            } else {
+                // Hitung selisih bulan absolut
+                $monthDiff = ($today->year - $date->year) * 12 + ($today->month - $date->month);
+                if ($monthDiff == 1) {
+                    return '1 Bulan Lalu';
+                }
+                return $monthDiff . ' Bulan Lalu';
+            }
+        });
+
+        return view('pendaftaran::admin.pendaftaran', compact('data', 'currentStatus'));
+    }
+
+
+    public function show($id)
+    {
+        $pendaftaran = Pendaftaran::with('seleksis')->findOrFail($id);
+
+        return view('pendaftaran::admin.show', compact('pendaftaran'));
     }
     public function create()
     {
@@ -20,16 +59,32 @@ class PendaftaranController extends Controller
 
     public function store(Request $request)
     {
+        $currentYear = date('Y');
+        $minYear = $currentYear - 18; // minimal umur 3 tahun
+        $maxYear = $currentYear - 3;  // maksimal umur 18 tahun
+
         $validated = $request->validate([
-            'nisn' => 'required|string|max:20|unique:pendaftarans,nisn',
-            'nama_lengkap' => 'required|string',
-            'tempat_lahir' => 'required|string',
-            'tanggal_lahir' => 'required|date',
+
+            'nisn' => 'required|digits_between:5,20|unique:pendaftarans,nisn',
+
+            'nama_lengkap' => 'required|string|max:255',
+
+            'tempat_lahir' => 'required|string|max:255',
+
+            'tanggal_lahir' => [
+                'required',
+                'date',
+                "after_or_equal:$minYear-01-01",
+                "before_or_equal:$maxYear-12-31",
+            ],
+
             'jenis_kelamin' => 'required|in:L,P',
 
             'berat_badan' => 'required|numeric|min:20',
-            'tinggi_badan' => 'required|numeric',
-            'riwayat_sakit' => 'nullable|string',
+
+            'tinggi_badan' => 'required|numeric|min:50',
+
+            'riwayat_sakit' => 'required|string',
 
             'kelurahan' => 'required|string',
             'kecamatan' => 'required|string',
@@ -39,57 +94,60 @@ class PendaftaranController extends Controller
 
             'nama_ayah' => 'required|string',
             'pekerjaan_ayah' => 'required|string',
-            'no_hp' => 'required|string|max:15',
+
+            'no_hp' => 'required|digits_between:10,15',
+
             'email' => 'required|email|unique:pendaftarans,email',
+
         ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | LOGIKA SELEKSI OTOMATIS
-        |--------------------------------------------------------------------------
-        */
-        $status = 'pending';
-        $catatan = null;
-
-        if ($validated['tinggi_badan'] < 150) {
-            $status = 'ditolak';
-            $catatan = 'Tinggi badan kurang dari standar minimal (150 cm)';
-        }
-
-        if ($validated['berat_badan'] < 35) {
-            $status = 'ditolak';
-            $catatan = 'Berat badan kurang dari standar minimal (35 kg)';
-        }
-
-        if (!empty($validated['riwayat_sakit'])) {
-            $status = 'diproses';
-            $catatan = 'Perlu pemeriksaan riwayat sakit';
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | SIMPAN DATA
-        |--------------------------------------------------------------------------
-        */
-        $validated['status'] = $status;
-        $validated['catatan'] = $catatan;
         $validated['tanggal_daftar'] = now();
+        $validated['status'] = 'pending';
 
         Pendaftaran::create($validated);
 
-        /*
-        |--------------------------------------------------------------------------
-        | RESPONSE
-        |--------------------------------------------------------------------------
-        */
-        if ($status === 'ditolak') {
-            return redirect()
-                ->route('pendaftaran.create')
-                ->with('warning', $catatan);
+        return redirect('/pendaftaran')
+            ->with('success', 'Pendaftaran berhasil');
+    }
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,diproses,diterima,ditolak',
+        ]);
+
+        $pendaftaran = Pendaftaran::findOrFail($id);
+
+        if (in_array($request->status, ['diterima', 'ditolak'])) {
+            $hasUnscoredTests = \Modules\Pendaftaran\Models\Seleksi::where('pendaftaran_id', $id)
+                                ->whereNull('nilai')
+                                ->exists();
+                                
+            if ($hasUnscoredTests) {
+                return back()->with('error', 'Terdeteksi ada tes yang belum selesai, silahkan selesaikan proses tes.');
+            }
         }
 
-        return redirect()
-            ->route('pendaftaran.create')
-            ->with('success', 'Pendaftaran berhasil dikirim');
+        $updateData = ['status' => $request->status];
+        if ($request->status === 'diterima') {
+            $updateData['tanggal_diterima'] = now();
+        }
+
+        $pendaftaran->update($updateData);
+
+        return back()->with('success', 'Status pendaftaran berhasil diperbarui');
+    }
+
+    public function updateCatatan(Request $request, $id)
+    {
+        $request->validate([
+            'catatan' => 'nullable|string'
+        ]);
+
+        $pendaftaran = Pendaftaran::findOrFail($id);
+        $pendaftaran->update([
+            'catatan' => $request->catatan,
+        ]);
+
+        return back()->with('success', 'Catatan berhasil diperbarui');
     }
 }

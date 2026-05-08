@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\MenuRegistry;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -27,6 +28,11 @@ class ModuleServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Register MenuRegistry as singleton
+        $this->app->singleton(MenuRegistry::class, function () {
+            return new MenuRegistry();
+        });
+
         $this->registerModuleMigrations();
     }
 
@@ -40,11 +46,13 @@ class ModuleServiceProvider extends ServiceProvider
     {
         $this->registerModuleRoutes();
         $this->registerModuleViews();
-        $modulePath = base_path('app/Modules/akademik/view');
+        $this->registerModuleMenus();
 
-        if (is_dir($modulePath)) {
-            View::addNamespace('akademik', $modulePath);
-        }
+        // Share module menus with all views for sidebar rendering
+        View::composer('layouts.partials.sidebar', function ($view) {
+            $menuRegistry = app(MenuRegistry::class);
+            $view->with('moduleMenus', $menuRegistry->getMenusForUser());
+        });
     }
 
     /**
@@ -141,6 +149,29 @@ class ModuleServiceProvider extends ServiceProvider
             $migrationsPath = $modulePath . '/Migrations';
             if (File::isDirectory($migrationsPath)) {
                 $this->loadMigrationsFrom($migrationsPath);
+            }
+        }
+    }
+
+    /**
+     * Register menus from all modules.
+     *
+     * Each module can define a menu.php file in its root directory
+     * that returns an array of menu configuration.
+     */
+    protected function registerModuleMenus(): void
+    {
+        $menuRegistry = app(MenuRegistry::class);
+
+        foreach ($this->getModules() as $module) {
+            $menuFile = $module['path'] . '/menu.php';
+
+            if (File::exists($menuFile)) {
+                $menuConfig = require $menuFile;
+
+                if (is_array($menuConfig)) {
+                    $menuRegistry->register($menuConfig);
+                }
             }
         }
     }

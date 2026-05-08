@@ -4,95 +4,83 @@
 
 @section('content')
 <div class="container-fluid">
-    <form action="{{ route('akademik.tahun-ajaran.update', $tahunAjaran->id) }}" method="POST">
-        @csrf
-        @method('PUT')
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <x-card title="Edit Tahun Ajaran" icon="fas fa-edit" type="warning" outline>
+                <form action="{{ route('akademik.tahun-ajaran.update', $tahunAjaran->id) }}" method="POST">
+                    @csrf
+                    @method('PUT')
 
-        <x-card title="Edit Tahun Ajaran" type="warning">
+                    <x-alert type="warning" outline>
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        <strong>Perhatian:</strong> Jika mengaktifkan tahun ajaran ini, tahun ajaran lain yang aktif akan otomatis dinonaktifkan.
+                    </x-alert>
 
-            {{-- Informasi --}}
-            <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle"></i>
-                Perhatikan: Jika mengaktifkan tahun ajaran ini, tahun ajaran lain yang aktif akan otomatis dinonaktifkan.
-            </div>
-
-            {{-- Form Input --}}
-            <div class="row">
-                <div class="col-md-6">
-                    <x-input
-                        label="Tahun Ajaran"
-                        name="tahun_ajaran"
-                        value="{{ old('tahun_ajaran', $tahunAjaran->tahun_ajaran) }}"
-                        placeholder="Contoh: 2023/2024"
-                        icon="fas fa-calendar"
-                        required
-                    />
-                </div>
-
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="d-block">Status</label>
-                        <div class="custom-control custom-switch">
-                            <input type="checkbox"
-                                   class="custom-control-input"
-                                   id="status"
-                                   name="status"
-                                   value="1"
-                                   {{ old('status', $tahunAjaran->status) ? 'checked' : '' }}>
-                            <label class="custom-control-label" for="status">
-                                Jadikan Tahun Ajaran Aktif
-                            </label>
+                    <div class="row mt-4">
+                        <div class="col-md-5 mb-3">
+                            <x-input label="Tahun Ajaran" name="tahunajaran" 
+                                     :value="old('tahunajaran', $tahunAjaran->tahunajaran)" 
+                                     placeholder="Contoh: 2023/2024" 
+                                     prepend="<i class='fas fa-calendar'></i>" 
+                                     required />
                         </div>
 
-                        @if($tahunAjaran->status)
-                            <div class="mt-2">
-                                <span class="badge badge-success">
-                                    <i class="fas fa-check"></i> Status Saat Ini: Aktif
-                                </span>
+                        <div class="col-md-3 mb-3">
+                            <div class="form-group">
+                                <label>Semester</label>
+                                <select name="semester" class="form-control select2" required>
+                                    <option value="Ganjil" {{ old('semester', $tahunAjaran->semester) == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                                    <option value="Genap" {{ old('semester', $tahunAjaran->semester) == 'Genap' ? 'selected' : '' }}>Genap</option>
+                                </select>
                             </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
+                        </div>
 
-            {{-- Info Data --}}
-            <div class="row mt-3">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Dibuat Pada</label>
-                        <p class="form-control-plaintext">
-                            {{ $tahunAjaran->created_at->format('d/m/Y H:i:s') }}
-                        </p>
+                        <div class="col-md-4 mb-3">
+                            <div class="form-group">
+                                <label class="d-block font-weight-bold">Status Keaktifan</label>
+                                <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                    <input type="checkbox" class="custom-control-input" id="status" name="status" value="1" 
+                                           {{ old('status', $tahunAjaran->status) ? 'checked' : '' }}>
+                                    <label class="custom-control-label" for="status">Jadikan Tahun Ajaran Aktif</label>
+                                </div>
+                                @if($tahunAjaran->status)
+                                    <small class="text-success font-weight-bold d-block mt-2">
+                                        <i class="fas fa-check-circle"></i> Saat ini berstatus Aktif
+                                    </small>
+                                @endif
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Terakhir Diperbarui</label>
-                        <p class="form-control-plaintext">
-                            {{ $tahunAjaran->updated_at->format('d/m/Y H:i:s') }}
-                        </p>
-                    </div>
-                </div>
-            </div>
 
-            {{-- Footer Buttons --}}
-            <x-slot name="footer">
-                <div class="d-flex justify-content-between">
-                    <a href="{{ route('akademik.tahun-ajaran.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Kembali
-                    </a>
-                    <div>
-                        <button type="reset" class="btn btn-warning">
-                            <i class="fas fa-undo"></i> Reset
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Perbarui
-                        </button>
+                    <div class="row border-top pt-3 mt-3">
+                        <div class="col-md-6">
+                            <small class="text-muted d-block">Dibuat Pada:</small>
+                            <span class="font-weight-bold">{{ $tahunAjaran->created_at->format('d/m/Y H:i') }}</span>
+                        </div>
+                        <div class="col-md-6 text-md-right">
+                            <small class="text-muted d-block">Terakhir Diperbarui:</small>
+                            <span class="font-weight-bold">{{ $tahunAjaran->updated_at->format('d/m/Y H:i') }}</span>
+                        </div>
                     </div>
-                </div>
-            </x-slot>
 
-        </x-card>
-    </form>
+                    <hr>
+
+                    <div class="d-flex justify-content-between">
+                        <x-btn :href="route('akademik.tahun-ajaran.index')" class="btn-secondary" icon="fas fa-arrow-left">
+                            Kembali
+                        </x-btn>
+                        <div>
+                            <x-btn type="reset" class="btn-warning text-white mr-2" icon="fas fa-undo">
+                                Reset
+                            </x-btn>
+                            <x-btn type="submit" icon="fas fa-save">
+                                Simpan Perubahan
+                            </x-btn>
+                        </div>
+                    </div>
+                </form>
+            </x-card>
+        </div>
+    </div>
 </div>
 @endsection

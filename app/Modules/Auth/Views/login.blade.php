@@ -22,14 +22,14 @@
             <form action="{{ route('login') }}" method="POST">
                 @csrf
 
-                {{-- Email --}}
+                {{-- Email atau Username --}}
                 <div class="input-group mb-3">
                     <input 
-                        type="email" 
-                        name="email" 
-                        class="form-control @error('email') is-invalid @enderror" 
-                        placeholder="Email"
-                        value="{{ old('email') }}"
+                        type="text" 
+                        name="login" 
+                        class="form-control @error('login') is-invalid @enderror" 
+                        placeholder="Email atau NIP/NIS"
+                        value="{{ old('login') }}"
                         required
                         autofocus
                     >
@@ -38,7 +38,7 @@
                             <span class="fas fa-envelope"></span>
                         </div>
                     </div>
-                    @error('email')
+                    @error('login')
                         <span class="invalid-feedback" role="alert">
                             <strong>{{ $message }}</strong>
                         </span>

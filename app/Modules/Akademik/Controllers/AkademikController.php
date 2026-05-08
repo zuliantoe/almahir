@@ -14,17 +14,121 @@ use Illuminate\View\View;
  */
 class AkademikController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request): View
     {
-        // TODO: Implement listing logic
-        $akademiks = collect();
+        $user = auth()->user();
+
+        // 1. Context Guru
+        if ($user && $user->hasRole('GURU')) {
+            $guru = $user->ref;
+            $today = \Carbon\Carbon::now()->locale('id')->translatedFormat('l');
+            $todayDate = \Carbon\Carbon::now()->toDateString();
+
+            $jadwalHariIni = \App\Modules\Akademik\Models\JadwalPelajaran::with(['mataPelajaran', 'rombel'])
+                ->where('guru_id', $guru?->id)
+                ->where('hari', $today)
+                ->orderBy('jamke')
+                ->get();
+
+            $jadwalMingguan = \App\Modules\Akademik\Models\JadwalPelajaran::with(['mataPelajaran', 'rombel'])
+                ->where('guru_id', $guru?->id)
+                ->orderBy('hari')
+                ->orderBy('jamke')
+                ->get();
+
+            // Ongoing events
+            $eventHariIni = \App\Modules\Akademik\Models\KalenderAkademik::with('jenisKegiatan')
+                ->whereDate('tanggal_awal', '<=', $todayDate)
+                ->whereDate('tanggal_akhir', '>=', $todayDate)
+                ->get();
+
+            // Upcoming events (next 30 days)
+            $upcomingEvents = \App\Modules\Akademik\Models\KalenderAkademik::with('jenisKegiatan')
+                ->whereDate('tanggal_awal', '>', $todayDate)
+                ->whereDate('tanggal_awal', '<=', \Carbon\Carbon::now()->addDays(30))
+                ->orderBy('tanggal_awal')
+                ->take(5)
+                ->get();
+
+            $tahunAjaranAktif = \App\Modules\Akademik\Models\TahunAjaran::aktif()->first();
+
+            return view('akademik::dashboards.guru', compact(
+                'jadwalHariIni', 'jadwalMingguan', 'upcomingEvents', 'today', 'eventHariIni', 'tahunAjaranAktif'
+            ));
+        }
+
+        // 2. Context Siswa
+        if ($user && $user->hasRole('SISWA')) {
+            $siswa = $user->ref;
+            $rombelSiswa = \App\Modules\Akademik\Models\RombelSiswa::with('rombel.tahunAjaran')->where('siswa_id', $siswa?->id)->first();
+            $rombelId = $rombelSiswa?->rombel_id;
+            $today = \Carbon\Carbon::now()->locale('id')->translatedFormat('l');
+            $todayDate = \Carbon\Carbon::now()->toDateString();
+
+            $jadwalHariIni = collect();
+            $jadwalMingguan = collect();
+            if ($rombelId) {
+                $jadwalHariIni = \App\Modules\Akademik\Models\JadwalPelajaran::with(['mataPelajaran', 'guru'])
+                    ->where('rombel_id', $rombelId)
+                    ->where('hari', $today)
+                    ->orderBy('jamke')
+                    ->get();
+
+                $jadwalMingguan = \App\Modules\Akademik\Models\JadwalPelajaran::with(['mataPelajaran', 'guru'])
+                    ->where('rombel_id', $rombelId)
+                    ->orderBy('hari')
+                    ->orderBy('jamke')
+                    ->get();
+            }
+
+            // Ongoing events
+            $eventHariIni = \App\Modules\Akademik\Models\KalenderAkademik::with('jenisKegiatan')
+                ->whereDate('tanggal_awal', '<=', $todayDate)
+                ->whereDate('tanggal_akhir', '>=', $todayDate)
+                ->get();
+
+            // Upcoming events
+            $upcomingEvents = \App\Modules\Akademik\Models\KalenderAkademik::with('jenisKegiatan')
+                ->whereDate('tanggal_awal', '>', $todayDate)
+                ->whereDate('tanggal_awal', '<=', \Carbon\Carbon::now()->addDays(30))
+                ->orderBy('tanggal_awal')
+                ->take(5)
+                ->get();
+
+            $tahunAjaranAktif = \App\Modules\Akademik\Models\TahunAjaran::aktif()->first();
+
+            return view('akademik::dashboards.siswa', compact(
+                'jadwalHariIni', 'jadwalMingguan', 'upcomingEvents', 'today', 'rombelSiswa', 'eventHariIni', 'tahunAjaranAktif'
+            ));
+        }
+
+        // Default Admin / Staff Context
+        $todayDate = \Carbon\Carbon::now()->toDateString();
+        $totalSiswa = \Modules\Siswa\Models\Siswa::count();
+        $totalGuru = \Modules\Guru\Models\Guru::count();
+        $totalKelas = \App\Modules\Akademik\Models\Kelas::count();
+        $totalMapel = \App\Modules\Akademik\Models\MataPelajaran::count();
         
+        $siswaTerbaru = \Modules\Siswa\Models\Siswa::latest()->take(5)->get();
+        $guruTerbaru = \Modules\Guru\Models\Guru::latest()->take(5)->get();
+
+        // Upcoming events (next 30 days) for Admin Dashboard Notifications
+        $upcomingEvents = \App\Modules\Akademik\Models\KalenderAkademik::with('jenisKegiatan')
+            ->whereDate('tanggal_awal', '>', $todayDate)
+            ->whereDate('tanggal_awal', '<=', \Carbon\Carbon::now()->addDays(30))
+            ->orderBy('tanggal_awal')
+            ->take(5)
+            ->get();
+
         return view('akademik::index', [
-            'title' => 'Daftar Akademik',
-            'akademiks' => $akademiks,
+            'title' => 'Dashboard Akademik',
+            'totalSiswa' => $totalSiswa,
+            'totalGuru' => $totalGuru,
+            'totalKelas' => $totalKelas,
+            'totalMapel' => $totalMapel,
+            'siswaTerbaru' => $siswaTerbaru,
+            'guruTerbaru' => $guruTerbaru,
+            'upcomingEvents' => $upcomingEvents,
         ]);
     }
 

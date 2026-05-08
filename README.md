@@ -37,7 +37,8 @@ app/
 ├── Models/                  # Core models (User, Role)
 │   └── Traits/             # Model traits (HasRoles)
 ├── Services/               # Application services
-│   └── PermissionRegistry.php  # Centralized permission definitions
+│   ├── PermissionRegistry.php  # Centralized permission definitions
+│   └── MenuRegistry.php       # Dynamic sidebar menu registry
 ├── Modules/                 # 📦 MODULAR MONOLITH - All modules here
 │   ├── Auth/               # Authentication (login/logout)
 │   ├── Siswa/              # Student data management
@@ -115,6 +116,9 @@ php artisan make:module-model Siswa NilaiSiswa -m
 
 # Add controller to existing module
 php artisan make:module-controller Siswa ReportController --resource
+
+# Add sidebar menu to existing module
+php artisan make:module-menu Kelas --header="DATA MASTER" --label="Data Kelas" --icon="fas fa-door-open" --roles="SUPER_ADMIN,GURU" --order=10
 ```
 
 | Command | Description |
@@ -123,6 +127,7 @@ php artisan make:module-controller Siswa ReportController --resource
 | `make:module-migration {module} {name}` | Add migration to existing module |
 | `make:module-model {module} {name} [-m]` | Add model (with optional migration) |
 | `make:module-controller {module} {name} [-r]` | Add controller (`-r` for resource) |
+| `make:module-menu {module}` | Add sidebar menu (auto-displays in sidebar) |
 
 ---
 
@@ -232,17 +237,44 @@ Module migrations are auto-discovered!
 @endsection
 ```
 
-### 7. Add to Sidebar
+### 7. Add Sidebar Menu
 
-Edit `resources/views/layouts/partials/sidebar.blade.php` and add menu item with active state:
+Create `app/Modules/Kelas/menu.php` — the sidebar will auto-discover and display it:
 
-```blade
-<li class="nav-item">
-    <a href="{{ route('kelas.index') }}" class="nav-link {{ request()->is('kelas*') ? 'active' : '' }}">
-        <i class="nav-icon fas fa-door-open"></i>
-        <p>Data Kelas</p>
-    </a>
-</li>
+```php
+<?php
+
+return [
+    'header' => 'DATA MASTER',           // Section header di sidebar
+    'roles'  => ['SUPER_ADMIN', 'GURU'], // Roles yang bisa melihat menu
+    'order'  => 10,                      // Urutan tampil (kecil = atas)
+    'items'  => [
+        [
+            'label' => 'Data Kelas',
+            'icon'  => 'fas fa-door-open',
+            'route' => 'kelas.index',    // Named route
+            'match' => 'kelas*',         // Pattern untuk active state
+        ],
+    ],
+];
+```
+
+> **Tips:**
+> - Gunakan `header` yang sama di beberapa modul untuk mengelompokkan di satu section
+> - Tambah `children` array untuk sub-menu (treeview)
+> - Gunakan `url` instead of `route` untuk link manual
+
+**Contoh dengan sub-menu:**
+```php
+[
+    'label' => 'Pembayaran',
+    'icon'  => 'fas fa-money-bill-wave',
+    'url'   => '#',
+    'children' => [
+        ['label' => 'SPP', 'route' => 'keuangan.spp.index', 'match' => 'keuangan/spp*'],
+        ['label' => 'Biaya Lain', 'route' => 'keuangan.biaya.index', 'match' => 'keuangan/biaya*'],
+    ],
+]
 ```
 
 ### 8. Refresh Autoloader

@@ -132,26 +132,38 @@
 @include('manajemenasetdanasrama::partials.modal-delete', ['id' => 'modalHapus', 'title' => 'Hapus Master Aset'])
 
 {{-- MODAL DUPLIKAT --}}
-<div class="modal fade" id="modalDuplikat" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <form id="formDuplikat" action="" method="POST">
+<div class="modal fade" id="modalDuplikat" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <form id="formDuplikat" method="POST">
                 @csrf
-                <div class="modal-header bg-secondary">
-                    <h5 class="modal-title text-white">Duplikat Aset</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                <div class="modal-header bg-secondary text-white border-0 py-3">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-copy mr-2"></i> Duplikat Master Aset</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
-                <div class="modal-body">
-                    <p>Menduplikat aset <strong id="duplikat_nama"></strong> (Kode Induk: <span id="duplikat_kode_text"></span>).</p>
-                    <div class="form-group">
-                        <label for="jumlah_duplikat">Jumlah Duplikat <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="jumlah_duplikat" name="jumlah_duplikat" min="1" max="50" value="1" required>
-                        <small class="text-muted">Aset baru akan memiliki nama yang sama dengan urutan kode aset yang bertambah (Contoh: KODE-1, KODE-2).</small>
+                <div class="modal-body p-4 text-center">
+                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-boxes text-secondary fa-lg"></i>
+                    </div>
+                    <h6 class="font-weight-bold mb-1" id="duplikat_nama"></h6>
+                    <p class="text-muted small">Kode Induk: <span id="duplikat_kode_text" class="badge badge-light border"></span></p>
+                    
+                    <div class="form-group text-left mt-4">
+                        <label class="small font-weight-bold text-muted text-uppercase">Jumlah Salinan <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white border-right-0"><i class="fas fa-layer-group"></i></span>
+                            </div>
+                            <input type="number" class="form-control border-left-0" id="jumlah_duplikat" name="jumlah_duplikat" min="1" max="50" value="1" required>
+                        </div>
+                        <small class="text-muted d-block mt-2">Sistem akan meng-generate aset baru dengan urutan kode otomatis.</small>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-secondary"><i class="fas fa-copy"></i> Duplikat</button>
+                <div class="modal-footer border-0 bg-light p-3 justify-content-center">
+                    <button type="button" class="btn btn-link text-muted font-weight-bold mr-2" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-secondary px-4 shadow-sm" style="border-radius: 8px;"><i class="fas fa-copy mr-1"></i> Proses Duplikat</button>
                 </div>
             </form>
         </div>

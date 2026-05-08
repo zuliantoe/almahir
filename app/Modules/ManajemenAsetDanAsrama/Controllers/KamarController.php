@@ -79,10 +79,9 @@ class KamarController extends BaseController
             'deskripsi'  => 'nullable|string',
         ]);
 
-        Kamar::create($validated);
-
-        return redirect()->route('manajemenasetdanasrama.kamar.index')
-            ->with('success', 'Kamar berhasil ditambahkan.');
+        $kamar = Kamar::create($validated);
+        return redirect()->route('manajemenasetdanasrama.penghuni.assign-multiple', $kamar->id)
+            ->with('success', 'Kamar berhasil dibuat. Silakan pilih penghuni untuk kamar ini.');
     }
 
     /**

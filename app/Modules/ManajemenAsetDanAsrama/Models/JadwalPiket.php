@@ -11,7 +11,9 @@ class JadwalPiket extends Model
 
     protected $fillable = [
         'kamar_id',
+        'lokasi_piket',
         'tanggal',
+        'shift',
         'siswa_id',
         'status',
     ];

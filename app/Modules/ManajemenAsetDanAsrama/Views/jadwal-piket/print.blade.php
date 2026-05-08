@@ -90,66 +90,65 @@
 
     <div class="info">
         <div>
-            <strong>Kamar:</strong> {{ $kamar ? $kamar->nama_kamar : 'Semua Kamar' }}<br>
-            <strong>Kapasitas:</strong> {{ $kamar ? $kamar->kapasitas : '-' }} Santri
-        </div>
-        <div style="text-align: right;">
             <strong>Periode:</strong> 
             {{ $request->tanggal_mulai ? \Carbon\Carbon::parse($request->tanggal_mulai)->format('d M Y') : 'Awal' }} 
             s/d 
             {{ $request->tanggal_selesai ? \Carbon\Carbon::parse($request->tanggal_selesai)->format('d M Y') : 'Akhir' }}
         </div>
+        <div style="text-align: right;">
+            <strong>Dicetak pada:</strong> {{ now()->format('d/m/Y H:i') }}
+        </div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 50px;">No</th>
-                <th style="width: 60px;">Foto</th>
-                <th>Hari / Tanggal</th>
-                <th>Nama Santri</th>
-                <th>NIS</th>
-                <th>Tanda Tangan</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($jadwal as $index => $item)
-                <tr>
-                    <td>{{ $index + 1 }}</td>
-                    <td style="text-align: center; vertical-align: middle;">
-                        @if($item->siswa->foto)
-                            <img src="{{ asset('storage/' . $item->siswa->foto) }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px; border: 1px solid #ddd;">
-                        @else
-                            <div style="width: 50px; height: 50px; background: #eee; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #999;">No Photo</div>
-                        @endif
-                    </td>
-                    <td>
-                        {{ $item->tanggal->isoFormat('dddd') }}<br>
-                        <small>{{ $item->tanggal->format('d/m/Y') }}</small>
-                    </td>
-                    <td>
-                        <strong>{{ $item->siswa->nama }}</strong>
-                    </td>
-                    <td>{{ $item->siswa->nis }}</td>
-                    <td style="height: 40px;"></td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="6" style="text-align: center;">Tidak ada jadwal dalam periode ini.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+    @php
+        $groupedJadwal = $jadwal->groupBy(function($item) {
+            return $item->tanggal->format('Y-m-d');
+        });
+    @endphp
+
+    @forelse($groupedJadwal as $date => $items)
+        <div style="page-break-inside: avoid; margin-bottom: 40px;">
+            <div style="background: #f0f0f0; padding: 8px 15px; border: 1px solid #999; border-bottom: none; font-weight: bold; font-size: 16px;">
+                <i class="fas fa-calendar-alt"></i> {{ \Carbon\Carbon::parse($date)->translatedFormat('l, d F Y') }}
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Waktu</th>
+                        <th style="width: 150px;">Lokasi</th>
+                        <th>Nama Santri</th>
+                        <th style="width: 100px;">NIS</th>
+                        <th style="width: 150px;">Tanda Tangan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($items as $item)
+                        <tr>
+                            <td style="text-align: center; text-transform: capitalize;">{{ $item->shift }}</td>
+                            <td style="font-weight: bold; color: #007bff;">{{ $item->lokasi_piket ?? '-' }}</td>
+                            <td>
+                                <strong>{{ $item->siswa->nama }}</strong>
+                            </td>
+                            <td>{{ $item->siswa->nis }}</td>
+                            <td style="height: 45px;"></td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @empty
+        <div style="text-align: center; padding: 50px; border: 1px dashed #ccc;">
+            Tidak ada jadwal dalam periode ini.
+        </div>
+    @endforelse
 
     <div class="footer">
-        Dicetak pada: {{ now()->format('d/m/Y H:i') }}<br>
         <div class="signature">
             Musyrif Asrama
         </div>
     </div>
 
     <script>
-        // Auto trigger print when loaded if needed
         // window.print();
     </script>
 </body>

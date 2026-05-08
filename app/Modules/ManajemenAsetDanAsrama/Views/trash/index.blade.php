@@ -262,30 +262,26 @@
     </div>
 
 {{-- MODAL FORCE DELETE --}}
-<div class="modal fade" id="modalForceDelete" tabindex="-1" role="dialog" aria-labelledby="modalForceDeleteLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <form id="formForceDelete" action="" method="POST">
-                @csrf
-                @method('DELETE')
-                <div class="modal-header bg-danger">
-                    <h5 class="modal-title text-white" id="modalForceDeleteLabel">Hapus Permanen</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+<div class="modal fade" id="modalForceDelete" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <div class="modal-header bg-white border-0 pt-4 pb-0 justify-content-center">
+                <div class="rounded-circle bg-danger-soft d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; background: #fff5f5;">
+                    <i class="fas fa-trash-alt text-danger fa-2x"></i>
                 </div>
-                <div class="modal-body">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
-                    </div>
-                    <p class="text-center">Apakah Anda yakin ingin <strong>MENGHAPUS PERMANEN</strong> data <strong id="force_delete_nama"></strong>?</p>
-                    <p class="text-center text-danger"><small><i class="fas fa-info-circle"></i> Data yang dihapus permanen tidak dapat dikembalikan!</small></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-danger">Ya, Hapus Permanen</button>
-                </div>
-            </form>
+            </div>
+            <div class="modal-body text-center p-4">
+                <h5 class="font-weight-bold text-danger">Hapus Permanen?</h5>
+                <p class="text-muted small">Data <span id="force_delete_nama" class="text-dark font-weight-bold"></span> akan dihapus selamanya dari sistem dan tidak bisa dipulihkan.</p>
+                <form id="formForceDelete" method="POST">
+                    @csrf
+                    @method('DELETE')
+            </div>
+            <div class="modal-footer border-0 bg-light p-3 justify-content-center">
+                    <button type="button" class="btn btn-link text-muted font-weight-bold mr-2" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger px-4 shadow-sm" style="border-radius: 8px;">Ya, Hapus Selamanya</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>

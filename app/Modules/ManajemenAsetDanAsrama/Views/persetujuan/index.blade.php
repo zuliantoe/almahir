@@ -118,51 +118,57 @@
 </div>
 
 {{-- MODAL APPROVE --}}
-<div class="modal fade" id="modalApprove" tabindex="-1" role="dialog" aria-labelledby="modalApproveLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <form id="formApprove" action="" method="POST">
-                @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalApproveLabel">Setujui Pengajuan Aset</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+<div class="modal fade" id="modalApprove" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <div class="modal-header bg-white border-0 pt-4 pb-0 justify-content-center">
+                <div class="rounded-circle bg-success-soft d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; background: #e8f5e9;">
+                    <i class="fas fa-check text-success fa-2x"></i>
                 </div>
-                <div class="modal-body">
-                    <p>Apakah Anda yakin ingin menyetujui pengajuan <strong id="approve_nama"></strong>?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-success">Ya, Setujui</button>
-                </div>
-            </form>
+            </div>
+            <div class="modal-body text-center p-4">
+                <h5 class="font-weight-bold">Setujui Pengajuan?</h5>
+                <p class="text-muted small">Pengajuan <span id="approve_nama" class="text-dark font-weight-bold"></span> akan diteruskan ke proses pengadaan.</p>
+                <form id="formApprove" method="POST">
+                    @csrf
+            </div>
+            <div class="modal-footer border-0 bg-light p-3 justify-content-center">
+                    <button type="button" class="btn btn-link text-muted font-weight-bold mr-2" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success px-4 shadow-sm" style="border-radius: 8px;">Ya, Setujui</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
 {{-- MODAL REJECT --}}
-<div class="modal fade" id="modalReject" tabindex="-1" role="dialog" aria-labelledby="modalRejectLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <form id="formReject" action="" method="POST">
+<div class="modal fade" id="modalReject" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <form id="formReject" method="POST">
                 @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalRejectLabel">Tolak Pengajuan Aset</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <div class="modal-header bg-danger text-white border-0 py-3">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-times-circle mr-2"></i> Tolak Pengajuan
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
-                    <p>Anda akan menolak pengajuan <strong id="reject_nama"></strong>. Berikan alasan penolakan:</p>
-                    <div class="form-group">
-                        <label for="catatan_tolak">Catatan Penolakan <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="catatan_tolak" name="catatan_tolak" rows="3" required></textarea>
+                <div class="modal-body p-4 text-center">
+                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-file-excel text-danger fa-lg"></i>
+                    </div>
+                    <p class="mb-4">Berikan alasan penolakan untuk pengajuan:<br><strong id="reject_nama" class="text-danger"></strong></p>
+                    
+                    <div class="form-group text-left mb-0">
+                        <label class="small font-weight-bold text-muted text-uppercase">Catatan Penolakan <span class="text-danger">*</span></label>
+                        <textarea class="form-control shadow-sm border-danger" id="catatan_tolak" name="catatan_tolak" rows="3" placeholder="Masukkan alasan penolakan agar pengaju bisa memperbaiki..." required></textarea>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-danger">Tolak</button>
+                <div class="modal-footer bg-light border-0 py-3 px-4 justify-content-center">
+                    <button type="button" class="btn btn-link text-muted font-weight-bold mr-2" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger px-4 shadow-sm" style="border-radius: 8px;">Ya, Tolak Pengajuan</button>
                 </div>
             </form>
         </div>
@@ -170,81 +176,81 @@
 </div>
 
 {{-- MODAL DETAIL PENGAJUAN (LIHAT) --}}
-<div class="modal fade" id="modalDetailPengajuan" tabindex="-1" role="dialog" aria-labelledby="modalDetailPengajuanLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalDetailPengajuanLabel">Detail Pengajuan Aset</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+<div class="modal fade" id="modalDetailPengajuan" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <div class="modal-header bg-info text-white border-0 py-3">
+                <h5 class="modal-title font-weight-bold">
+                    <i class="fas fa-file-invoice mr-2"></i> Detail Pengajuan Aset
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-4">
                 <div class="row">
-                    <div class="col-md-6">
-                        <table class="table table-sm table-borderless">
-                            <tr>
-                                <th width="40%">Nomor Pengajuan</th>
-                                <td><span id="detail_nomor_pengajuan">-</span></td>
-                            </tr>
-                            <tr>
-                                <th>Nama Aset</th>
-                                <td><span id="detail_nama_aset">-</span></td>
-                            </tr>
-                            <tr>
-                                <th>Deskripsi</th>
-                                <td><span id="detail_deskripsi">-</span></td>
-                            </tr>
-                            <tr>
-                                <th>Estimasi Harga</th>
-                                <td><span id="detail_estimasi_harga">-</span></td>
-                            </tr>
-                            <tr>
-                                <th>Tanggal Pengajuan</th>
-                                <td><span id="detail_tanggal">-</span></td>
-                            </tr>
-                        </table>
+                    <div class="col-md-6 border-right">
+                        <h6 class="font-weight-bold text-info mb-3 text-uppercase small" style="letter-spacing: 1px;">Informasi Aset</h6>
+                        <div class="mb-3">
+                            <label class="small text-muted mb-0 d-block text-uppercase">Nomor Pengajuan</label>
+                            <code id="detail_nomor_pengajuan" class="font-weight-bold" style="font-size: 1rem;">-</code>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small text-muted mb-0 d-block text-uppercase">Nama Aset</label>
+                            <span id="detail_nama_aset" class="font-weight-bold text-dark h6">-</span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small text-muted mb-0 d-block text-uppercase">Estimasi Harga</label>
+                            <span id="detail_estimasi_harga" class="font-weight-bold text-success h6">-</span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small text-muted mb-0 d-block text-uppercase">Deskripsi Alasan</label>
+                            <p id="detail_deskripsi" class="text-muted small mb-0"></p>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <table class="table table-sm table-borderless">
-                            <tr>
-                                <th width="40%">Status</th>
-                                <td><span id="detail_status">-</span></td>
-                            </tr>
-                            <tr>
-                                <th>Pengaju</th>
-                                <td><span id="detail_pengaju">-</span></td>
-                            </tr>
-                            <tr>
-                                <th id="label_approved_by">Disetujui Oleh</th>
-                                <td><span id="detail_approved_by">-</span></td>
-                            </tr>
-                            <tr>
-                                <th id="label_approved_at">Tanggal Persetujuan</th>
-                                <td><span id="detail_approved_at">-</span></td>
-                            </tr>
-                            <tr>
-                                <th>Catatan Tolak</th>
-                                <td><span id="detail_catatan_tolak">-</span></td>
-                            </tr>
-                            <tr>
-                                <th>Alasan Pengajuan Ulang</th>
-                                <td><span id="detail_alasan_ulang">-</span></td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <h6>Data Pengadaan Terkait</h6>
-                        <div id="detail_pengadaan">
-                            <p class="text-muted">Tidak ada data pengadaan</p>
+                    <div class="col-md-6 pl-md-4">
+                        <h6 class="font-weight-bold text-info mb-3 text-uppercase small" style="letter-spacing: 1px;">Status & Verifikasi</h6>
+                        <div class="mb-3">
+                            <label class="small text-muted mb-0 d-block text-uppercase">Status Saat Ini</label>
+                            <div id="detail_status" class="mt-1"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="small text-muted mb-0 d-block text-uppercase">Diajukan Oleh</label>
+                                <span id="detail_pengaju" class="font-weight-bold small text-dark">-</span>
+                            </div>
+                            <div class="col-6 mb-3 text-right">
+                                <label class="small text-muted mb-0 d-block text-uppercase">Tgl Pengajuan</label>
+                                <span id="detail_tanggal" class="font-weight-bold small text-dark">-</span>
+                            </div>
+                        </div>
+                        <div class="bg-light p-3 rounded shadow-sm border">
+                            <div class="mb-2">
+                                <label id="label_approved_by" class="small text-muted mb-0 d-block text-uppercase">Verifikator</label>
+                                <span id="detail_approved_by" class="font-weight-bold small text-dark">-</span>
+                            </div>
+                            <div>
+                                <label id="label_approved_at" class="small text-muted mb-0 d-block text-uppercase">Tgl Verifikasi</label>
+                                <span id="detail_approved_at" class="font-weight-bold small text-dark">-</span>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <div id="section_catatan_tolak" class="mt-4 p-3 bg-danger-soft rounded border border-danger" style="display:none; background: #fff5f5;">
+                    <label class="small text-danger font-weight-bold mb-1 text-uppercase"><i class="fas fa-exclamation-circle mr-1"></i> Catatan Penolakan</label>
+                    <p id="detail_catatan_tolak" class="mb-0 text-dark small italic"></p>
+                </div>
+
+                <div class="mt-4 pt-3 border-top">
+                    <h6 class="font-weight-bold text-muted mb-3 text-uppercase small"><i class="fas fa-link mr-1"></i> Riwayat Pengadaan Terkait</h6>
+                    <div id="detail_pengadaan" class="table-responsive">
+                        {{-- Data via AJAX --}}
+                    </div>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+            <div class="modal-footer border-0 bg-light py-3 px-4">
+                <button type="button" class="btn btn-secondary px-4 shadow-sm font-weight-bold" style="border-radius: 8px;" data-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
@@ -295,36 +301,39 @@
                     }
                     $('#detail_status').html('<span class="badge ' + statusClass + '">' + statusText + '</span>');
 
-                    // Ubah label berdasarkan status
-                    if (data.status === 'ditolak') {
-                        $('#label_approved_by').text('Ditolak Oleh');
-                        $('#label_approved_at').text('Tanggal Penolakan');
-                    } else {
-                        $('#label_approved_by').text('Disetujui Oleh');
-                        $('#label_approved_at').text('Tanggal Persetujuan');
-                    }
+                    $('#detail_status').html('<span class="badge ' + statusClass + '">' + statusText + '</span>');
                     
                     $('#detail_pengaju').text(data.pengaju ? data.pengaju.name : '-');
                     $('#detail_approved_by').text(data.approver ? data.approver.name : '-');
                     $('#detail_approved_at').text(data.approved_at ? new Date(data.approved_at).toLocaleString('id-ID') : '-');
-                    $('#detail_catatan_tolak').text(data.catatan_tolak || '-');
-                    $('#detail_alasan_ulang').text(data.alasan_pengajuan_ulang || '-');
 
                     // Data pengadaan
                     if (data.pengadaan && data.pengadaan.length > 0) {
-                        var html = '<table class="table table-sm table-bordered"><thead><tr><th>No. PO</th><th>Vendor</th><th>Tanggal Pesan</th><th>Status</th></tr></thead><tbody>';
+                        var html = '<table class="table table-sm table-bordered"><thead><tr><th>No. PO</th><th>Vendor</th><th>Tgl Pesan</th><th>Status</th></tr></thead><tbody>';
                         $.each(data.pengadaan, function(i, item) {
                             html += '<tr>' +
                                 '<td>' + (item.nomor_po || '-') + '</td>' +
                                 '<td>' + (item.vendor || '-') + '</td>' +
                                 '<td>' + (item.tanggal_pesan ? new Date(item.tanggal_pesan).toLocaleDateString('id-ID') : '-') + '</td>' +
-                                '<td>' + (item.status || '-') + '</td>' +
+                                '<td><span class="badge badge-light border">' + (item.status || '-') + '</span></td>' +
                                 '</tr>';
                         });
                         html += '</tbody></table>';
                         $('#detail_pengadaan').html(html);
                     } else {
-                        $('#detail_pengadaan').html('<p class="text-muted">Tidak ada data pengadaan</p>');
+                        $('#detail_pengadaan').html('<p class="text-muted small italic">Tidak ada riwayat pengadaan</p>');
+                    }
+
+                    // Tampilkan catatan tolak jika statusnya ditolak
+                    if (data.status === 'ditolak' && data.catatan_tolak) {
+                        $('#section_catatan_tolak').fadeIn();
+                        $('#detail_catatan_tolak').text(data.catatan_tolak);
+                        $('#label_approved_by').text('Ditolak Oleh');
+                        $('#label_approved_at').text('Tanggal Penolakan');
+                    } else {
+                        $('#section_catatan_tolak').hide();
+                        $('#label_approved_by').text('Verifikator');
+                        $('#label_approved_at').text('Tgl Verifikasi');
                     }
 
                     // Tampilkan modal

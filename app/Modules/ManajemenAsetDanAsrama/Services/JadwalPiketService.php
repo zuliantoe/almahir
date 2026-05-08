@@ -11,101 +11,98 @@ use Illuminate\Support\Facades\DB;
 class JadwalPiketService
 {
     /**
-     * Generate jadwal piket untuk suatu kamar secara Round Robin.
+     * Generate jadwal piket cerdas & adil.
      * 
-     * @param int $kamarId
      * @param string $startDate (Y-m-d)
      * @param string $endDate (Y-m-d)
-     * @param int $personPerDay Jumlah orang yang piket per hari
+     * @param string $shift (pagi/sore/malam)
+     * @param array $locations Array of ['nama' => '...', 'kuota' => ...]
+     * @param int|null $kamarId
      */
-    public function generateForKamar(int $kamarId, string $startDate, string $endDate, int $personPerDay = 1): int
+    public function generateSmart(string $startDate, string $endDate, string $shift, array $locations, ?int $kamarId = null): int
     {
-        // 1. Ambil semua penghuni AKTIF di kamar tersebut
-        $penghuniAktif = KamarPenghuni::where('kamar_id', $kamarId)
-            ->where(function($query) {
-                $query->whereNull('tanggal_keluar')
-                      ->orWhere('tanggal_keluar', '>', now());
-            })
-            ->pluck('siswa_id')
-            ->toArray();
+        // 1. Ambil semua santri aktif
+        $allSiswa = \Modules\Siswa\Models\Siswa::all();
+        if ($allSiswa->isEmpty()) return 0;
 
-        if (empty($penghuniAktif)) {
-            return 0; // Tidak ada yang bisa di-assign
-        }
-
-        // 2. Hitung statistik beban piket (total & terakhir piket) untuk pengurutan yang adil
-        // Kita sorting berdasarkan total_piket ASC, lalu last_piket ASC
-        $siswaStats = [];
-        foreach ($penghuniAktif as $siswaId) {
-            $totalPiket = JadwalPiket::where('kamar_id', $kamarId)
-                            ->where('siswa_id', $siswaId)
-                            ->count();
-                            
-            $lastPiket = JadwalPiket::where('kamar_id', $kamarId)
-                            ->where('siswa_id', $siswaId)
-                            ->orderBy('tanggal', 'desc')
-                            ->first();
-
-            $siswaStats[] = [
-                'siswa_id' => $siswaId,
-                'total_piket' => $totalPiket,
-                'last_piket_date' => $lastPiket ? $lastPiket->tanggal->format('Y-m-d') : '2000-01-01', // Asumsi belum pernah
-            ];
-        }
-
-        // Urutkan (Fairness Algorithm)
-        usort($siswaStats, function($a, $b) {
-            if ($a['total_piket'] == $b['total_piket']) {
-                return $a['last_piket_date'] <=> $b['last_piket_date'];
+        // 2. Siapkan data beban kerja awal (total piket) untuk semua santri & mapping kamar
+        $workloadMap = [];
+        $kamarMap = [];
+        foreach ($allSiswa as $s) {
+            $workloadMap[$s->id] = JadwalPiket::where('siswa_id', $s->id)->count();
+            
+            // Jika generate global, ambil kamar masing-masing santri
+            if (!$kamarId) {
+                $kamarMap[$s->id] = KamarPenghuni::where('siswa_id', $s->id)->aktif()->value('kamar_id');
             }
-            return $a['total_piket'] <=> $b['total_piket'];
-        });
+        }
 
-        // Ekstrak ID yang sudah terurut
-        $sortedSiswaIds = array_column($siswaStats, 'siswa_id');
-        $totalSiswa = count($sortedSiswaIds);
-        $siswaIndex = 0;
-
-        // 3. Loop hari per hari dari startDate ke endDate
         $currentDate = Carbon::parse($startDate);
         $end = Carbon::parse($endDate);
-        
         $insertedCount = 0;
 
-        // Mulai transaksi agar aman
         DB::beginTransaction();
         try {
             while ($currentDate->lte($end)) {
                 $dateStr = $currentDate->format('Y-m-d');
 
-                // Cek berapa jadwal yang sudah ada di tanggal ini untuk kamar ini
-                // agar tidak duplikat generate
-                $existingCount = JadwalPiket::where('kamar_id', $kamarId)
-                                    ->where('tanggal', $dateStr)
-                                    ->count();
+                // Untuk hari ini, siapa saja yang SUDAH piket di shift lain?
+                // (Mencegah 1 orang piket berkali-kali di hari yang sama)
+                $alreadyPicketToday = JadwalPiket::where('tanggal', $dateStr)
+                                        ->pluck('siswa_id')
+                                        ->toArray();
 
-                $needed = $personPerDay - $existingCount;
+                foreach ($locations as $loc) {
+                    $namaLokasi = $loc['nama'];
+                    $kuota = (int) $loc['kuota'];
 
-                for ($i = 0; $i < $needed; $i++) {
-                    $selectedSiswaId = $sortedSiswaIds[$siswaIndex % $totalSiswa];
-                    
-                    // Pastikan siswa ini belum piket di hari yang sama
-                    $isAlreadyPiket = JadwalPiket::where('kamar_id', $kamarId)
-                                        ->where('tanggal', $dateStr)
-                                        ->where('siswa_id', $selectedSiswaId)
-                                        ->exists();
+                    for ($i = 0; $i < $kuota; $i++) {
+                        // Cari kandidat:
+                        // 1. Belum piket hari ini (di shift manapun)
+                        // 2. Jika filter kamar aktif, harus santri dari kamar tersebut
+                        $candidates = $allSiswa->filter(function($s) use ($alreadyPicketToday, $kamarId, $kamarMap) {
+                            $notPicketed = !in_array($s->id, $alreadyPicketToday);
+                            if ($kamarId) {
+                                // Cek apakah santri ini di kamar yang dimaksud
+                                $isFromKamar = KamarPenghuni::where('siswa_id', $s->id)
+                                    ->where('kamar_id', $kamarId)
+                                    ->aktif()
+                                    ->exists();
+                                return $notPicketed && $isFromKamar;
+                            }
+                            return $notPicketed;
+                        });
 
-                    if (!$isAlreadyPiket) {
+                        if ($candidates->isEmpty()) break; // Kehabisan santri untuk hari ini
+
+                        // Urutkan kandidat berdasarkan workload terkecil
+                        // Jika workload sama, kita acak (shuffle) agar adil
+                        $sortedCandidates = $candidates->values()->all();
+                        usort($sortedCandidates, function($a, $b) use ($workloadMap) {
+                            if ($workloadMap[$a->id] == $workloadMap[$b->id]) {
+                                return rand(-1, 1); // Random jika beban sama
+                            }
+                            return $workloadMap[$a->id] <=> $workloadMap[$b->id];
+                        });
+
+                        $selected = $sortedCandidates[0];
+
+                        // Simpan ke database
                         JadwalPiket::create([
-                            'kamar_id' => $kamarId,
-                            'tanggal'  => $dateStr,
-                            'siswa_id' => $selectedSiswaId,
-                            'status'   => 'belum'
+                            'tanggal'      => $dateStr,
+                            'shift'        => $shift,
+                            'lokasi_piket' => $namaLokasi,
+                            'siswa_id'     => $selected->id,
+                            'kamar_id'     => $kamarId ?? ($kamarMap[$selected->id] ?? null),
+                            'status'       => 'belum'
                         ]);
+
                         $insertedCount++;
+                        
+                        // Update tracking lokal agar sisa loop hari ini tahu dia sudah terpilih
+                        $alreadyPicketToday[] = $selected->id;
+                        $workloadMap[$selected->id]++;
                     }
-                    
-                    $siswaIndex++;
                 }
 
                 $currentDate->addDay();
@@ -119,35 +116,57 @@ class JadwalPiketService
     }
 
     /**
-     * Regenerate jadwal untuk ke depannya jika ada perubahan penghuni.
-     * Ini menghapus jadwal 'belum' di masa depan dan me-regenerate ulang.
+     * Regenerate legacy method placeholder (untuk kompatibilitas controller lama jika ada)
      */
-    public function regenerateFutureJadwal(int $kamarId)
+    public function generateForKamar(int $kamarId, string $startDate, string $endDate, int $personPerDay = 1): int
     {
-        $tomorrow = now()->addDay()->format('Y-m-d');
-        
-        // Cari ujung jadwal terakhir di kamar ini untuk tahu seberapa jauh kita harus regenerate
-        $lastJadwal = JadwalPiket::where('kamar_id', $kamarId)
-                        ->orderBy('tanggal', 'desc')
-                        ->first();
-                        
-        if (!$lastJadwal) {
-            return 0;
-        }
+        $locations = [['nama' => 'Kamar', 'kuota' => $personPerDay]];
+        return $this->generateSmart($startDate, $endDate, 'pagi', $locations, $kamarId);
+    }
 
-        $endDate = $lastJadwal->tanggal->format('Y-m-d');
+    /**
+     * Regenerate jadwal piket mendatang untuk kamar tertentu.
+     * Dipanggil saat ada perubahan penghuni (tambah/hapus/edit).
+     */
+    public function regenerateFutureJadwal(int $kamarId): void
+    {
+        $today = Carbon::today()->toDateString();
         
-        if ($endDate < $tomorrow) {
-            return 0; // Tidak ada jadwal masa depan
-        }
-
-        // Hapus jadwal masa depan yang statusnya masih 'belum'
-        JadwalPiket::where('kamar_id', $kamarId)
-            ->where('tanggal', '>=', $tomorrow)
+        // 1. Ambil semua jadwal piket mendatang untuk kamar ini yang statusnya masih 'belum'
+        $futureJadwal = JadwalPiket::where('kamar_id', $kamarId)
+            ->where('tanggal', '>=', $today)
             ->where('status', 'belum')
-            ->delete();
+            ->orderBy('tanggal')
+            ->orderBy('shift')
+            ->get();
+            
+        if ($futureJadwal->isEmpty()) {
+            return;
+        }
 
-        // Generate ulang
-        return $this->generateForKamar($kamarId, $tomorrow, $endDate, 1); // Asumsi 1 orang per hari, bisa dinamis
+        // 2. Ambil daftar penghuni aktif di kamar ini
+        $penghuniIds = KamarPenghuni::where('kamar_id', $kamarId)
+            ->aktif()
+            ->pluck('siswa_id')
+            ->toArray();
+
+        if (empty($penghuniIds)) {
+            // Jika tidak ada penghuni, hapus jadwal mendatang karena tidak ada yang bisa piket
+            JadwalPiket::where('kamar_id', $kamarId)
+                ->where('tanggal', '>=', $today)
+                ->where('status', 'belum')
+                ->delete();
+            return;
+        }
+
+        // 3. Distribusikan penghuni ke jadwal secara round-robin agar adil
+        $index = 0;
+        foreach ($futureJadwal as $jadwal) {
+            /** @var JadwalPiket $jadwal */
+            $jadwal->update([
+                'siswa_id' => $penghuniIds[$index % count($penghuniIds)]
+            ]);
+            $index++;
+        }
     }
 }

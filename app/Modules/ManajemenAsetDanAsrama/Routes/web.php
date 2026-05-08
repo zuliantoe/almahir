@@ -86,6 +86,10 @@ Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
         Route::get('{id}/edit', [PenghuniController::class, 'edit'])->name('edit');
         Route::put('{id}', [PenghuniController::class, 'update'])->name('update');
         Route::delete('{id}', [PenghuniController::class, 'destroy'])->name('destroy');
+        
+        // Alur Cerdas: Assign Massal setelah buat Kamar
+        Route::get('kamar/{kamar_id}/assign', [PenghuniController::class, 'assignMultiple'])->name('assign-multiple');
+        Route::post('kamar/{kamar_id}/assign', [PenghuniController::class, 'storeMultiple'])->name('store-multiple');
     });
     
     // Jadwal Piket
@@ -98,6 +102,7 @@ Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
         Route::delete('{id}', [JadwalPiketController::class, 'destroy'])->name('destroy');
         Route::post('{id}/selesai', [JadwalPiketController::class, 'selesai'])->name('selesai');
         Route::post('auto-generate', [JadwalPiketController::class, 'autoGenerate'])->name('auto-generate');
+        Route::post('reset', [JadwalPiketController::class, 'resetAll'])->name('reset');
         Route::get('print', [JadwalPiketController::class, 'print'])->name('print');
     });
     

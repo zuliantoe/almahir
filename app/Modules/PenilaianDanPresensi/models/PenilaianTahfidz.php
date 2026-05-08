@@ -2,7 +2,7 @@
 
 namespace Modules\PenilaianDanPresensi\Models;
 
-use App\Modules\Akademik\Models\kelas;
+use App\Modules\Akademik\Models\kelas as AkademikKelas;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Guru\Models\Guru;
@@ -24,6 +24,7 @@ class PenilaianTahfidz extends Model
         'ayat_akhir',
         'id_guru',
         'nilai',
+        'status_capaian',
     ];
 
     protected $casts = [
@@ -41,7 +42,7 @@ class PenilaianTahfidz extends Model
 
     public function kelas()
     {
-        return $this->belongsTo(kelas::class, 'id_kelas');
+        return $this->belongsTo(AkademikKelas::class, 'id_kelas');
     }
 
     public function guru()

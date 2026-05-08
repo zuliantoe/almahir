@@ -20,7 +20,6 @@ class DatabaseSeeder extends Seeder
         
         // Then seed users
         $this->call(UserSeeder::class);
-
         // Guru & Siswa Data (Orang & Akun)
         $this->call([
             GuruDataSeeder::class,

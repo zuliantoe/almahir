@@ -37,4 +37,47 @@ class UpdateJadwalPelajaranRequest extends FormRequest
             'jamakhir.after' => 'Jam selesai harus setelah jam mulai.',
         ];
     }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $hari = $this->input('hari');
+            $jamke = $this->input('jamke');
+            $guruId = $this->input('guru_id');
+            $rombelId = $this->input('rombel_id');
+            $currentId = $this->route('jadwalPelajaran') ? $this->route('jadwalPelajaran')->id : null;
+
+            if ($hari && $jamke) {
+                // Cek bentrok Guru
+                if ($guruId) {
+                    $guruConflict = \App\Modules\Akademik\Models\JadwalPelajaran::where('guru_id', $guruId)
+                        ->where('hari', $hari)
+                        ->where('jamke', $jamke)
+                        ->when($currentId, function ($query, $currentId) {
+                            return $query->where('id', '!=', $currentId);
+                        })
+                        ->first();
+
+                    if ($guruConflict) {
+                        $validator->errors()->add('guru_id', "Guru ini sudah mengajar di kelas lain pada hari {$hari} jam ke-{$jamke}.");
+                    }
+                }
+
+                // Cek bentrok Rombel
+                if ($rombelId) {
+                    $rombelConflict = \App\Modules\Akademik\Models\JadwalPelajaran::where('rombel_id', $rombelId)
+                        ->where('hari', $hari)
+                        ->where('jamke', $jamke)
+                        ->when($currentId, function ($query, $currentId) {
+                            return $query->where('id', '!=', $currentId);
+                        })
+                        ->first();
+
+                    if ($rombelConflict) {
+                        $validator->errors()->add('rombel_id', "Rombel ini sudah memiliki mata pelajaran lain pada hari {$hari} jam ke-{$jamke}.");
+                    }
+                }
+            }
+        });
+    }
 }

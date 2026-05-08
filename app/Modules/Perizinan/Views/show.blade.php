@@ -108,10 +108,37 @@
                     {{-- Lampiran --}}
                     @if($perizinan->bukti)
                     <div class="glass-card p-4 mb-3 border-0">
-                        <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-paperclip text-secondary mr-2"></i>Lampiran Bukti</h6>
-                        <img src="{{ Storage::url($perizinan->bukti) }}" class="img-fluid rounded shadow-sm border" style="max-height:350px;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="font-weight-bold text-dark mb-0"><i class="fas fa-paperclip text-secondary mr-2"></i>Lampiran Bukti</h6>
+                            <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" 
+                                    onclick="openImagePreview('{{ Storage::url($perizinan->bukti) }}')">
+                                <i class="fas fa-expand mr-1"></i> Perbesar Gambar
+                            </button>
+                        </div>
+                        <div class="position-relative group" style="cursor: pointer;" onclick="openImagePreview('{{ Storage::url($perizinan->bukti) }}')">
+                            <img src="{{ Storage::url($perizinan->bukti) }}" 
+                                 class="img-fluid rounded shadow-sm border w-100" 
+                                 style="max-height:500px; object-fit: contain; background: #f8f9fa;">
+                            <div class="overlay-hover d-flex align-items-center justify-content-center">
+                                <div class="bg-white rounded-circle p-3 shadow-lg text-primary">
+                                    <i class="fas fa-search-plus fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     @endif
+
+                    <style>
+                        .position-relative.group { overflow: hidden; border-radius: 12px; }
+                        .overlay-hover {
+                            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                            background: rgba(67, 97, 238, 0.2);
+                            opacity: 0; transition: all 0.3s ease;
+                        }
+                        .position-relative.group:hover .overlay-hover { opacity: 1; }
+                        .position-relative.group img { transition: transform 0.5s ease; }
+                        .position-relative.group:hover img { transform: scale(1.02); }
+                    </style>
 
                     {{-- Timeline status --}}
                     <div class="glass-card p-4 border-0">

@@ -15,6 +15,10 @@ use Modules\Akademik\Controllers\TahunAjaranController;
 use Modules\Akademik\Controllers\JadwalPelajaranController;
 use Modules\Akademik\Controllers\KalenderAkademikController;
 use Modules\Akademik\Controllers\KurikulumController;
+use Modules\Akademik\Controllers\MasterKurikulumController;
+use Modules\Akademik\Controllers\BebanMengajarController;
+use Modules\Akademik\Controllers\KenaikanKelasController;
+use Modules\Akademik\Controllers\KelulusanController;
 use Modules\Akademik\Controllers\RombelController;
 
 /*
@@ -40,12 +44,25 @@ Route::middleware(['web', 'auth', \Modules\Akademik\Middleware\ReadOnlyRoleMiddl
     Route::resource('kelas', ControllersKelasController::class)->parameters(['kelas' => 'kelas']);
     Route::resource('jenis-kegiatan', ControllersJenisKegiatanController::class);
     Route::resource('kategori-pelajaran', ControllersKategoriPelajaranController::class);
+    Route::post('mata-pelajaran/import', [MataPelajaranController::class, 'import'])->name('mata-pelajaran.import');
+    Route::post('mata-pelajaran/bulk-store', [MataPelajaranController::class, 'bulkStore'])->name('mata-pelajaran.bulk-store');
     Route::resource('mata-pelajaran', MataPelajaranController::class);
+
+    Route::post('jadwal-pelajaran/copy', [JadwalPelajaranController::class, 'copyJadwal'])->name('jadwal-pelajaran.copy');
+    Route::post('jadwal-pelajaran/bulk-store', [JadwalPelajaranController::class, 'bulkStore'])->name('jadwal-pelajaran.bulk-store');
     Route::resource('jadwal-pelajaran', JadwalPelajaranController::class);
+    Route::get('beban-mengajar', [BebanMengajarController::class, 'index'])->name('beban-mengajar.index');
+
     Route::resource('kalender-akademik', KalenderAkademikController::class);
     Route::get('kalender-akademik-events-data', [KalenderAkademikController::class, 'events'])->name('kalender-akademik.events');
+    Route::resource('master-kurikulum', MasterKurikulumController::class);
+    Route::post('kurikulum/bulk-store', [KurikulumController::class, 'bulkStore'])->name('kurikulum.bulk-store');
     Route::resource('kurikulum', KurikulumController::class);
     Route::resource('rombel', RombelController::class);
+    Route::get('kenaikan-kelas', [KenaikanKelasController::class, 'index'])->name('kenaikan-kelas.index');
+    Route::post('kenaikan-kelas/process', [KenaikanKelasController::class, 'process'])->name('kenaikan-kelas.process');
+    Route::get('kelulusan', [KelulusanController::class, 'index'])->name('kelulusan.index');
+    Route::post('kelulusan/process', [KelulusanController::class, 'process'])->name('kelulusan.process');
 });
 
 // Public route for Calendar Sync (iCal) - Must be outside 'auth' so Google can fetch it

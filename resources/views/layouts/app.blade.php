@@ -7,10 +7,10 @@
 
     <title>@yield('title', 'SIAKAD') - {{ config('app.name', 'SIAKAD') }}</title>
 
-    {{-- Google Fonts: Inter untuk Typografi Modern & Premium --}}
+    {{-- Google Fonts: Outfit --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     {{-- Font Awesome 5 --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -21,43 +21,261 @@
     {{-- Premium UI Styles --}}
     <link rel="stylesheet" href="{{ asset('css/premium-ui.css') }}">
 
+    {{-- Animate.css --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
     {{-- Custom Styles --}}
     @stack('styles')
     
     <style>
-        /* Typography System */
-        body, h1, h2, h3, h4, h5, h6, p, a, span, button, input, select, textarea, .nav-link {
-            font-family: 'Inter', sans-serif !important;
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --info-color: #4895ef;
+            --card-radius: 16px;
+            --btn-radius: 10px;
         }
 
-        /* Custom styles for SIAKAD */
-        .sidebar-dark-primary .nav-sidebar>.nav-item>.nav-link.active {
-            background-color: #007bff;
-            box-shadow: 0 4px 6px -1px rgba(0, 123, 255, 0.2), 0 2px 4px -1px rgba(0, 123, 255, 0.1);
+        body {
+            font-family: 'Outfit', sans-serif !important;
+            background-color: #f8f9fc;
         }
         
+        .main-sidebar {
+            background-color: #1e1e2d !important;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.05);
+        }
+
+        .nav-sidebar .nav-link {
+            border-radius: 12px;
+            margin-bottom: 5px;
+            padding: 10px 15px;
+            font-weight: 500;
+        }
+
+        .nav-sidebar .nav-link.active {
+            background-color: var(--primary-color) !important;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+        }
+
         .content-wrapper {
-            min-height: calc(100vh - 57px - 57px);
+            background-color: #f8f9fc;
+            padding-top: 20px;
         }
-        
-        .card-title {
+
+        .card {
+            border: none;
+            border-radius: var(--card-radius);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid #f1f3f9;
+            padding: 1.25rem;
+        }
+
+        .btn {
+            border-radius: var(--btn-radius);
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .form-control, select.form-control {
+            border-radius: 10px;
+            padding: 12px 15px !important;
+            height: auto !important;
+            border: 1px solid #e1e5ef;
+            color: #4e5e7a;
+            font-weight: 500;
+        }
+
+        select.form-control {
+            padding-right: 45px !important; 
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234e5e7a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1.25rem center;
+            background-size: 1.2em;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.1);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.4);
+        }
+
+        .badge {
+            border-radius: 8px;
+            padding: 6px 12px;
             font-weight: 600;
         }
-        
-        /* Code snippet styling for UI Guide */
-        .code-snippet {
-            background: #2d3748;
-            color: #e2e8f0;
-            padding: 1rem;
-            border-radius: 0.375rem;
-            font-family: 'Fira Code', 'Consolas', monospace;
-            font-size: 0.875rem;
-            overflow-x: auto;
+
+        /* Table Styling */
+        .table thead th {
+            background-color: #f1f3f9;
+            border-top: none;
+            color: #4e5e7a;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
         }
-        
-        .code-snippet .tag { color: #63b3ed; }
-        .code-snippet .attr { color: #fbd38d; }
-        .code-snippet .value { color: #68d391; }
+
+        .table td {
+            vertical-align: middle;
+            color: #4e5e7a;
+            font-weight: 500;
+        }
+
+        .brand-link {
+            border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+            padding: 1.5rem 1rem !important;
+        }
+
+        .brand-text {
+            font-weight: 700 !important;
+            letter-spacing: 1px;
+        }
+
+        .content-header h1 {
+            font-weight: 700;
+            color: #1e1e2d;
+        }
+
+        /* SweetAlert Custom Styling */
+        .swal2-popup {
+            border-radius: 20px !important;
+            font-family: 'Outfit', sans-serif !important;
+            padding: 2rem !important;
+        }
+        .swal2-title {
+            font-weight: 700 !important;
+            color: #1e1e2d !important;
+        }
+        .swal2-styled.swal2-confirm {
+            border-radius: 10px !important;
+            padding: 10px 30px !important;
+            font-weight: 600 !important;
+        }
+        .swal2-icon {
+            border-width: 3px !important;
+        }
+
+        /* Global Image Preview Modal */
+        #imagePreviewModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #imagePreviewModal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .preview-container {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .preview-image-wrapper {
+            overflow: auto;
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            background: #fff;
+            cursor: grab;
+        }
+
+        .preview-image-wrapper:active {
+            cursor: grabbing;
+        }
+
+        #previewImage {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 100%;
+            display: block;
+            margin: auto;
+        }
+
+        .preview-controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px 25px;
+            border-radius: 50px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .preview-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .preview-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .preview-close {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .preview-close:hover {
+            transform: rotate(90deg);
+        }
     </style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -94,6 +312,22 @@
         </aside>
     </div>
 
+    {{-- Global Image Preview Modal --}}
+    <div id="imagePreviewModal">
+        <div class="preview-container animate__animated animate__zoomIn animate__faster">
+            <span class="preview-close" onclick="closeImagePreview()">&times;</span>
+            <div class="preview-image-wrapper">
+                <img id="previewImage" src="" alt="Preview">
+            </div>
+            <div class="preview-controls">
+                <button class="preview-btn" onclick="zoomImage(0.2)" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+                <button class="preview-btn" onclick="zoomImage(-0.2)" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+                <button class="preview-btn" onclick="rotateImage()" title="Rotate"><i class="fas fa-sync-alt"></i></button>
+                <button class="preview-btn" id="downloadPreview" title="Download"><i class="fas fa-download"></i></button>
+            </div>
+        </div>
+    </div>
+
     {{-- jQuery --}}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
@@ -126,21 +360,23 @@
                     icon: 'success',
                     title: 'Berhasil!',
                     text: "{{ session('success') }}",
-                    timer: 3000,
-                    showConfirmButton: true,
-                    confirmButtonText: 'OK',
-                    confirmButtonColor: '#3085d6',
-                    position: 'center',
-                    timerProgressBar: true
+                    confirmButtonColor: 'var(--primary-color)',
+                    timer: 2500,
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInDown'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutUp'
+                    }
                 });
             @endif
 
             @if(session('error'))
                 Swal.fire({
                     icon: 'error',
-                    title: 'Kesalahan',
+                    title: 'Oops...',
                     text: "{{ session('error') }}",
-                    confirmButtonColor: '#d33',
+                    confirmButtonColor: '#ef233c',
                 });
             @endif
 
@@ -181,6 +417,106 @@
                     }
                 });
             });
+
+            // Global Logout Confirmation
+            $(document).on('click', '.btn-logout', function(e) {
+                e.preventDefault();
+                let element = $(this);
+                let form = element.closest('form');
+                
+                // If it's a link (like in sidebar) that isn't inside a form
+                if (form.length === 0) {
+                    form = $('#logout-form-sidebar');
+                }
+
+                Swal.fire({
+                    title: 'Yakin ingin keluar?',
+                    text: "Sesi Anda akan berakhir dan Anda harus login kembali untuk masuk.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Keluar!',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+
+            // Status Cuti/Izin Notification
+            @auth
+                @if(auth()->user()->pegawai && $leave = auth()->user()->pegawai->isOnLeave())
+                    Swal.fire({
+                        title: 'Status: Sedang Cuti/Izin',
+                        html: `Halo <strong>{{ auth()->user()->name }}</strong>, Anda sedang dalam masa <strong>{{ strtoupper($leave->jenis_izin) }}</strong> hingga tanggal <strong>{{ \Carbon\Carbon::parse($leave->tanggal_selesai)->format('d/m/Y') }}</strong>. <br><br> <small class="text-muted">Selamat beristirahat/bertugas!</small>`,
+                        icon: 'info',
+                        confirmButtonText: 'Mengerti',
+                        confirmButtonColor: 'var(--primary-color)',
+                        backdrop: `rgba(0,0,123,0.1)`
+                    });
+                @endif
+            @endauth
+        });
+
+        // Global Image Preview Logic
+        let currentScale = 1;
+        let currentRotation = 0;
+
+        function openImagePreview(src) {
+            const modal = document.getElementById('imagePreviewModal');
+            const img = document.getElementById('previewImage');
+            const downloadBtn = document.getElementById('downloadPreview');
+            
+            img.src = src;
+            img.style.transform = `scale(1) rotate(0deg)`;
+            currentScale = 1;
+            currentRotation = 0;
+            
+            downloadBtn.onclick = function() {
+                const link = document.createElement('a');
+                link.href = src;
+                link.download = 'lampiran-bukti-' + new Date().getTime();
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        }
+
+        function closeImagePreview() {
+            const modal = document.getElementById('imagePreviewModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function zoomImage(delta) {
+            currentScale = Math.max(0.5, Math.min(3, currentScale + delta));
+            updateImageTransform();
+        }
+
+        function rotateImage() {
+            currentRotation += 90;
+            updateImageTransform();
+        }
+
+        function updateImageTransform() {
+            const img = document.getElementById('previewImage');
+            img.style.transform = `scale(${currentScale}) rotate(${currentRotation}deg)`;
+        }
+
+        // Close on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeImagePreview();
+        });
+
+        // Close on click outside
+        document.getElementById('imagePreviewModal').addEventListener('click', function(e) {
+            if (e.target === this) closeImagePreview();
         });
     </script>
 </body>

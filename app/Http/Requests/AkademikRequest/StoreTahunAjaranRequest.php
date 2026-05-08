@@ -19,6 +19,7 @@ class StoreTahunAjaranRequest extends FormRequest
                 'regex:/^\d{4}\/\d{4}$/',
                 'unique:tahun_ajaran,tahunajaran,' . $this->route('tahun_ajaran')
             ],
+            'semester' => 'required|in:Ganjil,Genap',
             'status' => 'nullable|boolean'
         ];
     }

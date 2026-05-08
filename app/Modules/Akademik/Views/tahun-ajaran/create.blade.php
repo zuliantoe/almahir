@@ -17,15 +17,25 @@
                     </x-alert>
 
                     <div class="row mt-4">
-                        <div class="col-md-6">
+                        <div class="col-md-5">
                             <x-input label="Tahun Ajaran" name="tahunajaran" 
                                      :value="old('tahunajaran')" 
                                      placeholder="Contoh: 2023/2024" 
                                      prepend="<i class='fas fa-calendar'></i>" 
-                                     hint="Format: YYYY/YYYY atau Ganjil/Genap" required />
+                                     hint="Format: YYYY/YYYY" required />
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Semester</label>
+                                <select name="semester" class="form-control select2" required>
+                                    <option value="Ganjil" {{ old('semester') == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                                    <option value="Genap" {{ old('semester') == 'Genap' ? 'selected' : '' }}>Genap</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label class="d-block">Status</label>
                                 <div class="custom-control custom-switch">

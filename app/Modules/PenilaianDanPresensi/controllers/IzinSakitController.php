@@ -7,8 +7,10 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Modules\PenilaianDanPresensi\Models\IzinSakit;
-use App\Models\Siswa;
 use Modules\Siswa\Models\Siswa as ModelsSiswa;
+use App\Modules\Akademik\Models\kelas as AkademikKelas;
+use App\Modules\Akademik\Models\MataPelajaran;
+use App\Modules\Akademik\Models\JadwalPelajaran;
 
 /**
  * IzinSakitController
@@ -18,28 +20,178 @@ use Modules\Siswa\Models\Siswa as ModelsSiswa;
 class IzinSakitController extends Controller
 {
     /**
+     * Display a listing of the resource for Siswa.
+     */
+    public function siswaIndex(Request $request): View
+    {
+        $user = auth()->user();
+        if ($user->ref_type !== \Modules\Siswa\Models\Siswa::class) {
+            abort(403, 'Akses ditolak. Halaman ini khusus untuk Siswa.');
+        }
+
+        $siswa = ModelsSiswa::find($user->ref_id);
+        $query = IzinSakit::with(['mataPelajaran'])
+            ->where('id_siswa', $siswa->id);
+
+        // Apply filters
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('tanggal')) {
+            $query->whereDate('tgl_mulai', '<=', $request->tanggal)
+                  ->whereDate('tgl_selesai', '>=', $request->tanggal);
+        }
+        
+        $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        $izinSakits = $query->orderBy('created_at', 'desc')->paginate(10);
+
+        return view('penilaiandanpresensi::izinsakit.siswa_index', [
+            'title' => 'Riwayat Pengajuan Izin/Sakit',
+            'izinSakits' => $izinSakits,
+            'activeTahunAjaran' => $activeTahunAjaran,
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource for Siswa.
+     */
+    public function siswaCreate(): View
+    {
+        $user = auth()->user();
+        if ($user->ref_type !== \Modules\Siswa\Models\Siswa::class) {
+            abort(403, 'Akses ditolak.');
+        }
+        $siswa = ModelsSiswa::find($user->ref_id);
+
+        // Fetch subjects associated with student's class (rombel) and active academic year
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        
+        $jadwalsQuery = JadwalPelajaran::with('mataPelajaran')
+            ->where('rombel_id', $siswa->kelas_id);
+            
+        if ($activeTA) {
+            $jadwalsQuery->whereHas('rombel', function($q) use ($activeTA) {
+                $q->where('tahunajaran_id', $activeTA->id);
+            });
+        }
+        
+        $jadwals = $jadwalsQuery->get();
+            
+        $mapels = $jadwals->pluck('mataPelajaran')->filter()->unique('id');
+
+        // Fallback if schedule is empty
+        if ($mapels->isEmpty()) {
+            $mapels = MataPelajaran::orderBy('nama')->get();
+        }
+
+        return view('penilaiandanpresensi::izinsakit.siswa_create', [
+            'title' => 'Pengajuan Izin/Sakit Baru',
+            'mapels' => $mapels,
+        ]);
+    }
+
+    /**
+     * Store a newly created resource in storage for Siswa.
+     */
+    public function siswaStore(Request $request): RedirectResponse
+    {
+        $user = auth()->user();
+        if ($user->ref_type !== \Modules\Siswa\Models\Siswa::class) {
+            abort(403, 'Akses ditolak.');
+        }
+        $siswa = ModelsSiswa::find($user->ref_id);
+
+        $validated = $request->validate([
+            'jenis' => 'required|in:Izin,Sakit',
+            'tipe_izin' => 'required|in:Harian,Per Matpel',
+            'id_mapel' => 'nullable|required_if:tipe_izin,Per Matpel|exists:mata_pelajaran,id',
+            'tgl_mulai' => 'required|date',
+            'tgl_selesai' => 'required|date|after_or_equal:tgl_mulai',
+            'keterangan' => 'nullable|string',
+            'bukti_foto' => 'nullable|image|max:2048',
+        ]);
+
+        $validated['id_siswa'] = $siswa->id;
+        $validated['id_kelas'] = $siswa->kelas_id ?? 1;
+
+        if ($validated['tipe_izin'] === 'Per Matpel') {
+            $validated['tgl_selesai'] = $validated['tgl_mulai']; // Force single day
+        } else {
+            $validated['id_mapel'] = null; // Clean up just in case
+        }
+
+        if ($request->hasFile('bukti_foto')) {
+            $validated['bukti_foto'] = $request->file('bukti_foto')->store('izin_sakit', 'public');
+        } elseif ($request->filled('captured_image')) {
+            $imageData = $request->input('captured_image');
+            $imageName = 'captured_' . time() . '.jpg';
+            $imagePath = 'izin_sakit/' . $imageName;
+            
+            $data = explode(',', $imageData);
+            if (isset($data[1])) {
+                \Illuminate\Support\Facades\Storage::disk('public')->put($imagePath, base64_decode($data[1]));
+                $validated['bukti_foto'] = $imagePath;
+            }
+        }
+
+        IzinSakit::create($validated);
+
+        return redirect()->route('penilaiandanpresensi.izinsakit.siswa.index')
+            ->with('success', 'Pengajuan berhasil dikirim.');
+    }
+
+    /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
-        $izinSakits = IzinSakit::with(['siswa'])->paginate(10);
+        $user = auth()->user();
+        if ($user->ref_type === \Modules\Siswa\Models\Siswa::class) {
+            return redirect()->route('penilaiandanpresensi.izinsakit.siswa.index');
+        }
 
+        $query = IzinSakit::with(['siswa', 'kelas']);
+
+        // Apply filters
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('tanggal')) {
+            $query->whereDate('tgl_mulai', '<=', $request->tanggal)
+                  ->whereDate('tgl_selesai', '>=', $request->tanggal);
+        }
+
+        // Order by status (Pending first) and then date
+        $izinSakits = $query->orderByRaw("CASE WHEN status = 'Pending' THEN 1 ELSE 2 END")
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
         return view('penilaiandanpresensi::izinsakit.index', [
-            'title' => 'Daftar Izin Sakit',
+            'title' => 'Konfirmasi Izin & Sakit',
             'izinSakits' => $izinSakits,
+            'activeTahunAjaran' => $activeTahunAjaran,
         ]);
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
-        $siswas = ModelsSiswa::all();
+        if (auth()->user()->ref_type === \Modules\Siswa\Models\Siswa::class) {
+            return redirect()->route('penilaiandanpresensi.izinsakit.siswa.create');
+        }
+
+        $kelas = AkademikKelas::orderBy('nama_kelas')->get();
+        $siswas = ModelsSiswa::orderBy('nama')->get();
 
         return view('penilaiandanpresensi::izinsakit.create', [
             'title' => 'Tambah Izin Sakit',
             'siswas' => $siswas,
+            'kelas' => $kelas,
         ]);
     }
 
@@ -50,11 +202,29 @@ class IzinSakitController extends Controller
     {
         $validated = $request->validate([
             'id_siswa' => 'required|exists:siswa,id',
-            'id_kelas' => 'required|integer',
+            'id_kelas' => 'required|exists:kelas,id',
             'jenis' => 'required|string|max:255',
+            'tipe_izin' => 'nullable|string|in:Harian,Per Matpel',
+            'id_mapel' => 'nullable|exists:mata_pelajaran,id',
             'tgl_mulai' => 'required|date',
             'tgl_selesai' => 'required|date|after_or_equal:tgl_mulai',
+            'keterangan' => 'nullable|string',
+            'bukti_foto' => 'nullable|image|max:2048',
         ]);
+
+        if (empty($validated['tipe_izin'])) {
+            $validated['tipe_izin'] = 'Harian';
+        }
+        
+        if ($validated['tipe_izin'] === 'Per Matpel') {
+            $validated['tgl_selesai'] = $validated['tgl_mulai'];
+        } else {
+            $validated['id_mapel'] = null;
+        }
+
+        if ($request->hasFile('bukti_foto')) {
+            $validated['bukti_foto'] = $request->file('bukti_foto')->store('izin_sakit', 'public');
+        }
 
         IzinSakit::create($validated);
 
@@ -67,7 +237,7 @@ class IzinSakitController extends Controller
      */
     public function show(string $id): View
     {
-        $izinSakit = IzinSakit::with(['siswa'])->findOrFail($id);
+        $izinSakit = IzinSakit::with(['siswa', 'kelas'])->findOrFail($id);
 
         return view('penilaiandanpresensi::izinsakit.show', [
             'title' => 'Detail Izin Sakit',
@@ -78,15 +248,21 @@ class IzinSakitController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id): View
+    public function edit(string $id): View|RedirectResponse
     {
+        if (auth()->user()->ref_type === \Modules\Siswa\Models\Siswa::class) {
+            return redirect()->route('penilaiandanpresensi.izinsakit.siswa.edit', $id);
+        }
+
         $izinSakit = IzinSakit::findOrFail($id);
-        $siswas = ModelsSiswa::all();
+        $kelas = AkademikKelas::orderBy('nama_kelas')->get();
+        $siswas = ModelsSiswa::orderBy('nama')->get();
 
         return view('penilaiandanpresensi::izinsakit.edit', [
             'title' => 'Edit Izin Sakit',
             'izinSakit' => $izinSakit,
             'siswas' => $siswas,
+            'kelas' => $kelas,
         ]);
     }
 
@@ -95,13 +271,45 @@ class IzinSakitController extends Controller
      */
     public function update(Request $request, string $id): RedirectResponse
     {
+        if (auth()->user()->ref_type === \Modules\Siswa\Models\Siswa::class) {
+            return redirect()->route('penilaiandanpresensi.izinsakit.siswa.update', $id);
+        }
+
         $validated = $request->validate([
             'id_siswa' => 'required|exists:siswa,id',
-            'id_kelas' => 'required|integer',
+            'id_kelas' => 'required|exists:kelas,id',
             'jenis' => 'required|string|max:255',
+            'tipe_izin' => 'nullable|string|in:Harian,Per Matpel',
+            'id_mapel' => 'nullable|exists:mata_pelajaran,id',
             'tgl_mulai' => 'required|date',
             'tgl_selesai' => 'required|date|after_or_equal:tgl_mulai',
+            'keterangan' => 'nullable|string',
+            'bukti_foto' => 'nullable|image|max:2048',
         ]);
+
+        if (empty($validated['tipe_izin'])) {
+            $validated['tipe_izin'] = 'Harian';
+        }
+
+        if ($validated['tipe_izin'] === 'Per Matpel') {
+            $validated['tgl_selesai'] = $validated['tgl_mulai'];
+        } else {
+            $validated['id_mapel'] = null;
+        }
+
+        if ($request->hasFile('bukti_foto')) {
+            $validated['bukti_foto'] = $request->file('bukti_foto')->store('izin_sakit', 'public');
+        } elseif ($request->filled('captured_image')) {
+            $imageData = $request->input('captured_image');
+            $imageName = 'captured_' . time() . '.jpg';
+            $imagePath = 'izin_sakit/' . $imageName;
+            
+            $data = explode(',', $imageData);
+            if (isset($data[1])) {
+                \Illuminate\Support\Facades\Storage::disk('public')->put($imagePath, base64_decode($data[1]));
+                $validated['bukti_foto'] = $imagePath;
+            }
+        }
 
         $izinSakit = IzinSakit::findOrFail($id);
         $izinSakit->update($validated);
@@ -115,10 +323,188 @@ class IzinSakitController extends Controller
      */
     public function destroy(string $id): RedirectResponse
     {
+        if (auth()->user()->ref_type === \Modules\Siswa\Models\Siswa::class) {
+            return redirect()->route('penilaiandanpresensi.izinsakit.siswa.destroy', $id);
+        }
+
         $izinSakit = IzinSakit::findOrFail($id);
         $izinSakit->delete();
 
         return redirect()->route('penilaiandanpresensi.izinsakit.index')
             ->with('success', 'Data berhasil dihapus.');
+    }
+    /**
+     * Confirm or Reject Izin Sakit pengajuan.
+     */
+    public function confirm(Request $request, string $id): RedirectResponse
+    {
+        if (auth()->user()->ref_type === \Modules\Siswa\Models\Siswa::class) {
+            abort(403, 'Anda tidak memiliki otoritas untuk mengonfirmasi pengajuan.');
+        }
+
+        $request->validate([
+            'status' => 'required|in:Disetujui,Ditolak',
+        ]);
+
+        $izinSakit = IzinSakit::findOrFail($id);
+        $izinSakit->update([
+            'status' => $request->status,
+            'konfirmasi_oleh' => auth()->id(),
+            'waktu_konfirmasi' => now(),
+        ]);
+
+        if ($request->status === 'Disetujui') {
+            // Sinkronisasi ke tabel Presensi
+            $tglMulai = \Carbon\Carbon::parse($izinSakit->tgl_mulai);
+            $tglSelesai = \Carbon\Carbon::parse($izinSakit->tgl_selesai);
+
+            for ($date = $tglMulai; $date->lte($tglSelesai); $date->addDay()) {
+                $hariAngka = $date->format('N'); // 1 = Senin, 7 = Minggu
+
+                $queryJadwal = JadwalPelajaran::where('rombel_id', $izinSakit->id_kelas)
+                    ->where('hari', $hariAngka);
+
+                if ($izinSakit->tipe_izin === 'Per Matpel' && $izinSakit->id_mapel) {
+                    $queryJadwal->where('mapel_id', $izinSakit->id_mapel);
+                }
+
+                $jadwals = $queryJadwal->get();
+
+                foreach ($jadwals as $jadwal) {
+                    // Check if presensi already exists to avoid duplicates
+                    $existingPresensi = \Modules\PenilaianDanPresensi\Models\Presensi::where('id_siswa', $izinSakit->id_siswa)
+                        ->where('id_jadwal_pelajaran', $jadwal->id)
+                        ->whereDate('created_at', $date->format('Y-m-d'))
+                        ->first();
+
+                    if (!$existingPresensi) {
+                        \Modules\PenilaianDanPresensi\Models\Presensi::create([
+                            'id_siswa' => $izinSakit->id_siswa,
+                            'id_guru' => $jadwal->guru_id ?? auth()->id(),
+                            'id_mapel' => $jadwal->mapel_id,
+                            'id_jadwal_pelajaran' => $jadwal->id,
+                            'jam' => $date->format('Y-m-d') . ' ' . $jadwal->jamawal,
+                            'status' => $izinSakit->jenis, // 'Izin' or 'Sakit'
+                            'kategori' => 'Sekolah',
+                            'created_at' => $date->format('Y-m-d H:i:s'),
+                            'updated_at' => now(),
+                        ]);
+                    } else {
+                        // If exists, just update the status
+                        $existingPresensi->update([
+                            'status' => $izinSakit->jenis,
+                        ]);
+                    }
+                }
+            }
+        }
+
+        $message = $request->status === 'Disetujui' ? 'Pengajuan telah disetujui dan disinkronkan ke Presensi.' : 'Pengajuan telah ditolak.';
+        
+        return redirect()->back()->with('success', $message);
+    }
+
+    /**
+     * Show the form for editing for Siswa.
+     */
+    public function siswaEdit(string $id): View
+    {
+        $user = auth()->user();
+        $izinSakit = IzinSakit::where('id', $id)->where('id_siswa', $user->ref_id)->firstOrFail();
+
+        if ($izinSakit->status !== 'Pending') {
+            abort(403, 'Hanya pengajuan dengan status Pending yang bisa diedit.');
+        }
+
+        $siswa = ModelsSiswa::find($user->ref_id);
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+
+        $jadwalsQuery = JadwalPelajaran::with('mataPelajaran')
+            ->where('rombel_id', $siswa->kelas_id);
+            
+        if ($activeTA) {
+            $jadwalsQuery->whereHas('rombel', function($q) use ($activeTA) {
+                $q->where('tahunajaran_id', $activeTA->id);
+            });
+        }
+
+        $jadwals = $jadwalsQuery->get();
+            
+        $mapels = $jadwals->pluck('mataPelajaran')->filter()->unique('id');
+        if ($mapels->isEmpty()) {
+            $mapels = MataPelajaran::orderBy('nama')->get();
+        }
+
+        return view('penilaiandanpresensi::izinsakit.siswa_edit', [
+            'title' => 'Edit Pengajuan Izin/Sakit',
+            'izinSakit' => $izinSakit,
+            'mapels' => $mapels,
+        ]);
+    }
+
+    /**
+     * Update for Siswa.
+     */
+    public function siswaUpdate(Request $request, string $id): RedirectResponse
+    {
+        $user = auth()->user();
+        $izinSakit = IzinSakit::where('id', $id)->where('id_siswa', $user->ref_id)->firstOrFail();
+
+        if ($izinSakit->status !== 'Pending') {
+            return back()->with('error', 'Hanya pengajuan dengan status Pending yang bisa diperbarui.');
+        }
+
+        $validated = $request->validate([
+            'jenis' => 'required|in:Izin,Sakit',
+            'tipe_izin' => 'required|in:Harian,Per Matpel',
+            'id_mapel' => 'nullable|required_if:tipe_izin,Per Matpel|exists:mata_pelajaran,id',
+            'tgl_mulai' => 'required|date',
+            'tgl_selesai' => 'required|date|after_or_equal:tgl_mulai',
+            'keterangan' => 'nullable|string',
+            'bukti_foto' => 'nullable|image|max:2048',
+        ]);
+
+        if ($validated['tipe_izin'] === 'Per Matpel') {
+            $validated['tgl_selesai'] = $validated['tgl_mulai'];
+        } else {
+            $validated['id_mapel'] = null;
+        }
+
+        if ($request->hasFile('bukti_foto')) {
+            $validated['bukti_foto'] = $request->file('bukti_foto')->store('izin_sakit', 'public');
+        } elseif ($request->filled('captured_image')) {
+            $imageData = $request->input('captured_image');
+            $imageName = 'captured_' . time() . '.jpg';
+            $imagePath = 'izin_sakit/' . $imageName;
+            
+            $data = explode(',', $imageData);
+            if (isset($data[1])) {
+                \Illuminate\Support\Facades\Storage::disk('public')->put($imagePath, base64_decode($data[1]));
+                $validated['bukti_foto'] = $imagePath;
+            }
+        }
+
+        $izinSakit->update($validated);
+
+        return redirect()->route('penilaiandanpresensi.izinsakit.siswa.index')
+            ->with('success', 'Pengajuan berhasil diperbarui.');
+    }
+
+    /**
+     * Delete for Siswa.
+     */
+    public function siswaDestroy(string $id): RedirectResponse
+    {
+        $user = auth()->user();
+        $izinSakit = IzinSakit::where('id', $id)->where('id_siswa', $user->ref_id)->firstOrFail();
+
+        if ($izinSakit->status !== 'Pending') {
+            return back()->with('error', 'Hanya pengajuan dengan status Pending yang bisa dihapus.');
+        }
+
+        $izinSakit->delete();
+
+        return redirect()->route('penilaiandanpresensi.izinsakit.siswa.index')
+            ->with('success', 'Pengajuan berhasil dihapus.');
     }
 }

@@ -28,6 +28,10 @@ return new class extends Migration
         // 2. Modifikasi Tabel Rombel
         Schema::table('rombel', function (Blueprint $table) {
             if (Schema::hasColumn('rombel', 'siswa_id')) {
+                // Khusus SQLite, kita perlu hapus index secara manual sebelum hapus kolom
+                if (config('database.default') === 'sqlite') {
+                    $table->dropIndex('rombel_siswa_id_index');
+                }
                 $table->dropColumn('siswa_id'); // Drop karena rombel to siswa is Many-to-Many via pivot
             }
             if (!Schema::hasColumn('rombel', 'wali_kelas_id')) {

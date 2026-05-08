@@ -21,6 +21,19 @@ class TahunAjaran extends Model
     protected $table = 'tahun_ajaran';
     protected $fillable = ['tahunajaran', 'semester', 'status', 'keterangan'];
 
+    protected static function booted()
+    {
+        static::saving(function ($tahunAjaran) {
+            if ($tahunAjaran->status) {
+                $query = static::where('status', 1);
+                if ($tahunAjaran->exists) {
+                    $query->where('id', '!=', $tahunAjaran->id);
+                }
+                $query->update(['status' => 0]);
+            }
+        });
+    }
+
     public function kalenderAkademik(): HasMany
     {
         return $this->hasMany(KalenderAkademik::class, 'tahunajaran_id');
@@ -51,5 +64,14 @@ class TahunAjaran extends Model
     public function scopeAktif($query)
     {
         return $query->where('status', true);
+    }
+
+    /**
+     * Get the current active academic year
+     * Accessible from any module: \App\Modules\Akademik\Models\TahunAjaran::current()
+     */
+    public static function current()
+    {
+        return self::aktif()->first();
     }
 }

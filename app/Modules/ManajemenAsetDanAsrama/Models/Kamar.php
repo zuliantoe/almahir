@@ -37,7 +37,7 @@ class Kamar extends Model
      */
     public function getTerisiAttribute(): int
     {
-        return $this->penghuni()->count();
+        return $this->penghuni()->aktif()->count();
     }
 
     /**

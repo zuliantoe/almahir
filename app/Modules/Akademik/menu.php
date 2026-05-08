@@ -20,6 +20,13 @@ return [
             'roles' => ['SUPER_ADMIN', 'STAFF', 'GURU', 'SISWA']
         ],
         [
+            'label' => 'Beban Mengajar',
+            'icon' => 'fas fa-chalkboard-teacher',
+            'route' => 'akademik.beban-mengajar.index',
+            'match' => 'akademik/beban-mengajar*',
+            'roles' => ['SUPER_ADMIN', 'STAFF']
+        ],
+        [
             'label' => 'Kalender Akademik',
             'icon' => 'fas fa-calendar-alt',
             'route' => 'akademik.kalender-akademik.index',
@@ -48,10 +55,30 @@ return [
             'roles' => ['SUPER_ADMIN', 'STAFF']
         ],
         [
+            'label' => 'Kenaikan Kelas',
+            'icon' => 'fas fa-level-up-alt',
+            'route' => 'akademik.kenaikan-kelas.index',
+            'match' => 'akademik/kenaikan-kelas*',
+            'roles' => ['SUPER_ADMIN', 'STAFF']
+        ],
+        [
+            'label' => 'Kelulusan Siswa',
+            'icon' => 'fas fa-graduation-cap',
+            'route' => 'akademik.kelulusan.index',
+            'match' => 'akademik/kelulusan*',
+            'roles' => ['SUPER_ADMIN', 'STAFF']
+        ],
+        [
             'label' => 'Data Master',
             'icon' => 'fas fa-database',
             'roles' => ['SUPER_ADMIN', 'STAFF'],
             'children' => [
+                [
+                    'label' => 'Master Kurikulum',
+                    'route' => 'akademik.master-kurikulum.index',
+                    'match' => 'akademik/master-kurikulum*',
+                    'roles' => ['SUPER_ADMIN', 'STAFF']
+                ],
                 [
                     'label' => 'Tahun Ajaran',
                     'route' => 'akademik.tahun-ajaran.index',

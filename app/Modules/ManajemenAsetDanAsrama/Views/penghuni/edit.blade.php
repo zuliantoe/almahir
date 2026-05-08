@@ -34,7 +34,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="kamar_id">Kamar <span class="text-danger">*</span></label>
-                                <select class="form-control @error('kamar_id') is-invalid @enderror" id="kamar_id" name="kamar_id" required>
+                                <select class="form-control select2 @error('kamar_id') is-invalid @enderror" id="kamar_id" name="kamar_id" required>
                                     <option value="">-- Pilih Kamar --</option>
                                     @foreach($kamar as $k)
                                         <option value="{{ $k->id }}" {{ old('kamar_id', $penghuni->kamar_id) == $k->id ? 'selected' : '' }}>
@@ -47,18 +47,32 @@
                                 @enderror
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label for="siswa_id">Siswa <span class="text-danger">*</span></label>
-                                <select class="form-control @error('siswa_id') is-invalid @enderror" id="siswa_id" name="siswa_id" required>
-                                    <option value="">-- Pilih Siswa --</option>
+                                <select class="form-control select2 @error('siswa_id') is-invalid @enderror" id="siswa_id" name="siswa_id" required>
                                     @foreach($siswa as $s)
                                         <option value="{{ $s->id }}" {{ old('siswa_id', $penghuni->siswa_id) == $s->id ? 'selected' : '' }}>
-                                            {{ $s->nama }}
+                                            {{ $s->nama }} (NIS: {{ $s->nis }})
                                         </option>
                                     @endforeach
                                 </select>
                                 @error('siswa_id')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="jabatan">Jabatan <span class="text-danger">*</span></label>
+                                <select class="form-control @error('jabatan') is-invalid @enderror" id="jabatan" name="jabatan" required>
+                                    <option value="Anggota" {{ old('jabatan', $penghuni->jabatan) == 'Anggota' ? 'selected' : '' }}>Anggota</option>
+                                    @if(!$hasKetua)
+                                        <option value="Ketua Kamar" {{ old('jabatan', $penghuni->jabatan) == 'Ketua Kamar' ? 'selected' : '' }}>Ketua Kamar</option>
+                                    @endif
+                                    <option value="Wakil Ketua Kamar" {{ old('jabatan', $penghuni->jabatan) == 'Wakil Ketua Kamar' ? 'selected' : '' }}>Wakil Ketua</option>
+                                </select>
+                                @error('jabatan')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
@@ -69,7 +83,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="tanggal_masuk">Tanggal Masuk <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control @error('tanggal_masuk') is-invalid @enderror" id="tanggal_masuk" name="tanggal_masuk" value="{{ old('tanggal_masuk', $penghuni->tanggal_masuk) }}" required>
+                                <input type="date" class="form-control @error('tanggal_masuk') is-invalid @enderror" id="tanggal_masuk" name="tanggal_masuk" value="{{ old('tanggal_masuk', $penghuni->tanggal_masuk ? $penghuni->tanggal_masuk->format('Y-m-d') : '') }}" required>
                                 @error('tanggal_masuk')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
@@ -78,7 +92,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="tanggal_keluar">Tanggal Keluar</label>
-                                <input type="date" class="form-control @error('tanggal_keluar') is-invalid @enderror" id="tanggal_keluar" name="tanggal_keluar" value="{{ old('tanggal_keluar', $penghuni->tanggal_keluar) }}">
+                                <input type="date" class="form-control @error('tanggal_keluar') is-invalid @enderror" id="tanggal_keluar" name="tanggal_keluar" value="{{ old('tanggal_keluar', $penghuni->tanggal_keluar ? $penghuni->tanggal_keluar->format('Y-m-d') : '') }}">
                                 @error('tanggal_keluar')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
@@ -108,3 +122,29 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css">
+<style>
+    .select2-container--bootstrap4 .select2-selection--single {
+        height: calc(2.25rem + 12px) !important;
+    }
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+        line-height: calc(2.25rem + 10px) !important;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({
+            theme: 'bootstrap4',
+            placeholder: "-- Pilih --",
+            allowClear: true
+        });
+    });
+</script>
+@endpush

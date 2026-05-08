@@ -20,20 +20,22 @@ class PerizinanController extends Controller
     /**
      * Hitung sisa cuti pegawai untuk tahun ini
      */
-    private function getSisaCuti($pegawaiId): int
+    private function getSisaCuti($pegawai): int
     {
         $currentYear = date('Y');
         
-        $cutiTerpakai = Perizinan::where('user_id', $pegawaiId)
-            ->where('jenis_izin', 'cuti')
-            ->whereIn('status', ['disetujui', 'menunggu'])
+        // Hitung cuti/izin yang masih menunggu (pending) untuk tahun ini
+        $pendingDays = Perizinan::where('user_id', $pegawai->id)
+            ->whereIn('jenis_izin', ['cuti', 'izin'])
+            ->where('status', 'menunggu')
             ->whereYear('tanggal_mulai', $currentYear)
             ->get()
             ->sum(function($izin) {
                 return Carbon::parse($izin->tanggal_mulai)->diffInDays(Carbon::parse($izin->tanggal_selesai)) + 1;
             });
 
-        return max(0, 12 - $cutiTerpakai);
+        // Sisa cuti tersedia = Jatah di database - yang sedang diajukan
+        return max(0, $pegawai->sisa_cuti - $pendingDays);
     }
 
     /**
@@ -43,12 +45,17 @@ class PerizinanController extends Controller
     {
         $user = Auth::user();
         $search = request('search');
+        $pegawaiFilterId = request('pegawai_id');
         
         $query = Perizinan::with('pegawai');
         
         if ($user->hasRole('SUPER_ADMIN') || $user->hasRole('STAF_TU')) {
             $isAdmin = true;
             $sisaCuti = null;
+            
+            if ($pegawaiFilterId) {
+                $query->where('user_id', $pegawaiFilterId);
+            }
         } else {
             $pegawai = $user->pegawai;
             if (!$pegawai) {
@@ -56,7 +63,7 @@ class PerizinanController extends Controller
             }
             $query->where('user_id', $pegawai->id);
             $isAdmin = false;
-            $sisaCuti = $this->getSisaCuti($pegawai->id);
+            $sisaCuti = $this->getSisaCuti($pegawai);
         }
 
         if ($search) {
@@ -96,7 +103,7 @@ class PerizinanController extends Controller
     public function create(): View
     {
         $pegawai = Auth::user()->pegawai;
-        $sisaCuti = $pegawai ? $this->getSisaCuti($pegawai->id) : 0;
+        $sisaCuti = $pegawai ? $this->getSisaCuti($pegawai) : 0;
 
         return view('perizinan::create', [
             'title' => 'Ajukan Perizinan',
@@ -123,15 +130,33 @@ class PerizinanController extends Controller
             'bukti' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        if ($request->jenis_izin == 'cuti') {
-            $sisaCuti = $this->getSisaCuti($pegawai->id);
+        if (in_array($request->jenis_izin, ['cuti', 'izin'])) {
+            $sisaCuti = $this->getSisaCuti($pegawai);
             $durasiCuti = Carbon::parse($request->tanggal_mulai)->diffInDays(Carbon::parse($request->tanggal_selesai)) + 1;
             
             if ($durasiCuti > $sisaCuti) {
                 return redirect()->back()
                     ->withInput()
-                    ->with('error', "Pengajuan gagal. Sisa jatah cuti Anda tahun ini adalah {$sisaCuti} hari, namun Anda mengajukan {$durasiCuti} hari.");
+                    ->with('error', "Pengajuan gagal. Sisa jatah cuti/izin Anda tahun ini adalah {$sisaCuti} hari, namun Anda mengajukan {$durasiCuti} hari.");
             }
+        }
+
+        // CEK OVERLAP: Apakah sudah ada izin yang DISETUJUI atau MENUNGGU di tanggal yang sama?
+        $overlap = Perizinan::where('user_id', $pegawai->id)
+            ->whereIn('status', ['disetujui', 'menunggu'])
+            ->where(function($q) use ($request) {
+                $q->whereDate('tanggal_mulai', '<=', $request->tanggal_selesai)
+                  ->whereDate('tanggal_selesai', '>=', $request->tanggal_mulai);
+            })
+            ->first();
+
+        if ($overlap) {
+            $tglAwal = Carbon::parse($overlap->tanggal_mulai)->format('d/m/Y');
+            $tglAkhir = Carbon::parse($overlap->tanggal_selesai)->format('d/m/Y');
+            $statusLabel = $overlap->status === 'disetujui' ? 'DISETUJUI' : 'MENUNGGU PERSETUJUAN';
+            return redirect()->back()
+                ->withInput()
+                ->with('error', "Pengajuan gagal. Anda sudah memiliki izin/cuti berstatus {$statusLabel} pada periode {$tglAwal} s/d {$tglAkhir}. Tidak dapat mengajukan izin baru di tanggal yang sama.");
         }
 
         $buktiPath = null;

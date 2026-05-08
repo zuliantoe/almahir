@@ -15,7 +15,8 @@ class RombelSiswa extends Model
     
     protected $fillable = [
         'rombel_id', 
-        'siswa_id'
+        'siswa_id',
+        'status'
     ];
     
     public function rombel(): BelongsTo 

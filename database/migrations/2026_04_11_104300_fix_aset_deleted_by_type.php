@@ -11,10 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Temukan FK jika ada
-        DB::statement('ALTER TABLE aset DROP FOREIGN KEY aset_deleted_by_foreign');
-        DB::statement('ALTER TABLE aset MODIFY COLUMN deleted_by CHAR(36) NULL;');
-        // DB::statement('ALTER TABLE aset ADD CONSTRAINT aset_deleted_by_foreign FOREIGN KEY (deleted_by) REFERENCES sys_users(id)');
+        if (config('database.default') === 'mysql') {
+            // MySQL specific raw SQL
+            try {
+                DB::statement('ALTER TABLE aset DROP FOREIGN KEY aset_deleted_by_foreign');
+            } catch (\Exception $e) {
+                // Ignore if FK doesn't exist
+            }
+            DB::statement('ALTER TABLE aset MODIFY COLUMN deleted_by CHAR(36) NULL;');
+        } else {
+            // SQLite and others: Use Laravel Schema Builder
+            Schema::table('aset', function (Blueprint $table) {
+                $table->uuid('deleted_by')->nullable()->change();
+            });
+        }
     }
 
     /**

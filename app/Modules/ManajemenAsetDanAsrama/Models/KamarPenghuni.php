@@ -34,4 +34,15 @@ class KamarPenghuni extends Model
     {
         return $this->belongsTo(Siswa::class, 'siswa_id', 'id');
     }
+
+    /**
+     * Scope: Hanya penghuni yang masih aktif (belum checkout).
+     */
+    public function scopeAktif($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('tanggal_keluar')
+              ->orWhere('tanggal_keluar', '>', now());
+        });
+    }
 }

@@ -15,13 +15,13 @@ class UpdateTahunAjaranRequest extends FormRequest
     public function rules()
     {
         return [
-            'tahun_ajaran' => [
+            'tahunajaran' => [
                 'required',
-                'string',
-                'max:20',
-                Rule::unique('tahun_ajaran', 'tahun_ajaran')->ignore($this->tahunAjaran)
+                'regex:/^\d{4}\/\d{4}$/',
+                'unique:tahun_ajaran,tahunajaran,' . $this->route('tahun_ajaran')
             ],
-            'status' => 'sometimes|boolean'
+            'semester' => 'required|in:Ganjil,Genap',
+            'status' => 'nullable|boolean'
         ];
     }
 

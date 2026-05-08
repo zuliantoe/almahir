@@ -17,7 +17,7 @@
                     </x-alert>
 
                     <div class="row mt-4">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-5 mb-3">
                             <x-input label="Tahun Ajaran" name="tahunajaran" 
                                      :value="old('tahunajaran', $tahunAjaran->tahunajaran)" 
                                      placeholder="Contoh: 2023/2024" 
@@ -25,7 +25,17 @@
                                      required />
                         </div>
 
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-3 mb-3">
+                            <div class="form-group">
+                                <label>Semester</label>
+                                <select name="semester" class="form-control select2" required>
+                                    <option value="Ganjil" {{ old('semester', $tahunAjaran->semester) == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                                    <option value="Genap" {{ old('semester', $tahunAjaran->semester) == 'Genap' ? 'selected' : '' }}>Genap</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
                             <div class="form-group">
                                 <label class="d-block font-weight-bold">Status Keaktifan</label>
                                 <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">

@@ -15,6 +15,12 @@ use Modules\Siswa\Controllers\SiswaController;
 |
 */
 
+use Modules\Siswa\Controllers\SiswaDashboardController;
+
+Route::middleware(['auth', 'role:SISWA'])->group(function () {
+    Route::get('/dashboard', [SiswaDashboardController::class, 'index'])->name('dashboard');
+});
+
 // Resource routes for CRUD operations
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [SiswaController::class, 'index'])->name('index');

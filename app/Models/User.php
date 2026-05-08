@@ -30,6 +30,8 @@ class User extends Authenticatable
         'account_status',
         'last_login_at',
         'last_login_ip',
+        'ref_type',
+        'ref_id',
     ];
 
     protected $hidden = [
@@ -56,11 +58,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Polymorphic relationship to link with Guru or Siswa.
+     * Polymorphic relationship to link with various entities (Guru, Siswa, etc.)
      */
     public function ref()
     {
-        return $this->morphTo('ref');
+        return $this->morphTo();
     }
 
     /*

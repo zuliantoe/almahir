@@ -24,96 +24,37 @@ class JadwalPelajaranController extends Controller
         $this->jadwalService = $jadwalService;
     }
 
-    /**
-     * Tampilkan jadwal pelajaran.
-
-     * - GURU : hanya jadwal miliknya (tabel mingguan)
-     * - SISWA : jadwal kelasnya (tabel mingguan)
-     * - Admin : semua jadwal (list paginated + filter)
-     */
     public function index(Request $request)
     {
-        $user    = auth()->user();
+        $user = auth()->user();
         $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-        $jamKes   = [1, 2, 3, 4, 5, 6, 7, 8];
 
-        // ── KONTEKS GURU ─────────────────────────────────────────────────
         if ($user && $user->hasRole('GURU')) {
-            $guru = $user->ref;
-
-            // Jika minta tampil ALL atau ada filter pencarian, tampilkan view index (list)
-            if ($request->get('tampil') === 'all' || $request->hasAny(['rombel_id', 'hari', 'guru_id'])) {
-                $jadwalPelajaran = JadwalPelajaran::query()
-                    ->with(['rombel.kelas', 'mataPelajaran', 'guru'])
-                    ->when($request->filled('rombel_id'), fn($q) => $q->where('rombel_id', $request->rombel_id))
-                    ->when($request->filled('hari'), fn($q) => $q->where('hari', $request->hari))
-                    ->when($request->filled('guru_id'), fn($q) => $q->where('guru_id', $request->guru_id))
-                    ->orderByRaw("FIELD(hari, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu')")
-                    ->orderBy('jamke')
-                    ->paginate(15)
-                    ->withQueryString();
-
-                $rombels = Rombel::with('kelas')->get();
-                $gurus   = Guru::aktif()->get();
-
-                return view('akademik::jadwal-pelajaran.index', compact('jadwalPelajaran', 'rombels', 'gurus'));
+            if ($request->get('tampil') === 'all' || $request->hasAny(['rombel_id', 'hari', 'guru_id', 'mapel_id', 'tahun_ajaran_id'])) {
+                return $this->renderListView($request);
             }
-
-            // Default: Tampilkan Jadwal Mengajar Guru Terkait (Timetable)
-            $rawJadwal = JadwalPelajaran::with(['mataPelajaran', 'rombel.kelas'])
-                ->where('guru_id', $guru?->id)
-                ->orderBy('hari')
-                ->orderBy('jamke')
-                ->get();
-
-            $timetable = [];
-            foreach ($rawJadwal as $j) {
-                $timetable[$j->hari][$j->jamke] = $j;
-            }
-
-            $usedJamKes = $rawJadwal->pluck('jamke')->unique()->sort()->values()->toArray();
-
-            return view('akademik::jadwal-pelajaran.timetable-guru', compact(
-                'timetable', 'hariList', 'usedJamKes', 'rawJadwal', 'guru'
-            ));
+            return $this->renderGuruTimetable($user->ref, $hariList, $request);
         }
 
-        // ── KONTEKS SISWA ─────────────────────────────────────────────────
         if ($user && $user->hasRole('SISWA')) {
-            $siswa       = $user->ref;
-            $rombelSiswa = RombelSiswa::with('rombel.kelas')
-                ->where('siswa_id', $siswa?->id)
-                ->first();
-            $rombelId    = $rombelSiswa?->rombel_id;
-
-            $rawJadwal = collect();
-            if ($rombelId) {
-                $rawJadwal = JadwalPelajaran::with(['mataPelajaran', 'guru'])
-                    ->where('rombel_id', $rombelId)
-                    ->orderBy('hari')
-                    ->orderBy('jamke')
-                    ->get();
-            }
-
-            // Susun sebagai pivot [hari][jamke] => jadwal
-            $timetable = [];
-            foreach ($rawJadwal as $j) {
-                $timetable[$j->hari][$j->jamke] = $j;
-            }
-
-            $usedJamKes = $rawJadwal->pluck('jamke')->unique()->sort()->values()->toArray();
-
-            return view('akademik::jadwal-pelajaran.timetable-siswa', compact(
-                'timetable', 'hariList', 'usedJamKes', 'rawJadwal', 'rombelSiswa'
-            ));
+            return $this->renderSiswaTimetable($user->ref, $hariList, $request);
         }
 
-        // ── KONTEKS ADMIN / STAF ──────────────────────────────────────────
+        // Default for Admin / Staf
+        return $this->renderListView($request);
+    }
+
+    private function renderListView(Request $request)
+    {
         $jadwalPelajaran = JadwalPelajaran::query()
             ->with(['rombel.kelas', 'mataPelajaran', 'guru'])
             ->when($request->filled('rombel_id'), fn($q) => $q->where('rombel_id', $request->rombel_id))
             ->when($request->filled('hari'), fn($q) => $q->where('hari', $request->hari))
             ->when($request->filled('guru_id'), fn($q) => $q->where('guru_id', $request->guru_id))
+            ->when($request->filled('mapel_id'), fn($q) => $q->where('mapel_id', $request->mapel_id))
+            ->when($request->filled('tahun_ajaran_id'), function($q) use ($request) {
+                return $q->whereHas('rombel', fn($sq) => $sq->where('tahunajaran_id', $request->tahun_ajaran_id));
+            })
             ->orderByRaw("FIELD(hari, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu')")
             ->orderBy('jamke')
             ->paginate(15)
@@ -121,22 +62,90 @@ class JadwalPelajaranController extends Controller
 
         $rombels = Rombel::with('kelas')->get();
         $gurus   = Guru::aktif()->get();
+        $mapels  = MataPelajaran::orderBy('nama')->get();
+        $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->orderBy('semester', 'desc')->get();
 
         $summaryJP = [];
         if ($request->filled('rombel_id')) {
             $rombel = Rombel::find($request->rombel_id);
             if ($rombel) {
-                $mapels = JadwalPelajaran::where('rombel_id', $rombel->id)
+                $mapelsInRombel = JadwalPelajaran::where('rombel_id', $rombel->id)
                     ->pluck('mapel_id')
                     ->unique();
                 
-                foreach ($mapels as $mId) {
+                foreach ($mapelsInRombel as $mId) {
                     $summaryJP[$mId] = $this->jadwalService->hitungEstimasiTotalJP($mId, $rombel->id, $rombel->tahunajaran_id);
                 }
             }
         }
 
-        return view('akademik::jadwal-pelajaran.index', compact('jadwalPelajaran', 'rombels', 'gurus', 'summaryJP'));
+        return view('akademik::jadwal-pelajaran.index', compact('jadwalPelajaran', 'rombels', 'gurus', 'mapels', 'tahunAjarans', 'summaryJP'));
+    }
+
+    private function renderGuruTimetable($guru, $hariList, Request $request)
+    {
+        $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->orderBy('semester', 'desc')->get();
+        $activeTahunAjaran = $request->filled('tahun_ajaran_id') 
+            ? TahunAjaran::find($request->tahun_ajaran_id) 
+            : TahunAjaran::aktif()->first();
+
+        $rawJadwal = JadwalPelajaran::with(['mataPelajaran', 'rombel.kelas'])
+            ->where('guru_id', $guru?->id)
+            ->when($activeTahunAjaran, function($q) use ($activeTahunAjaran) {
+                return $q->whereHas('rombel', fn($sq) => $sq->where('tahunajaran_id', $activeTahunAjaran->id));
+            })
+            ->orderBy('hari')
+            ->orderBy('jamke')
+            ->get();
+
+        [$timetable, $usedJamKes] = $this->buildTimetable($rawJadwal);
+
+        return view('akademik::jadwal-pelajaran.timetable-guru', compact(
+            'timetable', 'hariList', 'usedJamKes', 'rawJadwal', 'guru', 'tahunAjarans', 'activeTahunAjaran'
+        ));
+    }
+
+    private function renderSiswaTimetable($siswa, $hariList, Request $request)
+    {
+        $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->orderBy('semester', 'desc')->get();
+        $activeTahunAjaran = $request->filled('tahun_ajaran_id') 
+            ? TahunAjaran::find($request->tahun_ajaran_id) 
+            : TahunAjaran::aktif()->first();
+
+        $rombelSiswa = RombelSiswa::with(['rombel.kelas'])
+            ->where('siswa_id', $siswa?->id)
+            ->when($activeTahunAjaran, function($q) use ($activeTahunAjaran) {
+                return $q->whereHas('rombel', fn($sq) => $sq->where('tahunajaran_id', $activeTahunAjaran->id));
+            })
+            ->first();
+
+        $rombelId = $rombelSiswa?->rombel_id;
+
+        $rawJadwal = collect();
+        if ($rombelId) {
+            $rawJadwal = JadwalPelajaran::with(['mataPelajaran', 'guru'])
+                ->where('rombel_id', $rombelId)
+                ->orderBy('hari')
+                ->orderBy('jamke')
+                ->get();
+        }
+
+        [$timetable, $usedJamKes] = $this->buildTimetable($rawJadwal);
+
+        return view('akademik::jadwal-pelajaran.timetable-siswa', compact(
+            'timetable', 'hariList', 'usedJamKes', 'rawJadwal', 'rombelSiswa', 'tahunAjarans', 'activeTahunAjaran'
+        ));
+    }
+
+    private function buildTimetable($rawJadwal)
+    {
+        $timetable = [];
+        foreach ($rawJadwal as $j) {
+            $timetable[$j->hari][$j->jamke] = $j;
+        }
+        $usedJamKes = $rawJadwal->pluck('jamke')->unique()->sort()->values()->toArray();
+
+        return [$timetable, $usedJamKes];
     }
 
 
@@ -210,6 +219,82 @@ class JadwalPelajaranController extends Controller
             return redirect()
                 ->route('akademik.jadwal-pelajaran.index')
                 ->with('error', 'Gagal menghapus data: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Copy Jadwal from one Rombel to another
+     */
+    public function copyJadwal(Request $request)
+    {
+        $request->validate([
+            'from_rombel_id' => 'required|exists:rombel,id',
+            'to_rombel_id' => 'required|exists:rombel,id',
+        ]);
+
+        $sourceJadwal = JadwalPelajaran::where('rombel_id', $request->from_rombel_id)->get();
+        
+        $copied = 0;
+        foreach ($sourceJadwal as $item) {
+            // Check if target already has this schedule
+            $exists = JadwalPelajaran::where('rombel_id', $request->to_rombel_id)
+                ->where('hari', $item->hari)
+                ->where('jamke', $item->jamke)
+                ->exists();
+
+            if (!$exists) {
+                $newItem = $item->replicate();
+                $newItem->rombel_id = $request->to_rombel_id;
+                $newItem->save();
+                $copied++;
+            }
+        }
+
+        return redirect()->back()->with('success', "Berhasil menyalin $copied jadwal pelajaran.");
+    }
+
+    /**
+     * Bulk Store multiple schedules at once
+     */
+    public function bulkStore(Request $request)
+    {
+        $request->validate([
+            'schedules' => 'required|array',
+            'schedules.*.rombel_id' => 'required|exists:rombel,id',
+            'schedules.*.mapel_id' => 'required|exists:mata_pelajaran,id',
+            'schedules.*.guru_id' => 'required|exists:guru,id',
+            'schedules.*.hari' => 'required|string',
+            'schedules.*.jamke' => 'required|integer',
+            'schedules.*.jamawal' => 'required',
+            'schedules.*.jamakhir' => 'required',
+        ]);
+
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            $created = 0;
+            foreach ($request->schedules as $index => $data) {
+                // Reuse existing conflict logic if possible, or simple check here
+                $conflict = JadwalPelajaran::where('hari', $data['hari'])
+                    ->where('jamke', $data['jamke'])
+                    ->where(function($q) use ($data) {
+                        $q->where('guru_id', $data['guru_id'])
+                          ->orWhere('rombel_id', $data['rombel_id']);
+                    })->first();
+
+                if ($conflict) {
+                    throw new \Exception("Baris ke-" . ($index + 1) . " bentrok: Guru/Rombel sudah ada jadwal di hari {$data['hari']} jam ke-{$data['jamke']}.");
+                }
+
+                JadwalPelajaran::create($data);
+                $created++;
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+            return redirect()->route('akademik.jadwal-pelajaran.index')
+                ->with('success', "Berhasil menyimpan $created jadwal sekaligus!");
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
     }
 }

@@ -20,41 +20,41 @@
             </div>
 
             <div class="form-group">
-                <label for="id_siswa">Siswa</label>
-                <select name="id_siswa" id="id_siswa" class="form-control" required>
+                <label for="siswa_id">Siswa</label>
+                <select name="siswa_id" id="siswa_id" class="form-control" required>
                     <option value="">Pilih Siswa</option>
                     @foreach($siswas as $siswa)
-                        <option value="{{ $siswa->id }}" {{ old('id_siswa', $presensi->id_siswa) == $siswa->id ? 'selected' : '' }}>{{ $siswa->nama }}</option>
+                        <option value="{{ $siswa->id }}" {{ old('siswa_id', $presensi->siswa_id) == $siswa->id ? 'selected' : '' }}>{{ $siswa->nama }}</option>
                     @endforeach
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="id_guru">Guru</label>
-                <select name="id_guru" id="id_guru" class="form-control" required>
+                <label for="guru_id">Guru</label>
+                <select name="guru_id" id="guru_id" class="form-control" required>
                     <option value="">Pilih Guru</option>
                     @foreach($gurus as $guru)
-                        <option value="{{ $guru->id }}" {{ old('id_guru', $presensi->id_guru) == $guru->id ? 'selected' : '' }}>{{ $guru->nama }}</option>
+                        <option value="{{ $guru->id }}" {{ old('guru_id', $presensi->guru_id) == $guru->id ? 'selected' : '' }}>{{ $guru->nama }}</option>
                     @endforeach
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="id_mapel">Mata Pelajaran</label>
-                <select name="id_mapel" id="id_mapel" class="form-control" required>
+                <label for="mapel_id">Mata Pelajaran</label>
+                <select name="mapel_id" id="mapel_id" class="form-control" required>
                     <option value="">Pilih Mata Pelajaran</option>
                     @foreach($mapels as $mapel)
-                        <option value="{{ $mapel->id }}" {{ old('id_mapel', $presensi->id_mapel) == $mapel->id ? 'selected' : '' }}>{{ $mapel->nama ?? $mapel->name ?? 'Mapel '.$mapel->id }}</option>
+                        <option value="{{ $mapel->id }}" {{ old('mapel_id', $presensi->mapel_id) == $mapel->id ? 'selected' : '' }}>{{ $mapel->nama ?? $mapel->name ?? 'Mapel '.$mapel->id }}</option>
                     @endforeach
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="id_jadwal_pelajaran">Jadwal Pelajaran</label>
-                <select name="id_jadwal_pelajaran" id="id_jadwal_pelajaran" class="form-control" required>
+                <label for="jadwal_pelajaran_id">Jadwal Pelajaran</label>
+                <select name="jadwal_pelajaran_id" id="jadwal_pelajaran_id" class="form-control" required>
                     <option value="">Pilih Jadwal Pelajaran</option>
                     @foreach($jadwals as $jadwal)
-                        <option value="{{ $jadwal->id }}" {{ old('id_jadwal_pelajaran', $presensi->id_jadwal_pelajaran) == $jadwal->id ? 'selected' : '' }}>{{ $jadwal->hari }} - {{ \Carbon\Carbon::parse($jadwal->jamawal)->format('H:i') }} - {{ \Carbon\Carbon::parse($jadwal->jamakhir)->format('H:i') }}</option>
+                        <option value="{{ $jadwal->id }}" {{ old('jadwal_pelajaran_id', $presensi->jadwal_pelajaran_id) == $jadwal->id ? 'selected' : '' }}>{{ $jadwal->hari }} - {{ \Carbon\Carbon::parse($jadwal->jamawal)->format('H:i') }} - {{ \Carbon\Carbon::parse($jadwal->jamakhir)->format('H:i') }}</option>
                     @endforeach
                 </select>
             </div>
@@ -121,7 +121,7 @@ function getStudentOptions() {
 }
 
 function getMapelOptions() {
-    const guruId = document.getElementById('id_guru').value;
+    const guruId = document.getElementById('guru_id').value;
     if (!guruId) {
         return '<option value="">-- Pilih Guru terlebih dahulu --</option>';
     }
@@ -144,7 +144,7 @@ function getMapelOptions() {
 
 function getJadwalOptions() {
     const kelasId = document.getElementById('kelas_id').value;
-    const guruId = document.getElementById('id_guru').value;
+    const guruId = document.getElementById('guru_id').value;
     if (!kelasId || !guruId) {
         return '<option value="">-- Pilih kelas dan guru terlebih dahulu --</option>';
     }
@@ -163,7 +163,7 @@ function getJadwalOptions() {
 }
 
 function updateStudentOptions() {
-    const siswa = document.getElementById('id_siswa');
+    const siswa = document.getElementById('siswa_id');
     const currentValue = siswa.value;
     siswa.innerHTML = getStudentOptions();
     if (currentValue) {
@@ -172,7 +172,7 @@ function updateStudentOptions() {
 }
 
 function updateMapelOptions() {
-    const mapel = document.getElementById('id_mapel');
+    const mapel = document.getElementById('mapel_id');
     const currentValue = mapel.value;
     mapel.innerHTML = getMapelOptions();
     if (currentValue) {
@@ -181,7 +181,7 @@ function updateMapelOptions() {
 }
 
 function updateJadwalOptions() {
-    const jadwal = document.getElementById('id_jadwal_pelajaran');
+    const jadwal = document.getElementById('jadwal_pelajaran_id');
     const currentValue = jadwal.value;
     jadwal.innerHTML = getJadwalOptions();
     if (currentValue) {
@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateStudentOptions();
         updateJadwalOptions();
     });
-    document.getElementById('id_guru').addEventListener('change', function() {
+    document.getElementById('guru_id').addEventListener('change', function() {
         updateMapelOptions();
         updateJadwalOptions();
     });

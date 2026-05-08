@@ -15,20 +15,27 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Seed roles first
+        // 1. Roles & Permissions
         $this->call(RoleSeeder::class);
-        
-        // Then seed users
-        $this->call(UserSeeder::class);
-        // Guru & Siswa Data (Orang & Akun)
-        $this->call([
-            GuruDataSeeder::class,
-            SiswaDataSeeder::class,
-        ]);
+        if (class_exists(AcademicRoleSeeder::class)) {
+            $this->call(AcademicRoleSeeder::class);
+        }
 
-        // Academic Dummy Data
-        if (class_exists(\App\Modules\Akademik\Database\Seeders\AcademicDummySeeder::class)) {
-            $this->call(\App\Modules\Akademik\Database\Seeders\AcademicDummySeeder::class);
+        // 2. Base User Data (Guru & Siswa)
+        $this->call(GuruDataSeeder::class);
+        $this->call(SiswaDataSeeder::class);
+
+        // 3. Academic Structure
+        if (class_exists(\App\Modules\Akademik\Database\Seeders\SpecificAcademicSeeder::class)) {
+            $this->call(\App\Modules\Akademik\Database\Seeders\SpecificAcademicSeeder::class);
+        }
+
+        // 4. Assignments
+        $this->call(AssignStudentsToRombelSeeder::class);
+
+        // 5. Module Specific Integration (Penilaian & Presensi)
+        if (class_exists(\Modules\PenilaianDanPresensi\Database\Seeders\PenilaianIntegrasiSeeder::class)) {
+            $this->call(\Modules\PenilaianDanPresensi\Database\Seeders\PenilaianIntegrasiSeeder::class);
         }
     }
 }

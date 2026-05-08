@@ -32,7 +32,24 @@
         </div>
         <div class="card-body pt-0">
             <form method="GET" class="row">
-                <div class="col-md-4 mb-2">
+                <div class="col-md-2 mb-2">
+                    <label class="small font-weight-bold text-muted">KELAS</label>
+                    <select name="kelas_id" class="form-control">
+                        <option value="">Semua Kelas</option>
+                        @foreach($kelasList as $kelas)
+                            <option value="{{ $kelas->id }}" {{ request('kelas_id') == $kelas->id ? 'selected' : '' }}>{{ $kelas->nama_kelas }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="small font-weight-bold text-muted">JENIS</label>
+                    <select name="jenis" class="form-control">
+                        <option value="">Semua</option>
+                        <option value="Izin" {{ request('jenis') == 'Izin' ? 'selected' : '' }}>Izin</option>
+                        <option value="Sakit" {{ request('jenis') == 'Sakit' ? 'selected' : '' }}>Sakit</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
                     <label class="small font-weight-bold text-muted">STATUS</label>
                     <select name="status" class="form-control">
                         <option value="">Semua Status</option>
@@ -41,13 +58,13 @@
                         <option value="Ditolak" {{ request('status') == 'Ditolak' ? 'selected' : '' }}>Ditolak</option>
                     </select>
                 </div>
-                <div class="col-md-5 mb-2">
+                <div class="col-md-3 mb-2">
                     <label class="small font-weight-bold text-muted">TANGGAL</label>
                     <input type="date" name="tanggal" class="form-control" value="{{ request('tanggal', date('Y-m-d')) }}">
                 </div>
-                <div class="col-md-3 mt-auto mb-2">
+                <div class="col-md-2 mt-auto mb-2">
                     <button type="submit" class="btn btn-danger btn-block font-weight-bold">
-                        <i class="fas fa-search mr-1"></i> Terapkan
+                        <i class="fas fa-search mr-1"></i> Cari
                     </button>
                 </div>
             </form>
@@ -63,8 +80,9 @@
                             <th class="border-0 px-4">Santri & Kelas</th>
                             <th class="border-0">Jenis & Tipe</th>
                             <th class="border-0">Waktu</th>
+                            <th class="border-0 text-center">Bukti</th>
                             <th class="border-0 text-center">Status</th>
-                            <th class="border-0 text-center px-4">Aksi Konfirmasi</th>
+                            <th class="border-0 text-center px-4">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -72,7 +90,7 @@
                         <tr>
                             <td class="px-4">
                                 <div class="font-weight-bold text-dark">{{ $item->siswa->nama ?? '-' }}</div>
-                                <span class="badge badge-outline-danger text-danger border-danger" style="font-size: 0.7rem; border: 1px solid;">{{ $item->kelas->nama_kelas ?? '-' }}</span>
+                                <span class="badge badge-outline-danger text-danger border-danger" style="font-size: 0.7rem; border: 1px solid;">{{ $item->rombel->nama_kelas ?? '-' }}</span>
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">
@@ -86,9 +104,18 @@
                                 </div>
                             </td>
                             <td class="align-middle">
-                                <div class="text-dark small font-weight-bold">{{ $item->tgl_mulai->format('d M Y') }}</div>
+                                <div class="text-dark small font-weight-bold">{{ optional($item->tgl_mulai)->format('d M Y') }}</div>
                                 @if($item->tgl_mulai != $item->tgl_selesai)
-                                    <small class="text-muted">s/d {{ $item->tgl_selesai->format('d M Y') }}</small>
+                                    <small class="text-muted">s/d {{ optional($item->tgl_selesai)->format('d M Y') }}</small>
+                                @endif
+                            </td>
+                            <td class="align-middle text-center">
+                                @if($item->bukti_foto)
+                                    <a href="{{ asset('storage/' . $item->bukti_foto) }}" target="_blank" class="btn btn-sm btn-outline-danger" style="border-radius: 8px;">
+                                        <i class="fas fa-image mr-1"></i> Foto
+                                    </a>
+                                @else
+                                    <span class="text-muted small">-</span>
                                 @endif
                             </td>
                             <td class="align-middle text-center">
@@ -108,6 +135,9 @@
                             </td>
                             <td class="align-middle text-center px-4">
                                 <div class="btn-group shadow-sm" style="border-radius: 10px; overflow: hidden;">
+                                    <a href="{{ route('penilaiandanpresensi.izinsakit.show', $item->id) }}" class="btn btn-light btn-sm text-primary px-3" title="Lihat Detail">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
                                     @if($item->status === 'Pending')
                                         <button class="btn btn-success btn-sm border-0 px-3" onclick="konfirmasiStatus('{{ route('penilaiandanpresensi.izinsakit.confirm', $item->id) }}', 'Disetujui')" title="Setujui">
                                             <i class="fas fa-check"></i>
@@ -116,15 +146,12 @@
                                             <i class="fas fa-times"></i>
                                         </button>
                                     @endif
-                                    <a href="{{ route('penilaiandanpresensi.izinsakit.show', $item->id) }}" class="btn btn-light btn-sm text-primary px-3" title="Lihat Detail">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
                                 </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="text-center py-5">
+                            <td colspan="6" class="text-center py-5">
                                 <i class="fas fa-envelope-open fa-3x mb-3 d-block opacity-20 text-danger"></i>
                                 <p class="text-muted">Belum ada pengajuan izin atau sakit yang masuk.</p>
                             </td>
@@ -136,7 +163,7 @@
         </div>
         @if($izinSakits->hasPages())
         <div class="card-footer bg-white py-3 border-0">
-            {{ $izinSakits->links() }}
+            {{ $izinSakits->appends(request()->all())->links() }}
         </div>
         @endif
     </div>

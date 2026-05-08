@@ -14,92 +14,20 @@ use Illuminate\View\View;
  */
 class AkademikController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
         $user = auth()->user();
+        $today = \Carbon\Carbon::now()->locale('id')->translatedFormat('l');
+        $todayDate = \Carbon\Carbon::now()->toDateString();
 
         // 1. Context Guru
         if ($user && $user->hasRole('GURU')) {
-            $guru = $user->ref;
-            $today = \Carbon\Carbon::now()->locale('id')->translatedFormat('l');
-            $todayDate = \Carbon\Carbon::now()->toDateString();
-
-            $jadwalHariIni = \App\Modules\Akademik\Models\JadwalPelajaran::with(['mataPelajaran', 'rombel'])
-                ->where('guru_id', $guru?->id)
-                ->where('hari', $today)
-                ->orderBy('jamke')
-                ->get();
-
-            $jadwalMingguan = \App\Modules\Akademik\Models\JadwalPelajaran::with(['mataPelajaran', 'rombel'])
-                ->where('guru_id', $guru?->id)
-                ->orderBy('hari')
-                ->orderBy('jamke')
-                ->get();
-
-            // Ongoing events
-            $eventHariIni = \App\Modules\Akademik\Models\KalenderAkademik::with('jenisKegiatan')
-                ->whereDate('tanggal_awal', '<=', $todayDate)
-                ->whereDate('tanggal_akhir', '>=', $todayDate)
-                ->get();
-
-            // Upcoming events (next 30 days)
-            $upcomingEvents = \App\Modules\Akademik\Models\KalenderAkademik::with('jenisKegiatan')
-                ->whereDate('tanggal_awal', '>', $todayDate)
-                ->whereDate('tanggal_awal', '<=', \Carbon\Carbon::now()->addDays(30))
-                ->orderBy('tanggal_awal')
-                ->take(5)
-                ->get();
-
-            $tahunAjaranAktif = \App\Modules\Akademik\Models\TahunAjaran::aktif()->first();
-
-            return view('akademik::dashboards.guru', compact(
-                'jadwalHariIni', 'jadwalMingguan', 'upcomingEvents', 'today', 'eventHariIni', 'tahunAjaranAktif'
-            ));
+            return redirect()->route('guru.dashboard');
         }
 
         // 2. Context Siswa
         if ($user && $user->hasRole('SISWA')) {
-            $siswa = $user->ref;
-            $rombelSiswa = \App\Modules\Akademik\Models\RombelSiswa::with('rombel.tahunAjaran')->where('siswa_id', $siswa?->id)->first();
-            $rombelId = $rombelSiswa?->rombel_id;
-            $today = \Carbon\Carbon::now()->locale('id')->translatedFormat('l');
-            $todayDate = \Carbon\Carbon::now()->toDateString();
-
-            $jadwalHariIni = collect();
-            $jadwalMingguan = collect();
-            if ($rombelId) {
-                $jadwalHariIni = \App\Modules\Akademik\Models\JadwalPelajaran::with(['mataPelajaran', 'guru'])
-                    ->where('rombel_id', $rombelId)
-                    ->where('hari', $today)
-                    ->orderBy('jamke')
-                    ->get();
-
-                $jadwalMingguan = \App\Modules\Akademik\Models\JadwalPelajaran::with(['mataPelajaran', 'guru'])
-                    ->where('rombel_id', $rombelId)
-                    ->orderBy('hari')
-                    ->orderBy('jamke')
-                    ->get();
-            }
-
-            // Ongoing events
-            $eventHariIni = \App\Modules\Akademik\Models\KalenderAkademik::with('jenisKegiatan')
-                ->whereDate('tanggal_awal', '<=', $todayDate)
-                ->whereDate('tanggal_akhir', '>=', $todayDate)
-                ->get();
-
-            // Upcoming events
-            $upcomingEvents = \App\Modules\Akademik\Models\KalenderAkademik::with('jenisKegiatan')
-                ->whereDate('tanggal_awal', '>', $todayDate)
-                ->whereDate('tanggal_awal', '<=', \Carbon\Carbon::now()->addDays(30))
-                ->orderBy('tanggal_awal')
-                ->take(5)
-                ->get();
-
-            $tahunAjaranAktif = \App\Modules\Akademik\Models\TahunAjaran::aktif()->first();
-
-            return view('akademik::dashboards.siswa', compact(
-                'jadwalHariIni', 'jadwalMingguan', 'upcomingEvents', 'today', 'rombelSiswa', 'eventHariIni', 'tahunAjaranAktif'
-            ));
+            return redirect()->route('siswa.dashboard');
         }
 
         // Default Admin / Staff Context

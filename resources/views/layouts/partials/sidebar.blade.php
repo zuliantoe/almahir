@@ -2,7 +2,14 @@
 @php
     $isAcademicRole = Auth::check() && (Auth::user()->hasRole('GURU') || Auth::user()->hasRole('SISWA'));
     $sidebarClass = $isAcademicRole ? 'sidebar-dark-info' : 'sidebar-dark-primary';
-    $homeUrl = $isAcademicRole ? route('akademik.index') : url('/');
+    $homeUrl = url('/');
+    if (Auth::check()) {
+        if (Auth::user()->hasRole('SISWA')) {
+            $homeUrl = route('penilaiandanpresensi.index');
+        } elseif (Auth::user()->hasRole('GURU')) {
+            $homeUrl = route('penilaiandanpresensi.index');
+        }
+    }
 @endphp
 <aside class="main-sidebar {{ $sidebarClass }} elevation-4">
     {{-- Brand Logo --}}
@@ -11,11 +18,7 @@
              alt="SIAKAD Logo" 
              class="brand-image img-circle elevation-3" 
              style="opacity: .8">
-        @if($isAcademicRole)
-            <span class="brand-text font-weight-light"><strong>SI</strong>AKAD <small class="text-white-50">Akademik</small></span>
-        @else
-            <span class="brand-text font-weight-light"><strong>SI</strong>AKAD</span>
-        @endif
+        <span class="brand-text font-weight-light"><strong>SI</strong>AKAD</span>
     </a>
 
     {{-- Sidebar --}}
@@ -308,23 +311,34 @@
                     </li>
                     @endif
 
-                    {{-- PENILAIAN & PRESENSI --}}
-                    @if(Auth::check() && (Auth::user()->hasRole(['SUPER_ADMIN', 'GURU'])))
-                    <li class="nav-header">PENILAIAN & PRESENSI</li>
-                    
-                    <li class="nav-item">
-                        <a href="{{ route('penilaiandanpresensi.penilaianakademik.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-file-invoice"></i>
-                            <p>Penilaian Akademik</p>
-                        </a>
-                    </li>
+                {{-- 
+                |--------------------------------------------------------------------------
+                | PENILAIAN & PRESENSI (SUPER_ADMIN, GURU)
+                |--------------------------------------------------------------------------
+                --}}
+                @if(Auth::check() && (Auth::user()->hasRole(['SUPER_ADMIN', 'GURU'])))
+                <li class="nav-header">PENILAIAN & PRESENSI</li>
+                
+                <li class="nav-item">
+                    <a href="{{ route('penilaiandanpresensi.penilaianakademik.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-graduation-cap"></i>
+                        <p>Penilaian Akademik</p>
+                    </a>
+                </li>
 
-                    <li class="nav-item">
-                        <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaiantahfidz*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-book-open"></i>
-                            <p>Penilaian Tahfidz</p>
-                        </a>
-                    </li>
+                <li class="nav-item">
+                    <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaiantahfidz*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-quran"></i>
+                        <p>Penilaian Tahfidz</p>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ route('penilaiandanpresensi.penilaianakademik.raport.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik/raport*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-print"></i>
+                        <p>Cetak Raport</p>
+                    </a>
+                </li>
 
                     <li class="nav-item">
                         <a href="{{ route('penilaiandanpresensi.presensi.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/presensi') ? 'active' : (request()->is('penilaiandanpresensi/presensi/*') && !request()->is('penilaiandanpresensi/presensi/siswa*') ? 'active' : '') }}">

@@ -29,17 +29,17 @@
                             <!-- Guru Section -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="id_guru" class="font-weight-bold text-dark">Guru Pengampu <span class="text-danger">*</span></label>
-                                    <select name="id_guru" id="id_guru" class="form-control select2" required {{ $isGuru ? 'readonly' : '' }}>
+                                    <label for="guru_id" class="font-weight-bold text-dark">Guru Pengampu <span class="text-danger">*</span></label>
+                                    <select name="guru_id" id="guru_id" class="form-control select2" required {{ $isGuru ? 'readonly' : '' }}>
                                         <option value="">-- Pilih Guru --</option>
                                         @foreach($gurus as $guru)
-                                            <option value="{{ $guru->id }}" {{ ($isGuru && $loggedGuruId == $guru->id) || old('id_guru') == $guru->id ? 'selected' : '' }}>
+                                            <option value="{{ $guru->id }}" {{ ($isGuru && $loggedGuruId == $guru->id) || old('guru_id') == $guru->id ? 'selected' : '' }}>
                                                 {{ $guru->nama }}
                                             </option>
                                         @endforeach
                                     </select>
                                     @if($isGuru)
-                                        <input type="hidden" name="id_guru" value="{{ $loggedGuruId }}">
+                                        <input type="hidden" name="guru_id" value="{{ $loggedGuruId }}">
                                     @endif
                                 </div>
                             </div>
@@ -63,11 +63,11 @@
                             <!-- Kelas Section -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="id_kelas" class="font-weight-bold text-dark">Pilih Kelas <span class="text-danger">*</span></label>
-                                    <select name="id_kelas" id="id_kelas" class="form-control" required>
+                                    <label for="kelas_id" class="font-weight-bold text-dark">Pilih Kelas <span class="text-danger">*</span></label>
+                                    <select name="kelas_id" id="kelas_id" class="form-control" required>
                                         <option value="">-- Pilih Kelas --</option>
                                         @foreach($kelas as $k)
-                                            <option value="{{ $k->id }}" {{ old('id_kelas') == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
+                                            <option value="{{ $k->id }}" {{ old('kelas_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -76,8 +76,8 @@
                             <!-- Siswa Section -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="id_siswa" class="font-weight-bold text-dark">Nama Santri <span class="text-danger">*</span></label>
-                                    <select name="id_siswa" id="id_siswa" class="form-control" required>
+                                    <label for="siswa_id" class="font-weight-bold text-dark">Nama Santri <span class="text-danger">*</span></label>
+                                    <select name="siswa_id" id="siswa_id" class="form-control" required>
                                         <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
                                     </select>
                                 </div>
@@ -217,11 +217,11 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     const siswasData = @json($siswas);
-    const oldIdSiswa = "{{ old('id_siswa') }}";
+    const oldIdSiswa = "{{ old('siswa_id') }}";
 
     function updateSiswaOptions() {
-        const kelasId = document.getElementById('id_kelas').value;
-        const siswaSelect = document.getElementById('id_siswa');
+        const kelasId = document.getElementById('kelas_id').value;
+        const siswaSelect = document.getElementById('siswa_id');
         
         siswaSelect.innerHTML = '<option value="">-- Pilih Santri --</option>';
         
@@ -353,9 +353,9 @@
             }
         });
 
-        document.getElementById('id_kelas').addEventListener('change', updateSiswaOptions);
+        document.getElementById('kelas_id').addEventListener('change', updateSiswaOptions);
         
-        if (document.getElementById('id_kelas').value) {
+        if (document.getElementById('kelas_id').value) {
             updateSiswaOptions();
         }
 

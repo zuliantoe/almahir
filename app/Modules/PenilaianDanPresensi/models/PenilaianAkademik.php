@@ -16,10 +16,13 @@ class PenilaianAkademik extends Model
     protected $table = 'penilaian';
 
     protected $fillable = [
-        'id_siswa',
-        'id_guru',
-        'id_mapel',
-        'id_tahun_ajaran',
+        'siswa_id',
+        'guru_id',
+        'mapel_id',
+        'tahunajaran_id',
+        'jenis_nilai',
+        'semester',
+        'author_id',
         'nilai',
         'kkm',
     ];
@@ -32,21 +35,26 @@ class PenilaianAkademik extends Model
     // Relationships
     public function siswa()
     {
-        return $this->belongsTo(Siswa::class, 'id_siswa');
+        return $this->belongsTo(Siswa::class, 'siswa_id');
     }
 
     public function guru()
     {
-        return $this->belongsTo(Guru::class, 'id_guru');
+        return $this->belongsTo(Guru::class, 'guru_id');
     }
 
     public function mataPelajaran()
     {
-        return $this->belongsTo(MataPelajaran::class, 'id_mapel');
+        return $this->belongsTo(MataPelajaran::class, 'mapel_id');
     }
 
     public function tahunAjaran()
     {
-        return $this->belongsTo(TahunAjaran::class, 'id_tahun_ajaran');
+        return $this->belongsTo(TahunAjaran::class, 'tahunajaran_id');
+    }
+
+    public function author()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'author_id');
     }
 }

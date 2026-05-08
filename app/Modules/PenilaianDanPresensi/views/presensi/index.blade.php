@@ -40,10 +40,21 @@
             <div class="card border-0 shadow-sm text-center h-100" style="border-radius: 15px; background: #fff;">
                 <div class="card-body p-3">
                     <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: rgba(40, 167, 69, 0.1);">
-                        <i class="fas fa-check text-success"></i>
+                        <i class="fas fa-check-circle text-success"></i>
                     </div>
                     <h3 class="font-weight-bold text-dark mb-0">{{ $stats['Hadir'] }}</h3>
                     <p class="text-muted small mb-0">Hadir</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <div class="card border-0 shadow-sm text-center h-100" style="border-radius: 15px; background: #fff;">
+                <div class="card-body p-3">
+                    <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: rgba(255, 152, 0, 0.1);">
+                        <i class="fas fa-user-clock text-warning"></i>
+                    </div>
+                    <h3 class="font-weight-bold text-dark mb-0">{{ $stats['Telat'] }}</h3>
+                    <p class="text-muted small mb-0">Telat</p>
                 </div>
             </div>
         </div>
@@ -80,14 +91,13 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4 col-12 mb-3">
+        <div class="col-md-2 col-12 mb-3">
             <div class="card border-0 shadow-sm text-center h-100" style="border-radius: 15px; background: linear-gradient(135deg, #1e1e2d 0%, #33334d 100%);">
                 <div class="card-body p-3 text-white d-flex align-items-center justify-content-center">
-                    <div class="text-left mr-4">
-                        <p class="mb-0 opacity-75 small">Total Data</p>
+                    <div class="text-center">
+                        <p class="mb-0 opacity-75 small">Total</p>
                         <h2 class="font-weight-bold mb-0">{{ $stats['total'] }}</h2>
                     </div>
-                    <i class="fas fa-database fa-3x opacity-20"></i>
                 </div>
             </div>
         </div>
@@ -105,16 +115,35 @@
         <div id="filterBody" class="collapse show">
             <div class="card-body pt-0">
                 <form method="GET" class="row">
-                    <div class="col-md-3 mb-2">
+                    @if(auth()->user()->ref_type !== \Modules\Siswa\Models\Siswa::class)
+                    <div class="col-md-2 mb-2">
+                        <select name="kelas_id" class="form-control select2-modern">
+                            <option value="">Semua Kelas</option>
+                            @foreach($kelasList as $kelas)
+                                <option value="{{ $kelas->id }}" {{ request('kelas_id') == $kelas->id ? 'selected' : '' }}>{{ $kelas->nama_kelas }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <select name="mapel_id" class="form-control select2-modern">
+                            <option value="">Semua Mapel</option>
+                            @foreach($mapels as $mapel)
+                                <option value="{{ $mapel->id }}" {{ request('mapel_id') == $mapel->id ? 'selected' : '' }}>{{ $mapel->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
+                    <div class="col-md-2 mb-2">
                         <select name="status" class="form-control select2-modern">
                             <option value="">Semua Status</option>
                             <option value="Hadir" {{ request('status') == 'Hadir' ? 'selected' : '' }}>Hadir</option>
+                            <option value="Telat" {{ request('status') == 'Telat' ? 'selected' : '' }}>Telat</option>
                             <option value="Izin" {{ request('status') == 'Izin' ? 'selected' : '' }}>Izin</option>
                             <option value="Sakit" {{ request('status') == 'Sakit' ? 'selected' : '' }}>Sakit</option>
                             <option value="Alpha" {{ request('status') == 'Alpha' ? 'selected' : '' }}>Alpha</option>
                         </select>
                     </div>
-                    <div class="col-md-3 mb-2">
+                    <div class="col-md-2 mb-2">
                         <select name="kategori" class="form-control select2-modern">
                             <option value="">Semua Kategori</option>
                             <option value="Sekolah" {{ request('kategori') == 'Sekolah' ? 'selected' : '' }}>Sekolah</option>
@@ -122,12 +151,12 @@
                             <option value="Ekstrakurikuler" {{ request('kategori') == 'Ekstrakurikuler' ? 'selected' : '' }}>Ekstrakurikuler</option>
                         </select>
                     </div>
-                    <div class="col-md-3 mb-2">
+                    <div class="col-md-2 mb-2">
                         <input type="date" name="tanggal" class="form-control" value="{{ request('tanggal', date('Y-m-d')) }}" placeholder="Tanggal">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <button type="submit" class="btn btn-primary btn-block">
-                            <i class="fas fa-search mr-1"></i> Terapkan Filter
+                            <i class="fas fa-search mr-1"></i> Cari
                         </button>
                     </div>
                 </form>
@@ -154,12 +183,19 @@
                         <tr>
                             <td class="px-4">
                                 <div class="font-weight-bold text-dark">{{ $item->siswa->nama ?? '-' }}</div>
-                                 <span class="badge badge-outline-primary text-primary border-primary" style="font-size: 0.7rem; border: 1px solid;">
-                                    {{ $item->siswa->kelas->nama_kelas ?? '-' }}
+                                @php
+                                    $badgeClass = 'badge-success';
+                                    if($item->status == 'Telat') $badgeClass = 'badge-warning';
+                                    if($item->status == 'Izin') $badgeClass = 'badge-info';
+                                    if($item->status == 'Sakit') $badgeClass = 'badge-primary';
+                                    if($item->status == 'Alpha') $badgeClass = 'badge-danger';
+                                @endphp
+                                <span class="badge {{ $badgeClass }} px-3 py-2" style="border-radius: 8px;">
+                                    {{ $item->status }}
                                 </span>
                             </td>
                             <td>
-                                <div class="text-dark font-weight-500">{{ $mapels->get($item->id_mapel)->nama ?? '-' }}</div>
+                                <div class="text-dark font-weight-500">{{ $mapels->get($item->mapel_id)->nama ?? '-' }}</div>
                                 <small class="text-muted">{{ $item->guru->nama ?? '-' }}</small>
                             </td>
                             <td>
@@ -198,7 +234,7 @@
         <div class="card-footer bg-white py-3 border-0">
             <div class="d-flex justify-content-between align-items-center">
                 <span class="text-muted small">Menampilkan <strong>{{ $presensis->count() }}</strong> data</span>
-                {{ $presensis->links() }}
+                {{ $presensis->appends(request()->all())->links() }}
             </div>
         </div>
     </div>

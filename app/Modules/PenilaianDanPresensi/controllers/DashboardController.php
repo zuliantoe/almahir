@@ -21,43 +21,112 @@ class DashboardController extends Controller
      */
     public function index(): View
     {
-        // Get counts for each module
-        $penilaianAkademikCount = PenilaianAkademik::count();
-        $penilaianTahfidzCount = PenilaianTahfidz::count();
-        $presensiCount = Presensi::count();
-        $izinSakitCount = IzinSakit::count();
+        $user = auth()->user();
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        $today = today();
 
-        // Get recent data for each module (latest 5)
-        $recentPenilaianAkademik = PenilaianAkademik::with(['siswa', 'guru'])->latest()->take(5)->get();
-        $recentPenilaianTahfidz = PenilaianTahfidz::with(['siswa'])->latest()->take(5)->get();
-        $recentPresensi = Presensi::with(['siswa', 'guru'])->latest()->take(5)->get();
-        $recentIzinSakit = IzinSakit::with(['siswa'])->latest()->take(5)->get();
+        // Data for SISWA
+        if ($user->hasRole('SISWA')) {
+            $siswa = $user->ref;
+            
+            // Presensi Stats for this student
+            $presensiSiswa = Presensi::where('siswa_id', $siswa?->id)
+                ->whereMonth('created_at', now()->month)
+                ->get();
+            
+            $statsPresensi = [
+                'hadir' => $presensiSiswa->where('status', 'Hadir')->count(),
+                'izin' => $presensiSiswa->where('status', 'Izin')->count(),
+                'sakit' => $presensiSiswa->where('status', 'Sakit')->count(),
+                'alpha' => $presensiSiswa->where('status', 'Alpha')->count(),
+            ];
 
-        // Get today's presensi statistics
+            // Recent scores
+            $penilaianAkademik = PenilaianAkademik::with(['mataPelajaran'])
+                ->where('siswa_id', $siswa?->id)
+                ->latest()
+                ->take(5)
+                ->get();
+            
+            $penilaianTahfidz = PenilaianTahfidz::where('siswa_id', $siswa?->id)
+                ->latest()
+                ->take(5)
+                ->get();
+
+            return view('penilaiandanpresensi::dashboard.index', [
+                'title' => 'Dashboard Santri',
+                'activeTA' => $activeTA,
+                'statsPresensi' => $statsPresensi,
+                'penilaianAkademik' => $penilaianAkademik,
+                'penilaianTahfidz' => $penilaianTahfidz,
+                'isSiswa' => true,
+            ]);
+        }
+
+        // Data for GURU
+        if ($user->hasRole('GURU')) {
+            $guru = $user->ref;
+            
+            // Stats for Guru's classes
+            $todayPresensi = Presensi::where('guru_id', $guru?->id)
+                ->whereDate('created_at', $today)
+                ->get();
+            
+            $statsPresensi = [
+                'hadir' => $todayPresensi->where('status', 'Hadir')->count(),
+                'izin' => $todayPresensi->where('status', 'Izin')->count(),
+                'sakit' => $todayPresensi->where('status', 'Sakit')->count(),
+                'alpha' => $todayPresensi->where('status', 'Alpha')->count(),
+            ];
+
+            $pendingIzin = IzinSakit::with(['siswa', 'rombel'])
+                ->where('status', 'Pending')
+                ->latest()
+                ->take(5)
+                ->get();
+
+            $recentPenilaianAkademik = PenilaianAkademik::with(['siswa', 'mataPelajaran'])
+                ->where('guru_id', $guru?->id)
+                ->latest()
+                ->take(5)
+                ->get();
+
+            return view('penilaiandanpresensi::dashboard.index', [
+                'title' => 'Dashboard Penilaian & Presensi',
+                'activeTA' => $activeTA,
+                'statsPresensi' => $statsPresensi,
+                'pendingIzin' => $pendingIzin,
+                'penilaianAkademik' => $recentPenilaianAkademik,
+                'penilaianTahfidz' => collect(),
+                'isGuru' => true,
+            ]);
+        }
+
         $todayPresensi = Presensi::whereDate('created_at', today())->get();
-        $todayHadir = $todayPresensi->where('status', 'Hadir')->count();
-        $todayIzin = $todayPresensi->where('status', 'Izin')->count();
-        $todaySakit = $todayPresensi->where('status', 'Sakit')->count();
-        $todayAlpha = $todayPresensi->where('status', 'Alpha')->count();
+        $statsPresensi = [
+            'hadir' => $todayPresensi->where('status', 'Hadir')->count(),
+            'izin' => $todayPresensi->where('status', 'Izin')->count(),
+            'sakit' => $todayPresensi->where('status', 'Sakit')->count(),
+            'alpha' => $todayPresensi->where('status', 'Alpha')->count(),
+        ];
 
-        // Get pending izin/sakit requests
-        $pendingIzinSakit = IzinSakit::where('status', 'pending')->count();
+        $pendingIzin = IzinSakit::with(['siswa', 'rombel'])
+            ->where('status', 'Pending')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $recentPenilaianAkademik = PenilaianAkademik::with(['siswa', 'mataPelajaran'])->latest()->take(5)->get();
+        $recentPenilaianTahfidz = PenilaianTahfidz::with(['siswa'])->latest()->take(5)->get();
 
         return view('penilaiandanpresensi::dashboard.index', [
-            'title' => 'Dashboard Penilaian dan Presensi',
-            'penilaianAkademikCount' => $penilaianAkademikCount,
-            'penilaianTahfidzCount' => $penilaianTahfidzCount,
-            'presensiCount' => $presensiCount,
-            'izinSakitCount' => $izinSakitCount,
-            'recentPenilaianAkademik' => $recentPenilaianAkademik,
-            'recentPenilaianTahfidz' => $recentPenilaianTahfidz,
-            'recentPresensi' => $recentPresensi,
-            'recentIzinSakit' => $recentIzinSakit,
-            'todayHadir' => $todayHadir,
-            'todayIzin' => $todayIzin,
-            'todaySakit' => $todaySakit,
-            'todayAlpha' => $todayAlpha,
-            'pendingIzinSakit' => $pendingIzinSakit,
+                'title' => 'Dashboard Penilaian & Presensi',
+            'activeTA' => $activeTA,
+            'statsPresensi' => $statsPresensi,
+            'pendingIzin' => $pendingIzin,
+            'penilaianAkademik' => $recentPenilaianAkademik,
+            'penilaianTahfidz' => $recentPenilaianTahfidz,
+            'isAdmin' => true,
         ]);
     }
 
@@ -71,7 +140,7 @@ class DashboardController extends Controller
         $stats = [
             'total' => PenilaianAkademik::count(),
             'average' => PenilaianAkademik::avg('nilai') ?? 0,
-            'students' => PenilaianAkademik::distinct('id_siswa')->count(),
+            'students' => PenilaianAkademik::distinct('siswa_id')->count(),
             'this_month' => PenilaianAkademik::whereMonth('created_at', now()->month)->count(),
         ];
 
@@ -98,15 +167,15 @@ class DashboardController extends Controller
         
         $stats = [
             'total' => PenilaianTahfidz::count(),
-            'surat_count' => PenilaianTahfidz::distinct('surat')->count(),
-            'students' => PenilaianTahfidz::distinct('id_siswa')->count(),
+            'surat_count' => PenilaianTahfidz::distinct('surat_awal')->count(),
+            'students' => PenilaianTahfidz::distinct('siswa_id')->count(),
             'this_month' => PenilaianTahfidz::whereMonth('created_at', now()->month)->count(),
         ];
 
         // Top hafizan (students with most hafalans)
-        $topHafizan = PenilaianTahfidz::selectRaw('id_siswa, COUNT(*) as total')
+        $topHafizan = PenilaianTahfidz::selectRaw('siswa_id, COUNT(*) as total')
             ->with('siswa')
-            ->groupBy('id_siswa')
+            ->groupBy('siswa_id')
             ->orderByDesc('total')
             ->take(5)
             ->get()

@@ -17,6 +17,14 @@
                     </div>
                     @if(auth()->user()->ref_type !== \Modules\Siswa\Models\Siswa::class)
                     <div class="ml-auto text-right">
+                        <div class="btn-group mr-2">
+                            <button class="btn btn-light shadow-sm text-primary dropdown-toggle font-weight-bold" style="border-radius: 50px;" data-toggle="dropdown">
+                                <i class="fas fa-file-export mr-1"></i> EXPORT RAPORT
+                            </button>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="{{ route('penilaiandanpresensi.penilaianakademik.export-excel', request()->all()) }}"><i class="fas fa-file-excel mr-2 text-success"></i> Excel (.xls)</a>
+                            </div>
+                        </div>
                         <a href="{{ route('penilaiandanpresensi.penilaianakademik.create') }}" class="btn btn-light px-4 font-weight-bold shadow-sm" style="border-radius: 50px; color: #28a745;">
                             <i class="fas fa-plus-circle mr-2"></i> TAMBAH NILAI
                         </a>
@@ -39,27 +47,47 @@
         <div id="filterBody" class="collapse show">
             <div class="card-body pt-0">
                 <form method="GET" class="row">
-                    <div class="col-md-5 mb-2">
-                        <label class="small font-weight-bold text-muted">MATA PELAJARAN</label>
-                        <select name="id_mapel" class="form-control select2-modern">
-                            <option value="">Semua Mata Pelajaran</option>
-                            @foreach($allMapels as $mapel)
-                                <option value="{{ $mapel->id }}" {{ request('id_mapel') == $mapel->id ? 'selected' : '' }}>{{ $mapel->nama }}</option>
+                    @if(auth()->user()->ref_type !== \Modules\Siswa\Models\Siswa::class)
+                    <div class="col-md-2 mb-2">
+                        <label class="small font-weight-bold text-muted">KELAS</label>
+                        <select name="kelas_id" class="form-control select2-modern">
+                            <option value="">Semua Kelas</option>
+                            @foreach($kelasList as $kelas)
+                                <option value="{{ $kelas->id }}" {{ request('kelas_id') == $kelas->id ? 'selected' : '' }}>{{ $kelas->nama_kelas }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4 mb-2">
+                    @endif
+                    <div class="col-md-3 mb-2">
+                        <label class="small font-weight-bold text-muted">MATA PELAJARAN</label>
+                        <select name="mapel_id" class="form-control select2-modern">
+                            <option value="">Semua Mapel</option>
+                            @foreach($allMapels as $mapel)
+                                <option value="{{ $mapel->id }}" {{ request('mapel_id') == $mapel->id ? 'selected' : '' }}>{{ $mapel->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <label class="small font-weight-bold text-muted">JENIS NILAI</label>
+                        <select name="jenis_nilai" class="form-control select2-modern">
+                            <option value="">Semua Jenis</option>
+                            <option value="Harian" {{ request('jenis_nilai') == 'Harian' ? 'selected' : '' }}>Harian</option>
+                            <option value="UTS" {{ request('jenis_nilai') == 'UTS' ? 'selected' : '' }}>UTS</option>
+                            <option value="UAS" {{ request('jenis_nilai') == 'UAS' ? 'selected' : '' }}>UAS</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
                         <label class="small font-weight-bold text-muted">TAHUN AJARAN</label>
-                        <select name="id_tahun_ajaran" class="form-control select2-modern">
+                        <select name="tahunajaran_id" class="form-control select2-modern">
                             <option value="">Semua Tahun Ajaran</option>
                             @foreach($tahunAjarans as $ta)
-                                <option value="{{ $ta->id }}" {{ (request('id_tahun_ajaran') == $ta->id || (!request()->has('id_tahun_ajaran') && $ta->status)) ? 'selected' : '' }}>{{ $ta->tahunajaran }}</option>
+                                <option value="{{ $ta->id }}" {{ request('tahunajaran_id') == $ta->id ? 'selected' : '' }}>{{ $ta->tahunajaran }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-3 mt-auto mb-2">
+                    <div class="col-md-2 mt-auto mb-2">
                         <button type="submit" class="btn btn-success btn-block font-weight-bold">
-                            <i class="fas fa-search mr-1"></i> Terapkan
+                            <i class="fas fa-search mr-1"></i> Cari
                         </button>
                     </div>
                 </form>
@@ -75,9 +103,9 @@
                         <tr>
                             <th class="border-0 px-4">Santri</th>
                             <th class="border-0">Mata Pelajaran</th>
-                            <th class="border-0">Tahun Ajaran</th>
-                            <th class="border-0">KKM</th>
-                            <th class="border-0">Nilai</th>
+                            <th class="border-0 text-center">Jenis</th>
+                            <th class="border-0 text-center">KKM</th>
+                            <th class="border-0 text-center">Nilai</th>
                             <th class="border-0 text-center px-4">Aksi</th>
                         </tr>
                     </thead>
@@ -90,11 +118,18 @@
                             </td>
                             <td>
                                 <div class="text-dark font-weight-500">{{ $item->mataPelajaran->nama ?? '-' }}</div>
-                                <small class="text-muted">Oleh: {{ $item->guru->nama ?? '-' }}</small>
+                                <small class="text-muted">{{ $item->tahunAjaran->tahunajaran ?? '-' }}</small>
                             </td>
-                            <td><span class="badge badge-light px-2 py-1 text-muted">{{ $item->tahunAjaran->tahunajaran ?? '-' }}</span></td>
-                            <td><span class="font-weight-bold text-muted">{{ $item->kkm ?? '-' }}</span></td>
-                            <td>
+                            <td class="text-center align-middle">
+                                @php
+                                    $badgeColor = 'badge-info';
+                                    if($item->jenis_nilai == 'UTS') $badgeColor = 'badge-warning';
+                                    if($item->jenis_nilai == 'UAS') $badgeColor = 'badge-danger';
+                                @endphp
+                                <span class="badge {{ $badgeColor }} px-3 py-2" style="border-radius: 8px;">{{ $item->jenis_nilai ?? 'Harian' }}</span>
+                            </td>
+                            <td class="text-center"><span class="font-weight-bold text-muted">{{ $item->kkm ?? '-' }}</span></td>
+                            <td class="text-center">
                                 <div class="h5 mb-0 font-weight-bold {{ $item->nilai >= ($item->kkm ?? 75) ? 'text-success' : 'text-danger' }}">
                                     {{ $item->nilai }}
                                 </div>
@@ -133,6 +168,11 @@
                     </tbody>
                 </table>
             </div>
+            @if($penilaianAkademiks->hasPages())
+            <div class="px-4 py-3 bg-light border-top d-flex justify-content-start">
+                {{ $penilaianAkademiks->appends(request()->all())->links() }}
+            </div>
+            @endif
         </div>
     </div>
 </div>

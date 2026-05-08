@@ -15,14 +15,17 @@ class PenilaianTahfidz extends Model
     protected $table = 'penilaian_tahfidz';
 
     protected $fillable = [
-        'id_siswa',
-        'id_kelas',
+        'siswa_id',
+        'kelas_id',
+        'guru_id',
+        'tahunajaran_id',
+        'semester',
+        'author_id',
         'tanggal',
         'surat_awal',
         'surat_akhir',
         'ayat_awal',
         'ayat_akhir',
-        'id_guru',
         'nilai',
         'status_capaian',
     ];
@@ -37,16 +40,32 @@ class PenilaianTahfidz extends Model
     // Relationships
     public function siswa()
     {
-        return $this->belongsTo(Siswa::class, 'id_siswa');
+        return $this->belongsTo(Siswa::class, 'siswa_id');
     }
 
+    public function rombel()
+    {
+        return $this->belongsTo(AkademikKelas::class, 'kelas_id');
+    }
+
+    // Alias for backward compatibility
     public function kelas()
     {
-        return $this->belongsTo(AkademikKelas::class, 'id_kelas');
+        return $this->rombel();
     }
 
     public function guru()
     {
-        return $this->belongsTo(Guru::class, 'id_guru');
+        return $this->belongsTo(Guru::class, 'guru_id');
+    }
+
+    public function tahunAjaran()
+    {
+        return $this->belongsTo(\App\Modules\Akademik\Models\TahunAjaran::class, 'tahunajaran_id');
+    }
+
+    public function author()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'author_id');
     }
 }

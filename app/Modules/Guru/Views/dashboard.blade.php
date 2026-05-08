@@ -40,7 +40,7 @@
                         </div>
                         <h5 class="mb-0 font-weight-bold">Total Santri</h5>
                     </div>
-                    <h2 class="font-weight-bold mb-1">-</h2>
+                    <h2 class="font-weight-bold mb-1">{{ $stats['total_siswa'] }}</h2>
                     <p class="text-muted small mb-0">Terdaftar di kelas Anda</p>
                 </div>
             </div>
@@ -54,7 +54,7 @@
                         </div>
                         <h5 class="mb-0 font-weight-bold">Presensi Hari Ini</h5>
                     </div>
-                    <h2 class="font-weight-bold mb-1">-</h2>
+                    <h2 class="font-weight-bold mb-1">{{ $stats['presensi_today'] }}</h2>
                     <p class="text-muted small mb-0">Sudah melakukan absensi</p>
                 </div>
             </div>
@@ -68,7 +68,7 @@
                         </div>
                         <h5 class="mb-0 font-weight-bold">Rata-rata Nilai</h5>
                     </div>
-                    <h2 class="font-weight-bold mb-1">-</h2>
+                    <h2 class="font-weight-bold mb-1">{{ number_format($stats['avg_nilai'], 1) }}</h2>
                     <p class="text-muted small mb-0">Pencapaian akademik santri</p>
                 </div>
             </div>

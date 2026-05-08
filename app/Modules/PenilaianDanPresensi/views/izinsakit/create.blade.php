@@ -9,21 +9,21 @@
             @csrf
 
             <div class="form-group">
-                <label for="id_siswa">Siswa <span class="text-danger">*</span></label>
-                <select name="id_siswa" id="id_siswa" class="form-control" required>
+                <label for="siswa_id">Siswa <span class="text-danger">*</span></label>
+                <select name="siswa_id" id="siswa_id" class="form-control" required>
                     <option value="">-- Pilih Siswa --</option>
                     @foreach($siswas as $siswa)
-                        <option value="{{ $siswa->id }}" {{ old('id_siswa') == $siswa->id ? 'selected' : '' }}>{{ $siswa->nama }}</option>
+                        <option value="{{ $siswa->id }}" {{ old('siswa_id') == $siswa->id ? 'selected' : '' }}>{{ $siswa->nama }}</option>
                     @endforeach
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="id_kelas">Kelas <span class="text-danger">*</span></label>
-                <select name="id_kelas" id="id_kelas" class="form-control" required>
+                <label for="kelas_id">Kelas <span class="text-danger">*</span></label>
+                <select name="kelas_id" id="kelas_id" class="form-control" required>
                     <option value="">-- Pilih Kelas --</option>
                     @foreach($kelas as $k)
-                        <option value="{{ $k->id }}" {{ old('id_kelas') == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
+                        <option value="{{ $k->id }}" {{ old('kelas_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
                     @endforeach
                 </select>
             </div>

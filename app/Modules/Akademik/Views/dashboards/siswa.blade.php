@@ -4,15 +4,30 @@
 
 @section('content')
 <div class="container-fluid">
-    {{-- Content Header --}}
-    <div class="row mb-3">
-        <div class="col-sm-6">
-            <h1 class="m-0 text-dark">Dashboard Santri</h1>
-        </div>
-        <div class="col-sm-6 text-right">
-            <span class="badge badge-info px-3 py-2">
-                <i class="fas fa-clock mr-1"></i> {{ $today }}, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}
-            </span>
+    {{-- Welcome Card --}}
+    <div class="row mb-4">
+        <div class="col-12">
+            <x-card type="info" outline>
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <img src="{{ Auth::user()->avatar_url ?: 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&color=fff&background=17a2b8' }}" 
+                             class="img-circle elevation-1 border" 
+                             style="width: 60px; height: 60px; object-fit: cover;">
+                    </div>
+                    <div class="col">
+                        <h4 class="mb-1 font-weight-bold">أهلاً وسهلاً، {{ Auth::user()->name }}!</h4>
+                        <p class="text-muted mb-0">
+                            Status: <span class="badge badge-info">Santri / Siswa</span>
+                            @if($rombelSiswa && $rombelSiswa->rombel)
+                                &nbsp;&bull;&nbsp;
+                                Kelas: <strong>{{ $rombelSiswa->rombel->nama_rombel }}</strong>
+                            @endif
+                            &nbsp;&bull;&nbsp;
+                            Semangat belajarnya hari ini ya!
+                        </p>
+                    </div>
+                </div>
+            </x-card>
         </div>
     </div>
 

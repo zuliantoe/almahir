@@ -16,14 +16,17 @@ class IzinSakit extends Model
     protected $table = 'izin_sakit';
 
     protected $fillable = [
-        'id_siswa',
-        'id_kelas',
-        'jenis',
-        'tipe_izin',
-        'id_mapel',
-        'id_jadwal_pelajaran',
+        'siswa_id',
+        'kelas_id',
+        'mapel_id',
+        'jadwal_pelajaran_id',
+        'tahunajaran_id',
+        'semester',
+        'author_id',
         'tgl_mulai',
         'tgl_selesai',
+        'jenis',
+        'tipe_izin',
         'keterangan',
         'bukti_foto',
         'status',
@@ -40,22 +43,38 @@ class IzinSakit extends Model
     // Relationships
     public function siswa()
     {
-        return $this->belongsTo(Siswa::class, 'id_siswa');
+        return $this->belongsTo(Siswa::class, 'siswa_id');
     }
 
+    public function rombel()
+    {
+        return $this->belongsTo(AkademikKelas::class, 'kelas_id');
+    }
+
+    // Alias for backward compatibility
     public function kelas()
     {
-        return $this->belongsTo(AkademikKelas::class, 'id_kelas');
+        return $this->rombel();
     }
 
     public function mataPelajaran()
     {
-        return $this->belongsTo(MataPelajaran::class, 'id_mapel');
+        return $this->belongsTo(MataPelajaran::class, 'mapel_id');
     }
 
     public function jadwalPelajaran()
     {
-        return $this->belongsTo(JadwalPelajaran::class, 'id_jadwal_pelajaran');
+        return $this->belongsTo(JadwalPelajaran::class, 'jadwal_pelajaran_id');
+    }
+
+    public function tahunAjaran()
+    {
+        return $this->belongsTo(\App\Modules\Akademik\Models\TahunAjaran::class, 'tahunajaran_id');
+    }
+
+    public function author()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'author_id');
     }
 
     public function konfirmasiOleh()

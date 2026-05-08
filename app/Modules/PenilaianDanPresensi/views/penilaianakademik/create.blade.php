@@ -30,32 +30,43 @@
                             <!-- Guru Section -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="id_guru" class="font-weight-bold text-dark">Guru Pengampu <span class="text-danger">*</span></label>
-                                    <select name="id_guru" id="id_guru" class="form-control" required {{ $isGuru ? 'readonly' : '' }}>
+                                    <label for="guru_id" class="font-weight-bold text-dark">Guru Pengampu <span class="text-danger">*</span></label>
+                                    <select name="guru_id" id="guru_id" class="form-control" required {{ $isGuru ? 'readonly' : '' }}>
                                         <option value="">-- Pilih Guru --</option>
                                         @foreach($gurus as $guru)
-                                            <option value="{{ $guru->id }}" {{ ($isGuru && $loggedGuruId == $guru->id) || old('id_guru') == $guru->id ? 'selected' : '' }}>
+                                            <option value="{{ $guru->id }}" {{ ($isGuru && $loggedGuruId == $guru->id) || old('guru_id') == $guru->id ? 'selected' : '' }}>
                                                 {{ $guru->nama }}
                                             </option>
                                         @endforeach
                                     </select>
                                     @if($isGuru)
-                                        <input type="hidden" name="id_guru" value="{{ $loggedGuruId }}">
+                                        <input type="hidden" name="guru_id" value="{{ $loggedGuruId }}">
                                     @endif
                                 </div>
                             </div>
 
                             <!-- Tahun Ajaran Section (Badge Style) -->
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label class="font-weight-bold text-dark">Tahun Ajaran <span class="text-danger">*</span></label>
                                     <div class="form-control bg-white d-flex align-items-center justify-content-between" style="border-radius: 0.5rem; height: calc(2.25rem + 2px); border: 2px solid var(--success-color);">
-                                        <span class="font-weight-bold text-success">
-                                            <i class="fas fa-calendar-check mr-2"></i> {{ $activeTahunAjaran->tahunajaran ?? 'Pilih TA Aktif' }}
+                                        <span class="font-weight-bold text-success small">
+                                            <i class="fas fa-calendar-check mr-1"></i> {{ $activeTahunAjaran->tahunajaran ?? 'Pilih TA Aktif' }}
                                         </span>
-                                        <span class="badge badge-success">Aktif</span>
                                     </div>
-                                    <input type="hidden" name="id_tahun_ajaran" id="id_tahun_ajaran" value="{{ $activeTahunAjaran->id ?? '' }}">
+                                    <input type="hidden" name="tahunajaran_id" id="tahunajaran_id" value="{{ $activeTahunAjaran->id ?? '' }}">
+                                </div>
+                            </div>
+
+                            <!-- Jenis Nilai Section -->
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="jenis_nilai" class="font-weight-bold text-dark">Jenis Nilai <span class="text-danger">*</span></label>
+                                    <select name="jenis_nilai" id="jenis_nilai" class="form-control" required>
+                                        <option value="Harian" {{ old('jenis_nilai') == 'Harian' ? 'selected' : '' }}>Harian</option>
+                                        <option value="UTS" {{ old('jenis_nilai') == 'UTS' ? 'selected' : '' }}>UTS</option>
+                                        <option value="UAS" {{ old('jenis_nilai') == 'UAS' ? 'selected' : '' }}>UAS</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -64,11 +75,11 @@
                         <div class="row mb-4 p-3 bg-white shadow-sm mx-1" style="border-radius: 12px; border-left: 5px solid var(--success-color);">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="id_mapel" class="font-weight-bold text-dark">Mata Pelajaran <span class="text-danger">*</span></label>
-                                    <select name="id_mapel" id="id_mapel" class="form-control" required>
+                                    <label for="mapel_id" class="font-weight-bold text-dark">Mata Pelajaran <span class="text-danger">*</span></label>
+                                    <select name="mapel_id" id="mapel_id" class="form-control" required>
                                         <option value="">-- Pilih Mata Pelajaran --</option>
                                         @foreach($mapels as $mapel)
-                                            <option value="{{ $mapel->id }}" {{ old('id_mapel') == $mapel->id ? 'selected' : '' }}>
+                                            <option value="{{ $mapel->id }}" {{ old('mapel_id') == $mapel->id ? 'selected' : '' }}>
                                                 {{ $mapel->nama }}
                                             </option>
                                         @endforeach
@@ -120,6 +131,7 @@
                                         <tr>
                                             <th class="px-4" style="width: 50px;">No</th>
                                             <th>Santri</th>
+                                            <th class="text-center" style="width: 150px;">Riwayat</th>
                                             <th class="text-center" style="width: 280px;">
                                                 Nilai Akademik (0-100)
                                                 <button type="button" id="btn-set-all-nilai" class="btn btn-xs btn-outline-success ml-2" style="font-size: 0.7rem;">
@@ -184,7 +196,12 @@
                         <td>
                             <div class="font-weight-bold text-dark">${siswa.nama}</div>
                             <small class="text-muted">NIS: ${siswa.nis || '-'}</small>
-                            <input type="hidden" name="penilaian[${index}][id_siswa]" value="${siswa.id}">
+                            <input type="hidden" name="penilaian[${index}][siswa_id]" value="${siswa.id}">
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-info btn-history" data-siswa-id="${siswa.id}" data-siswa-nama="${siswa.nama}">
+                                <i class="fas fa-history"></i> Lihat
+                            </button>
                         </td>
                         <td class="text-center px-4">
                             <input type="number" name="penilaian[${index}][nilai]" class="form-control text-center font-weight-bold input-nilai-akademik" 
@@ -204,7 +221,7 @@
     }
 
     function setKKM() {
-        const mapelId = document.getElementById('id_mapel').value;
+        const mapelId = document.getElementById('mapel_id').value;
         if (!mapelId) return;
 
         const selectedMapel = allMapelsData.find(m => m.id == mapelId);
@@ -232,7 +249,7 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('kelas_id').addEventListener('change', populateSiswaTable);
-        document.getElementById('id_mapel').addEventListener('change', setKKM);
+        document.getElementById('mapel_id').addEventListener('change', setKKM);
         
         // Search Filter Logic
         $(document).on('keyup', '#searchSiswa', function() {
@@ -289,12 +306,86 @@
             });
         });
 
-        if (document.getElementById('kelas_id').value) {
-            populateSiswaTable();
-        }
-        if (document.getElementById('id_mapel').value) {
+        if (document.getElementById('mapel_id').value) {
             setKKM();
         }
+
+        // Handle History Click
+        $(document).on('click', '.btn-history', function() {
+            const siswaId = $(this).data('siswa-id');
+            const siswaNama = $(this).data('siswa-nama');
+            const mapelId = $('#mapel_id').val();
+
+            if (!mapelId) {
+                Swal.fire('Opps!', 'Pilih Mata Pelajaran terlebih dahulu.', 'warning');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Memuat Riwayat...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            $.ajax({
+                url: "{{ route('penilaiandanpresensi.penilaianakademik.history') }}",
+                method: 'GET',
+                data: { siswa_id: siswaId, mapel_id: mapelId },
+                success: function(data) {
+                    Swal.close();
+                    let html = `
+                        <div class="text-left">
+                            <p class="mb-2 font-weight-bold">Santri: <span class="text-primary">${siswaNama}</span></p>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th>Tanggal</th>
+                                            <th>Jenis</th>
+                                            <th>Nilai</th>
+                                            <th>TA</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                    `;
+
+                    if (data.length > 0) {
+                        data.forEach(item => {
+                            let date = new Date(item.created_at).toLocaleDateString('id-ID');
+                            let color = item.nilai >= $('#kkm').val() ? 'text-success' : 'text-danger';
+                            html += `
+                                <tr>
+                                    <td>${date}</td>
+                                    <td>${item.jenis_nilai || '-'}</td>
+                                    <td class="font-weight-bold ${color}">${item.nilai}</td>
+                                    <td><small>${item.tahun_ajaran ? item.tahun_ajaran.tahunajaran : '-'}</small></td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        html += '<tr><td colspan="4" class="text-center py-3 text-muted">Belum ada riwayat nilai.</td></tr>';
+                    }
+
+                    html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+
+                    Swal.fire({
+                        title: '<i class="fas fa-history mr-2"></i> Riwayat Nilai Akademik',
+                        html: html,
+                        width: '600px',
+                        confirmButtonText: 'Tutup'
+                    });
+                },
+                error: function() {
+                    Swal.close();
+                    Swal.fire('Error', 'Gagal memuat data riwayat.', 'error');
+                }
+            });
+        });
     });
 </script>
 @endpush

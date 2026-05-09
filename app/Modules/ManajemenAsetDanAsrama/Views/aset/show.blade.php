@@ -30,37 +30,23 @@
                     </tr>
                     <tr>
                         <th>Nama Aset</th>
-                        <td>{{ $aset->nama_aset }}</td>
+                        <td><strong>{{ $aset->nama_aset }}</strong></td>
                     </tr>
                     <tr>
                         <th>Harga</th>
-                        <td>Rp {{ number_format($aset->harga, 0, ',', '.') }}</td>
+                        <td class="text-success font-weight-bold">{{ $aset->harga_formatted }}</td>
                     </tr>
                     <tr>
                         <th>Status Kondisi</th>
-                        <td>
-                            @if($aset->status_kondisi == 'baik')
-                                <span class="badge badge-success">Baik</span>
-                            @elseif($aset->status_kondisi == 'rusak')
-                                <span class="badge badge-danger">Rusak</span>
-                            @elseif($aset->status_kondisi == 'dalam_perbaikan')
-                                <span class="badge badge-warning">Dalam Perbaikan</span>
-                            @elseif($aset->status_kondisi == 'sudah_diperbaiki')
-                                <span class="badge badge-info">Sudah Diperbaiki</span>
-                            @endif
-                        </td>
+                        <td>{!! $aset->status_badge !!}</td>
                     </tr>
                     <tr>
-                        <th>Kondisi</th>
+                        <th>Kondisi Fisik</th>
                         <td>{{ $aset->kondisi ?? '-' }}</td>
                     </tr>
                     <tr>
                         <th>Deskripsi</th>
-                        <td>{{ $aset->deskripsi_aset ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Tanggal Pengajuan</th>
-                        <td>{{ $aset->tanggal_pengajuan ? $aset->tanggal_pengajuan->format('d/m/Y') : '-' }}</td>
+                        <td><small class="text-muted">{{ $aset->deskripsi_aset ?? '-' }}</small></td>
                     </tr>
                     <tr>
                         <th>Tanggal Pengadaan</th>
@@ -68,15 +54,19 @@
                     </tr>
                 </table>
                 <x-slot name="footer">
-                    <a href="{{ route('manajemenasetdanasrama.aset.edit', $aset->id) }}" class="btn btn-sm btn-warning">
-                        <i class="fas fa-edit mr-1"></i> Edit Aset
-                    </a>
-                    <a href="{{ route('manajemenasetdanasrama.aset.print-label') }}?id={{ $aset->id }}" target="_blank" class="btn btn-sm btn-info">
-                        <i class="fas fa-print mr-1"></i> Cetak Label (QR)
-                    </a>
-                    <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="btn btn-sm btn-secondary">
-                        <i class="fas fa-arrow-left mr-1"></i> Kembali
-                    </a>
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a href="{{ route('manajemenasetdanasrama.aset.edit', $aset->id) }}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit mr-1"></i> Edit Aset
+                            </a>
+                            <a href="{{ route('manajemenasetdanasrama.aset.print-label') }}?id={{ $aset->id }}" target="_blank" class="btn btn-sm btn-info">
+                                <i class="fas fa-print mr-1"></i> Cetak Label
+                            </a>
+                        </div>
+                        <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-arrow-left mr-1"></i> Kembali
+                        </a>
+                    </div>
                 </x-slot>
             </x-card>
         </div>
@@ -107,7 +97,7 @@
                         <td>{{ $aset->pengadaan->tanggal_datang ? $aset->pengadaan->tanggal_datang->format('d/m/Y') : '-' }}</td>
                     </tr>
                     <tr>
-                        <th>Status</th>
+                        <th>Status PO</th>
                         <td>
                             @if($aset->pengadaan->status == 'dipesan')
                                 <span class="badge badge-warning">Dipesan</span>
@@ -118,13 +108,12 @@
                             @endif
                         </td>
                     </tr>
-                    <tr>
-                        <th>Catatan</th>
-                        <td>{{ $aset->pengadaan->catatan_pengadaan ?? '-' }}</td>
-                    </tr>
                 </table>
                 @else
-                <p class="text-muted"><i class="fas fa-info-circle"></i> Tidak ada data pengadaan terkait</p>
+                <div class="text-center py-4">
+                    <i class="fas fa-info-circle fa-2x text-muted mb-2"></i>
+                    <p class="text-muted small">Aset ini ditambahkan secara manual tanpa melalui proses pengadaan sistem.</p>
+                </div>
                 @endif
             </x-card>
         </div>
@@ -132,110 +121,89 @@
 
     {{-- Riwayat Kerusakan & Pemeliharaan --}}
     <div class="row mt-3">
-        {{-- Riwayat Kerusakan --}}
         <div class="col-md-12 mb-4">
-            <x-card title="Riwayat Kerusakan" icon="fas fa-exclamation-triangle">
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered table-hover">
-                        <thead>
-                            <tr>
-                                <th width="50">No</th>
-                                <th width="120">Tanggal</th>
-                                <th>Deskripsi Kerusakan</th>
-                                <th width="150">Tingkat Kerusakan</th>
-                                <th width="150">Status Penanganan</th>
-                                <th>Catatan Tambahan</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($aset->kerusakan as $kerusakan)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $kerusakan->tanggal_kerusakan ? \Carbon\Carbon::parse($kerusakan->tanggal_kerusakan)->format('d/m/Y') : ($kerusakan->tanggal_rusak ? \Carbon\Carbon::parse($kerusakan->tanggal_rusak)->format('d/m/Y') : '-') }}</td>
-                                <td>{{ $kerusakan->deskripsi_kerusakan ?? '-' }}</td>
-                                <td>
-                                    @if($kerusakan->tingkat_kerusakan == 'ringan')
-                                        <span class="badge badge-info">Ringan</span>
-                                    @elseif($kerusakan->tingkat_kerusakan == 'sedang')
-                                        <span class="badge badge-warning">Sedang</span>
-                                    @elseif($kerusakan->tingkat_kerusakan == 'berat')
-                                        <span class="badge badge-danger">Berat</span>
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($kerusakan->status_penanganan == 'belum_ditangani')
-                                        <span class="badge badge-danger">Belum Ditangani</span>
-                                    @elseif($kerusakan->status_penanganan == 'sedang_ditangani')
-                                        <span class="badge badge-warning">Sedang Diperbaiki</span>
-                                    @elseif($kerusakan->status_penanganan == 'selesai')
-                                        <span class="badge badge-success">Selesai</span>
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                                <td>{{ $kerusakan->catatan ?? '-' }}</td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="6" class="text-center text-muted">Tidak ada riwayat kerusakan</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+            <x-card title="Riwayat Kerusakan" icon="fas fa-exclamation-triangle" class="card-outline card-danger">
+                @include('manajemenasetdanasrama::partials.table-kerusakan', [
+                    'items' => $aset->kerusakan,
+                    'showAset' => false,
+                    'actionWidth' => '100'
+                ])
             </x-card>
         </div>
 
-        {{-- Riwayat Pemeliharaan --}}
         <div class="col-md-12">
-            <x-card title="Riwayat Pemeliharaan" icon="fas fa-wrench">
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered table-hover">
-                        <thead>
-                            <tr>
-                                <th width="50">No</th>
-                                <th width="120">Tanggal Mulai</th>
-                                <th width="120">Tanggal Selesai</th>
-                                <th>Deskripsi & Catatan Awal</th>
-                                <th>Catatan Penyelesaian</th>
-                                <th width="150">Biaya</th>
-                                <th width="120">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($aset->pemeliharaan as $pelihara)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $pelihara->tanggal_pemeliharaan ? \Carbon\Carbon::parse($pelihara->tanggal_pemeliharaan)->format('d/m/Y') : ($pelihara->tanggal_mulai_pemeliharaan ? \Carbon\Carbon::parse($pelihara->tanggal_mulai_pemeliharaan)->format('d/m/Y') : '-') }}</td>
-                                <td>{{ $pelihara->tanggal_selesai_pemeliharaan ? \Carbon\Carbon::parse($pelihara->tanggal_selesai_pemeliharaan)->format('d/m/Y') : '-' }}</td>
-                                <td>
-                                    <strong>Deskripsi:</strong> {{ $pelihara->deskripsi_pemeliharaan ?? '-' }}<br>
-                                    @if($pelihara->catatan)
-                                    <small class="text-muted"><strong>Catatan:</strong> {{ $pelihara->catatan }}</small>
-                                    @endif
-                                </td>
-                                <td>{{ $pelihara->catatan_selesai ?? '-' }}</td>
-                                <td>Rp {{ number_format($pelihara->biaya ?? $pelihara->biaya_pemeliharaan ?? 0, 0, ',', '.') }}</td>
-                                <td>
-                                    @if($pelihara->status == 'proses' || is_null($pelihara->status))
-                                        <span class="badge badge-warning">Proses</span>
-                                    @elseif($pelihara->status == 'selesai')
-                                        <span class="badge badge-success">Selesai</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="7" class="text-center text-muted">Tidak ada riwayat pemeliharaan</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+            <x-card title="Riwayat Pemeliharaan" icon="fas fa-wrench" class="card-outline card-primary">
+                @include('manajemenasetdanasrama::partials.table-pemeliharaan', [
+                    'items' => $aset->pemeliharaan,
+                    'showAset' => false,
+                    'actionWidth' => '100'
+                ])
             </x-card>
         </div>
     </div>
 </div>
+
+@include('manajemenasetdanasrama::partials.modal-delete', ['id' => 'modalHapus', 'title' => 'Hapus Laporan'])
+
+{{-- MODAL SELESAI PEMELIHARAAN --}}
+<div class="modal fade" id="modalSelesai" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <form id="formSelesai" method="POST">
+                @csrf
+                <div class="modal-header bg-success text-white border-0 py-3">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-check-circle mr-2"></i> Penyelesaian Pemeliharaan</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-4">Konfirmasi bahwa pemeliharaan untuk aset <strong id="selesai_nama"></strong> telah selesai dilakukan.</p>
+                    <div class="form-group mb-3">
+                        <label class="small font-weight-bold text-muted text-uppercase">Tanggal Selesai <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="tanggal_selesai" value="{{ date('Y-m-d') }}" required>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="small font-weight-bold text-muted text-uppercase">Catatan Penyelesaian</label>
+                        <textarea class="form-control" name="catatan_selesai" rows="3" placeholder="Contoh: Sudah diganti sparepart, kondisi normal..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 py-3 px-4 justify-content-between">
+                    <button type="button" class="btn btn-link text-muted font-weight-bold" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success px-4 shadow-sm font-weight-bold" style="border-radius: 8px;">Simpan & Selesaikan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        // Modal Hapus
+        $('#modalHapus').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var id = button.data('id');
+            var nama = button.data('nama');
+            var targetUrl = button.data('url');
+
+            $(this).find('#formDelete').attr('action', targetUrl);
+            $(this).find('#delete_nama').text(nama);
+        });
+
+        // Modal Selesai
+        $('#modalSelesai').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var id = button.data('id');
+            var nama = button.data('nama');
+            
+            $('#selesai_nama').text(nama);
+            
+            var url = '{{ route("manajemenasetdanasrama.pemeliharaan.selesai", ":id") }}';
+            url = url.replace(':id', id);
+            $('#formSelesai').attr('action', url);
+        });
+    });
+</script>
+@endpush

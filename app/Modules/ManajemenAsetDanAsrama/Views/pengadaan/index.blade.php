@@ -64,15 +64,191 @@
 
     {{-- Quick Navigation --}}
     <div class="row mb-3">
-        <div class="col-md-12 d-flex justify-content-between">
-            <a href="{{ route('manajemenasetdanasrama.persetujuan.index') }}" class="btn btn-outline-secondary shadow-sm">
-                <i class="fas fa-arrow-left"></i> Kembali ke Persetujuan
-            </a>
+        <div class="col-md-12 d-flex justify-content-between align-items-center">
+            <div>
+                <a href="{{ route('manajemenasetdanasrama.persetujuan.index') }}" class="btn btn-outline-secondary shadow-sm mr-2">
+                    <i class="fas fa-arrow-left"></i> Kembali ke Persetujuan
+                </a>
+                <button type="button" class="btn btn-primary shadow-sm mr-2" data-toggle="modal" data-target="#modalBulkStore">
+                    <i class="fas fa-file-invoice mr-1"></i> Proses Masal
+                </button>
+                <button type="button" class="btn btn-success shadow-sm" data-toggle="modal" data-target="#modalBulkConfirm">
+                    <i class="fas fa-check-double mr-1"></i> Konfirmasi Masal
+                </button>
+            </div>
             <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="btn btn-outline-primary shadow-sm">
                 Lanjut ke Master Aset <i class="fas fa-arrow-right"></i>
             </a>
         </div>
     </div>
+
+{{-- MODAL PROSES MASAL (CREATE PO) --}}
+<div class="modal fade" id="modalBulkStore" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <form action="{{ route('manajemenasetdanasrama.pengadaan.bulk-store') }}" method="POST">
+                @csrf
+                <div class="modal-header bg-primary text-white border-0 py-3">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-file-invoice mr-2"></i> Proses Pengadaan Masal (Buat PO)
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-light border shadow-sm mb-4" style="border-left: 5px solid #007bff; background: #f0f7ff;">
+                        <div class="d-flex align-items-center">
+                            <div class="mr-3">
+                                <i class="fas fa-info-circle text-primary fa-2x"></i>
+                            </div>
+                            <div>
+                                <h6 class="font-weight-bold mb-1">Mode Proses PO Masal</h6>
+                                <p class="small text-muted mb-0">Form ini untuk memproses pengajuan yang sudah <b>Disetujui</b> menjadi status <b>Dipesan</b>.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label class="small font-weight-bold text-muted text-uppercase">Inisial Kode / Nama Barang <span class="text-danger">*</span></label>
+                        <div class="input-group shadow-sm">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white border-right-0"><i class="fas fa-search"></i></span>
+                            </div>
+                            <input type="text" class="form-control border-left-0" name="prefix" placeholder="Contoh: Kursi atau KRS" required>
+                        </div>
+                        <small class="text-muted">Mencari semua pengajuan disetujui yang berawalan inisial ini.</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="small font-weight-bold text-muted text-uppercase">Vendor / Supplier <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control shadow-sm" name="vendor" placeholder="Contoh: Toko Abadi" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="small font-weight-bold text-muted text-uppercase">Biaya Riil (Per Item)</label>
+                                <div class="input-group shadow-sm">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light border-right-0"><i class="fas fa-coins"></i></span>
+                                    </div>
+                                    <input type="number" class="form-control border-left-0" name="biaya_riil" placeholder="Sesuai Harga Pengajuan">
+                                </div>
+                                <small class="text-info"><i class="fas fa-info-circle mr-1"></i> Biarkan kosong jika harga tidak berubah.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="small font-weight-bold text-muted text-uppercase">Tanggal Pesan <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control shadow-sm" name="tanggal_pesan" value="{{ date('Y-m-d') }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="small font-weight-bold text-muted text-uppercase">Estimasi Datang <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control shadow-sm" name="estimasi_datang" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-0">
+                        <label class="small font-weight-bold text-muted text-uppercase">Catatan Pengadaan</label>
+                        <textarea class="form-control shadow-sm" name="catatan_pengadaan" rows="2" placeholder="Tambahkan catatan jika diperlukan..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 py-3 px-4 justify-content-between">
+                    <button type="button" class="btn btn-link text-muted font-weight-bold" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary px-4 shadow-sm font-weight-bold" style="border-radius: 8px;">
+                        <i class="fas fa-save mr-2"></i> Simpan Pengadaan Masal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL KONFIRMASI MASAL (RECEIVE) --}}
+<div class="modal fade" id="modalBulkConfirm" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <form action="{{ route('manajemenasetdanasrama.pengadaan.bulk-confirm') }}" method="POST">
+                @csrf
+                <div class="modal-header bg-success text-white border-0 py-3">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-shipping-fast mr-2"></i> Konfirmasi Kedatangan Masal
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-light border shadow-sm mb-4" style="border-left: 5px solid #28a745; background: #f8fff9;">
+                        <div class="d-flex align-items-center">
+                            <div class="mr-3">
+                                <i class="fas fa-info-circle text-success fa-2x"></i>
+                            </div>
+                            <div>
+                                <h6 class="font-weight-bold mb-1">Mode Konfirmasi Masal</h6>
+                                <p class="small text-muted mb-0">Masukkan inisial kode (PO/Aset) atau nama. Semua pesanan status <b>Dipesan</b> yang cocok akan dikonfirmasi datang.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="small font-weight-bold text-muted text-uppercase">Inisial Kode / Nama Barang <span class="text-danger">*</span></label>
+                                <div class="input-group shadow-sm">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-white border-right-0"><i class="fas fa-search"></i></span>
+                                    </div>
+                                    <input type="text" class="form-control border-left-0" name="prefix" placeholder="Contoh: Kursi atau KRS" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="small font-weight-bold text-muted text-uppercase">Tanggal Datang <span class="text-danger">*</span></label>
+                                <div class="input-group shadow-sm">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-white border-right-0"><i class="fas fa-calendar-alt"></i></span>
+                                    </div>
+                                    <input type="date" class="form-control border-left-0" name="tanggal_datang" value="{{ date('Y-m-d') }}" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="small font-weight-bold text-muted text-uppercase">Kondisi saat Diterima</label>
+                                <textarea class="form-control shadow-sm" name="kondisi" rows="3" placeholder="Contoh: Baik / Segel Utuh"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="small font-weight-bold text-muted text-uppercase">Deskripsi / Catatan Tambahan</label>
+                                <textarea class="form-control shadow-sm" name="deskripsi_aset" rows="3" placeholder="Contoh: Warna Hitam, Merk LG"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 py-3 px-4 justify-content-between">
+                    <button type="button" class="btn btn-link text-muted font-weight-bold" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success px-4 shadow-sm font-weight-bold" style="border-radius: 8px;">
+                        <i class="fas fa-save mr-2"></i> Konfirmasi Semua & Masuk Master Aset
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
     {{-- Alert Messages --}}
     @if(session('success'))
@@ -115,6 +291,7 @@
                                 <th>No</th>
                                 <th>Nomor PO</th>
                                 <th>Nama Aset (Pengajuan)</th>
+                                <th>Kode Aset</th>
                                 <th>Vendor</th>
                                 <th>Biaya Riil</th>
                                 <th>Tgl Pesan</th>
@@ -131,6 +308,13 @@
                                 <td>{{ $loop->iteration + ($pengadaan->currentPage() - 1) * $pengadaan->perPage() }}</td>
                                 <td><code>{{ $item->nomor_po }}</code></td>
                                 <td>{{ $item->pengajuan->nama_aset ?? '-' }}</td>
+                                <td>
+                                    @if($item->aset)
+                                        <span class="badge badge-info">{{ $item->aset->kode_aset }}</span>
+                                    @else
+                                        <span class="text-muted small"><i>Belum Datang</i></span>
+                                    @endif
+                                </td>
                                 <td>{{ $item->vendor }}</td>
                                 <td>Rp {{ number_format($item->biaya_riil, 0, ',', '.') }}</td>
                                 <td>{{ $item->tanggal_pesan ? $item->tanggal_pesan->format('d/m/Y') : '-' }}</td>
@@ -154,7 +338,7 @@
                                 </td>
                                 <td>
                                     @if($item->status == 'dipesan')
-                                    <button type="button" class="btn btn-xs btn-success"
+                                    <button type="button" class="btn btn-action-xs btn-success"
                                             data-toggle="modal"
                                             data-target="#modalSelesai"
                                             data-id="{{ $item->id }}"
@@ -162,14 +346,14 @@
                                             data-biaya="{{ number_format($item->biaya_riil, 0, ',', '.') }}"
                                             data-vendor="{{ $item->vendor }}"
                                             title="Konfirmasi Barang Datang">
-                                        <i class="fas fa-check"></i> Konfirmasi Datang
+                                        <i class="fas fa-check mr-1"></i> Konfirmasi Datang
                                     </button>
                                     @elseif($item->status == 'datang')
-                                    <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="btn btn-xs btn-outline-primary" title="Lihat di Master Aset">
-                                        <i class="fas fa-boxes"></i> Lihat Aset
+                                    <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="btn btn-action-xs btn-outline-primary" title="Lihat di Master Aset">
+                                        <i class="fas fa-boxes mr-1"></i> Lihat Aset
                                     </a>
                                     @else
-                                        <span class="text-muted">-</span>
+                                        <span class="text-muted small">-</span>
                                     @endif
                                 </td>
                             </tr>
@@ -229,12 +413,11 @@
                             </div>
                         </div>
                     </div>
-
                     <h6 class="font-weight-bold text-primary mb-3"><i class="fas fa-edit mr-2"></i> Detail Registrasi Aset</h6>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group mb-3">
-                                <label class="small font-weight-bold text-muted">TANGGAL DATANG <span class="text-danger">*</span></label>
+                                <label class="small font-weight-bold text-muted text-uppercase">Tanggal Datang <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text bg-white border-right-0"><i class="fas fa-calendar-alt"></i></span>
@@ -243,22 +426,24 @@
                                 </div>
                             </div>
                         </div>
-                    <div class="form-group mb-3">
-                        <label class="small font-weight-bold text-muted">NAMA ASET (FINAL) <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control bg-light font-weight-bold" id="selesai_nama_input" name="nama_aset" required readonly>
-                        <small class="text-muted">Nama ini akan digunakan untuk membuat kode aset otomatis.</small>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="small font-weight-bold text-muted text-uppercase">Nama Aset (Final) <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control bg-light font-weight-bold" id="selesai_nama_input" name="nama_aset" required readonly>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="small font-weight-bold text-muted">KONDISI SAAT DITERIMA</label>
+                            <div class="form-group mb-3">
+                                <label class="small font-weight-bold text-muted text-uppercase">Kondisi saat Diterima</label>
                                 <textarea class="form-control" name="kondisi" rows="2" placeholder="Contoh: Baik / Segel Utuh"></textarea>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="small font-weight-bold text-muted">DESKRIPSI ASET</label>
+                            <div class="form-group mb-3">
+                                <label class="small font-weight-bold text-muted text-uppercase">Deskripsi Aset</label>
                                 <textarea class="form-control" name="deskripsi_aset" rows="2" placeholder="Contoh: Warna Hitam, Merk LG"></textarea>
                             </div>
                         </div>
@@ -310,6 +495,20 @@
             $.get('{{ route("manajemenasetdanasrama.aset.suggest-code") }}', { nama: nama }, function(res) {
                 modal.find('input[name="kode_aset"]').val(res.code);
             });
+        });
+
+        // Sync Tanggal Pesan -> Estimasi Datang (Bulk Modal)
+        $('#modalBulkStore input[name="tanggal_pesan"]').on('change', function() {
+            var tanggalPesan = $(this).val();
+            var estimasiDatangInput = $('#modalBulkStore input[name="estimasi_datang"]');
+            
+            // Set minimal tanggal datang
+            estimasiDatangInput.attr('min', tanggalPesan);
+            
+            // Auto fill jika masih kosong atau jika tanggal datang sebelumnya lebih kecil
+            if (!estimasiDatangInput.val() || estimasiDatangInput.val() < tanggalPesan) {
+                estimasiDatangInput.val(tanggalPesan);
+            }
         });
     });
 </script>

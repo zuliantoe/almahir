@@ -64,15 +64,60 @@
 
     {{-- Quick Navigation --}}
     <div class="row mb-3">
-        <div class="col-md-12 d-flex justify-content-between">
-            <a href="{{ route('manajemenasetdanasrama.pengajuan.index') }}" class="btn btn-outline-secondary shadow-sm">
-                <i class="fas fa-arrow-left"></i> Kembali ke Pengajuan
-            </a>
+        <div class="col-md-12 d-flex justify-content-between align-items-center">
+            <div>
+                <a href="{{ route('manajemenasetdanasrama.pengajuan.index') }}" class="btn btn-outline-secondary shadow-sm mr-2">
+                    <i class="fas fa-arrow-left"></i> Kembali ke Pengajuan
+                </a>
+                <button type="button" class="btn btn-success shadow-sm" data-toggle="modal" data-target="#modalBulkApprove">
+                    <i class="fas fa-check-double mr-1"></i> Persetujuan Masal
+                </button>
+            </div>
             <a href="{{ route('manajemenasetdanasrama.pengadaan.index') }}" class="btn btn-outline-primary shadow-sm">
                 Lanjut ke Pengadaan <i class="fas fa-arrow-right"></i>
             </a>
         </div>
     </div>
+
+{{-- MODAL APPROVE MASAL --}}
+<div class="modal fade" id="modalBulkApprove" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <form action="{{ route('manajemenasetdanasrama.persetujuan.bulk-approve') }}" method="POST">
+                @csrf
+                <div class="modal-header bg-success text-white border-0 py-3">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-check-double mr-2"></i> Persetujuan Masal</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px;">
+                        <i class="fas fa-tasks text-success fa-2x"></i>
+                    </div>
+                    <h6 class="font-weight-bold mb-3">Setujui Kelompok Pengajuan</h6>
+                    <p class="small text-muted mb-4">Masukkan inisial kode atau nama barang untuk menyetujui semua pengajuan yang cocok sekaligus.</p>
+                    
+                    <div class="form-group text-left mb-0">
+                        <label class="small font-weight-bold text-muted text-uppercase">Inisial Kode / Nama Barang <span class="text-danger">*</span></label>
+                        <div class="input-group shadow-sm">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white border-right-0"><i class="fas fa-search"></i></span>
+                            </div>
+                            <input type="text" class="form-control border-left-0" name="prefix" placeholder="Contoh: Kursi atau KRS" required style="text-transform: uppercase;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 py-3 px-4 justify-content-between">
+                    <button type="button" class="btn btn-link text-muted font-weight-bold" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success px-4 shadow-sm font-weight-bold" style="border-radius: 8px;">
+                        <i class="fas fa-check mr-2"></i> Setujui Semua
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
     {{-- Alert Messages --}}
     @if(session('success'))

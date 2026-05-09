@@ -65,12 +65,12 @@
             justify-content: center;
         }
         .header-label {
-            font-size: 10px;
-            font-weight: 800;
-            color: #007bff;
-            margin-bottom: 4px;
+            font-size: 9px;
+            font-weight: 900;
+            color: #dc3545;
+            margin-bottom: 2px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
         .asset-name {
             margin: 0;
@@ -131,6 +131,9 @@
                 <p class="text-muted small mb-0">Pastikan printer sudah terhubung dan gunakan kertas stiker label jika tersedia.</p>
             </div>
             <div>
+                <button id="btn-download" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; margin-right: 10px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2);">
+                    <i class="fas fa-download mr-2"></i> Download PDF
+                </button>
                 <button onclick="window.print()" style="padding: 10px 25px; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px rgba(40, 167, 69, 0.2);">
                     <i class="fas fa-print mr-2"></i> Cetak Sekarang
                 </button>
@@ -141,22 +144,28 @@
         </div>
     </div>
 
-    <div class="label-container">
+    <style>
+        /* ... existing styles ... */
+        .page-break {
+            page-break-after: always;
+        }
+    </style>
+    
+    <div class="label-container" id="print-area">
         @foreach($aset as $item)
-            @php
-                // URL detail aset untuk discan (Real-time data)
-                $detailUrl = route('manajemenasetdanasrama.aset.show', $item->id);
-                $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" . urlencode($detailUrl);
-            @endphp
-            <div class="label-card">
+            <div class="label-card" style="page-break-inside: avoid; margin-bottom: 10px;">
                 <div class="qr-section">
                     <div class="qr-code">
+                        @php
+                            $qrData = $item->kode_aset;
+                            $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" . urlencode($qrData);
+                        @endphp
                         <img src="{{ $qrUrl }}" alt="QR Code">
                     </div>
                     <div class="qr-text">SCAN FOR DETAIL</div>
                 </div>
                 <div class="asset-info">
-                    <div class="header-label">Aset Management</div>
+                    <div class="header-label">PROPERTY PPQ IT AL MAHIR</div>
                     <h2 class="asset-name">{{ $item->nama_aset }}</h2>
                     <p class="asset-code">{{ $item->kode_aset }}</p>
                     
@@ -173,5 +182,23 @@
             </div>
         @endforeach
     </div>
+
+    {{-- PDF Download Script --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        document.getElementById('btn-download').addEventListener('click', function() {
+            const element = document.getElementById('print-area');
+            const opt = {
+                margin:       10,
+                filename:     'Label_Aset_{{ date("dmy_His") }}.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: 'css' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        });
+    </script>
 </body>
 </html>

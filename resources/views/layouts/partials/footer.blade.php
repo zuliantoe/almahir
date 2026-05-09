@@ -1,5 +1,5 @@
 {{-- Main Footer --}}
-<footer class="main-footer border-top-0 text-sm py-3 shadow-sm bg-white">
+<footer class="main-footer border-top-0 text-sm py-3 shadow-sm bg-white" style="position: relative; z-index: 1000; clear: both; margin-top: 20px;">
     <div class="container-fluid">
         <div class="row w-100">
             <div class="col-md-6 text-center text-md-left">

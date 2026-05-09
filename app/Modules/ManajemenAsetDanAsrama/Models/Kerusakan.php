@@ -18,6 +18,7 @@ class Kerusakan extends Model
         'deskripsi_kerusakan',
         'tingkat_kerusakan',
         'status_penanganan',
+        'pelapor',
         'catatan',
         'deleted_by',
         'alasan_hapus',

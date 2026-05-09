@@ -74,6 +74,9 @@
                 <a href="{{ route('manajemenasetdanasrama.aset.scan') }}" class="btn btn-dark shadow-sm mr-2">
                     <i class="fas fa-qrcode mr-1"></i> Scan QR
                 </a>
+                <button type="button" class="btn btn-info shadow-sm mr-2" data-toggle="modal" data-target="#modalBulkPrint">
+                    <i class="fas fa-print mr-1"></i> Cetak Masal
+                </button>
                 <button type="button" class="btn btn-danger shadow-sm mr-2" data-toggle="modal" data-target="#modalBulkDelete">
                     <i class="fas fa-trash-alt mr-1"></i> Hapus Massal
                 </button>
@@ -111,6 +114,45 @@
                     <small class="text-muted">Total data: {{ $aset->total() }}</small>
                 </x-slot>
             </x-card>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL CETAK MASSAL --}}
+<div class="modal fade" id="modalBulkPrint" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <form action="{{ route('manajemenasetdanasrama.aset.bulk-print-action') }}" method="POST" target="_blank">
+                @csrf
+                <div class="modal-header bg-info text-white border-0 py-3">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-print mr-2"></i> Cetak Label Massal</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="form-group mb-3">
+                        <label class="small font-weight-bold text-muted text-uppercase">Berapa kelompok kode?</label>
+                        <input type="number" class="form-control shadow-sm" id="input_count" min="1" max="10" value="1" placeholder="Misal: 3">
+                        <small class="text-muted">Masukkan jumlah kelompok kode yang ingin dicetak sekaligus.</small>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div id="prefix_container">
+                        <div class="form-group mb-2">
+                            <label class="small font-weight-bold text-muted text-uppercase">Inisial Kode Kelompok 1</label>
+                            <input type="text" class="form-control shadow-sm" name="patterns[]" placeholder="Contoh: LPT" required style="text-transform: uppercase;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 py-3 px-4 justify-content-between">
+                    <button type="button" class="btn btn-link text-muted font-weight-bold" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-info px-4 shadow-sm font-weight-bold" style="border-radius: 8px;">
+                        <i class="fas fa-print mr-2"></i> Cetak Label
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -157,63 +199,11 @@
     </div>
 </div>
 
-{{-- MODAL DUPLIKAT --}}
-<div class="modal fade" id="modalDuplikat" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
-            <form id="formDuplikat" method="POST">
-                @csrf
-                <div class="modal-header bg-secondary text-white border-0 py-3">
-                    <h5 class="modal-title font-weight-bold"><i class="fas fa-copy mr-2"></i> Duplikat Master Aset</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body p-4 text-center">
-                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px;">
-                        <i class="fas fa-boxes text-secondary fa-lg"></i>
-                    </div>
-                    <h6 class="font-weight-bold mb-1" id="duplikat_nama"></h6>
-                    <p class="text-muted small mb-4">Gunakan fitur ini untuk menambah aset yang sama (spesifikasi identik) dalam jumlah banyak.</p>
-                    
-                    <div class="form-group text-left">
-                        <label class="small font-weight-bold text-muted text-uppercase">Jumlah Duplikasi (Unit)</label>
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text bg-white"><i class="fas fa-layer-group"></i></span>
-                            </div>
-                            <input type="number" class="form-control" name="jumlah" value="1" min="1" max="50" required>
-                        </div>
-                        <small class="form-text text-muted mt-1">Maksimal 50 unit per sekali proses.</small>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light border-0 py-3 px-4 justify-content-between">
-                    <button type="button" class="btn btn-link text-muted font-weight-bold" data-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-secondary px-4 shadow-sm font-weight-bold" style="border-radius: 8px;">
-                        Mulai Duplikasi <i class="fas fa-arrow-right ml-1"></i>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 @endsection
 
 @push('scripts')
 <script>
     $(document).ready(function() {
-        // Modal Duplikat
-        $('.btn-duplicate').on('click', function() {
-            var id = $(this).data('id');
-            var nama = $(this).data('nama');
-            
-            $('#duplikat_nama').text(nama);
-            
-            var url = '{{ route("manajemenasetdanasrama.aset.duplicate", ":id") }}';
-            url = url.replace(':id', id);
-            $('#formDuplikat').attr('action', url);
-        });
-
         // Modal Hapus
         $('#modalHapus').on('show.bs.modal', function (event) {
             var button = $(event.relatedTarget);
@@ -222,6 +212,25 @@
             
             $(this).find('#formDelete').attr('action', url);
             $(this).find('#delete_nama').text(nama);
+        });
+
+        // Dynamic Input for Bulk Print
+        $('#input_count').on('input change', function() {
+            var count = $(this).val();
+            var container = $('#prefix_container');
+            container.empty();
+            
+            if (count > 10) count = 10;
+            if (count < 1) count = 1;
+
+            for (var i = 1; i <= count; i++) {
+                container.append(`
+                    <div class="form-group mb-2">
+                        <label class="small font-weight-bold text-muted text-uppercase">Inisial Kode Kelompok ${i}</label>
+                        <input type="text" class="form-control shadow-sm" name="patterns[]" placeholder="Contoh: LPT" required style="text-transform: uppercase;">
+                    </div>
+                `);
+            }
         });
     });
 </script>

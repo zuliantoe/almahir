@@ -18,128 +18,137 @@
 @endsection
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        {{-- Info Utama Aset --}}
-        <div class="col-md-6">
-            <x-card title="Informasi Aset" icon="fas fa-boxes">
-                <table class="table table-sm table-borderless">
-                    <tr>
-                        <th width="40%">Kode Aset</th>
-                        <td><code>{{ $aset->kode_aset }}</code></td>
-                    </tr>
-                    <tr>
-                        <th>Nama Aset</th>
-                        <td><strong>{{ $aset->nama_aset }}</strong></td>
-                    </tr>
-                    <tr>
-                        <th>Harga</th>
-                        <td class="text-success font-weight-bold">{{ $aset->harga_formatted }}</td>
-                    </tr>
-                    <tr>
-                        <th>Status Kondisi</th>
-                        <td>{!! $aset->status_badge !!}</td>
-                    </tr>
-                    <tr>
-                        <th>Kondisi Fisik</th>
-                        <td>{{ $aset->kondisi ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Deskripsi</th>
-                        <td><small class="text-muted">{{ $aset->deskripsi_aset ?? '-' }}</small></td>
-                    </tr>
-                    <tr>
-                        <th>Tanggal Pengadaan</th>
-                        <td>{{ $aset->tanggal_pengadaan ? $aset->tanggal_pengadaan->format('d/m/Y') : '-' }}</td>
-                    </tr>
-                </table>
-                <x-slot name="footer">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <a href="{{ route('manajemenasetdanasrama.aset.edit', $aset->id) }}" class="btn btn-sm btn-warning">
-                                <i class="fas fa-edit mr-1"></i> Edit Aset
-                            </a>
-                            <a href="{{ route('manajemenasetdanasrama.aset.print-label') }}?id={{ $aset->id }}" target="_blank" class="btn btn-sm btn-info">
-                                <i class="fas fa-print mr-1"></i> Cetak Label
-                            </a>
-                        </div>
-                        <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="btn btn-sm btn-secondary">
-                            <i class="fas fa-arrow-left mr-1"></i> Kembali
+<style>
+    .btn-action-xs {
+        padding: 0.1rem 0.5rem !important;
+        font-size: 0.75rem !important;
+        line-height: 1.5 !important;
+        border-radius: 4px !important;
+    }
+</style>
+
+<div class="row">
+    {{-- Info Utama Aset --}}
+    <div class="col-md-6">
+        <x-card title="Informasi Aset" icon="fas fa-boxes">
+            <table class="table table-sm table-borderless">
+                <tr>
+                    <th width="40%">Kode Aset</th>
+                    <td><code>{{ $aset->kode_aset }}</code></td>
+                </tr>
+                <tr>
+                    <th>Nama Aset</th>
+                    <td><strong>{{ $aset->nama_aset }}</strong></td>
+                </tr>
+                <tr>
+                    <th>Harga</th>
+                    <td class="text-success font-weight-bold">{{ $aset->harga_formatted }}</td>
+                </tr>
+                <tr>
+                    <th>Status Kondisi</th>
+                    <td>{!! $aset->status_badge !!}</td>
+                </tr>
+                <tr>
+                    <th>Kondisi Fisik</th>
+                    <td>{{ $aset->kondisi ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <th>Deskripsi</th>
+                    <td><small class="text-muted">{{ $aset->deskripsi_aset ?? '-' }}</small></td>
+                </tr>
+                <tr>
+                    <th>Tanggal Pengadaan</th>
+                    <td>{{ $aset->tanggal_pengadaan ? $aset->tanggal_pengadaan->format('d/m/Y') : '-' }}</td>
+                </tr>
+            </table>
+            <x-slot name="footer">
+                <div class="d-flex flex-wrap justify-content-between align-items-center" style="gap: 10px;">
+                    <div class="btn-group shadow-sm">
+                        <a href="{{ route('manajemenasetdanasrama.aset.edit', $aset->id) }}" class="btn btn-action-xs btn-warning text-white">
+                            <i class="fas fa-edit mr-1"></i> Edit
+                        </a>
+                        <a href="{{ route('manajemenasetdanasrama.aset.print-label') }}?id={{ $aset->id }}" target="_blank" class="btn btn-action-xs btn-primary">
+                            <i class="fas fa-print mr-1"></i> Cetak Label
                         </a>
                     </div>
-                </x-slot>
-            </x-card>
-        </div>
-
-        {{-- Info Pengadaan --}}
-        <div class="col-md-6">
-            <x-card title="Data Pengadaan" icon="fas fa-truck">
-                @if($aset->pengadaan)
-                <table class="table table-sm table-borderless">
-                    <tr>
-                        <th width="40%">Nomor PO</th>
-                        <td><code>{{ $aset->pengadaan->nomor_po }}</code></td>
-                    </tr>
-                    <tr>
-                        <th>Vendor</th>
-                        <td>{{ $aset->pengadaan->vendor }}</td>
-                    </tr>
-                    <tr>
-                        <th>Biaya Riil</th>
-                        <td>Rp {{ number_format($aset->pengadaan->biaya_riil, 0, ',', '.') }}</td>
-                    </tr>
-                    <tr>
-                        <th>Tanggal Pesan</th>
-                        <td>{{ $aset->pengadaan->tanggal_pesan ? $aset->pengadaan->tanggal_pesan->format('d/m/Y') : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Tanggal Datang</th>
-                        <td>{{ $aset->pengadaan->tanggal_datang ? $aset->pengadaan->tanggal_datang->format('d/m/Y') : '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Status PO</th>
-                        <td>
-                            @if($aset->pengadaan->status == 'dipesan')
-                                <span class="badge badge-warning">Dipesan</span>
-                            @elseif($aset->pengadaan->status == 'datang')
-                                <span class="badge badge-success">Datang</span>
-                            @elseif($aset->pengadaan->status == 'batal')
-                                <span class="badge badge-danger">Batal</span>
-                            @endif
-                        </td>
-                    </tr>
-                </table>
-                @else
-                <div class="text-center py-4">
-                    <i class="fas fa-info-circle fa-2x text-muted mb-2"></i>
-                    <p class="text-muted small">Aset ini ditambahkan secara manual tanpa melalui proses pengadaan sistem.</p>
+                    <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="btn btn-action-xs btn-secondary shadow-sm">
+                        <i class="fas fa-arrow-left mr-1"></i> Kembali ke Master
+                    </a>
                 </div>
-                @endif
-            </x-card>
-        </div>
+            </x-slot>
+        </x-card>
     </div>
 
-    {{-- Riwayat Kerusakan & Pemeliharaan --}}
-    <div class="row mt-3">
-        <div class="col-md-12 mb-4">
-            <x-card title="Riwayat Kerusakan" icon="fas fa-exclamation-triangle" class="card-outline card-danger">
-                @include('manajemenasetdanasrama::partials.table-kerusakan', [
-                    'items' => $aset->kerusakan,
-                    'showAset' => false,
-                    'actionWidth' => '100'
-                ])
-            </x-card>
-        </div>
+    {{-- Info Pengadaan --}}
+    <div class="col-md-6">
+        <x-card title="Data Pengadaan" icon="fas fa-truck">
+            @if($aset->pengadaan)
+            <table class="table table-sm table-borderless">
+                <tr>
+                    <th width="40%">Nomor PO</th>
+                    <td><code>{{ $aset->pengadaan->nomor_po }}</code></td>
+                </tr>
+                <tr>
+                    <th>Vendor</th>
+                    <td>{{ $aset->pengadaan->vendor }}</td>
+                </tr>
+                <tr>
+                    <th>Biaya Riil</th>
+                    <td>Rp {{ number_format($aset->pengadaan->biaya_riil, 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <th>Tanggal Pesan</th>
+                    <td>{{ $aset->pengadaan->tanggal_pesan ? $aset->pengadaan->tanggal_pesan->format('d/m/Y') : '-' }}</td>
+                </tr>
+                <tr>
+                    <th>Tanggal Datang</th>
+                    <td>{{ $aset->pengadaan->tanggal_datang ? $aset->pengadaan->tanggal_datang->format('d/m/Y') : '-' }}</td>
+                </tr>
+                <tr>
+                    <th>Status PO</th>
+                    <td>
+                        @if($aset->pengadaan->status == 'dipesan')
+                            <span class="badge badge-warning">Dipesan</span>
+                        @elseif($aset->pengadaan->status == 'datang')
+                            <span class="badge badge-success">Datang</span>
+                        @elseif($aset->pengadaan->status == 'batal')
+                            <span class="badge badge-danger">Batal</span>
+                        @endif
+                    </td>
+                </tr>
+            </table>
+            @else
+            <div class="text-center py-4">
+                <i class="fas fa-info-circle fa-2x text-muted mb-2"></i>
+                <p class="text-muted small">Aset ini ditambahkan secara manual tanpa melalui proses pengadaan sistem.</p>
+            </div>
+            @endif
+        </x-card>
+    </div>
+</div>
 
-        <div class="col-md-12">
-            <x-card title="Riwayat Pemeliharaan" icon="fas fa-wrench" class="card-outline card-primary">
-                @include('manajemenasetdanasrama::partials.table-pemeliharaan', [
-                    'items' => $aset->pemeliharaan,
-                    'showAset' => false,
-                    'actionWidth' => '100'
-                ])
-            </x-card>
-        </div>
+{{-- Riwayat Kerusakan & Pemeliharaan --}}
+<div class="row mt-3">
+    <div class="col-md-12 mb-4">
+        <x-card title="Riwayat Kerusakan" icon="fas fa-exclamation-triangle" class="card-outline card-danger">
+            @include('manajemenasetdanasrama::partials.table-kerusakan', [
+                'items' => $aset->kerusakan,
+                'showAset' => false,
+                'actionWidth' => '80',
+                'hideDelete' => true
+            ])
+        </x-card>
+    </div>
+
+    <div class="col-md-12">
+        <x-card title="Riwayat Pemeliharaan" icon="fas fa-wrench" class="card-outline card-primary">
+            @include('manajemenasetdanasrama::partials.table-pemeliharaan', [
+                'items' => $aset->pemeliharaan,
+                'showAset' => false,
+                'actionWidth' => '80',
+                'hideDelete' => true
+            ])
+        </x-card>
     </div>
 </div>
 

@@ -19,15 +19,15 @@ class KerusakanController extends BaseController
     {
         $kerusakan = Kerusakan::with('aset')
                         ->whereHas('aset')
-                        ->where('status_penanganan', 'belum_ditangani')
+                        ->whereIn('status_penanganan', ['belum_ditangani', 'sedang_ditangani'])
                         ->latest()
                         ->paginate(15);
         
         $stats = [
-            'total'   => Kerusakan::where('status_penanganan', 'belum_ditangani')->count(),
-            'ringan'  => Kerusakan::where('status_penanganan', 'belum_ditangani')->where('tingkat_kerusakan', 'ringan')->count(),
-            'sedang'  => Kerusakan::where('status_penanganan', 'belum_ditangani')->where('tingkat_kerusakan', 'sedang')->count(),
-            'berat'   => Kerusakan::where('status_penanganan', 'belum_ditangani')->where('tingkat_kerusakan', 'berat')->count(),
+            'total'   => Kerusakan::whereIn('status_penanganan', ['belum_ditangani', 'sedang_ditangani'])->count(),
+            'ringan'  => Kerusakan::whereIn('status_penanganan', ['belum_ditangani', 'sedang_ditangani'])->where('tingkat_kerusakan', 'ringan')->count(),
+            'sedang'  => Kerusakan::whereIn('status_penanganan', ['belum_ditangani', 'sedang_ditangani'])->where('tingkat_kerusakan', 'sedang')->count(),
+            'berat'   => Kerusakan::whereIn('status_penanganan', ['belum_ditangani', 'sedang_ditangani'])->where('tingkat_kerusakan', 'berat')->count(),
         ];
         
         return view('manajemenasetdanasrama::kerusakan.index', [
@@ -130,11 +130,14 @@ class KerusakanController extends BaseController
      */
     private function syncStatusAset(array $validated): void
     {
-        if ($validated['status_penanganan'] == 'sedang_ditangani') {
+        $status_penanganan = $validated['status_penanganan'] ?? 'belum_ditangani';
+        
+        if ($status_penanganan == 'sedang_ditangani') {
             Aset::where('id', $validated['aset_id'])->update(['status_kondisi' => 'dalam_perbaikan']);
-        } elseif ($validated['status_penanganan'] == 'selesai') {
+        } elseif ($status_penanganan == 'selesai') {
             Aset::where('id', $validated['aset_id'])->update(['status_kondisi' => 'sudah_diperbaiki']);
-        } elseif ($validated['tingkat_kerusakan'] == 'berat' && $validated['status_penanganan'] == 'belum_ditangani') {
+        } else {
+            // Default: Jika ada laporan kerusakan yang belum ditangani, status aset wajib 'rusak'
             Aset::where('id', $validated['aset_id'])->update(['status_kondisi' => 'rusak']);
         }
     }

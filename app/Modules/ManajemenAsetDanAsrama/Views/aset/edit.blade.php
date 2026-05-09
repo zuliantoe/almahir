@@ -53,21 +53,6 @@
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group mb-3">
-                                    <label class="small font-weight-bold text-muted text-uppercase">Status Kondisi <span class="text-danger">*</span></label>
-                                    <select class="form-control @error('status_kondisi') is-invalid @enderror" name="status_kondisi" required>
-                                        <option value="baik" {{ old('status_kondisi', $aset->status_kondisi) == 'baik' ? 'selected' : '' }}>Baik</option>
-                                        <option value="rusak" {{ old('status_kondisi', $aset->status_kondisi) == 'rusak' ? 'selected' : '' }}>Rusak</option>
-                                        <option value="dalam_perbaikan" {{ old('status_kondisi', $aset->status_kondisi) == 'dalam_perbaikan' ? 'selected' : '' }}>Dalam Perbaikan</option>
-                                        <option value="sudah_diperbaiki" {{ old('status_kondisi', $aset->status_kondisi) == 'sudah_diperbaiki' ? 'selected' : '' }}>Sudah Diperbaiki</option>
-                                    </select>
-                                    @error('status_kondisi') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="form-group mb-3">
                             <label class="small font-weight-bold text-muted text-uppercase">Kondisi Fisik (Detail)</label>
                             <textarea class="form-control @error('kondisi') is-invalid @enderror" name="kondisi" rows="2" placeholder="Contoh: Lecet sedikit, baterai bocor, dsb...">{{ old('kondisi', $aset->kondisi) }}</textarea>

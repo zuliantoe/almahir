@@ -21,10 +21,10 @@ class PengadaanController extends BaseController
      */
     public function index(Request $request): View
     {
-        $pengadaan = PengadaanAset::with('pengajuan:id,nomor_pengajuan,nama_aset')
-                        ->whereHas('pengajuan')
+        $pengadaan = PengadaanAset::with(['pengajuan', 'aset'])
+                        ->where('status', 'dipesan') // Cuma tampilin yang masih dipesan
                         ->latest()
-                        ->paginate(15);
+                        ->paginate(10);
         
         // Pengajuan yang sudah disetujui tapi belum dibuatkan pengadaan
         $menungguProses = PengajuanAset::with('pengaju:id,name')
@@ -72,7 +72,7 @@ class PengadaanController extends BaseController
             'pengajuan_id'    => 'required|exists:pengajuan_aset,id|unique:pengadaan_aset,pengajuan_id',
             'vendor'          => 'required|string|max:255',
             'tanggal_pesan'   => 'required|date',
-            'estimasi_datang' => 'required|date|after:tanggal_pesan',
+            'estimasi_datang' => 'required|date|after_or_equal:tanggal_pesan',
             'biaya_riil'      => 'required|numeric|min:0',
             'catatan_pengadaan' => 'nullable|string',
         ]);
@@ -135,5 +135,120 @@ class PengadaanController extends BaseController
 
         return redirect()->route('manajemenasetdanasrama.aset.index')
             ->with('success', 'Barang berhasil diterima dan didaftarkan ke Master Aset dengan kode: ' . $kode_aset);
+    }
+
+    /**
+     * Bulk confirm receipt of items by name prefix.
+     */
+    public function bulkConfirm(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'prefix' => 'required|string|min:1',
+            'tanggal_datang' => 'required|date',
+            'kondisi' => 'nullable|string',
+            'deskripsi_aset' => 'nullable|string',
+        ]);
+
+        $prefix = strtoupper($request->prefix);
+        $pengadaan = PengadaanAset::with('pengajuan')
+                        ->where('status', 'dipesan')
+                        ->where(function($q) use ($prefix) {
+                            $q->where('nomor_po', 'LIKE', $prefix . '%')
+                              ->orWhereHas('pengajuan', function($sq) use ($prefix) {
+                                  $sq->where('nama_aset', 'LIKE', $prefix . '%')
+                                     ->orWhere('nomor_pengajuan', 'LIKE', $prefix . '%');
+                              });
+                        })
+                        ->get();
+
+        if ($pengadaan->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada data pengadaan (dipesan) yang ditemukan dengan inisial tersebut.');
+        }
+
+        $count = 0;
+        foreach ($pengadaan as $item) {
+            /** @var PengadaanAset $item */
+            // Update Pengadaan
+            $item->tanggal_datang = $request->tanggal_datang;
+            $item->status = 'datang';
+            $item->save();
+
+            // Create Aset
+            $nama_aset = $item->pengajuan->nama_aset;
+            $kode_aset = $this->generateAssetCode($nama_aset, Aset::class, 'kode_aset', \Carbon\Carbon::parse($request->tanggal_datang)->format('dmy'));
+
+            Aset::create([
+                'kode_aset'          => $kode_aset,
+                'nama_aset'          => $nama_aset,
+                'tanggal_pengajuan'  => $item->pengajuan->tanggal_pengajuan,
+                'harga'              => $item->biaya_riil,
+                'status_kondisi'     => 'baik',
+                'tanggal_pengadaan'  => $request->tanggal_datang,
+                'kondisi'            => $request->kondisi,
+                'deskripsi_aset'     => $request->deskripsi_aset,
+                'pengadaan_id'       => $item->id,
+            ]);
+            $count++;
+        }
+
+        return redirect()->route('manajemenasetdanasrama.aset.index')
+            ->with('success', "$count barang berhasil dikonfirmasi datang dan didaftarkan ke Master Aset.");
+    }
+
+    /**
+     * Bulk store procurement (Create POs in batch).
+     */
+    public function bulkStore(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'prefix'          => 'required|string|min:1',
+            'vendor'          => 'required|string|max:255',
+            'tanggal_pesan'   => 'required|date',
+            'estimasi_datang' => 'required|date|after_or_equal:tanggal_pesan',
+            'biaya_riil'      => 'nullable|numeric|min:0',
+            'catatan_pengadaan' => 'nullable|string',
+        ]);
+
+        $prefix = strtoupper($request->prefix);
+        $pengajuan = PengajuanAset::where('status', 'disetujui')
+                        ->where(function($q) use ($prefix) {
+                            $q->where('nama_aset', 'LIKE', $prefix . '%')
+                              ->orWhere('nomor_pengajuan', 'LIKE', $prefix . '%');
+                        })
+                        ->get();
+
+        if ($pengajuan->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada pengajuan disetujui yang ditemukan dengan inisial tersebut.');
+        }
+
+        $count = 0;
+        foreach ($pengajuan as $item) {
+            /** @var PengajuanAset $item */
+            // Cek apakah sudah ada pengadaan (safety)
+            if (PengadaanAset::where('pengajuan_id', $item->id)->exists()) {
+                continue;
+            }
+
+            $data = $validated;
+            unset($data['prefix']);
+            $data['pengajuan_id'] = $item->id;
+            $data['nomor_po'] = $this->generateNomor(PengadaanAset::class, 'PO');
+            $data['status'] = 'dipesan';
+            
+            // LOGIKA HARGA: Jika input biaya_riil kosong, pake estimasi_harga dari pengajuan
+            if (empty($request->biaya_riil)) {
+                $data['biaya_riil'] = $item->estimasi_harga;
+            }
+
+            PengadaanAset::create($data);
+
+            // Update status pengajuan
+            $item->status = 'proses_pengadaan';
+            $item->save();
+            $count++;
+        }
+
+        return redirect()->route('manajemenasetdanasrama.pengadaan.index')
+            ->with('success', "$count data pengadaan berhasil diproses secara masal.");
     }
 }

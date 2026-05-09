@@ -81,4 +81,39 @@ class PersetujuanController extends BaseController
         return redirect()->route('manajemenasetdanasrama.persetujuan.index')
             ->with('success', 'Pengajuan aset ditolak.');
     }
+
+    /**
+     * Bulk approve requests by name prefix.
+     */
+    public function bulkApprove(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'prefix' => 'required|string|min:1',
+        ]);
+
+        $prefix = strtoupper($request->prefix);
+        $pengajuan = PengajuanAset::where('status', 'diajukan')
+                        ->where(function($q) use ($prefix) {
+                            $q->where('nama_aset', 'LIKE', $prefix . '%')
+                              ->orWhere('nomor_pengajuan', 'LIKE', $prefix . '%');
+                        })
+                        ->get();
+
+        if ($pengajuan->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada pengajuan yang ditemukan dengan inisial tersebut.');
+        }
+
+        $count = 0;
+        foreach ($pengajuan as $item) {
+            /** @var PengajuanAset $item */
+            $item->status = 'disetujui';
+            $item->approved_by = auth()->id();
+            $item->approved_at = now();
+            $item->save();
+            $count++;
+        }
+
+        return redirect()->route('manajemenasetdanasrama.persetujuan.index')
+            ->with('success', "$count pengajuan aset berhasil disetujui secara masal.");
+    }
 }

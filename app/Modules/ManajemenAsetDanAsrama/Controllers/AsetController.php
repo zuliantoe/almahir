@@ -43,6 +43,27 @@ class AsetController extends BaseController
     }
 
     /**
+     * Find asset by code and return its detail URL.
+     */
+    public function findByCode(Request $request)
+    {
+        $code = $request->input('code');
+        $aset = Aset::where('kode_aset', $code)->first();
+
+        if ($aset) {
+            return response()->json([
+                'success' => true,
+                'url' => route('manajemenasetdanasrama.aset.show', $aset->id)
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Aset dengan kode ' . $code . ' tidak ditemukan.'
+        ]);
+    }
+
+    /**
      * Show the form for creating a new asset manually.
      */
     public function create(): View
@@ -108,37 +129,14 @@ class AsetController extends BaseController
     public function update(Request $request, string $id): RedirectResponse
     {
         $aset = Aset::findOrFail($id);
-        $oldStatus = $aset->status_kondisi;
         
         $validated = $request->validate([
             'nama_aset'       => 'required|string|max:255',
-            'status_kondisi'  => 'required|in:baik,rusak,dalam_perbaikan,sudah_diperbaiki',
             'kondisi'         => 'nullable|string',
             'deskripsi_aset'  => 'nullable|string',
         ]);
 
         $aset->update($validated);
-
-        // Fase 3: Auto-Maintenance Engine
-        // Jika status diubah dari selain 'rusak' menjadi 'rusak'
-        if ($oldStatus !== 'rusak' && $validated['status_kondisi'] === 'rusak') {
-            // Cek apakah sudah ada kerusakan belum ditangani untuk aset ini
-            $existingKerusakan = \App\Modules\ManajemenAsetDanAsrama\Models\Kerusakan::where('aset_id', $aset->id)
-                ->where('status_penanganan', 'belum_ditangani')
-                ->exists();
-
-            if (!$existingKerusakan) {
-                \App\Modules\ManajemenAsetDanAsrama\Models\Kerusakan::create([
-                    'aset_id'           => $aset->id,
-                    'tanggal_lapor'     => now(),
-                    'pelapor'           => auth()->user()->name ?? 'Sistem Otomatis',
-                    'deskripsi_kerusakan'=> 'Otomatis dicatat oleh sistem karena status aset diubah menjadi rusak.',
-                    'tingkat_kerusakan' => 'sedang', // Default level
-                    'status_penanganan' => 'belum_ditangani',
-                    'catatan'           => null,
-                ]);
-            }
-        }
 
         return redirect()->route('manajemenasetdanasrama.aset.index')
             ->with('success', 'Data aset berhasil diperbarui.');
@@ -258,5 +256,34 @@ class AsetController extends BaseController
         $code = $this->generateAssetCode($nama, Aset::class, 'kode_aset');
         
         return response()->json(['code' => $code]);
+    }
+    /**
+     * Process bulk print request from prefixes/patterns.
+     */
+    public function bulkPrintAction(Request $request)
+    {
+        $request->validate([
+            'patterns' => 'required|array',
+            'patterns.*' => 'required|string|min:1'
+        ]);
+
+        $patterns = $request->input('patterns');
+        $query = Aset::query();
+
+        $query->where(function($q) use ($patterns) {
+            foreach ($patterns as $pattern) {
+                $q->orWhere('kode_aset', 'LIKE', trim(strtoupper($pattern)) . '%');
+            }
+        });
+
+        $aset = $query->get();
+
+        if ($aset->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada aset yang ditemukan dengan pola kode tersebut.');
+        }
+
+        $ids = $aset->pluck('id')->implode(',');
+
+        return redirect()->route('manajemenasetdanasrama.aset.print-label', ['ids' => $ids]);
     }
 }

@@ -46,6 +46,7 @@ Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
     // Persetujuan
     Route::prefix('persetujuan')->name('persetujuan.')->group(function () {
         Route::get('/', [PersetujuanController::class, 'index'])->name('index');
+        Route::post('bulk-approve', [PersetujuanController::class, 'bulkApprove'])->name('bulk-approve');
         Route::post('{id}/approve', [PersetujuanController::class, 'approve'])->name('approve');
         Route::post('{id}/reject', [PersetujuanController::class, 'reject'])->name('reject');
     });
@@ -53,6 +54,8 @@ Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
     // Pengadaan
     Route::prefix('pengadaan')->name('pengadaan.')->group(function () {
         Route::get('/', [PengadaanController::class, 'index'])->name('index');
+        Route::post('bulk-store', [PengadaanController::class, 'bulkStore'])->name('bulk-store');
+        Route::post('bulk-confirm', [PengadaanController::class, 'bulkConfirm'])->name('bulk-confirm');
         Route::get('{id}/proses', [PengadaanController::class, 'proses'])->name('proses');
         Route::post('store', [PengadaanController::class, 'store'])->name('store');
         Route::post('{id}/selesai', [PengadaanController::class, 'selesai'])->name('selesai');
@@ -63,15 +66,17 @@ Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
         Route::get('/', [AsetController::class, 'index'])->name('index');
         Route::get('create', [AsetController::class, 'create'])->name('create');
         Route::get('scan', [AsetController::class, 'scan'])->name('scan');
+        Route::get('find-by-code', [AsetController::class, 'findByCode'])->name('find-by-code');
         Route::post('/', [AsetController::class, 'store'])->name('store');
         Route::get('print-label', [AsetController::class, 'printLabel'])->name('print-label');
         Route::get('suggest-code', [AsetController::class, 'suggestCode'])->name('suggest-code');
+        Route::post('bulk-print', [AsetController::class, 'bulkPrintAction'])->name('bulk-print-action');
+        Route::post('bulk-destroy', [AsetController::class, 'bulkDestroy'])->name('bulk-destroy');
         Route::get('{id}', [AsetController::class, 'show'])->name('show');
         Route::get('{id}/edit', [AsetController::class, 'edit'])->name('edit');
         Route::put('{id}', [AsetController::class, 'update'])->name('update');
         Route::delete('{id}', [AsetController::class, 'destroy'])->name('destroy');
         Route::post('duplicate/{id}', [AsetController::class, 'duplicate'])->name('duplicate');
-        Route::post('bulk-destroy', [AsetController::class, 'bulkDestroy'])->name('bulk-destroy');
     });
     
     // Kamar

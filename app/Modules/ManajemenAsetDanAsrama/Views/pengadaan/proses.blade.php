@@ -123,3 +123,23 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        // Sync Tanggal Pesan -> Estimasi Datang
+        $('#tanggal_pesan').on('change', function() {
+            var tanggalPesan = $(this).val();
+            var estimasiDatangInput = $('#estimasi_datang');
+            
+            // Set minimal tanggal datang
+            estimasiDatangInput.attr('min', tanggalPesan);
+            
+            // Auto fill jika masih kosong atau jika tanggal datang sebelumnya lebih kecil
+            if (!estimasiDatangInput.val() || estimasiDatangInput.val() < tanggalPesan) {
+                estimasiDatangInput.val(tanggalPesan);
+            }
+        }).trigger('change'); // Trigger saat pertama kali buka halaman
+    });
+</script>
+@endpush

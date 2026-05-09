@@ -29,6 +29,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css">
     
     {{-- Custom Styles --}}
+    <style>
+        .btn-action-xs {
+            padding: 0.1rem 0.4rem !important;
+            font-size: 0.75rem !important;
+            line-height: 1.5 !important;
+            border-radius: 4px !important;
+        }
+    </style>
     @stack('styles')
     
     <style>
@@ -86,6 +94,8 @@
         .content-wrapper {
             background-color: #f8f9fc;
             padding-top: 20px;
+            min-height: calc(100vh - 120px) !important; /* Memastikan footer tetap di bawah */
+            padding-bottom: 20px;
         }
 
         .card {

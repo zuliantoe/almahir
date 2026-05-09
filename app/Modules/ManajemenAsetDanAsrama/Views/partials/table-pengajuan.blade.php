@@ -1,18 +1,9 @@
-<style>
-    .btn-action-xs {
-        padding: 0.1rem 0.3rem !important;
-        font-size: 0.7rem !important;
-        line-height: 1.2 !important;
-        border-radius: 4px !important;
-    }
-</style>
-
 <div class="table-responsive">
     <table class="table table-hover align-middle {{ $striped ?? 'table-striped' }} mb-0" style="width: 100%; min-width: 900px;">
         <thead class="bg-light text-muted small text-uppercase" style="letter-spacing: 0.5px;">
             <tr>
                 <th style="width: 3%;" class="text-center py-3 border-top-0">No</th>
-                <th style="width: 17%;" class="py-3 border-top-0">Kode Aset</th>
+                <th style="width: 17%;" class="py-3 border-top-0">No. Pengajuan</th>
                 <th style="width: 30%;" class="py-3 border-top-0">Nama Aset</th>
                 <th style="width: 15%;" class="py-3 border-top-0 text-right">Est. Harga</th>
                 <th style="width: 10%;" class="py-3 border-top-0 text-center">Tgl Ajuan</th>
@@ -43,15 +34,15 @@
                 @endif
                 <td class="small" style="white-space: nowrap;">{{ $item->pengaju->name ?? '-' }}</td>
                 <td class="text-center">
-                    <div class="d-flex justify-content-center">
+                    <div class="d-flex justify-content-center" style="gap: 4px;">
                         {{-- Tombol Lihat --}}
-                        <button type="button" class="btn btn-action-xs btn-info mr-1 btn-lihat" data-id="{{ $item->id }}" title="Lihat Detail">
+                        <button type="button" class="btn btn-action-xs btn-info btn-lihat" data-id="{{ $item->id }}" title="Lihat Detail">
                             <i class="fas fa-eye"></i>
                         </button>
 
                         @if($mode == 'user')
                             {{-- Edit --}}
-                            <button type="button" class="btn btn-action-xs btn-warning mr-1" 
+                            <button type="button" class="btn btn-action-xs btn-warning" 
                                     data-toggle="modal" 
                                     data-target="#modalEditPengajuan"
                                     data-id="{{ $item->id }}"
@@ -63,7 +54,7 @@
                             </button>
                             
                             {{-- Duplikat --}}
-                            <button type="button" class="btn btn-action-xs btn-secondary mr-1 btn-duplicate-pengajuan" 
+                            <button type="button" class="btn btn-action-xs btn-secondary btn-duplicate-pengajuan" 
                                     data-id="{{ $item->id }}"
                                     data-nama="{{ $item->nama_aset }}"
                                     title="Duplikat">
@@ -71,7 +62,7 @@
                             </button>
 
                             {{-- Hapus --}}
-                            <button type="button" class="btn btn-action-xs btn-danger mr-1" 
+                            <button type="button" class="btn btn-action-xs btn-danger" 
                                     data-toggle="modal" 
                                     data-target="#modalHapus"
                                     data-id="{{ $item->id }}"
@@ -94,7 +85,7 @@
                             @endif
 
                         @elseif($mode == 'approver')
-                            <button type="button" class="btn btn-action-xs btn-success mr-1 btn-approve" data-id="{{ $item->id }}" title="Setujui">
+                            <button type="button" class="btn btn-action-xs btn-success btn-approve" data-id="{{ $item->id }}" title="Setujui">
                                 <i class="fas fa-check"></i>
                             </button>
                             <button type="button" class="btn btn-action-xs btn-danger btn-reject" data-id="{{ $item->id }}" title="Tolak">
@@ -103,7 +94,7 @@
 
                         @elseif($mode == 'procurement')
                             <a href="{{ route('manajemenasetdanasrama.pengadaan.proses', $item->id) }}" class="btn btn-action-xs btn-success" title="Proses PO">
-                                <i class="fas fa-truck"></i> Proses
+                                <i class="fas fa-truck mr-1"></i> Proses
                             </a>
                         @endif
                     </div>

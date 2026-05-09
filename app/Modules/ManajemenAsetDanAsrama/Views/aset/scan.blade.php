@@ -65,22 +65,27 @@
     $(document).ready(function() {
         const html5QrCode = new Html5Qrcode("reader");
         const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-            // Berhenti scan
-            html5QrCode.stop().then((ignore) => {
-                // Tampilkan overlay loading
-                $('#scanner-overlay').attr('style', 'top:0; left:0; background: rgba(0,0,0,0.7); z-index: 10; display: flex !important;');
-                
-                // Cek apakah decodedText adalah URL yang valid ke aplikasi kita
-                // Karena rute kita mengandung rute detail aset
-                if (decodedText.includes('{{ url("/manajemenasetdanasrama/aset") }}')) {
-                    // Langsung redirect ke halaman detail
-                    window.location.href = decodedText;
+            // Berhenti scan sebentar biar gak double request
+            html5QrCode.pause(true);
+            
+            // Tampilkan overlay loading
+            $('#scanner-overlay').attr('style', 'top:0; left:0; background: rgba(0,0,0,0.7); z-index: 10; display: flex !important;');
+            
+            // Cari data ke server berdasarkan KODE ASET
+            $.get('{{ route("manajemenasetdanasrama.aset.find-by-code") }}', { code: decodedText }, function(res) {
+                if (res.success) {
+                    // Jika ketemu, langsung ganti halaman ke detail
+                    window.location.href = res.url;
                 } else {
-                    alert("QR Code tidak dikenali sebagai aset Siakad Almahir.");
-                    location.reload(); // Reset scanner
+                    // Jika tidak ketemu
+                    $('#scanner-overlay').hide();
+                    alert(res.message);
+                    html5QrCode.resume(); // Mulai scan lagi
                 }
-            }).catch((err) => {
-                console.error("Stop error", err);
+            }).fail(function() {
+                $('#scanner-overlay').hide();
+                alert("Terjadi kesalahan sistem saat mencari data.");
+                html5QrCode.resume();
             });
         };
 

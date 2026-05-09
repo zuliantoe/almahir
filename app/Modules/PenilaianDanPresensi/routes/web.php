@@ -20,10 +20,6 @@ use Modules\PenilaianDanPresensi\Controllers\IzinSakitController;
 Route::middleware(['auth'])->group(function () {
     // Dashboard Routes
     Route::get('/', [DashboardController::class, 'index'])->name('index');
-    Route::get('/dashboard-penilaian-akademik', [DashboardController::class, 'dashboardPenilaianAkademik'])->name('dashboard-penilaian-akademik');
-    Route::get('/dashboard-penilaian-tahfidz', [DashboardController::class, 'dashboardPenilaianTahfidz'])->name('dashboard-penilaian-tahfidz');
-    Route::get('/dashboard-presensi', [DashboardController::class, 'dashboardPresensi'])->name('dashboard-presensi');
-    Route::get('/dashboard-izin-sakit', [DashboardController::class, 'dashboardIzinSakit'])->name('dashboard-izin-sakit');
 
     // Penilaian Akademik Routes
     Route::prefix('penilaianakademik')->name('penilaianakademik.')->group(function () {

@@ -31,24 +31,24 @@
                     </div>
                 </div>
             @else
-                {{-- Guru/Admin Header: Clean Professional Style --}}
-                <div class="card border-0 shadow-sm overflow-hidden animate__animated animate__fadeIn" style="border-radius: 24px; background: white; border-left: 10px solid #4361ee !important;">
+                {{-- Guru/Admin Header: Indigo Gradient Style (UPGRADED) --}}
+                <div class="card border-0 shadow-lg overflow-hidden animate__animated animate__fadeIn" style="border-radius: 24px; background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); color: white;">
                     <div class="card-body p-5">
                         <div class="row align-items-center">
                             <div class="col-md-8">
-                                <h1 class="display-4 font-weight-bold text-primary mb-3">Assalamualaikum, أهلاً وسهلاً!</h1>
-                                <p class="lead text-muted mb-4">أهلاً وسهلاً، <strong>{{ auth()->user()->name }}</strong>. Mari kita mulai hari ini dengan semangat dan ikhlas untuk mendidik generasi rabbani.</p>
+                                <h1 class="display-4 font-weight-bold mb-3">Assalamualaikum, أهلاً وسهلاً!</h1>
+                                <p class="lead mb-4 opacity-75">أهلاً وسهلاً, <strong>{{ auth()->user()->name }}</strong>. Mari kita mulai hari ini dengan semangat untuk mendidik generasi rabbani.</p>
                                 <div class="d-flex flex-wrap">
-                                    <a href="{{ route('penilaiandanpresensi.presensi.index') }}" class="btn btn-primary btn-lg px-4 mr-3 mb-2 shadow-sm" style="border-radius: 50px;">
+                                    <a href="{{ route('penilaiandanpresensi.presensi.index') }}" class="btn btn-light btn-lg px-4 mr-3 mb-2 shadow-sm text-primary" style="border-radius: 50px;">
                                         <i class="fas fa-user-check mr-2"></i> Input Presensi
                                     </a>
-                                    <a href="{{ route('penilaiandanpresensi.penilaianakademik.create') }}" class="btn btn-outline-primary btn-lg px-4 mb-2" style="border-radius: 50px;">
+                                    <a href="{{ route('penilaiandanpresensi.penilaianakademik.create') }}" class="btn btn-outline-light btn-lg px-4 mb-2" style="border-radius: 50px;">
                                         <i class="fas fa-edit mr-2"></i> Input Nilai
                                     </a>
                                 </div>
                             </div>
                             <div class="col-md-4 text-center d-none d-md-block">
-                                <i class="fas fa-chalkboard-teacher fa-10x text-primary opacity-10"></i>
+                                <i class="fas fa-chalkboard-teacher fa-10x opacity-25"></i>
                             </div>
                         </div>
                     </div>
@@ -89,6 +89,39 @@
                 </div>
                 <h3 class="font-weight-bold mb-0 text-dark">-</h3>
                 <p class="text-muted small mb-0">Peringkat Kelas</p>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Stats Grid for Guru (MATCHING SISWA STYLE) --}}
+    @if(isset($isGuru) && isset($guruStats))
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-4 h-100 hover-elevate" style="border-radius: 20px;">
+                <div class="icon-circle bg-primary-light text-primary mb-3 mx-auto">
+                    <i class="fas fa-users fa-lg"></i>
+                </div>
+                <h3 class="font-weight-bold mb-0 text-dark">{{ $guruStats['total_siswa'] }}</h3>
+                <p class="text-muted small mb-0">Total Santri</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-4 h-100 hover-elevate" style="border-radius: 20px;">
+                <div class="icon-circle bg-success-light text-success mb-3 mx-auto">
+                    <i class="fas fa-calendar-check fa-lg"></i>
+                </div>
+                <h3 class="font-weight-bold mb-0 text-dark">{{ $guruStats['presensi_today'] }}</h3>
+                <p class="text-muted small mb-0">Presensi Hari Ini</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-4 h-100 hover-elevate" style="border-radius: 20px;">
+                <div class="icon-circle bg-info-light text-info mb-3 mx-auto">
+                    <i class="fas fa-star fa-lg"></i>
+                </div>
+                <h3 class="font-weight-bold mb-0 text-dark">{{ number_format($guruStats['avg_nilai'], 1) }}</h3>
+                <p class="text-muted small mb-0">Rata-rata Nilai</p>
             </div>
         </div>
     </div>

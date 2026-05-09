@@ -95,6 +95,13 @@ class DashboardController extends Controller
                 ->take(5)
                 ->get();
 
+            // Additional stats for Guru Stats Cards (consolidated from misplaced Guru dashboard)
+            $guruStats = [
+                'total_siswa' => \Modules\Siswa\Models\Siswa::count(),
+                'presensi_today' => $todayPresensi->count(),
+                'avg_nilai' => PenilaianAkademik::where('guru_id', $guru?->id)->avg('nilai') ?? 0
+            ];
+
             return view('penilaiandanpresensi::dashboard.index', [
                 'title' => 'Dashboard Penilaian & Presensi',
                 'activeTA' => $activeTA,
@@ -103,6 +110,7 @@ class DashboardController extends Controller
                 'penilaianAkademik' => $recentPenilaianAkademik,
                 'penilaianTahfidz' => collect(),
                 'isGuru' => true,
+                'guruStats' => $guruStats,
             ]);
         }
 
@@ -125,141 +133,13 @@ class DashboardController extends Controller
         $recentPenilaianTahfidz = PenilaianTahfidz::with(['siswa'])->where('tahunajaran_id', $activeTA->id ?? 0)->latest()->take(5)->get();
 
         return view('penilaiandanpresensi::dashboard.index', [
-                'title' => 'Dashboard Penilaian & Presensi',
+            'title' => 'Dashboard Penilaian & Presensi',
             'activeTA' => $activeTA,
             'statsPresensi' => $statsPresensi,
             'pendingIzin' => $pendingIzin,
             'penilaianAkademik' => $recentPenilaianAkademik,
             'penilaianTahfidz' => $recentPenilaianTahfidz,
             'isAdmin' => true,
-        ]);
-    }
-
-    /**
-     * Dashboard Penilaian Akademik
-     */
-    public function dashboardPenilaianAkademik(): View
-    {
-        $recentNilai = PenilaianAkademik::with(['siswa', 'guru'])->latest()->take(10)->get();
-        
-        $stats = [
-            'total' => PenilaianAkademik::count(),
-            'average' => PenilaianAkademik::avg('nilai') ?? 0,
-            'students' => PenilaianAkademik::distinct('siswa_id')->count(),
-            'this_month' => PenilaianAkademik::whereMonth('created_at', now()->month)->count(),
-        ];
-
-        $distribution = [
-            'excellent' => PenilaianAkademik::where('nilai', '>=', 90)->count(),
-            'good' => PenilaianAkademik::whereBetween('nilai', [75, 89])->count(),
-            'fair' => PenilaianAkademik::whereBetween('nilai', [60, 74])->count(),
-            'poor' => PenilaianAkademik::where('nilai', '<', 60)->count(),
-        ];
-
-        return view('penilaiandanpresensi::penilaian-akademik.dashboard', [
-            'recentNilai' => $recentNilai,
-            'stats' => $stats,
-            'distribution' => $distribution,
-        ]);
-    }
-
-    /**
-     * Dashboard Penilaian Tahfidz
-     */
-    public function dashboardPenilaianTahfidz(): View
-    {
-        $recentHafalan = PenilaianTahfidz::with(['siswa'])->latest()->take(10)->get();
-        
-        $stats = [
-            'total' => PenilaianTahfidz::count(),
-            'surat_count' => PenilaianTahfidz::distinct('surat_awal')->count(),
-            'students' => PenilaianTahfidz::distinct('siswa_id')->count(),
-            'this_month' => PenilaianTahfidz::whereMonth('created_at', now()->month)->count(),
-        ];
-
-        // Top hafizan (students with most hafalans)
-        $topHafizan = PenilaianTahfidz::selectRaw('siswa_id, COUNT(*) as total')
-            ->with('siswa')
-            ->groupBy('siswa_id')
-            ->orderByDesc('total')
-            ->take(5)
-            ->get()
-            ->map(function($item) {
-                return (object)[
-                    'siswa_nama' => $item->siswa->nama ?? '-',
-                    'total' => $item->total,
-                ];
-            });
-
-        return view('penilaiandanpresensi::penilaian-tahfidz.dashboard', [
-            'recentHafalan' => $recentHafalan,
-            'stats' => $stats,
-            'topHafizan' => $topHafizan,
-        ]);
-    }
-
-    /**
-     * Dashboard Presensi
-     */
-    public function dashboardPresensi(): View
-    {
-        $recentPresensi = Presensi::with(['siswa', 'guru'])->latest()->take(10)->get();
-        
-        $todayPresensi = Presensi::whereDate('created_at', today())->get();
-        $todayHadir = $todayPresensi->where('status', 'Hadir')->count();
-        $todayIzin = $todayPresensi->where('status', 'Izin')->count();
-        $todaySakit = $todayPresensi->where('status', 'Sakit')->count();
-        $todayAlpha = $todayPresensi->where('status', 'Alpha')->count();
-
-        $weekStart = now()->startOfWeek();
-        $weekEnd = now()->endOfWeek();
-        $weekPresensi = Presensi::whereBetween('created_at', [$weekStart, $weekEnd])->get();
-        $weekHadir = $weekPresensi->where('status', 'Hadir')->count();
-        $weekIzin = $weekPresensi->where('status', 'Izin')->count();
-        $weekSakit = $weekPresensi->where('status', 'Sakit')->count();
-        $weekAlpha = $weekPresensi->where('status', 'Alpha')->count();
-
-        return view('penilaiandanpresensi::presensi.dashboard', [
-            'recentPresensi' => $recentPresensi,
-            'todayHadir' => $todayHadir,
-            'todayIzin' => $todayIzin,
-            'todaySakit' => $todaySakit,
-            'todayAlpha' => $todayAlpha,
-            'presensiCount' => Presensi::count(),
-            'weekHadir' => $weekHadir,
-            'weekIzin' => $weekIzin,
-            'weekSakit' => $weekSakit,
-            'weekAlpha' => $weekAlpha,
-        ]);
-    }
-
-    /**
-     * Dashboard Izin & Sakit
-     */
-    public function dashboardIzinSakit(): View
-    {
-        $pendingRequests = IzinSakit::with(['siswa'])
-            ->where('status', 'pending')
-            ->latest()
-            ->take(10)
-            ->get();
-
-        $stats = [
-            'pending' => IzinSakit::where('status', 'pending')->count(),
-            'approved' => IzinSakit::where('status', 'approved')->count(),
-            'rejected' => IzinSakit::where('status', 'rejected')->count(),
-            'total' => IzinSakit::count(),
-        ];
-
-        $distribution = [
-            'izin' => IzinSakit::where('jenis', 'Izin')->count(),
-            'sakit' => IzinSakit::where('jenis', 'Sakit')->count(),
-        ];
-
-        return view('penilaiandanpresensi::izin-sakit.dashboard', [
-            'pendingRequests' => $pendingRequests,
-            'stats' => $stats,
-            'distribution' => $distribution,
         ]);
     }
 }

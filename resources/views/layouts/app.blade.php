@@ -49,9 +49,29 @@
 
         .nav-sidebar .nav-link {
             border-radius: 12px;
-            margin-bottom: 5px;
-            padding: 10px 15px;
+            margin-bottom: 8px !important; /* Menaikkan margin antar menu */
+            padding: 12px 15px !important; /* Menaikkan padding agar lebih lega */
             font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-sidebar .nav-link .nav-icon {
+            margin-left: 0 !important;
+            margin-right: 12px !important;
+            width: 20px !important;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .nav-header {
+            padding: 1.8rem 15px 0.8rem !important; /* Memberi ruang lebih pada header */
+            font-weight: 700 !important;
+            font-size: 0.75rem !important;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            opacity: 0.8;
+            color: #8a8a8e !important;
         }
 
         .nav-sidebar .nav-link.active {

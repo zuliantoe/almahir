@@ -38,6 +38,24 @@
                 <div class="col-md-6">
                     <x-input name="pekerjaan" label="Pekerjaan" :value="old('pekerjaan', $waliMurid->pekerjaan)" />
                 </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Pilih Siswa (Anak) <span class="text-danger">*</span></label>
+                        <select name="siswa_ids[]" class="form-control select2 @error('siswa_ids') is-invalid @enderror" multiple="multiple" data-placeholder="Pilih satu atau lebih siswa" required>
+                            @php
+                                $selectedIds = old('siswa_ids', $waliMurid->siswa->pluck('id')->toArray());
+                            @endphp
+                            @foreach($siswas as $siswa)
+                                <option value="{{ $siswa->id }}" {{ in_array($siswa->id, $selectedIds) ? 'selected' : '' }}>
+                                    {{ $siswa->nama }} ({{ $siswa->nis }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('siswa_ids')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
+                </div>
             </div>
 
             <div class="form-group">

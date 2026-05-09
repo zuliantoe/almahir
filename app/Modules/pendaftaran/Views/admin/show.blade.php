@@ -137,24 +137,58 @@
 
             {{-- DATA ORANG TUA --}}
             <h5 class="mb-3"><strong>Data Orang Tua</strong></h5>
-            <table class="table table-bordered mb-4">
-                <tr>
-                    <th width="30%">Nama Ayah</th>
-                    <td>{{ $pendaftaran->nama_ayah }}</td>
-                </tr>
-                <tr>
-                    <th>Pekerjaan Ayah</th>
-                    <td>{{ $pendaftaran->pekerjaan_ayah }}</td>
-                </tr>
-                <tr>
-                    <th>No HP</th>
-                    <td>{{ $pendaftaran->no_hp }}</td>
-                </tr>
-                <tr>
-                    <th>Email</th>
-                    <td>{{ $pendaftaran->email }}</td>
-                </tr>
-            </table>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <p class="mb-1 text-muted"><strong>Data Ayah</strong></p>
+                    <table class="table table-sm table-bordered">
+                        <tr>
+                            <th width="40%">Nama Ayah</th>
+                            <td>{{ $pendaftaran->nama_ayah }}</td>
+                        </tr>
+                        <tr>
+                            <th>Pekerjaan</th>
+                            <td>{{ $pendaftaran->pekerjaan_ayah }}</td>
+                        </tr>
+                        <tr>
+                            <th>No HP</th>
+                            <td>{{ $pendaftaran->no_hp_ayah }}</td>
+                        </tr>
+                        <tr>
+                            <th>Alamat</th>
+                            <td>{{ $pendaftaran->alamat_ayah ?? '-' }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-1 text-muted"><strong>Data Ibu</strong></p>
+                    <table class="table table-sm table-bordered">
+                        <tr>
+                            <th width="40%">Nama Ibu</th>
+                            <td>{{ $pendaftaran->nama_ibu ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Pekerjaan</th>
+                            <td>{{ $pendaftaran->pekerjaan_ibu ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>No HP</th>
+                            <td>{{ $pendaftaran->no_hp_ibu ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Alamat</th>
+                            <td>{{ $pendaftaran->alamat_ibu ?? '-' }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-12 mt-2">
+                    <table class="table table-sm table-bordered">
+                        <tr>
+                            <th width="20%">Email (Wali)</th>
+                            <td>{{ $pendaftaran->email }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
 
 
             {{-- STATUS & ADMIN --}}

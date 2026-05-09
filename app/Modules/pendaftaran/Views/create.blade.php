@@ -166,17 +166,44 @@
 
         <h3>Data Orang Tua</h3>
 
-        <label>Nama Ayah</label>
-        <input type="text" name="nama_ayah">
-        <small id="error-nama_ayah" class="error"></small>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <h4>Data Ayah</h4>
+                <label>Nama Ayah</label>
+                <input type="text" name="nama_ayah">
+                <small id="error-nama_ayah" class="error"></small>
 
-        <label>Pekerjaan Ayah</label>
-        <input type="text" name="pekerjaan_ayah">
-        <small id="error-pekerjaan_ayah" class="error"></small>
+                <label>Pekerjaan Ayah</label>
+                <input type="text" name="pekerjaan_ayah">
+                <small id="error-pekerjaan_ayah" class="error"></small>
 
-        <label>No HP</label>
-        <input type="text" name="no_hp">
-        <small id="error-no_hp" class="error"></small>
+                <label>No HP Ayah</label>
+                <input type="text" name="no_hp_ayah">
+                <small id="error-no_hp_ayah" class="error"></small>
+
+                <label>Alamat Ayah</label>
+                <textarea name="alamat_ayah" rows="2"></textarea>
+                <small id="error-alamat_ayah" class="error"></small>
+            </div>
+            <div>
+                <h4>Data Ibu</h4>
+                <label>Nama Ibu</label>
+                <input type="text" name="nama_ibu">
+                <small id="error-nama_ibu" class="error"></small>
+
+                <label>Pekerjaan Ibu</label>
+                <input type="text" name="pekerjaan_ibu">
+                <small id="error-pekerjaan_ibu" class="error"></small>
+
+                <label>No HP Ibu</label>
+                <input type="text" name="no_hp_ibu">
+                <small id="error-no_hp_ibu" class="error"></small>
+
+                <label>Alamat Ibu</label>
+                <textarea name="alamat_ibu" rows="2"></textarea>
+                <small id="error-alamat_ibu" class="error"></small>
+            </div>
+        </div>
 
         <label>Email</label>
         <input type="email" name="email">

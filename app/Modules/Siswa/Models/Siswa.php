@@ -125,4 +125,10 @@ class Siswa extends Model
     {
         return $this->hasMany(\App\Modules\Akademik\Models\RombelSiswa::class, 'siswa_id');
     }
+
+    public function wali()
+    {
+        return $this->belongsToMany(\Modules\WaliMurid\Models\WaliMurid::class, 'siswa_wali', 'siswa_id', 'wali_murid_id')
+            ->withTimestamps();
+    }
 }

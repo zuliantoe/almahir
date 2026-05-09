@@ -8,6 +8,8 @@
             $homeUrl = route('penilaiandanpresensi.index');
         } elseif (Auth::user()->hasRole('GURU')) {
             $homeUrl = route('penilaiandanpresensi.index');
+        } elseif (Auth::user()->hasRole('WALI_MURID')) {
+            $homeUrl = route('walimurid.portal.dashboard');
         }
     }
 @endphp
@@ -216,6 +218,18 @@
                         <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaiantahfidz*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-quran"></i>
                             <p>Nilai Tahfidz</p>
+                        </a>
+                    </li>
+                    @endif
+                    
+                    {{-- PORTAL WALI MURID --}}
+                    @if(Auth::check() && Auth::user()->hasRole('WALI_MURID'))
+                    <li class="nav-header">PORTAL WALI MURID</li>
+                    
+                    <li class="nav-item">
+                        <a href="{{ route('walimurid.portal.dashboard') }}" class="nav-link {{ request()->is('walimurid/portal/dashboard*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-user-shield"></i>
+                            <p>Dashboard Wali</p>
                         </a>
                     </li>
                     @endif

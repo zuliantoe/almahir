@@ -42,8 +42,7 @@ class WaliMurid extends Model
      */
     public function siswa()
     {
-        return $this->belongsToMany(Siswa::class, 'siswa_wali', 'wali_murid', 'siswa_id')
-            ->withPivot('hubungan')
+        return $this->belongsToMany(Siswa::class, 'siswa_wali', 'wali_murid_id', 'siswa_id')
             ->withTimestamps();
     }
 }

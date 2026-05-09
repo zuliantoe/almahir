@@ -2,9 +2,23 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\WaliMurid\Controllers\WaliMuridController;
+use Modules\WaliMurid\Controllers\PortalController;
 
 Route::middleware('auth')->group(function () {
-    // Resource routes - names will be auto-prefixed by ModuleServiceProvider
-    // Final routes: walimurid.index, walimurid.create, etc.
-    Route::resource('/', WaliMuridController::class)->parameters(['' => 'walimurid']);
+    // Admin Routes
+    Route::resource('admin', WaliMuridController::class)->names([
+        'index' => 'index',
+        'create' => 'create',
+        'store' => 'store',
+        'edit' => 'edit',
+        'update' => 'update',
+        'destroy' => 'destroy',
+        'show' => 'show',
+    ])->parameters(['admin' => 'walimurid']);
+
+    // Portal Wali Murid Routes
+    Route::group(['prefix' => 'portal'], function() {
+        Route::get('/dashboard', [PortalController::class, 'dashboard'])->name('portal.dashboard');
+        Route::get('/siswa/{id}', [PortalController::class, 'siswaDetail'])->name('portal.siswa-detail');
+    });
 });

@@ -34,8 +34,9 @@
                 <thead class="thead-light">
                     <tr>
                         <th width="50">No</th>
-                        <th>Nama</th>
+                        <th>Nama Wali</th>
                         <th>Hubungan</th>
+                        <th>Putra/Putri (Siswa)</th>
                         <th>Telepon</th>
                         <th>Pekerjaan</th>
                         <th width="150">Aksi</th>
@@ -53,6 +54,15 @@
                         </td>
                         <td>
                             <span class="badge badge-info">{{ ucfirst($wali->hubungan) }}</span>
+                        </td>
+                        <td>
+                            @forelse($wali->siswa as $s)
+                                <span class="badge badge-light border mb-1">
+                                    <i class="fas fa-user-graduate text-primary mr-1"></i> {{ $s->nama }}
+                                </span><br>
+                            @empty
+                                <span class="text-danger small"><i class="fas fa-exclamation-triangle"></i> Belum ada anak</span>
+                            @endforelse
                         </td>
                         <td>{{ $wali->telepon ?? '-' }}</td>
                         <td>{{ $wali->pekerjaan ?? '-' }}</td>

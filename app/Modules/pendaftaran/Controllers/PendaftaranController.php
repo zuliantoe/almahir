@@ -93,8 +93,13 @@ class PendaftaranController extends Controller
 
             'nama_ayah' => 'required|string',
             'pekerjaan_ayah' => 'required|string',
+            'no_hp_ayah' => 'required|string|max:20',
+            'alamat_ayah' => 'required|string',
 
-            'no_hp' => 'required|digits_between:10,15',
+            'nama_ibu' => 'required|string',
+            'pekerjaan_ibu' => 'required|string',
+            'no_hp_ibu' => 'required|string|max:20',
+            'alamat_ibu' => 'required|string',
 
             'email' => 'required|email|unique:pendaftarans,email',
 

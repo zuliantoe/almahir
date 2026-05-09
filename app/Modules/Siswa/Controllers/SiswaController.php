@@ -58,11 +58,11 @@ class SiswaController extends Controller
             'nis' => 'required|string|max:20|unique:siswa,nis',
             'email' => 'required|email|unique:siswa,email',
             'tanggal_lahir' => 'required|date',
-            'tempat_lahir' => 'nullable|string|max:255',
-            'jenis_kelamin' => 'nullable|in:L,P',
-            'telepon' => 'nullable|string|max:20',
-            'alamat' => 'nullable|string',
-            'tahun_masuk' => 'nullable|integer',
+            'tempat_lahir' => 'required|string|max:255',
+            'jenis_kelamin' => 'required|in:L,P',
+            'telepon' => 'required|string|max:20',
+            'alamat' => 'required|string',
+            'tahun_masuk' => 'required|integer',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 

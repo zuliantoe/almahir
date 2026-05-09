@@ -37,11 +37,10 @@
                                     <option value="{{ $p->id }}" 
                                         data-nama="{{ $p->nama_lengkap }}"
                                         data-nis="{{ $p->nisn }}"
-                                        data-email="{{ $p->email }}"
                                         data-tempat_lahir="{{ $p->tempat_lahir }}"
                                         data-tanggal_lahir="{{ $p->tanggal_lahir }}"
                                         data-jenis_kelamin="{{ $p->jenis_kelamin }}"
-                                        data-telepon="{{ $p->no_hp }}"
+                                        data-telepon="{{ $p->no_hp_ayah }}"
                                         data-alamat="{{ $p->alamat }}"
                                     >
                                         {{ $p->nama_lengkap }} (NISN: {{ $p->nisn }})
@@ -100,12 +99,13 @@
                             <x-input 
                                 label="Tempat Lahir" 
                                 name="tempat_lahir" 
-                                placeholder="Kota kelahiran" />
+                                placeholder="Kota kelahiran"
+                                required />
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Jenis Kelamin</label>
-                                <select name="jenis_kelamin" class="form-control @error('jenis_kelamin') is-invalid @enderror">
+                                <label>Jenis Kelamin <span class="text-danger">*</span></label>
+                                <select name="jenis_kelamin" class="form-control @error('jenis_kelamin') is-invalid @enderror" required>
                                     <option value="">-- Pilih --</option>
                                     <option value="L" {{ old('jenis_kelamin') == 'L' ? 'selected' : '' }}>Laki-laki</option>
                                     <option value="P" {{ old('jenis_kelamin') == 'P' ? 'selected' : '' }}>Perempuan</option>
@@ -120,12 +120,13 @@
                     <x-input 
                         label="No. Telepon" 
                         name="telepon" 
-                        placeholder="08xxxxxxxxxx" />
+                        placeholder="08xxxxxxxxxx"
+                        required />
 
                     <div class="form-group">
-                        <label>Alamat Lengkap</label>
+                        <label>Alamat Lengkap <span class="text-danger">*</span></label>
                         <textarea name="alamat" class="form-control @error('alamat') is-invalid @enderror" 
-                                  rows="3" placeholder="Masukkan alamat lengkap">{{ old('alamat') }}</textarea>
+                                  rows="3" placeholder="Masukkan alamat lengkap" required>{{ old('alamat') }}</textarea>
                         @error('alamat')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -139,8 +140,8 @@
 
 
                     <div class="form-group">
-                        <label>Tahun Masuk (Tahun Ajaran)</label>
-                        <select name="tahun_masuk" class="form-control @error('tahun_masuk') is-invalid @enderror">
+                        <label>Tahun Masuk (Tahun Ajaran) <span class="text-danger">*</span></label>
+                        <select name="tahun_masuk" class="form-control @error('tahun_masuk') is-invalid @enderror" required>
                             <option value="">-- Pilih Tahun Ajaran --</option>
                             @if(isset($tahunAjaran))
                                 @foreach($tahunAjaran as $ta)
@@ -207,36 +208,39 @@
     }
 
     // Auto-fill form from Pendaftaran
-    var autoFillSelect = document.getElementById('auto_fill_pendaftaran');
-    if (autoFillSelect) {
-        autoFillSelect.addEventListener('change', function() {
-            var selected = this.options[this.selectedIndex];
-            if (selected.value) {
+    $(document).ready(function() {
+        $('#auto_fill_pendaftaran').on('change', function() {
+            var selected = $(this).find(':selected');
+            if (selected.val()) {
                 // Update inputs
-                document.querySelector('input[name="nama"]').value = selected.getAttribute('data-nama') || '';
-                document.querySelector('input[name="nis"]').value = selected.getAttribute('data-nis') || '';
-                document.querySelector('input[name="email"]').value = selected.getAttribute('data-email') || '';
-                document.querySelector('input[name="tempat_lahir"]').value = selected.getAttribute('data-tempat_lahir') || '';
-                document.querySelector('input[name="tanggal_lahir"]').value = selected.getAttribute('data-tanggal_lahir') || '';
-                document.querySelector('input[name="telepon"]').value = selected.getAttribute('data-telepon') || '';
-                document.querySelector('textarea[name="alamat"]').value = selected.getAttribute('data-alamat') || '';
+                $('input[name="nama"]').val(selected.data('nama') || '');
+                $('input[name="nis"]').val(selected.data('nis') || '');
+                $('input[name="tempat_lahir"]').val(selected.data('tempat_lahir') || '');
+                $('input[name="tanggal_lahir"]').val(selected.data('tanggal_lahir') || '');
+                $('input[name="telepon"]').val(selected.data('telepon') || '');
+                $('textarea[name="alamat"]').val(selected.data('alamat') || '');
                 
                 // Update select
-                var jkSelect = document.querySelector('select[name="jenis_kelamin"]');
-                jkSelect.value = selected.getAttribute('data-jenis_kelamin') || '';
+                var jkSelect = $('select[name="jenis_kelamin"]');
+                jkSelect.val(selected.data('jenis_kelamin') || '').trigger('change');
 
                 // Add or update hidden input for pendaftaran_id
-                var hiddenInput = document.getElementById('hidden_pendaftaran_id');
-                if (hiddenInput) {
-                    hiddenInput.value = selected.value;
-                }
+                $('#hidden_pendaftaran_id').val(selected.val());
+                
+                // Visual feedback
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Data Terisi!',
+                    text: 'Form berhasil diisi menggunakan data pendaftaran.',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
             } else {
-                var hiddenInput = document.getElementById('hidden_pendaftaran_id');
-                if (hiddenInput) {
-                    hiddenInput.value = '';
-                }
+                $('#hidden_pendaftaran_id').val('');
             }
         });
-    }
+    });
 </script>
 @endpush

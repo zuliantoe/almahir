@@ -87,32 +87,35 @@
             <div class="col-lg-7">
                 <x-card title="Pilih Siswa" icon="fas fa-user-graduate" type="info" outline>
                     <div class="mb-3">
+                        <div class="alert alert-info py-2 shadow-sm border-0" style="background: linear-gradient(to right, #e0f3ff, #ffffff);">
+                            <i class="fas fa-info-circle mr-2 text-info"></i>
+                            <small class="font-weight-bold text-info">Hanya menampilkan siswa yang BELUM terdaftar di Rombel manapun pada Tahun Ajaran ini.</small>
+                        </div>
                         <div class="input-group">
                             <div class="input-group-prepend">
-                                <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                                <span class="input-group-text bg-white border-right-0"><i class="fas fa-search text-muted"></i></span>
                             </div>
                             <input type="text" id="siswaSearch" class="form-control border-left-0" placeholder="Cari nama atau NIS siswa...">
                         </div>
                     </div>
 
-                    <div class="siswa-list-container" style="max-height: 400px; overflow-y: auto; border: 1px solid #e3e6f0; border-radius: 8px;">
-                        <table class="table table-sm table-hover mb-0">
-                            <thead class="thead-light sticky-top">
+                    <div class="siswa-list-container shadow-sm" style="max-height: 450px; overflow-y: auto; border: 1px solid #e3e6f0; border-radius: 12px; background: #fdfdfd;">
+                        <table class="table table-hover mb-0">
+                            <thead class="thead-light sticky-top shadow-sm">
                                 <tr>
                                     <th width="40" class="text-center">
-                                        <div class="custom-control custom-checkbox">
+                                        <div class="custom-control custom-checkbox custom-control-lg">
                                             <input type="checkbox" class="custom-control-input" id="selectAllSiswa">
                                             <label class="custom-control-label" for="selectAllSiswa"></label>
                                         </div>
                                     </th>
-                                    <th>NIS</th>
-                                    <th>Nama Siswa</th>
+                                    <th>Identitas Siswa</th>
                                     <th class="text-center">Gender</th>
                                 </tr>
                             </thead>
                             <tbody id="siswaTableBody">
                                 @forelse($siswas as $s)
-                                    <tr class="siswa-row">
+                                    <tr class="siswa-row" style="cursor: pointer;" onclick="toggleRow(this)">
                                         <td class="text-center">
                                             <div class="custom-control custom-checkbox">
                                                 <input type="checkbox" name="siswa_ids[]" value="{{ $s->id }}" 
@@ -121,26 +124,45 @@
                                                 <label class="custom-control-label" for="siswa_{{ $s->id }}"></label>
                                             </div>
                                         </td>
-                                        <td><code>{{ $s->nis }}</code></td>
-                                        <td class="siswa-nama font-weight-bold">{{ $s->nama }}</td>
-                                        <td class="text-center text-muted">{{ $s->jenis_kelamin }}</td>
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <span class="siswa-nama font-weight-bold text-dark">{{ $s->nama }}</span>
+                                                <small class="text-muted"><code class="text-primary">{{ $s->nis }}</code></small>
+                                            </div>
+                                        </td>
+                                        <td class="text-center text-muted">
+                                            @if($s->jenis_kelamin == 'L')
+                                                <span class="badge badge-soft-info px-2">Laki-laki</span>
+                                            @else
+                                                <span class="badge badge-soft-danger px-2">Perempuan</span>
+                                            @endif
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center py-4 text-muted small italic">Tidak ada siswa aktif ditemukan.</td>
+                                        <td colspan="3" class="text-center py-5 text-muted">
+                                            <i class="fas fa-user-slash fa-3x mb-3 text-light"></i>
+                                            <p class="mb-0 italic">Semua siswa aktif sudah terdaftar di Rombel lain.</p>
+                                        </td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
-                    <div class="mt-2 text-right">
-                        <small class="text-muted"><span id="selectedCount">0</span> siswa terpilih</small>
+                    <div class="mt-3 d-flex justify-content-between align-items-center">
+                        <span class="badge badge-light border px-3 py-2 text-muted">
+                            Total: {{ $siswas->count() }} Siswa Tersedia
+                        </span>
+                        <div class="text-primary font-weight-bold" style="font-size: 1.1rem;">
+                            <span id="selectedCount">0</span> <small>Siswa Terpilih</small>
+                        </div>
                     </div>
 
-                    <hr>
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary px-4 shadow-sm">
-                            <i class="fas fa-save mr-2"></i>Simpan Rombel
+                    <hr class="my-4">
+                    <div class="d-flex justify-content-between">
+                        <x-btn :href="route('akademik.rombel.index')" class="btn-light text-muted border">Batal</x-btn>
+                        <button type="submit" class="btn btn-primary px-5 shadow-lg font-weight-bold" style="border-radius: 30px;">
+                            <i class="fas fa-check-circle mr-2"></i>Finalisasi Rombel
                         </button>
                     </div>
                 </x-card>
@@ -149,8 +171,25 @@
     </form>
 </div>
 
+<style>
+    .badge-soft-danger { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; }
+    .custom-control-lg .custom-control-label::before, 
+    .custom-control-lg .custom-control-label::after { width: 1.5rem; height: 1.5rem; top: -0.25rem; left: -1.75rem; }
+    .siswa-row:hover { background-color: #f0f7ff !important; }
+    .siswa-row.selected { background-color: #e3f2fd !important; }
+    .sticky-top { z-index: 100; }
+</style>
+
 @push('scripts')
 <script>
+    function toggleRow(row) {
+        const check = row.querySelector('.siswa-check');
+        if (event.target.tagName !== 'INPUT' && event.target.tagName !== 'LABEL') {
+            check.checked = !check.checked;
+            updateCount();
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('siswaSearch');
         const rows = document.querySelectorAll('.siswa-row');
@@ -175,16 +214,24 @@
         // Select All logic
         selectAll.addEventListener('change', function() {
             checks.forEach(check => {
-                if (check.closest('.siswa-row').style.display !== 'none') {
+                const row = check.closest('.siswa-row');
+                if (row.style.display !== 'none') {
                     check.checked = this.checked;
+                    if (this.checked) row.classList.add('selected');
+                    else row.classList.remove('selected');
                 }
             });
             updateCount();
         });
 
-        // Count logic
+        // Check logic
         checks.forEach(check => {
-            check.addEventListener('change', updateCount);
+            check.addEventListener('change', function() {
+                const row = this.closest('.siswa-row');
+                if (this.checked) row.classList.add('selected');
+                else row.classList.remove('selected');
+                updateCount();
+            });
         });
 
         function updateCount() {

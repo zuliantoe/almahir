@@ -12,34 +12,29 @@ class WaliKelasTestingSeeder extends Seeder
 {
     public function run(): void
     {
-        $teacherNames = [
-            'Budi Santoso, S.Pd',
-            'Siti Aminah, M.Pd',
-            'Agus Hermawan, S.T',
-            'Dewi Lestari, S.S'
-        ];
-
-        $gurus = Guru::whereIn('nama', $teacherNames)->get();
+        // Get all available gurus
+        $gurus = Guru::all();
         
-        // Ensure they have the correct roles if necessary
-        foreach ($gurus as $guru) {
-            $user = User::where('ref_type', Guru::class)->where('ref_id', $guru->id)->first();
-            if ($user) {
-                // Ensure they have GURU role at least
-                if (!$user->hasRole('GURU')) {
-                    $user->assignRole('GURU');
-                }
-            }
+        if ($gurus->isEmpty()) {
+            $this->command->error("× No Guru data found in database. Please seed Guru data first.");
+            return;
         }
 
         $rombels = Rombel::all();
         
-        foreach ($gurus as $index => $guru) {
-            if (isset($rombels[$index])) {
-                $rombel = $rombels[$index];
-                $rombel->wali_kelas_id = $guru->id;
-                $rombel->save();
-                $this->command->info("✓ Assigned {$guru->nama} as Wali Kelas for {$rombel->nama_rombel}");
+        foreach ($rombels as $index => $rombel) {
+            // Pick a guru based on index (loop back if more rombels than gurus)
+            $guru = $gurus[$index % $gurus->count()];
+            
+            $rombel->guru_id = $guru->id;
+            $rombel->save();
+            
+            $this->command->info("✓ Assigned {$guru->nama} as Wali Kelas for {$rombel->nama_rombel}");
+            
+            // Ensure they have the correct roles if necessary
+            $user = User::where('ref_type', Guru::class)->where('ref_id', $guru->id)->first();
+            if ($user && !$user->hasRole('GURU')) {
+                $user->assignRole('GURU');
             }
         }
     }

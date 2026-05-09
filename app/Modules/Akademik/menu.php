@@ -55,20 +55,6 @@ return [
             'roles' => ['SUPER_ADMIN', 'STAFF']
         ],
         [
-            'label' => 'Kenaikan Kelas',
-            'icon' => 'fas fa-level-up-alt',
-            'route' => 'akademik.kenaikan-kelas.index',
-            'match' => 'akademik/kenaikan-kelas*',
-            'roles' => ['SUPER_ADMIN', 'STAFF']
-        ],
-        [
-            'label' => 'Kelulusan Siswa',
-            'icon' => 'fas fa-graduation-cap',
-            'route' => 'akademik.kelulusan.index',
-            'match' => 'akademik/kelulusan*',
-            'roles' => ['SUPER_ADMIN', 'STAFF']
-        ],
-        [
             'label' => 'Data Master',
             'icon' => 'fas fa-database',
             'roles' => ['SUPER_ADMIN', 'STAFF'],

@@ -72,7 +72,7 @@
             <x-card title="Daftar Penghuni Aktif" icon="fas fa-users" class="card-outline card-success">
                 <x-slot name="tools">
                     <div class="no-print">
-                        <button onclick="window.print()" class="btn btn-sm btn-info mr-1 shadow-sm">
+                        <button type="button" data-toggle="modal" data-target="#modalCetakKamar" class="btn btn-sm btn-info mr-1 shadow-sm">
                             <i class="fas fa-print mr-1"></i> Cetak Laporan
                         </button>
                         <a href="{{ route('manajemenasetdanasrama.penghuni.assign-multiple', $kamar->id) }}" class="btn btn-sm btn-primary mr-1 shadow-sm">
@@ -177,6 +177,8 @@
                     </table>
                 </div>
             </x-card>
+
+
 
             {{-- Riwayat --}}
             <x-card title="Riwayat Penghuni Sebelumnya" icon="fas fa-history" class="card-outline card-secondary collapsed-card no-print mt-3">
@@ -313,6 +315,50 @@
             <div class="modal-footer bg-light border-0 py-3 px-5">
                 <button type="button" class="btn btn-secondary px-4 shadow-sm font-weight-bold" style="border-radius: 8px;" data-dismiss="modal">Tutup Profil</button>
             </div>
+        </div>
+    </div>
+</div>
+{{-- MODAL CETAK KAMAR --}}
+<div class="modal fade" id="modalCetakKamar" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <div class="modal-header bg-info text-white border-0 py-3">
+                <h5 class="modal-title font-weight-bold"><i class="fas fa-print mr-2"></i> Pengaturan Cetak Kamar</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="formCetakKamar" action="{{ route('manajemenasetdanasrama.kamar.print', $kamar->id) }}" method="GET" target="_blank">
+                <div class="modal-body p-4">
+                    <div class="alert alert-info border-0 shadow-none mb-4" style="background: #e8f4f8; color: #1a4b63;">
+                        <i class="fas fa-info-circle mr-2"></i> Masukkan nama penandatangan untuk dicantumkan di bagian bawah laporan.
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="small font-weight-bold text-muted text-uppercase">Nama Musyrif Kamar</label>
+                        <div class="input-group shadow-sm">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white border-right-0"><i class="fas fa-user-tie text-info"></i></span>
+                            </div>
+                            <input type="text" name="musyrif" class="form-control border-left-0" placeholder="Contoh: Ustadz Ahmad" required>
+                        </div>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="small font-weight-bold text-muted text-uppercase">Nama Kepala Sekolah / Mudir</label>
+                        <div class="input-group shadow-sm">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white border-right-0"><i class="fas fa-user-graduate text-info"></i></span>
+                            </div>
+                            <input type="text" name="kepsek" class="form-control border-left-0" placeholder="Contoh: Dr. Sulaiman, M.Pd" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 py-3 px-4">
+                    <button type="button" class="btn btn-link text-muted font-weight-bold" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-info px-4 shadow-sm" style="border-radius: 8px;">
+                        <i class="fas fa-file-pdf mr-1"></i> Download Laporan PDF
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

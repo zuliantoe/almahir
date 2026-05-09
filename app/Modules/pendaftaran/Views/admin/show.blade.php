@@ -24,13 +24,20 @@
 
 @push('styles')
 <style>
-    /* Animasi modal muncul dari bawah ke atas */
+    /* Matikan efek hover kartu di halaman detail agar tidak jitter saat klik tombol */
+    .card:hover {
+        transform: none !important;
+    }
+
+    /* Animasi modal muncul dari bawah ke atas yang lebih stabil */
     .modal-bottom-up.fade .modal-dialog {
-        transform: translate(0, 50px);
-        transition: transform 0.3s ease-out;
+        transform: translateY(20px);
+        opacity: 0;
+        transition: all 0.3s ease-out;
     }
     .modal-bottom-up.show .modal-dialog {
-        transform: none;
+        transform: translateY(0);
+        opacity: 1;
     }
 </style>
 @endpush

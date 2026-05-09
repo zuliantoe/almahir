@@ -7,11 +7,6 @@ trait HasNomorOtomatis
 {
     /**
      * Generate nomor otomatis (e.g., PJ-202404-0001)
-     * 
-     * @param string $modelClass Class name of the model
-     * @param string $prefix Prefix (PJ, PO, etc.)
-     * @param string $dateColumn Column to check for date (default: created_at)
-     * @return string
      */
     public function generateNomor(string $modelClass, string $prefix, string $dateColumn = 'created_at'): string
     {
@@ -19,12 +14,32 @@ trait HasNomorOtomatis
         $year = date('Y');
         $month = date('m');
 
-        $count = $modelClass::whereYear($dateColumn, $year)
+        // Tentukan field berdasarkan prefix
+        $field = ($prefix === 'PJ') ? 'nomor_pengajuan' : 'nomor_po';
+
+        // Cek apakah model punya trait SoftDeletes
+        $hasSoftDeletes = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($modelClass));
+        
+        $baseQuery = $hasSoftDeletes ? $modelClass::withTrashed() : $modelClass::query();
+
+        // Hitung semua data di bulan ini
+        $count = (clone $baseQuery)
+                    ->whereYear($dateColumn, $year)
                     ->whereMonth($dateColumn, $month)
                     ->count();
 
-        $nomorUrut = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+        $nomorUrut = $count + 1;
 
-        return "{$prefix}-{$yearMonth}-{$nomorUrut}";
+        // Safety loop: Pastikan nomor bener-bener belum ada di DB
+        do {
+            $nomor = "{$prefix}-{$yearMonth}-" . str_pad($nomorUrut, 4, '0', STR_PAD_LEFT);
+            $exists = (clone $baseQuery)->where($field, $nomor)->exists();
+            
+            if ($exists) {
+                $nomorUrut++;
+            }
+        } while ($exists);
+
+        return $nomor;
     }
 }

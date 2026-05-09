@@ -3,9 +3,11 @@
 namespace App\Modules\ManajemenAsetDanAsrama\Models;  // UBAH
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PengadaanAset extends Model
 {
+    use SoftDeletes;
     protected $table = 'pengadaan_aset';
 
     protected $fillable = [

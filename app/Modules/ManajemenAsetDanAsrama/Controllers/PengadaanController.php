@@ -10,10 +10,11 @@ use App\Modules\ManajemenAsetDanAsrama\Models\PengajuanAset;
 use App\Modules\ManajemenAsetDanAsrama\Models\Aset;
 
 use App\Modules\ManajemenAsetDanAsrama\Traits\HasNomorOtomatis;
+use App\Modules\ManajemenAsetDanAsrama\Traits\HasAssetCode;
 
 class PengadaanController extends BaseController
 {
-    use HasNomorOtomatis;
+    use HasNomorOtomatis, HasAssetCode;
 
     /**
      * Display a listing of pengadaan aset.
@@ -26,18 +27,26 @@ class PengadaanController extends BaseController
                         ->paginate(15);
         
         // Pengajuan yang sudah disetujui tapi belum dibuatkan pengadaan
-        $menungguProses = PengajuanAset::with('pengaju:id,nama')
+        $menungguProses = PengajuanAset::with('pengaju:id,name')
                             ->where('status', 'disetujui')
                             ->latest()
                             ->get();
 
         $kamar = \App\Modules\ManajemenAsetDanAsrama\Models\Kamar::all();
 
+        $stats = [
+            'menunggu' => $menungguProses->count(),
+            'dipesan'  => PengadaanAset::where('status', 'dipesan')->count(),
+            'datang'   => PengadaanAset::where('status', 'datang')->count(),
+            'total_biaya' => PengadaanAset::sum('biaya_riil'),
+        ];
+
         return view('manajemenasetdanasrama::pengadaan.index', [
             'title'          => 'Data Pengadaan Aset',
             'pengadaan'      => $pengadaan,
             'menungguProses' => $menungguProses,
             'kamar'          => $kamar,
+            'stats'          => $stats,
         ]);
     }
 
@@ -90,9 +99,7 @@ class PengadaanController extends BaseController
     {
         $validated = $request->validate([
             'tanggal_datang'  => 'required|date',
-            'kode_aset'       => 'required|string|unique:aset,kode_aset',
             'nama_aset'       => 'required|string|max:255',
-            'kamar_id'        => 'required|exists:kamar,id',
             'kondisi'         => 'nullable|string',
             'deskripsi_aset'  => 'nullable|string',
         ]);
@@ -109,9 +116,12 @@ class PengadaanController extends BaseController
         $pengadaan->status = 'datang';
         $pengadaan->save();
 
+        // Generate kode otomatis
+        $kode_aset = $this->generateAssetCode($request->nama_aset, Aset::class, 'kode_aset');
+
         // Buat aset baru
         Aset::create([
-            'kode_aset'          => $request->kode_aset,
+            'kode_aset'          => $kode_aset,
             'nama_aset'          => $request->nama_aset,
             'tanggal_pengajuan'  => $pengadaan->pengajuan->tanggal_pengajuan,
             'harga'              => $pengadaan->biaya_riil,
@@ -120,10 +130,10 @@ class PengadaanController extends BaseController
             'kondisi'            => $request->kondisi,
             'deskripsi_aset'     => $request->deskripsi_aset,
             'pengadaan_id'       => $pengadaan->id,
-            'kamar_id'           => $request->kamar_id,
+            'kamar_id'           => null, // Lokasi dihilangkan sesuai request
         ]);
 
         return redirect()->route('manajemenasetdanasrama.aset.index')
-            ->with('success', 'Aset berhasil ditambahkan ke master aset beserta lokasi kamarnya.');
+            ->with('success', 'Barang berhasil diterima dan didaftarkan ke Master Aset dengan kode: ' . $kode_aset);
     }
 }

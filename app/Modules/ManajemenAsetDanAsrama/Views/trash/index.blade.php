@@ -8,10 +8,18 @@
         <h1 class="m-0">{{ $title }}</h1>
     </div>
     <div class="col-sm-6">
-        <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="{{ route('manajemenasetdanasrama.index') }}">Manajemen Aset & Asrama</a></li>
-            <li class="breadcrumb-item active">Trash</li>
-        </ol>
+        <div class="float-sm-right d-flex">
+            <form action="{{ route('manajemenasetdanasrama.trash.empty-trash') }}" method="POST" class="mr-2" onsubmit="return confirm('Apakah Anda yakin ingin mengosongkan SEMUA sampah? Tindakan ini tidak dapat dibatalkan!')">
+                @csrf
+                <button type="submit" class="btn btn-outline-danger shadow-sm">
+                    <i class="fas fa-trash-restore-alt mr-1"></i> Kosongkan Semua Sampah
+                </button>
+            </form>
+            <ol class="breadcrumb pt-1">
+                <li class="breadcrumb-item"><a href="{{ route('manajemenasetdanasrama.index') }}">Manajemen Aset & Asrama</a></li>
+                <li class="breadcrumb-item active">Trash</li>
+            </ol>
+        </div>
     </div>
 </div>
 @endsection
@@ -30,6 +38,11 @@
     <div class="row">
         <div class="col-md-12">
             <x-card title="Aset Terhapus" icon="fas fa-boxes">
+                <x-slot name="tools">
+                    <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#modalBulkForceDelete" data-type="aset">
+                        <i class="fas fa-trash-alt mr-1"></i> Hapus Massal
+                    </button>
+                </x-slot>
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover table-striped">
                         <thead>
@@ -88,6 +101,11 @@
     <div class="row">
         <div class="col-md-12">
             <x-card title="Pengajuan Terhapus" icon="fas fa-file-alt">
+                <x-slot name="tools">
+                    <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#modalBulkForceDelete" data-type="pengajuan">
+                        <i class="fas fa-trash-alt mr-1"></i> Hapus Massal
+                    </button>
+                </x-slot>
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover table-striped">
                         <thead>
@@ -261,6 +279,49 @@
         </div>
     </div>
 
+@include('manajemenasetdanasrama::partials.modal-delete', ['id' => 'modalHapus', 'title' => 'Hapus Pengajuan Aset'])
+
+{{-- MODAL BULK FORCE DELETE --}}
+<div class="modal fade" id="modalBulkForceDelete" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <form action="{{ route('manajemenasetdanasrama.trash.bulk-force-delete') }}" method="POST">
+                @csrf
+                <input type="hidden" name="type" id="bulk_type">
+                <div class="modal-header bg-danger text-white border-0 py-3">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-trash-alt mr-2"></i> Hapus Permanen Massal</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px;">
+                            <i class="fas fa-exclamation-triangle text-danger fa-lg"></i>
+                        </div>
+                        <h6 class="font-weight-bold">Konfirmasi Hapus Permanen</h6>
+                        <p class="text-muted small">Tulis inisial/pola kode untuk menghapus permanen data <span id="text_bulk_type" class="font-weight-bold"></span>.</p>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label class="small font-weight-bold text-muted text-uppercase">Pola Kode (Inisial)</label>
+                        <input type="text" class="form-control shadow-sm" name="pattern" placeholder="Contoh: MEB atau MJ" required style="text-transform: uppercase;">
+                        <small class="text-danger mt-1 d-block" style="font-size: 0.75rem;">
+                            <i class="fas fa-info-circle mr-1"></i> Data yang dihapus tidak akan bisa dipulihkan lagi!
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 py-3 px-4 justify-content-between">
+                    <button type="button" class="btn btn-link text-muted font-weight-bold" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger px-4 shadow-sm font-weight-bold" style="border-radius: 8px;">
+                        Hapus Permanen <i class="fas fa-trash-alt ml-1"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {{-- MODAL FORCE DELETE --}}
 <div class="modal fade" id="modalForceDelete" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
@@ -290,6 +351,16 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        // Modal Bulk Force Delete
+        $('#modalBulkForceDelete').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var type = button.data('type');
+            
+            var modal = $(this);
+            modal.find('#bulk_type').val(type);
+            modal.find('#text_bulk_type').text(type.toUpperCase());
+        });
+
         $('#modalForceDelete').on('show.bs.modal', function (event) {
             var button = $(event.relatedTarget);
             var type = button.data('type');

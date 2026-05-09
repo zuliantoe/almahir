@@ -2,6 +2,10 @@
 
 @section('title', $title)
 
+@push('css')
+@include('manajemenasetdanasrama::partials.styles-dashboard')
+@endpush
+
 @section('content-header')
 <div class="row mb-2">
     <div class="col-sm-6">
@@ -18,6 +22,46 @@
 
 @section('content')
 <div class="container-fluid">
+    {{-- Quick Information --}}
+    <div class="row">
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-warning shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($stats['total_proses'] ?? 0) }}</h3>
+                    <p>Dalam Perbaikan</p>
+                </div>
+                <div class="icon"><i class="fas fa-tools"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-success shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($stats['total_selesai'] ?? 0) }}</h3>
+                    <p>Selesai Diperbaiki</p>
+                </div>
+                <div class="icon"><i class="fas fa-check-double"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-info shadow-sm">
+                <div class="inner">
+                    <h3 style="font-size: 1.6rem;">Rp {{ number_format($stats['biaya_proses'] ?? 0, 0, ',', '.') }}</h3>
+                    <p>Estimasi Biaya Aktif</p>
+                </div>
+                <div class="icon"><i class="fas fa-file-invoice-dollar"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-secondary shadow-sm">
+                <div class="inner">
+                    <h3 style="font-size: 1.6rem;">Rp {{ number_format($stats['biaya_selesai'] ?? 0, 0, ',', '.') }}</h3>
+                    <p>Total Biaya Historis</p>
+                </div>
+                <div class="icon"><i class="fas fa-history"></i></div>
+            </div>
+        </div>
+    </div>
+
     {{-- Quick Navigation --}}
     <div class="row mb-3">
         <div class="col-md-12 d-flex justify-content-between">

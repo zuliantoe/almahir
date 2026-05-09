@@ -16,8 +16,52 @@
 </div>
 @endsection
 
+@push('css')
+@include('manajemenasetdanasrama::partials.styles-dashboard')
+@endpush
+
 @section('content')
 <div class="container-fluid">
+    {{-- Quick Information --}}
+    <div class="row">
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-purple shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($stats['menunggu'] ?? 0) }}</h3>
+                    <p>Menunggu Proses PO</p>
+                </div>
+                <div class="icon"><i class="fas fa-file-contract"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-warning shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($stats['dipesan'] ?? 0) }}</h3>
+                    <p>Sedang Dipesan</p>
+                </div>
+                <div class="icon"><i class="fas fa-shipping-fast"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-success shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($stats['datang'] ?? 0) }}</h3>
+                    <p>Barang Diterima</p>
+                </div>
+                <div class="icon"><i class="fas fa-hand-holding-box"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-info shadow-sm">
+                <div class="inner">
+                    <h3 style="font-size: 1.6rem;">Rp {{ number_format($stats['total_biaya'] ?? 0, 0, ',', '.') }}</h3>
+                    <p>Total Nilai Pengadaan</p>
+                </div>
+                <div class="icon"><i class="fas fa-wallet"></i></div>
+            </div>
+        </div>
+    </div>
+
     {{-- Quick Navigation --}}
     <div class="row mb-3">
         <div class="col-md-12 d-flex justify-content-between">
@@ -45,39 +89,13 @@
                 <div class="alert alert-warning mb-3">
                     <i class="fas fa-info-circle"></i> Pengajuan berikut sudah <strong>disetujui</strong> dan siap diproses menjadi pengadaan. Klik tombol <strong>"Proses Pengadaan"</strong> untuk melanjutkan.
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>No</th>
-                                <th>Nomor Pengajuan</th>
-                                <th>Nama Aset</th>
-                                <th>Estimasi Harga</th>
-                                <th>Tanggal Pengajuan</th>
-                                <th>Pengaju</th>
-                                <th width="180">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($menungguProses as $item)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td><code>{{ $item->nomor_pengajuan }}</code></td>
-                                <td><strong>{{ $item->nama_aset }}</strong></td>
-                                <td>Rp {{ number_format($item->estimasi_harga, 0, ',', '.') }}</td>
-                                <td>{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d/m/Y') }}</td>
-                                <td>{{ $item->pengaju->name ?? '-' }}</td>
-                                <td>
-                                    <a href="{{ route('manajemenasetdanasrama.pengadaan.proses', $item->id) }}" 
-                                       class="btn btn-sm btn-success">
-                                        <i class="fas fa-truck mr-1"></i> Proses Pengadaan
-                                    </a>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+                @include('manajemenasetdanasrama::partials.table-pengajuan', [
+                    'items' => $menungguProses,
+                    'mode' => 'procurement',
+                    'showStatus' => false,
+                    'actionWidth' => '180',
+                    'striped' => false
+                ])
                 <x-slot name="footer">
                     <small class="text-muted">{{ $menungguProses->count() }} pengajuan menunggu diproses</small>
                 </x-slot>
@@ -225,32 +243,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="small font-weight-bold text-muted">KODE ASET BARU <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text bg-white border-right-0"><i class="fas fa-barcode"></i></span>
-                                    </div>
-                                    <input type="text" class="form-control border-left-0" name="kode_aset" placeholder="AST-XXX" required>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="form-group mb-3">
                         <label class="small font-weight-bold text-muted">NAMA ASET (FINAL) <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control bg-light" id="selesai_nama_input" name="nama_aset" required readonly>
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label class="small font-weight-bold text-muted">LOKASI PENEMPATAN <span class="text-danger">*</span></label>
-                        <select class="form-control shadow-sm" name="kamar_id" required>
-                            <option value="">-- Pilih Kamar / Lokasi --</option>
-                            @foreach($kamar as $k)
-                            <option value="{{ $k->id }}">{{ $k->nama_kamar }}</option>
-                            @endforeach
-                        </select>
+                        <input type="text" class="form-control bg-light font-weight-bold" id="selesai_nama_input" name="nama_aset" required readonly>
+                        <small class="text-muted">Nama ini akan digunakan untuk membuat kode aset otomatis.</small>
                     </div>
 
                     <div class="row">
@@ -278,11 +274,21 @@
         </div>
     </div>
 </div>
+
+@include('manajemenasetdanasrama::partials.modal-detail-pengajuan')
 @endsection
 
 @push('scripts')
+@include('manajemenasetdanasrama::partials.scripts-asset')
 <script>
     $(document).ready(function() {
+        // Tombol Lihat - fetch data via AJAX dan tampilkan di modal
+        $('.btn-lihat').on('click', function() {
+            var id = $(this).data('id');
+            var url = '{{ route("manajemenasetdanasrama.pengajuan.show", ":id") }}';
+            showDetailPengajuan(id, url);
+        });
+
         $('#modalSelesai').on('show.bs.modal', function (event) {
             var button = $(event.relatedTarget);
             var id = button.data('id');
@@ -299,6 +305,11 @@
             var url = '{{ route("manajemenasetdanasrama.pengadaan.selesai", ":id") }}';
             url = url.replace(':id', id);
             modal.find('#formSelesai').attr('action', url);
+
+            // SUGGEST ASSET CODE
+            $.get('{{ route("manajemenasetdanasrama.aset.suggest-code") }}', { nama: nama }, function(res) {
+                modal.find('input[name="kode_aset"]').val(res.code);
+            });
         });
     });
 </script>

@@ -23,9 +23,17 @@ class KerusakanController extends BaseController
                         ->latest()
                         ->paginate(15);
         
+        $stats = [
+            'total'   => Kerusakan::where('status_penanganan', 'belum_ditangani')->count(),
+            'ringan'  => Kerusakan::where('status_penanganan', 'belum_ditangani')->where('tingkat_kerusakan', 'ringan')->count(),
+            'sedang'  => Kerusakan::where('status_penanganan', 'belum_ditangani')->where('tingkat_kerusakan', 'sedang')->count(),
+            'berat'   => Kerusakan::where('status_penanganan', 'belum_ditangani')->where('tingkat_kerusakan', 'berat')->count(),
+        ];
+        
         return view('manajemenasetdanasrama::kerusakan.index', [
             'title'     => 'Data Kerusakan Aset Tertunda',
             'kerusakan' => $kerusakan,
+            'stats'     => $stats,
         ]);
     }
 

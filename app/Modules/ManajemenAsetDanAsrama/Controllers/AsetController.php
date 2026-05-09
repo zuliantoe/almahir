@@ -8,14 +8,12 @@ use Illuminate\View\View;
 use App\Modules\ManajemenAsetDanAsrama\Models\Aset;
 
 use App\Modules\ManajemenAsetDanAsrama\Traits\HasSoftDeleteWithUser;
+use App\Modules\ManajemenAsetDanAsrama\Traits\HasAssetCode;
 
 class AsetController extends BaseController
 {
-    use HasSoftDeleteWithUser;
+    use HasSoftDeleteWithUser, HasAssetCode;
 
-    /**
-     * Display a listing of master aset.
-     */
     public function index(Request $request): View
     {
         $aset = Aset::with('pengadaan:id,nomor_po,pengajuan_id', 'pengadaan.pengajuan:id,nomor_pengajuan')
@@ -23,10 +21,58 @@ class AsetController extends BaseController
                     ->latest()
                     ->paginate(15);
         
+        $stats = [
+            'total'           => Aset::whereNull('deleted_at')->count(),
+            'baik'            => Aset::whereNull('deleted_at')->where('status_kondisi', 'baik')->count(),
+            'rusak'           => Aset::whereNull('deleted_at')->where('status_kondisi', 'rusak')->count(),
+            'dalam_perbaikan' => Aset::whereNull('deleted_at')->where('status_kondisi', 'dalam_perbaikan')->count(),
+        ];
+        
         return view('manajemenasetdanasrama::aset.index', [
             'title' => 'Master Aset',
             'aset'  => $aset,
+            'stats' => $stats,
         ]);
+    }
+
+    public function scan(): View
+    {
+        return view('manajemenasetdanasrama::aset.scan', [
+            'title' => 'Scan QR Aset',
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new asset manually.
+     */
+    public function create(): View
+    {
+        return view('manajemenasetdanasrama::aset.create', [
+            'title' => 'Tambah Aset Langsung',
+        ]);
+    }
+
+    /**
+     * Store a newly created asset in storage.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'nama_aset'       => 'required|string|max:255',
+            'harga'           => 'nullable|numeric|min:0',
+            'tanggal_pengadaan' => 'required|date',
+            'kondisi'         => 'nullable|string',
+            'deskripsi_aset'  => 'nullable|string',
+        ]);
+
+        // Generate kode otomatis pake inisial barang
+        $validated['kode_aset'] = $this->generateAssetCode($request->nama_aset, Aset::class, 'kode_aset');
+        $validated['status_kondisi'] = 'baik'; 
+
+        Aset::create($validated);
+
+        return redirect()->route('manajemenasetdanasrama.aset.index')
+            ->with('success', 'Aset berhasil ditambahkan dengan kode otomatis: ' . $validated['kode_aset']);
     }
 
     /**
@@ -49,12 +95,10 @@ class AsetController extends BaseController
     public function edit(string $id): View
     {
         $aset = Aset::findOrFail($id);
-        $kamar = \App\Modules\ManajemenAsetDanAsrama\Models\Kamar::all();
         
         return view('manajemenasetdanasrama::aset.edit', [
             'title' => 'Edit Aset',
             'aset'  => $aset,
-            'kamar' => $kamar,
         ]);
     }
 
@@ -68,7 +112,6 @@ class AsetController extends BaseController
         
         $validated = $request->validate([
             'nama_aset'       => 'required|string|max:255',
-            'kamar_id'        => 'required|exists:kamar,id',
             'status_kondisi'  => 'required|in:baik,rusak,dalam_perbaikan,sudah_diperbaiki',
             'kondisi'         => 'nullable|string',
             'deskripsi_aset'  => 'nullable|string',
@@ -153,53 +196,67 @@ class AsetController extends BaseController
     }
 
     /**
-     * Duplicate the specified aset.
+     * Bulk destroy assets based on pattern.
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'pattern' => 'required|string|min:2',
+        ]);
+
+        $pattern = strtoupper($request->pattern);
+        
+        // Query untuk mencari aset berdasarkan kode (exact atau prefix)
+        $query = Aset::where('kode_aset', 'LIKE', "{$pattern}%");
+        $count = $query->count();
+
+        if ($count === 0) {
+            return redirect()->back()->with('error', "Tidak ditemukan aset dengan pola kode '{$pattern}'.");
+        }
+
+        // Simpan jumlah untuk pesan sukses
+        $query->delete();
+
+        return redirect()->route('manajemenasetdanasrama.aset.index')
+            ->with('success', "Berhasil menghapus {$count} aset dengan pola kode '{$pattern}'.");
+    }
+
+    /**
+     * Duplicate an existing asset.
      */
     public function duplicate(Request $request, string $id): RedirectResponse
     {
         $request->validate([
-            'jumlah_duplikat' => 'required|integer|min:1|max:50'
+            'jumlah' => 'required|integer|min:1|max:100'
         ]);
 
-        $originalAset = Aset::findOrFail($id);
-        $jumlah = (int) $request->jumlah_duplikat;
-        $baseCode = $originalAset->kode_aset;
+        $original = Aset::findOrFail($id);
+        $jumlah = (int) $request->jumlah;
 
-        // Pisahkan bagian teks dan bagian angka (e.g. MEJA-001 -> 'MEJA-', '001')
-        // Jika tidak ada angka di belakang, tambahkan '-1'
-        if (preg_match('/^(.*?)(\d+)$/', $baseCode, $matches)) {
-            $prefix = $matches[1];
-            $numericFormatLength = strlen($matches[2]);
-            $currentNumber = (int) $matches[2];
-        } else {
-            $prefix = $baseCode . '-';
-            $numericFormatLength = 1;
-            $currentNumber = 0;
-        }
-
-        $duplicatedCount = 0;
-
-        for ($i = 1; $i <= $jumlah; $i++) {
-            $currentNumber++;
+        for ($i = 0; $i < $jumlah; $i++) {
+            $new = $original->replicate();
             
-            // Coba cari kode yang belum terpakai kalau-kalau sudah ada
-            do {
-                $newCode = $prefix . str_pad($currentNumber, $numericFormatLength, '0', STR_PAD_LEFT);
-                $exists = Aset::withTrashed()->where('kode_aset', $newCode)->exists();
-                if ($exists) {
-                    $currentNumber++;
-                }
-            } while ($exists);
+            // Ambil tanggal dari kode asli biar tetep identik kelompoknya
+            $parts = explode('-', $original->kode_aset);
+            $originalDate = isset($parts[1]) ? $parts[1] : null;
 
-            $newAset = $originalAset->replicate();
-            $newAset->kode_aset = $newCode;
-            $newAset->status_kondisi = 'baik'; // Set status awal ke baik
-            $newAset->save();
-
-            $duplicatedCount++;
+            $new->kode_aset = $this->generateAssetCode($original->nama_aset, Aset::class, 'kode_aset', $originalDate);
+            $new->status_kondisi = 'baik';
+            $new->save();
         }
 
         return redirect()->route('manajemenasetdanasrama.aset.index')
-            ->with('success', "Berhasil menduplikat aset sebanyak {$duplicatedCount} kali dengan rentang kode berurutan.");
+            ->with('success', "Berhasil menduplikat aset sebanyak {$jumlah} kali dengan kode berurutan otomatis.");
+    }
+
+    /**
+     * Suggest an asset code via AJAX.
+     */
+    public function suggestCode(Request $request)
+    {
+        $nama = $request->input('nama', 'AST');
+        $code = $this->generateAssetCode($nama, Aset::class, 'kode_aset');
+        
+        return response()->json(['code' => $code]);
     }
 }

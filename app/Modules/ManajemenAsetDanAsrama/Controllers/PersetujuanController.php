@@ -19,9 +19,17 @@ class PersetujuanController extends BaseController
                         ->latest()
                         ->paginate(15);
         
+        $stats = [
+            'total_pending' => PengajuanAset::where('status', 'diajukan')->count(),
+            'total_approved' => PengajuanAset::where('status', 'disetujui')->count(),
+            'total_rejected' => PengajuanAset::where('status', 'ditolak')->count(),
+            'estimasi_biaya' => PengajuanAset::where('status', 'diajukan')->sum('estimasi_harga'),
+        ];
+        
         return view('manajemenasetdanasrama::persetujuan.index', [
             'title'     => 'Persetujuan Pengajuan Aset',
             'pengajuan' => $pengajuan,
+            'stats'     => $stats,
         ]);
     }
 

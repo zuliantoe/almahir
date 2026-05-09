@@ -2,6 +2,10 @@
 
 @section('title', $title)
 
+@push('css')
+@include('manajemenasetdanasrama::partials.styles-dashboard')
+@endpush
+
 @section('content-header')
 <div class="row mb-2">
     <div class="col-sm-6">
@@ -18,6 +22,46 @@
 
 @section('content')
 <div class="container-fluid">
+    {{-- Quick Information --}}
+    <div class="row">
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-secondary shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($stats['total'] ?? 0) }}</h3>
+                    <p>Total Laporan Masuk</p>
+                </div>
+                <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-info shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($stats['ringan'] ?? 0) }}</h3>
+                    <p>Rusak Ringan</p>
+                </div>
+                <div class="icon"><i class="fas fa-info-circle"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-warning shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($stats['sedang'] ?? 0) }}</h3>
+                    <p>Rusak Sedang</p>
+                </div>
+                <div class="icon"><i class="fas fa-exclamation-circle"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-danger shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($stats['berat'] ?? 0) }}</h3>
+                    <p>Rusak Berat</p>
+                </div>
+                <div class="icon"><i class="fas fa-radiation"></i></div>
+            </div>
+        </div>
+    </div>
+
     {{-- Quick Navigation --}}
     <div class="row mb-3">
         <div class="col-md-12 d-flex justify-content-between">
@@ -46,77 +90,10 @@
                     </a>
                 </x-slot>
 
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover table-striped">
-                        <thead>
-                            <tr>
-                                <th width="50">No</th>
-                                <th>Nama Aset</th>
-                                <th width="130">Tanggal</th>
-                                <th width="100">Tingkat</th>
-                                <th width="140">Status</th>
-                                <th>Deskripsi</th>
-                                <th width="100">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($kerusakan as $item)
-                            <tr>
-                                <td>{{ $loop->iteration + ($kerusakan->currentPage() - 1) * $kerusakan->perPage() }}</td>
-                                <td>
-                                    <strong>{{ $item->aset->nama_aset ?? '-' }}</strong>
-                                    <br><small class="text-muted">{{ $item->aset->kode_aset ?? '' }}</small>
-                                </td>
-                                <td>{{ $item->tanggal_kerusakan ? \Carbon\Carbon::parse($item->tanggal_kerusakan)->format('d/m/Y') : '-' }}</td>
-                                <td>
-                                    @if($item->tingkat_kerusakan == 'ringan')
-                                        <span class="badge badge-info">Ringan</span>
-                                    @elseif($item->tingkat_kerusakan == 'sedang')
-                                        <span class="badge badge-warning">Sedang</span>
-                                    @elseif($item->tingkat_kerusakan == 'berat')
-                                        <span class="badge badge-danger">Berat</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($item->status_penanganan == 'belum_ditangani')
-                                        <span class="badge badge-danger">Belum Ditangani</span>
-                                    @elseif($item->status_penanganan == 'sedang_ditangani')
-                                        <span class="badge badge-warning">Sedang Ditangani</span>
-                                    @elseif($item->status_penanganan == 'selesai')
-                                        <span class="badge badge-success">Selesai</span>
-                                    @endif
-                                </td>
-                                <td>{{ Str::limit($item->deskripsi_kerusakan ?? '-', 40) }}</td>
-                                <td>
-                                    <form action="{{ route('manajemenasetdanasrama.kerusakan.proses-pemeliharaan', $item->id) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        <button type="submit" class="btn btn-xs btn-success" title="Proses Pemeliharaan">
-                                            <i class="fas fa-wrench"></i> Proses
-                                        </button>
-                                    </form>
-                                    <a href="{{ route('manajemenasetdanasrama.kerusakan.edit', $item->id) }}" class="btn btn-xs btn-warning" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-xs btn-danger"
-                                            data-toggle="modal"
-                                            data-target="#modalHapus"
-                                            data-id="{{ $item->id }}"
-                                            data-nama="{{ $item->aset->nama_aset ?? '' }}"
-                                            title="Hapus">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="7" class="text-center text-muted">
-                                    <i class="fas fa-inbox"></i> Belum ada data kerusakan
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                @include('manajemenasetdanasrama::partials.table-kerusakan', [
+                    'items' => $kerusakan,
+                    'mode' => 'index'
+                ])
 
                 @if($kerusakan->hasPages())
                 <div class="d-flex justify-content-end mt-3">

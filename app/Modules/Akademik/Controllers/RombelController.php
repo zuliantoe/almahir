@@ -26,10 +26,17 @@ class RombelController extends Controller
     {
         $kelas = Kelas::all();
         $gurus = Guru::all();
-        $siswas = Siswa::aktif()->get();
+        // Ambil tahun ajaran aktif atau terpilih
+        $currentYear = TahunAjaran::where('status', 1)->first() ?? TahunAjaran::latest()->first();
         
-        // Smart Filter: Hanya ambil tahun aktif, 1 tahun sebelum, dan 1 tahun sesudah
-        $currentYear = TahunAjaran::where('status', 1)->first();
+        // Filter Siswa: Hanya yang AKTIF dan BELUM masuk rombel di tahun ajaran ini
+        $siswas = Siswa::aktif()
+            ->whereDoesntHave('rombelSiswa', function($q) use ($currentYear) {
+                if ($currentYear) {
+                    $q->where('tahunajaran_id', $currentYear->id);
+                }
+            })->get();
+
         if ($currentYear) {
             $tahun_ajaran = TahunAjaran::where('id', '>=', $currentYear->id - 1)
                                        ->orderBy('id', 'asc')
@@ -53,6 +60,9 @@ class RombelController extends Controller
             $siswaData = collect($request->siswa_ids)->map(fn($id) => [
                 'rombel_id' => $rombel->id,
                 'siswa_id' => $id,
+                'tahunajaran_id' => $rombel->tahunajaran_id,
+                'kelas_id' => $rombel->kelas_id,
+                'status' => 'aktif',
                 'created_at' => now(),
                 'updated_at' => now()
             ])->toArray();
@@ -77,7 +87,17 @@ class RombelController extends Controller
     {
         $kelas = Kelas::all();
         $gurus = Guru::all();
-        $siswas = Siswa::aktif()->get();
+        // Filter Siswa: Yang belum punya rombel di tahun ini + yang sudah ada di rombel ini
+        $siswas = Siswa::aktif()
+            ->where(function($query) use ($rombel) {
+                $query->whereDoesntHave('rombelSiswa', function($q) use ($rombel) {
+                    $q->where('tahunajaran_id', $rombel->tahunajaran_id);
+                })
+                ->orWhereHas('rombelSiswa', function($q) use ($rombel) {
+                    $q->where('rombel_id', $rombel->id)
+                      ->where('tahunajaran_id', $rombel->tahunajaran_id);
+                });
+            })->get();
         
         // Smart Filter: Sama seperti create, tapi pastikan tahun rombel saat ini juga muncul
         $currentYear = TahunAjaran::where('status', 1)->first();
@@ -92,7 +112,9 @@ class RombelController extends Controller
                              ->orderBy('id', 'asc')
                              ->get();
 
-        $selected_siswas = $rombel->riwayatSiswa->pluck('siswa_id')->toArray();
+        $selected_siswas = $rombel->riwayatSiswa()
+            ->where('tahunajaran_id', $rombel->tahunajaran_id)
+            ->pluck('siswa_id')->toArray();
 
         return view('akademik::rombel.edit', compact('rombel', 'kelas', 'gurus', 'siswas', 'tahun_ajaran', 'selected_siswas'));
     }
@@ -105,12 +127,34 @@ class RombelController extends Controller
                 'nama_rombel', 'kelas_id', 'tahunajaran_id', 'guru_id', 'keterangan'
             ]));
 
-            // Sync students
-            $rombel->riwayatSiswa()->delete();
+            // Pintar: Jangan asal delete. Jika tahun/kelas berubah, ini adalah "Kenakan Kelas" versi edit.
+            // Untuk mempermudah sesuai request user: "edit aja kelas tapi masih romblenya"
+            // Kita pastikan data siswa yang ada sekarang tercatat di snapshot baru jika berubah.
+            
+            $oldTahunId = $rombel->getOriginal('tahunajaran_id');
+            $oldKelasId = $rombel->getOriginal('kelas_id');
+
+            if ($request->tahunajaran_id != $oldTahunId || $request->kelas_id != $oldKelasId) {
+                // Tandai yang lama sebagai 'naik' jika tahun/kelas berubah
+                RombelSiswa::where('rombel_id', $rombel->id)
+                    ->where('tahunajaran_id', $oldTahunId)
+                    ->where('kelas_id', $oldKelasId)
+                    ->where('status', 'aktif')
+                    ->update(['status' => 'naik']);
+            } else {
+                // Jika tidak berubah (cuma edit biasa), baru boleh hapus/sync yang di tahun/kelas saat ini
+                RombelSiswa::where('rombel_id', $rombel->id)
+                    ->where('tahunajaran_id', $rombel->tahunajaran_id)
+                    ->where('kelas_id', $rombel->kelas_id)
+                    ->delete();
+            }
             
             $siswaData = collect($request->siswa_ids)->map(fn($id) => [
                 'rombel_id' => $rombel->id,
                 'siswa_id' => $id,
+                'tahunajaran_id' => $rombel->tahunajaran_id,
+                'kelas_id' => $rombel->kelas_id,
+                'status' => 'aktif',
                 'created_at' => now(),
                 'updated_at' => now()
             ])->toArray();

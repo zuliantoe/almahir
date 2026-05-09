@@ -16,6 +16,8 @@ class RombelSiswa extends Model
     protected $fillable = [
         'rombel_id', 
         'siswa_id',
+        'tahunajaran_id',
+        'kelas_id',
         'status'
     ];
     
@@ -27,5 +29,15 @@ class RombelSiswa extends Model
     public function siswa(): BelongsTo 
     { 
         return $this->belongsTo(Siswa::class, 'siswa_id'); 
+    }
+
+    public function tahunAjaran(): BelongsTo
+    {
+        return $this->belongsTo(TahunAjaran::class, 'tahunajaran_id');
+    }
+
+    public function kelas(): BelongsTo
+    {
+        return $this->belongsTo(Kelas::class, 'kelas_id');
     }
 }

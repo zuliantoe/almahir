@@ -17,8 +17,6 @@ use Modules\Akademik\Controllers\KalenderAkademikController;
 use Modules\Akademik\Controllers\KurikulumController;
 use Modules\Akademik\Controllers\MasterKurikulumController;
 use Modules\Akademik\Controllers\BebanMengajarController;
-use Modules\Akademik\Controllers\KenaikanKelasController;
-use Modules\Akademik\Controllers\KelulusanController;
 use Modules\Akademik\Controllers\RombelController;
 
 /*
@@ -59,10 +57,6 @@ Route::middleware(['web', 'auth', \Modules\Akademik\Middleware\ReadOnlyRoleMiddl
     Route::post('kurikulum/bulk-store', [KurikulumController::class, 'bulkStore'])->name('kurikulum.bulk-store');
     Route::resource('kurikulum', KurikulumController::class);
     Route::resource('rombel', RombelController::class);
-    Route::get('kenaikan-kelas', [KenaikanKelasController::class, 'index'])->name('kenaikan-kelas.index');
-    Route::post('kenaikan-kelas/process', [KenaikanKelasController::class, 'process'])->name('kenaikan-kelas.process');
-    Route::get('kelulusan', [KelulusanController::class, 'index'])->name('kelulusan.index');
-    Route::post('kelulusan/process', [KelulusanController::class, 'process'])->name('kelulusan.process');
 });
 
 // Public route for Calendar Sync (iCal) - Must be outside 'auth' so Google can fetch it

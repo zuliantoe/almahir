@@ -25,9 +25,17 @@ class PemeliharaanController extends BaseController
                             ->latest()
                             ->paginate(15);
         
+        $stats = [
+            'total_proses' => Pemeliharaan::where('status', 'proses')->count(),
+            'total_selesai'=> Pemeliharaan::where('status', 'selesai')->count(),
+            'biaya_proses' => Pemeliharaan::where('status', 'proses')->sum('biaya_pemeliharaan'),
+            'biaya_selesai'=> Pemeliharaan::where('status', 'selesai')->sum('biaya_pemeliharaan'),
+        ];
+        
         return view('manajemenasetdanasrama::pemeliharaan.index', [
             'title'        => 'Data Pemeliharaan Aset',
             'pemeliharaan' => $pemeliharaan,
+            'stats'        => $stats,
         ]);
     }
 

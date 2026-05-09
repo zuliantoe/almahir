@@ -9,9 +9,11 @@ use App\Modules\ManajemenAsetDanAsrama\Models\PengajuanAset;
 use App\Modules\ManajemenAsetDanAsrama\Traits\HasNomorOtomatis;
 use App\Modules\ManajemenAsetDanAsrama\Traits\HasSoftDeleteWithUser;
 
+use App\Modules\ManajemenAsetDanAsrama\Traits\HasAssetCode;
+
 class PengajuanController extends BaseController
 {
-    use HasNomorOtomatis, HasSoftDeleteWithUser;
+    use HasNomorOtomatis, HasSoftDeleteWithUser, HasAssetCode;
 
     /**
      * Display a listing of pengajuan aset.
@@ -19,14 +21,22 @@ class PengajuanController extends BaseController
     public function index(Request $request): View
     {
         // Hanya tampilkan pengajuan yang masih di tahap pengajuan atau ditolak
-        $pengajuan = PengajuanAset::with(['pengaju:id,nama', 'approver:id,nama'])
+        $pengajuan = PengajuanAset::with(['pengaju:id,name', 'approver:id,name'])
                         ->whereIn('status', ['diajukan', 'ditolak'])
                         ->latest()
                         ->paginate(15);
         
+        $stats = [
+            'total'     => PengajuanAset::count(),
+            'diajukan'  => PengajuanAset::where('status', 'diajukan')->count(),
+            'disetujui' => PengajuanAset::where('status', 'disetujui')->count(),
+            'ditolak'   => PengajuanAset::where('status', 'ditolak')->count(),
+        ];
+        
         return view('manajemenasetdanasrama::pengajuan.index', [
             'title'     => 'Data Pengajuan Aset',
             'pengajuan' => $pengajuan,
+            'stats'     => $stats,
         ]);
     }
 
@@ -43,22 +53,38 @@ class PengajuanController extends BaseController
      */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $request->validate([
             'nama_aset'            => 'required|string|max:255',
             'deskripsi_pengajuan'  => 'required|string',
             'estimasi_harga'       => 'required|numeric|min:0',
             'tanggal_pengajuan'    => 'required|date',
+            'jumlah'               => 'required|integer|min:1|max:100',
         ]);
 
-        $data = $validated;
-        $data['nomor_pengajuan'] = $this->generateNomor(PengajuanAset::class, 'PJ');
-        $data['pengaju_id'] = auth()->id();
-        $data['status'] = 'diajukan';
+        $jumlah = (int) $request->jumlah;
+        $namaAset = ucwords(strtolower($request->nama_aset));
 
-        PengajuanAset::create($data);
+        for ($i = 0; $i < $jumlah; $i++) {
+            $data = [
+                'nama_aset'           => $namaAset,
+                'deskripsi_pengajuan' => $request->deskripsi_pengajuan,
+                'estimasi_harga'      => $request->estimasi_harga,
+                'tanggal_pengajuan'   => $request->tanggal_pengajuan,
+                'pengaju_id'          => auth()->id(),
+                'status'              => 'diajukan',
+                // Pake generateAssetCode biar kodenya MJ, KRS, dll (Cek ke tabel pengajuan)
+                'nomor_pengajuan'     => $this->generateAssetCode($namaAset, PengajuanAset::class, 'nomor_pengajuan')
+            ];
+
+            PengajuanAset::create($data);
+        }
+
+        $msg = $jumlah > 1 
+            ? "Berhasil mengirim {$jumlah} pengajuan aset dengan kode berurutan." 
+            : "Pengajuan aset berhasil diajukan.";
 
         return redirect()->route('manajemenasetdanasrama.pengajuan.index')
-            ->with('success', 'Pengajuan aset berhasil ditambahkan.');
+            ->with('success', $msg);
     }
 
     /**
@@ -129,7 +155,32 @@ class PengajuanController extends BaseController
     }
 
     /**
-     * Resubmit a rejected pengajuan aset.
+     * Bulk destroy submissions based on pattern.
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'pattern' => 'required|string|min:2',
+        ]);
+
+        $pattern = strtoupper($request->pattern);
+        
+        // Cari pengajuan berdasarkan nomor_pengajuan (yang sekarang isinya kode aset)
+        $query = PengajuanAset::where('nomor_pengajuan', 'LIKE', "{$pattern}%");
+        $count = $query->count();
+
+        if ($count === 0) {
+            return redirect()->back()->with('error', "Tidak ditemukan pengajuan dengan pola kode '{$pattern}'.");
+        }
+
+        $query->delete();
+
+        return redirect()->route('manajemenasetdanasrama.pengajuan.index')
+            ->with('success', "Berhasil menghapus {$count} pengajuan dengan pola kode '{$pattern}'.");
+    }
+
+    /**
+     * Resubmit a rejected submission.
      */
     public function ajukanUlang(Request $request, string $id): RedirectResponse
     {
@@ -154,5 +205,33 @@ class PengajuanController extends BaseController
 
         return redirect()->route('manajemenasetdanasrama.pengajuan.index')
             ->with('success', 'Pengajuan berhasil diajukan ulang.');
+    }
+
+    /**
+     * Duplicate a pengajuan multiple times.
+     */
+    public function duplicate(Request $request, string $id): RedirectResponse
+    {
+        $request->validate([
+            'jumlah' => 'required|integer|min:1|max:100'
+        ]);
+
+        $original = PengajuanAset::findOrFail($id);
+        $jumlah = (int) $request->jumlah;
+
+        for ($i = 0; $i < $jumlah; $i++) {
+            $new = $original->replicate();
+            
+            // Ambil tanggal dari kode asli (parts[1]) biar kodenya tetep "sama"
+            $parts = explode('-', $original->nomor_pengajuan);
+            $originalDate = isset($parts[1]) ? $parts[1] : null;
+            
+            $new->nomor_pengajuan = $this->generateAssetCode($original->nama_aset, PengajuanAset::class, 'nomor_pengajuan', $originalDate);
+            $new->status = 'diajukan';
+            $new->save();
+        }
+
+        return redirect()->route('manajemenasetdanasrama.pengajuan.index')
+            ->with('success', "Berhasil menduplikat pengajuan sebanyak {$jumlah} kali.");
     }
 }

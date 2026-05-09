@@ -2,6 +2,10 @@
 
 @section('title', $title)
 
+@push('css')
+@include('manajemenasetdanasrama::partials.styles-dashboard')
+@endpush
+
 @section('content-header')
 <div class="row mb-2">
     <div class="col-sm-6">
@@ -18,6 +22,46 @@
 
 @section('content')
 <div class="container-fluid">
+    {{-- Quick Information --}}
+    <div class="row">
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-info shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($stats['total'] ?? 0) }}</h3>
+                    <p>Total Pengajuan</p>
+                </div>
+                <div class="icon"><i class="fas fa-file-invoice"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-warning shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($stats['diajukan'] ?? 0) }}</h3>
+                    <p>Menunggu Persetujuan</p>
+                </div>
+                <div class="icon"><i class="fas fa-clock"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-success shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($stats['disetujui'] ?? 0) }}</h3>
+                    <p>Telah Disetujui</p>
+                </div>
+                <div class="icon"><i class="fas fa-check-circle"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-danger shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($stats['ditolak'] ?? 0) }}</h3>
+                    <p>Ditolak / Perbaikan</p>
+                </div>
+                <div class="icon"><i class="fas fa-times-circle"></i></div>
+            </div>
+        </div>
+    </div>
+
     {{-- Quick Navigation --}}
     <div class="row mb-3">
         <div class="col-md-12 d-flex justify-content-between">
@@ -42,88 +86,20 @@
         <div class="col-md-12">
             <x-card title="Daftar Pengajuan Aset" icon="fas fa-file-alt">
                 <x-slot name="tools">
+                    <button type="button" class="btn btn-sm btn-danger mr-1" data-toggle="modal" data-target="#modalBulkDelete">
+                        <i class="fas fa-trash-alt mr-1"></i> Hapus Massal
+                    </button>
                     <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#modalTambahPengajuan">
                         <i class="fas fa-plus mr-1"></i> Tambah Pengajuan
                     </button>
                 </x-slot>
 
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover table-striped">
-                        <thead>
-                            <tr>
-                                <th width="50">No</th>
-                                <th width="140">Nomor Pengajuan</th>
-                                <th>Nama Aset</th>
-                                <th width="140">Estimasi Harga</th>
-                                <th width="130">Tanggal Pengajuan</th>
-                                <th width="150">Status</th>
-                                <th width="150">Pengaju</th>
-                                <th width="150">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($pengajuan as $item)
-                            <tr>
-                                <td>{{ $loop->iteration + ($pengajuan->currentPage() - 1) * $pengajuan->perPage() }}</td>
-                                <td>{{ $item->nomor_pengajuan ?? '-' }}</td>
-                                <td><strong>{{ $item->nama_aset }}</strong></td>
-                                <td>{{ $item->estimasi_harga_formatted }}</td>
-                                <td>{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('d/m/Y') }}</td>
-                                <td>{!! $item->status_badge !!}</td>
-                                <td>{{ $item->pengaju->name ?? '-' }}</td>
-                                <td>
-                                    {{-- Tombol Lihat --}}
-                                    <button type="button" class="btn btn-xs btn-info btn-lihat" data-id="{{ $item->id }}" title="Lihat">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-
-                                    {{-- Tombol Edit --}}
-                                    <button type="button" class="btn btn-xs btn-warning" 
-                                            data-toggle="modal" 
-                                            data-target="#modalEditPengajuan"
-                                            data-id="{{ $item->id }}"
-                                            data-nama_aset="{{ $item->nama_aset }}"
-                                            data-deskripsi="{{ $item->deskripsi_pengajuan }}"
-                                            data-estimasi_harga="{{ $item->estimasi_harga }}"
-                                            title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-
-                                    {{-- Tombol Hapus --}}
-                                    <button type="button" class="btn btn-xs btn-danger" 
-                                            data-toggle="modal" 
-                                            data-target="#modalHapus"
-                                            data-id="{{ $item->id }}"
-                                            data-nama="{{ $item->nama_aset }}"
-                                            data-url="{{ route('manajemenasetdanasrama.pengajuan.destroy', $item->id) }}"
-                                            title="Hapus">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-
-                                    {{-- Tombol Ajukan Kembali (khusus ditolak) --}}
-                                    @if($item->status == 'ditolak')
-                                    <button type="button" class="btn btn-xs btn-secondary btn-ajukan-ulang mt-1"
-                                            data-toggle="modal" 
-                                            data-target="#modalAjukanUlang"
-                                            data-id="{{ $item->id }}"
-                                            data-nama="{{ $item->nama_aset }}"
-                                            data-deskripsi="{{ $item->deskripsi_pengajuan }}"
-                                            title="Ajukan Kembali">
-                                        <i class="fas fa-redo"></i> Ajukan Kembali
-                                    </button>
-                                    @endif
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="8" class="text-center text-muted">
-                                    <i class="fas fa-inbox"></i> Belum ada data pengajuan
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                @include('manajemenasetdanasrama::partials.table-pengajuan', [
+                    'items' => $pengajuan,
+                    'mode' => 'user',
+                    'showStatus' => true,
+                    'actionWidth' => '180'
+                ])
 
                 {{-- Pagination --}}
                 @if($pengajuan->hasPages())
@@ -142,6 +118,75 @@
 
 @include('manajemenasetdanasrama::partials.modal-delete', ['id' => 'modalHapus', 'title' => 'Hapus Pengajuan Aset'])
 
+{{-- MODAL HAPUS MASSAL --}}
+<div class="modal fade" id="modalBulkDelete" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <form action="{{ route('manajemenasetdanasrama.pengajuan.bulk-destroy') }}" method="POST">
+                @csrf
+                <div class="modal-header bg-danger text-white border-0 py-3">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-trash-alt mr-2"></i> Hapus Pengajuan Massal</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px;">
+                            <i class="fas fa-exclamation-triangle text-danger fa-lg"></i>
+                        </div>
+                        <h6 class="font-weight-bold">Konfirmasi Penghapusan Massal</h6>
+                        <p class="text-muted small">Hapus pengajuan berdasarkan kode aset atau inisial yang diajukan.</p>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label class="small font-weight-bold text-muted text-uppercase">Pola Kode Aset (Inisial)</label>
+                        <input type="text" class="form-control shadow-sm" name="pattern" placeholder="Contoh: MEB atau MJ" required style="text-transform: uppercase;">
+                        <small class="text-danger mt-1 d-block" style="font-size: 0.75rem;">
+                            <i class="fas fa-info-circle mr-1"></i> <b>PERHATIAN:</b> Semua pengajuan dengan inisial ini akan dihapus permanen.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 py-3 px-4 justify-content-between">
+                    <button type="button" class="btn btn-link text-muted font-weight-bold" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger px-4 shadow-sm font-weight-bold" style="border-radius: 8px;">
+                        Hapus Sekarang <i class="fas fa-trash-alt ml-1"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL DUPLIKAT PENGAJUAN --}}
+<div class="modal fade" id="modalDuplikatPengajuan" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <form id="formDuplikatPengajuan" method="POST">
+                @csrf
+                <div class="modal-header bg-secondary text-white border-0 py-3">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-copy mr-2"></i> Duplikat Pengajuan</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <h6 class="font-weight-bold mb-1" id="duplikat_pengajuan_nama"></h6>
+                    <p class="text-muted small mb-4">Ingin menduplikat pengajuan ini berapa kali?</p>
+                    <div class="form-group text-left">
+                        <label class="small font-weight-bold text-muted">JUMLAH DUPLIKASI</label>
+                        <input type="number" class="form-control" name="jumlah" value="1" min="1" max="100" required>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 py-3 justify-content-center">
+                    <button type="button" class="btn btn-link text-muted font-weight-bold mr-2" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-secondary px-4 shadow-sm" style="border-radius: 8px;">Proses Duplikat</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {{-- MODAL TAMBAH PENGAJUAN --}}
 <div class="modal fade" id="modalTambahPengajuan" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -157,19 +202,31 @@
                     </button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="form-group mb-3">
-                        <label class="small font-weight-bold text-muted text-uppercase">Nama Aset <span class="text-danger">*</span></label>
-                        <div class="input-group shadow-sm">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text bg-white border-right-0"><i class="fas fa-box text-primary"></i></span>
+                    <div class="row">
+                        <div class="col-md-9">
+                            <div class="form-group mb-3">
+                                <label class="small font-weight-bold text-muted text-uppercase">Nama Aset <span class="text-danger">*</span></label>
+                                <div class="input-group shadow-sm">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-white border-right-0"><i class="fas fa-box text-primary"></i></span>
+                                    </div>
+                                    <input type="text" class="form-control border-left-0" name="nama_aset" placeholder="Contoh: Meja Belajar" required>
+                                </div>
                             </div>
-                            <input type="text" class="form-control border-left-0 @error('nama_aset') is-invalid @enderror" name="nama_aset" value="{{ old('nama_aset') }}" placeholder="Contoh: Laptop Admin" required>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group mb-3">
+                                <label class="small font-weight-bold text-muted text-uppercase">Jumlah <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control shadow-sm" name="jumlah" value="1" min="1" max="100" required>
+                            </div>
                         </div>
                     </div>
+
                     <div class="form-group mb-3">
                         <label class="small font-weight-bold text-muted text-uppercase">Deskripsi Alasan <span class="text-danger">*</span></label>
-                        <textarea class="form-control shadow-sm @error('deskripsi_pengajuan') is-invalid @enderror" name="deskripsi_pengajuan" rows="3" placeholder="Jelaskan mengapa aset ini dibutuhkan..." required>{{ old('deskripsi_pengajuan') }}</textarea>
+                        <textarea class="form-control shadow-sm" name="deskripsi_pengajuan" rows="2" placeholder="Mengapa aset ini dibutuhkan?" required></textarea>
                     </div>
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group mb-3">
@@ -248,86 +305,7 @@
 </div>
 
 
-{{-- MODAL DETAIL PENGAJUAN (LIHAT) --}}
-<div class="modal fade" id="modalDetailPengajuan" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
-            <div class="modal-header bg-info text-white border-0 py-3">
-                <h5 class="modal-title font-weight-bold">
-                    <i class="fas fa-file-invoice mr-2"></i> Detail Pengajuan Aset
-                </h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="row">
-                    <div class="col-md-6 border-right">
-                        <h6 class="font-weight-bold text-info mb-3 text-uppercase small" style="letter-spacing: 1px;">Informasi Aset</h6>
-                        <div class="mb-3">
-                            <label class="small text-muted mb-0 d-block text-uppercase">Nomor Pengajuan</label>
-                            <code id="detail_nomor_pengajuan" class="font-weight-bold" style="font-size: 1rem;">-</code>
-                        </div>
-                        <div class="mb-3">
-                            <label class="small text-muted mb-0 d-block text-uppercase">Nama Aset</label>
-                            <span id="detail_nama_aset" class="font-weight-bold text-dark h6">-</span>
-                        </div>
-                        <div class="mb-3">
-                            <label class="small text-muted mb-0 d-block text-uppercase">Estimasi Harga</label>
-                            <span id="detail_estimasi_harga" class="font-weight-bold text-success h6">-</span>
-                        </div>
-                        <div class="mb-3">
-                            <label class="small text-muted mb-0 d-block text-uppercase">Deskripsi Alasan</label>
-                            <p id="detail_deskripsi" class="text-muted small mb-0"></p>
-                        </div>
-                    </div>
-                    <div class="col-md-6 pl-md-4">
-                        <h6 class="font-weight-bold text-info mb-3 text-uppercase small" style="letter-spacing: 1px;">Status & Verifikasi</h6>
-                        <div class="mb-3">
-                            <label class="small text-muted mb-0 d-block text-uppercase">Status Saat Ini</label>
-                            <div id="detail_status" class="mt-1"></div>
-                        </div>
-                        <div class="row">
-                            <div class="col-6 mb-3">
-                                <label class="small text-muted mb-0 d-block text-uppercase">Diajukan Oleh</label>
-                                <span id="detail_pengaju" class="font-weight-bold small text-dark">-</span>
-                            </div>
-                            <div class="col-6 mb-3 text-right">
-                                <label class="small text-muted mb-0 d-block text-uppercase">Tgl Pengajuan</label>
-                                <span id="detail_tanggal" class="font-weight-bold small text-dark">-</span>
-                            </div>
-                        </div>
-                        <div class="bg-light p-3 rounded shadow-sm border">
-                            <div class="mb-2">
-                                <label id="label_approved_by" class="small text-muted mb-0 d-block text-uppercase">Verifikator</label>
-                                <span id="detail_approved_by" class="font-weight-bold small text-dark">-</span>
-                            </div>
-                            <div>
-                                <label id="label_approved_at" class="small text-muted mb-0 d-block text-uppercase">Tgl Verifikasi</label>
-                                <span id="detail_approved_at" class="font-weight-bold small text-dark">-</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="section_catatan_tolak" class="mt-4 p-3 bg-danger-soft rounded border border-danger" style="display:none; background: #fff5f5;">
-                    <label class="small text-danger font-weight-bold mb-1 text-uppercase"><i class="fas fa-exclamation-circle mr-1"></i> Catatan Penolakan</label>
-                    <p id="detail_catatan_tolak" class="mb-0 text-dark small italic"></p>
-                </div>
-
-                <div class="mt-4 pt-3 border-top">
-                    <h6 class="font-weight-bold text-muted mb-3 text-uppercase small"><i class="fas fa-link mr-1"></i> Riwayat Pengadaan Terkait</h6>
-                    <div id="detail_pengadaan" class="table-responsive">
-                        {{-- Data via AJAX --}}
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer border-0 bg-light py-3 px-4">
-                <button type="button" class="btn btn-secondary px-4 shadow-sm font-weight-bold" style="border-radius: 8px;" data-dismiss="modal">Tutup</button>
-            </div>
-        </div>
-    </div>
-</div>
+@include('manajemenasetdanasrama::partials.modal-detail-pengajuan')
 
 {{-- MODAL AJUKAN ULANG --}}
 <div class="modal fade" id="modalAjukanUlang" tabindex="-1" role="dialog" aria-hidden="true">
@@ -367,6 +345,7 @@
 @endsection
 
 @push('scripts')
+@include('manajemenasetdanasrama::partials.scripts-asset')
 <script>
     $(document).ready(function() {
         // Edit modal - isi data dari tombol
@@ -392,83 +371,29 @@
         $('.btn-lihat').on('click', function() {
             var id = $(this).data('id');
             var url = '{{ route("manajemenasetdanasrama.pengajuan.show", ":id") }}';
+            showDetailPengajuan(id, url);
+        });
+
+        // Modal Duplikat
+        $('.btn-duplicate-pengajuan').on('click', function() {
+            var id = $(this).data('id');
+            var nama = $(this).data('nama');
+            $('#duplikat_pengajuan_nama').text(nama);
+            
+            var url = '{{ route("manajemenasetdanasrama.pengajuan.duplicate", ":id") }}';
             url = url.replace(':id', id);
+            $('#formDuplikatPengajuan').attr('action', url);
+            $('#modalDuplikatPengajuan').modal('show');
+        });
 
-            $.ajax({
-                url: url,
-                type: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    // Isi field modal
-                    $('#detail_nomor_pengajuan').text(data.nomor_pengajuan || '-');
-                    $('#detail_nama_aset').text(data.nama_aset || '-');
-                    $('#detail_deskripsi').text(data.deskripsi_pengajuan || '-');
-                    $('#detail_estimasi_harga').text(data.estimasi_harga ? 'Rp ' + new Intl.NumberFormat('id-ID').format(data.estimasi_harga) : '-');
-                    $('#detail_tanggal').text(data.tanggal_pengajuan ? new Date(data.tanggal_pengajuan).toLocaleDateString('id-ID') : '-');
-
-                    // Status dengan badge
-                    var statusText = '';
-                    var statusClass = '';
-                    switch (data.status) {
-                        case 'diajukan':
-                            statusText = 'Diajukan';
-                            statusClass = 'badge-warning';
-                            break;
-                        case 'disetujui':
-                            statusText = 'Disetujui';
-                            statusClass = 'badge-success';
-                            break;
-                        case 'ditolak':
-                            statusText = 'Ditolak';
-                            statusClass = 'badge-danger';
-                            break;
-                        case 'proses_pengadaan':
-                            statusText = 'Proses Pengadaan';
-                            statusClass = 'badge-info';
-                            break;
-                    }
-                    $('#detail_status').html('<span class="badge ' + statusClass + '">' + statusText + '</span>');
-
-                    $('#detail_pengaju').text(data.pengaju ? data.pengaju.name : '-');
-                    $('#detail_approved_by').text(data.approver ? data.approver.name : '-');
-                    $('#detail_approved_at').text(data.approved_at ? new Date(data.approved_at).toLocaleString('id-ID') : '-');
-
-                    // Data pengadaan
-                    if (data.pengadaan && data.pengadaan.length > 0) {
-                        var html = '<table class="table table-sm table-bordered"><thead><tr><th>No. PO</th><th>Vendor</th><th>Tgl Pesan</th><th>Status</th></tr></thead><tbody>';
-                        $.each(data.pengadaan, function(i, item) {
-                            html += '<tr>' +
-                                '<td>' + (item.nomor_po || '-') + '</td>' +
-                                '<td>' + (item.vendor || '-') + '</td>' +
-                                '<td>' + (item.tanggal_pesan ? new Date(item.tanggal_pesan).toLocaleDateString('id-ID') : '-') + '</td>' +
-                                '<td><span class="badge badge-light border">' + (item.status || '-') + '</span></td>' +
-                                '</tr>';
-                        });
-                        html += '</tbody></table>';
-                        $('#detail_pengadaan').html(html);
-                    } else {
-                        $('#detail_pengadaan').html('<p class="text-muted small italic">Tidak ada riwayat pengadaan</p>');
-                    }
-
-                    // Tampilkan catatan tolak jika statusnya ditolak
-                    if (data.status === 'ditolak' && data.catatan_tolak) {
-                        $('#section_catatan_tolak').fadeIn();
-                        $('#detail_catatan_tolak').text(data.catatan_tolak);
-                        $('#label_approved_by').text('Ditolak Oleh');
-                        $('#label_approved_at').text('Tanggal Penolakan');
-                    } else {
-                        $('#section_catatan_tolak').hide();
-                        $('#label_approved_by').text('Verifikator');
-                        $('#label_approved_at').text('Tgl Verifikasi');
-                    }
-
-                    // Tampilkan modal
-                    $('#modalDetailPengajuan').modal('show');
-                },
-                error: function(xhr) {
-                    alert('Gagal mengambil data. Silakan coba lagi.');
-                }
-            });
+        // Modal Hapus
+        $('#modalHapus').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var url = button.data('url');
+            var nama = button.data('nama');
+            
+            $(this).find('#formDelete').attr('action', url);
+            $(this).find('#hapus_nama_generic').text(nama);
         });
 
         // Ajukan ulang modal
@@ -484,6 +409,11 @@
             var url = '{{ route("manajemenasetdanasrama.pengajuan.ajukan-ulang", ":id") }}';
             url = url.replace(':id', id);
             $('#formAjukanUlang').attr('action', url);
+        });
+        // Prevent double submission
+        $('form').on('submit', function() {
+            var btn = $(this).find('button[type="submit"]');
+            btn.attr('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Memproses...');
         });
     });
 </script>

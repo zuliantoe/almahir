@@ -103,4 +103,48 @@ class TrashController extends BaseController
         return redirect()->route('manajemenasetdanasrama.trash.index')
             ->with('success', $message);
     }
+
+    /**
+     * Bulk permanently delete trashed items based on pattern.
+     */
+    public function bulkForceDelete(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'type' => 'required|in:aset,pengajuan',
+            'pattern' => 'required|string|min:2',
+        ]);
+
+        $type = $request->type;
+        $pattern = strtoupper($request->pattern);
+
+        if ($type === 'aset') {
+            $query = Aset::onlyTrashed()->where('kode_aset', 'LIKE', "{$pattern}%");
+        } else {
+            $query = PengajuanAset::onlyTrashed()->where('nomor_pengajuan', 'LIKE', "{$pattern}%");
+        }
+
+        $count = $query->count();
+        if ($count === 0) {
+            return redirect()->back()->with('error', "Tidak ditemukan data ".ucfirst($type)." di sampah dengan pola '{$pattern}'.");
+        }
+
+        $query->forceDelete();
+
+        return redirect()->route('manajemenasetdanasrama.trash.index')
+            ->with('success', "Berhasil menghapus permanen {$count} data {$type} dengan pola '{$pattern}'.");
+    }
+
+    /**
+     * Empty all trash.
+     */
+    public function emptyTrash(): RedirectResponse
+    {
+        Aset::onlyTrashed()->forceDelete();
+        PengajuanAset::onlyTrashed()->forceDelete();
+        Kerusakan::onlyTrashed()->forceDelete();
+        Pemeliharaan::onlyTrashed()->forceDelete();
+
+        return redirect()->route('manajemenasetdanasrama.trash.index')
+            ->with('success', 'Semua data di sampah berhasil dihapus permanen.');
+    }
 }

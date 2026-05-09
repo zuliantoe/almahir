@@ -39,6 +39,8 @@ Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
     Route::delete('{id}', [PengajuanController::class, 'destroy'])->name('destroy');
     // Route untuk ajukan ulang (resubmit) pengajuan yang ditolak
     Route::post('{id}/ajukan-ulang', [PengajuanController::class, 'ajukanUlang'])->name('ajukan-ulang');
+    Route::post('{id}/duplicate', [PengajuanController::class, 'duplicate'])->name('duplicate');
+    Route::post('bulk-destroy', [PengajuanController::class, 'bulkDestroy'])->name('bulk-destroy');
 });
     
     // Persetujuan
@@ -59,12 +61,17 @@ Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
     // Master Aset
     Route::prefix('aset')->name('aset.')->group(function () {
         Route::get('/', [AsetController::class, 'index'])->name('index');
+        Route::get('create', [AsetController::class, 'create'])->name('create');
+        Route::get('scan', [AsetController::class, 'scan'])->name('scan');
+        Route::post('/', [AsetController::class, 'store'])->name('store');
+        Route::get('print-label', [AsetController::class, 'printLabel'])->name('print-label');
+        Route::get('suggest-code', [AsetController::class, 'suggestCode'])->name('suggest-code');
         Route::get('{id}', [AsetController::class, 'show'])->name('show');
         Route::get('{id}/edit', [AsetController::class, 'edit'])->name('edit');
         Route::put('{id}', [AsetController::class, 'update'])->name('update');
         Route::delete('{id}', [AsetController::class, 'destroy'])->name('destroy');
-        Route::post('{id}/duplicate', [AsetController::class, 'duplicate'])->name('duplicate');
-        Route::get('print-label', [AsetController::class, 'printLabel'])->name('print-label');
+        Route::post('duplicate/{id}', [AsetController::class, 'duplicate'])->name('duplicate');
+        Route::post('bulk-destroy', [AsetController::class, 'bulkDestroy'])->name('bulk-destroy');
     });
     
     // Kamar
@@ -134,6 +141,8 @@ Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
     // Trash
     Route::prefix('trash')->name('trash.')->group(function () {
         Route::get('/', [TrashController::class, 'index'])->name('index');
+        Route::post('empty-trash', [TrashController::class, 'emptyTrash'])->name('empty-trash');
+        Route::post('bulk-force-delete', [TrashController::class, 'bulkForceDelete'])->name('bulk-force-delete');
         Route::post('{type}/{id}/restore', [TrashController::class, 'restore'])->name('restore');
         Route::delete('{type}/{id}/force-delete', [TrashController::class, 'forceDelete'])->name('force-delete');
     });

@@ -178,6 +178,8 @@
                 </div>
             </x-card>
 
+
+
             {{-- Riwayat --}}
             <x-card title="Riwayat Penghuni Sebelumnya" icon="fas fa-history" class="card-outline card-secondary collapsed-card no-print mt-3">
                 <x-slot name="tools">

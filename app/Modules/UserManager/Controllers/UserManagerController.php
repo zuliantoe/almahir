@@ -91,9 +91,7 @@ class UserManagerController extends Controller
         ]);
 
         // Assign roles
-        foreach ($validated['roles'] as $roleId) {
-            $user->assignRole($roleId);
-        }
+        $user->syncRoles($validated['roles']);
 
         return redirect()->route('users.index')
             ->with('success', 'User berhasil dibuat.');

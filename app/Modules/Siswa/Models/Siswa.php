@@ -51,6 +51,7 @@ class Siswa extends Model
         'kelas_id',
         'tahun_masuk',
         'status', // aktif, lulus, keluar, cuti
+        'pendaftaran_id',
     ];
 
     /**

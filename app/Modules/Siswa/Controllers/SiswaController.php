@@ -37,7 +37,7 @@ class SiswaController extends Controller
     {
         $tahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::orderBy('id', 'desc')->get();
         $pendaftaranDiterima = \Modules\Pendaftaran\Models\Pendaftaran::where('status', 'diterima')
-                                                                        ->where('aktif', 0)
+                                                                        ->whereDoesntHave('siswa')
                                                                         ->get();
 
         return view('siswa::create', [
@@ -72,14 +72,10 @@ class SiswaController extends Controller
             $validated['foto'] = $request->file('foto')->store('siswa/foto', 'public');
         }
 
-        // Siswa::create($validated);
-        Siswa::create($validated);
+        $siswa = Siswa::create($validated);
 
         if ($request->filled('pendaftaran_id')) {
-            $pendaftaran = \Modules\Pendaftaran\Models\Pendaftaran::find($request->pendaftaran_id);
-            if ($pendaftaran) {
-                $pendaftaran->update(['aktif' => 1]);
-            }
+            $siswa->update(['pendaftaran_id' => $request->pendaftaran_id]);
         }
 
         return redirect()->route('siswa.index')

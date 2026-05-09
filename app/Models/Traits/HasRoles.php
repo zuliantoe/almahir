@@ -95,7 +95,7 @@ trait HasRoles
      */
     public function assignRole($role, ?string $assignedBy = null): void
     {
-        $roleModel = $role instanceof Role ? $role : Role::where('name', $role)->first();
+        $roleModel = $role instanceof Role ? $role : Role::where('name', $role)->orWhere('id', $role)->first();
 
         if ($roleModel && !$this->hasRole($roleModel->name)) {
             $this->roles()->attach($roleModel->id, [
@@ -127,9 +127,9 @@ trait HasRoles
      * @param string|null $assignedBy UUID of user who assigned these roles
      * @return void
      */
-    public function syncRoles(array $roleNames, ?string $assignedBy = null): void
+    public function syncRoles(array $roleIdsOrNames, ?string $assignedBy = null): void
     {
-        $roles = Role::whereIn('name', $roleNames)->pluck('id')->toArray();
+        $roles = Role::whereIn('name', $roleIdsOrNames)->orWhereIn('id', $roleIdsOrNames)->pluck('id')->toArray();
 
         $syncData = [];
         foreach ($roles as $roleId) {

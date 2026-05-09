@@ -88,10 +88,11 @@
             border: none;
             border-radius: var(--card-radius);
             box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
         }
 
-        .card:hover {
+        /* Hanya berikan efek angkat pada kartu di halaman dashboard utama, bukan form/admin detail */
+        .dashboard-card:hover {
             transform: translateY(-5px);
         }
 
@@ -103,9 +104,14 @@
 
         .btn {
             border-radius: var(--btn-radius);
-            padding: 10px 20px;
+            padding: 8px 20px;
             font-weight: 600;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+        }
+
+        .btn-sm {
+            padding: 5px 12px !important;
+            font-size: 0.85rem;
         }
 
         .form-control, select.form-control {

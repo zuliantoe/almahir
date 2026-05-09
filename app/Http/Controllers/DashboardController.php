@@ -17,9 +17,9 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Jika Guru atau Siswa, jadikan modul Akademik sebagai halaman utama mereka
+        // Langsung masuk ke modul Penilaian & Presensi sebagai dashboard utama
         if ($user && ($user->hasRole('GURU') || $user->hasRole('SISWA'))) {
-            return redirect()->route('akademik.index');
+            return redirect()->route('penilaiandanpresensi.index');
         }
 
         // 1. Menghitung Total Guru (berdasarkan role GURU)

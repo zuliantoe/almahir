@@ -11,8 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('pegawai', function (Blueprint $table) {
-            $table->softDeletes();
+        Schema::table('rombel_siswa', function (Blueprint $table) {
+            if (!Schema::hasColumn('rombel_siswa', 'status')) {
+                $table->string('status')->default('aktif')->after('siswa_id');
+            }
         });
     }
 
@@ -21,8 +23,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('pegawai', function (Blueprint $table) {
-            $table->dropSoftDeletes();
+        Schema::table('rombel_siswa', function (Blueprint $table) {
+            $table->dropColumn('status');
         });
     }
 };

@@ -79,10 +79,9 @@ class KamarController extends BaseController
             'deskripsi'  => 'nullable|string',
         ]);
 
-        Kamar::create($validated);
-
-        return redirect()->route('manajemenasetdanasrama.kamar.index')
-            ->with('success', 'Kamar berhasil ditambahkan.');
+        $kamar = Kamar::create($validated);
+        return redirect()->route('manajemenasetdanasrama.penghuni.assign-multiple', $kamar->id)
+            ->with('success', 'Kamar berhasil dibuat. Silakan pilih penghuni untuk kamar ini.');
     }
 
     /**
@@ -129,5 +128,35 @@ class KamarController extends BaseController
 
         return redirect()->route('manajemenasetdanasrama.kamar.index')
             ->with('success', 'Kamar berhasil dihapus.');
+    }
+
+    /**
+     * Print the list of residents in the specified kamar.
+     */
+    public function print(Request $request, string $id): View
+    {
+        $kamar = Kamar::findOrFail($id);
+        
+        $penghuniAktif = $kamar->penghuni()
+            ->with('siswa')
+            ->where(function($query) {
+                $query->whereNull('tanggal_keluar')
+                      ->orWhere('tanggal_keluar', '>', now());
+            })
+            ->orderByRaw("CASE 
+                WHEN jabatan = 'Ketua Kamar' THEN 1 
+                WHEN jabatan = 'Wakil Ketua Kamar' THEN 2 
+                ELSE 3 
+            END ASC")
+            ->orderBy('id', 'asc')
+            ->get();
+
+        return view('manajemenasetdanasrama::kamar.print', [
+            'title'         => 'Cetak Daftar Penghuni Kamar',
+            'kamar'         => $kamar,
+            'penghuniAktif' => $penghuniAktif,
+            'musyrif'       => $request->query('musyrif'),
+            'kepsek'        => $request->query('kepsek'),
+        ]);
     }
 }

@@ -45,7 +45,7 @@ class SpecificAcademicSeeder extends Seeder
         }
 
         // 3. Mata Pelajaran (3 items)
-        $katNasional = KategoriPelajaran::updateOrCreate(['kategori' => 'Nasional'], []);
+        $katDiniyyah = KategoriPelajaran::updateOrCreate(['kategori' => 'Diniyyah'], []);
         $mapelData = [
             ['kode' => 'MAT', 'nama' => 'Matematika'],
             ['kode' => 'BIG', 'nama' => 'Bahasa Inggris'],
@@ -55,7 +55,7 @@ class SpecificAcademicSeeder extends Seeder
         foreach ($mapelData as $m) {
             $mapelObjects[] = MataPelajaran::updateOrCreate(
                 ['kode' => $m['kode']],
-                ['nama' => $m['nama'], 'kategori_id' => $katNasional->id]
+                ['nama' => $m['nama'], 'kategori_id' => $katDiniyyah->id]
             );
         }
 

@@ -9,7 +9,8 @@ use Illuminate\View\View;
 use Modules\PenilaianDanPresensi\Models\PenilaianTahfidz;
 use Modules\Guru\Models\Guru as ModelsGuru;
 use Modules\Siswa\Models\Siswa as ModelsSiswa;
-use App\Modules\Akademik\Models\kelas as AkademikKelas;
+use App\Modules\Akademik\Models\Kelas as AkademikKelas;
+use App\Modules\Akademik\Models\Rombel;
 use App\Modules\Akademik\Models\TahunAjaran;
 
 /**
@@ -30,10 +31,27 @@ class PenilaianTahfidzController extends Controller
         // Filter for students: they only see their own scores
         if (auth()->user()->ref_type === ModelsSiswa::class) {
             $siswaId = auth()->user()->ref_id;
-            $query->where('id_siswa', $siswaId);
+            $query->where('siswa_id', $siswaId);
         }
 
         // Apply filters
+        if ($request->filled('rombel_id')) {
+            $rombelId = $request->rombel_id;
+            $query->whereHas('siswa.rombelSiswa', function($rq) use ($rombelId) {
+                $rq->where('rombel_id', $rombelId)->where('status', 'aktif');
+            });
+        }
+        
+        // Support legacy filter
+        if ($request->filled('kelas_id')) {
+            $kelasId = $request->kelas_id;
+            $query->where('kelas_id', $kelasId);
+        }
+
+        if ($request->filled('tahunajaran_id')) {
+            $query->where('tahunajaran_id', $request->tahunajaran_id);
+        }
+
         if ($request->filled('surah')) {
             $surah = $request->surah;
             $query->where(function($q) use ($surah) {
@@ -47,11 +65,15 @@ class PenilaianTahfidzController extends Controller
         }
 
         $penilaianTahfidzs = $query->latest()->paginate(10);
+        $rombels = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0)->orderBy('nama_rombel')->get();
+        $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
 
         return view('penilaiandanpresensi::penilaian-tahfidz.index', [
             'title' => 'Daftar Penilaian Tahfidz',
             'penilaianTahfidzs' => $penilaianTahfidzs,
             'activeTahunAjaran' => $activeTahunAjaran,
+            'rombels' => $rombels,
+            'tahunAjarans' => $tahunAjarans,
             'userRole' => auth()->user()->ref_type,
         ]);
     }
@@ -65,17 +87,22 @@ class PenilaianTahfidzController extends Controller
         $isGuru = $user->ref_type === ModelsGuru::class;
         $loggedGuruId = $isGuru ? $user->ref_id : null;
 
-        $kelas = AkademikKelas::orderBy('nama_kelas')->get();
+        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+        
+        $rombelQuery = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0);
+        if ($isGuru) {
+            $rombelQuery->where('wali_kelas_id', $loggedGuruId);
+        }
+        $rombels = $rombelQuery->orderBy('nama_rombel')->get();
+
         $gurus = ModelsGuru::orderBy('nama')->get();
         $siswas = ModelsSiswa::with('kelas')->orderBy('nama')->get();
-        
-        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
 
         return view('penilaiandanpresensi::penilaian-tahfidz.create', [
             'title' => 'Tambah Penilaian Tahfidz',
             'siswas' => $siswas,
             'gurus' => $gurus,
-            'kelas' => $kelas,
+            'rombels' => $rombels,
             'activeTahunAjaran' => $activeTahunAjaran,
             'isGuru' => $isGuru,
             'loggedGuruId' => $loggedGuruId,
@@ -88,8 +115,8 @@ class PenilaianTahfidzController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'id_siswa' => 'required|exists:siswa,id',
-            'id_kelas' => 'required|exists:kelas,id',
+            'siswa_id' => 'required|exists:siswa,id',
+            'kelas_id' => 'required|exists:kelas,id',
             'tanggal' => 'required|date',
             'surat_awal' => 'required|array',
             'surat_awal.*' => 'required|string|max:255',
@@ -99,7 +126,7 @@ class PenilaianTahfidzController extends Controller
             'ayat_awal.*' => 'required|integer|min:1',
             'ayat_akhir' => 'required|array',
             'ayat_akhir.*' => 'required|integer|min:1',
-            'id_guru' => 'required|exists:guru,id',
+            'guru_id' => 'required|exists:guru,id',
             'nilai' => 'required|array',
             'nilai.*' => 'required|integer|min:0|max:100',
             'status_capaian' => 'required|array',
@@ -114,11 +141,16 @@ class PenilaianTahfidzController extends Controller
         $nilais = $request->input('nilai');
         $status_capaians = $request->input('status_capaian');
 
+        $activeTA = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+
         foreach ($ayatAwals as $index => $ayatAwal) {
             PenilaianTahfidz::create([
-                'id_siswa' => $validated['id_siswa'],
-                'id_kelas' => $validated['id_kelas'],
-                'id_guru' => $validated['id_guru'],
+                'siswa_id' => $validated['siswa_id'],
+                'kelas_id' => $validated['kelas_id'],
+                'guru_id' => $validated['guru_id'],
+                'tahunajaran_id' => $activeTA->id ?? null,
+                'semester' => $activeTA->semester ?? null,
+                'author_id' => auth()->id(),
                 'tanggal' => $validated['tanggal'],
                 'surat_awal' => $suratAwals[$index],
                 'surat_akhir' => $suratAkhirs[$index],
@@ -161,7 +193,7 @@ class PenilaianTahfidzController extends Controller
         $gurus = ModelsGuru::orderBy('nama')->get();
         $siswas = ModelsSiswa::with('kelas')->orderBy('nama')->get();
         
-        $activeTahunAjaran = TahunAjaran::where('status', true)->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
 
         return view('penilaiandanpresensi::penilaian-tahfidz.edit', [
             'title' => 'Edit Penilaian Tahfidz',
@@ -181,20 +213,26 @@ class PenilaianTahfidzController extends Controller
     public function update(Request $request, string $id): RedirectResponse
     {
         $validated = $request->validate([
-            'id_siswa' => 'required|exists:siswa,id',
-            'id_kelas' => 'required|exists:kelas,id',
+            'siswa_id' => 'required|exists:siswa,id',
+            'kelas_id' => 'required|exists:kelas,id',
             'tanggal' => 'required|date',
             'surat_awal' => 'required|string|max:255',
             'surat_akhir' => 'required|string|max:255',
             'ayat_awal' => 'required|integer|min:1',
             'ayat_akhir' => 'required|integer|min:1',
-            'id_guru' => 'required|exists:guru,id',
+            'guru_id' => 'required|exists:guru,id',
             'nilai' => 'required|integer|min:0|max:100',
             'status_capaian' => 'required|in:Lolos,Tidak Lolos',
         ]);
 
+        $activeTA = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
         $penilaianTahfidz = PenilaianTahfidz::findOrFail($id);
-        $penilaianTahfidz->update($validated);
+        
+        $updateData = $validated;
+        $updateData['tahunajaran_id'] = $activeTA->id ?? null;
+        $updateData['semester'] = $activeTA->semester ?? null;
+        
+        $penilaianTahfidz->update($updateData);
 
         return redirect()->route('penilaiandanpresensi.penilaiantahfidz.index')
             ->with('success', 'Data berhasil diperbarui.');

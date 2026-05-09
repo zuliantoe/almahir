@@ -18,7 +18,7 @@ class Rombel extends Model
         'nama_rombel',
         'kelas_id',
         'tahunajaran_id',
-        'guru_id',
+        'wali_kelas_id',
         'keterangan'
     ];
 
@@ -34,7 +34,7 @@ class Rombel extends Model
 
     public function walikelas(): BelongsTo
     {
-        return $this->belongsTo(Guru::class, 'guru_id');
+        return $this->belongsTo(Guru::class, 'wali_kelas_id');
     }
 
     public function riwayatSiswa(): HasMany

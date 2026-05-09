@@ -9,9 +9,19 @@
             @csrf
 
             {{-- Scan Kartu Section --}}
-            <div class="alert alert-info mb-4">
-                <i class="fas fa-barcode mr-2"></i>
-                <strong>Scan Kartu Siswa</strong> - Arahkan kartu ke scanner untuk mengisi data siswa secara otomatis
+            <div class="row align-items-center mb-4">
+                <div class="col-md-8">
+                    <div class="alert alert-info mb-0" style="border-radius: 15px; border-left: 5px solid #117a8b;">
+                        <i class="fas fa-barcode mr-2"></i>
+                        <strong>Scan Kartu Siswa</strong> - Arahkan kartu ke scanner untuk mengisi data siswa secara otomatis
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-right mt-3 mt-md-0">
+                    <div class="bg-white p-2 rounded-lg shadow-sm border text-center" style="min-width: 150px;">
+                        <h4 class="mb-0 font-weight-bold text-primary" id="create-live-clock">00:00:00</h4>
+                        <small class="text-muted font-weight-bold">{{ now()->locale('id')->translatedFormat('d M Y') }}</small>
+                    </div>
+                </div>
             </div>
 
             <div class="form-group">
@@ -57,8 +67,8 @@
             {{-- Siswa Section (Single) --}}
             <div id="single-input-container">
             <div class="form-group">
-                <label for="id_siswa">Siswa</label>
-                <select name="id_siswa" id="id_siswa" class="form-control" required>
+                <label for="siswa_id">Siswa</label>
+                <select name="siswa_id" id="siswa_id" class="form-control" required>
                     <option value="">-- Pilih Kelas terlebih dahulu --</option>
                 </select>
                 <div id="siswa_info" class="alert alert-success mt-2" style="display: none;">
@@ -68,8 +78,8 @@
 
             {{-- Guru Section --}}
             <div class="form-group">
-                <label for="id_guru">Guru</label>
-                <select name="id_guru" id="id_guru" class="form-control" required>
+                <label for="guru_id">Guru</label>
+                <select name="guru_id" id="guru_id" class="form-control" required>
                     <option value="">-- Pilih Guru --</option>
                     @foreach($gurus as $guru)
                         <option value="{{ $guru->id }}">{{ $guru->nama }}</option>
@@ -79,16 +89,16 @@
 
             {{-- Mata Pelajaran Section --}}
             <div class="form-group">
-                <label for="id_mapel">Mata Pelajaran</label>
-                <select name="id_mapel" id="id_mapel" class="form-control" required>
+                <label for="mapel_id">Mata Pelajaran</label>
+                <select name="mapel_id" id="mapel_id" class="form-control" required>
                     <option value="">-- Pilih Guru terlebih dahulu --</option>
                 </select>
             </div>
 
             {{-- Jadwal Pelajaran Section --}}
             <div class="form-group">
-                <label for="id_jadwal_pelajaran">Jadwal Pelajaran</label>
-                <select name="id_jadwal_pelajaran" id="id_jadwal_pelajaran" class="form-control" required>
+                <label for="jadwal_pelajaran_id">Jadwal Pelajaran</label>
+                <select name="jadwal_pelajaran_id" id="jadwal_pelajaran_id" class="form-control" required>
                     <option value="">-- Pilih Guru dan Kelas terlebih dahulu --</option>
                 </select>
             </div>
@@ -160,7 +170,26 @@
 
 @push('scripts')
 <script>
-document.getElementById('scan_id').addEventListener('change', function() {
+document.addEventListener('DOMContentLoaded', function() {
+    // Live Clock for header
+    function updateHeaderClock() {
+        const now = new Date();
+        const timeString = now.getHours().toString().padStart(2, '0') + ':' + 
+                         now.getMinutes().toString().padStart(2, '0') + ':' + 
+                         now.getSeconds().toString().padStart(2, '0');
+        $('#create-live-clock').text(timeString);
+        
+        // Also auto-update the 'Jam' input field if it's not being edited
+        if (!document.getElementById('jam').matches(':focus')) {
+            const timeOnly = now.getHours().toString().padStart(2, '0') + ':' + 
+                           now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('jam').value = timeOnly;
+        }
+    }
+    setInterval(updateHeaderClock, 1000);
+    updateHeaderClock();
+
+    document.getElementById('scan_id').addEventListener('change', function() {
     const scanId = this.value.trim();
     
     if (!scanId) return;
@@ -180,14 +209,14 @@ document.getElementById('scan_id').addEventListener('change', function() {
     .then(data => {
         if (data.success) {
             // Set siswa value
-            document.getElementById('id_siswa').value = data.data.id_siswa;
+            document.getElementById('siswa_id').value = data.data.siswa_id;
             
             // Show success message
             document.getElementById('siswa_info').style.display = 'block';
             document.getElementById('siswa_nama').textContent = '✓ Siswa ditemukan: ' + data.data.nama_siswa;
             
             // Focus to next field
-            document.getElementById('id_guru').focus();
+            document.getElementById('guru_id').focus();
         } else {
             alert('❌ ' + data.message);
             this.value = '';
@@ -228,7 +257,7 @@ document.getElementById('scan_id').addEventListener('change', function() {
     }
 
     function getMapelOptions() {
-        const guruId = document.getElementById('id_guru').value;
+        const guruId = document.getElementById('guru_id').value;
         if (!guruId) {
             return '<option value="">-- Pilih Guru terlebih dahulu --</option>';
         }
@@ -252,7 +281,7 @@ document.getElementById('scan_id').addEventListener('change', function() {
 
     function getJadwalOptions() {
         const kelasId = document.getElementById('kelas_id').value;
-        const guruId = document.getElementById('id_guru').value;
+        const guruId = document.getElementById('guru_id').value;
         if (!kelasId || !guruId) {
             return '<option value="">-- Pilih kelas dan guru terlebih dahulu --</option>';
         }
@@ -271,7 +300,7 @@ document.getElementById('scan_id').addEventListener('change', function() {
     }
 
     function updateStudentOptions() {
-        const siswa = document.getElementById('id_siswa');
+        const siswa = document.getElementById('siswa_id');
         const currentValue = siswa.value;
         siswa.innerHTML = getStudentOptions();
         if (currentValue) {
@@ -280,7 +309,7 @@ document.getElementById('scan_id').addEventListener('change', function() {
     }
 
     function updateMapelOptions() {
-        const mapel = document.getElementById('id_mapel');
+        const mapel = document.getElementById('mapel_id');
         const currentValue = mapel.value;
         mapel.innerHTML = getMapelOptions();
         if (currentValue) {
@@ -289,7 +318,7 @@ document.getElementById('scan_id').addEventListener('change', function() {
     }
 
     function updateJadwalOptions() {
-        const jadwal = document.getElementById('id_jadwal_pelajaran');
+        const jadwal = document.getElementById('jadwal_pelajaran_id');
         const currentValue = jadwal.value;
         jadwal.innerHTML = getJadwalOptions();
         if (currentValue) {
@@ -309,7 +338,7 @@ document.getElementById('scan_id').addEventListener('change', function() {
                 populateBulkTable();
             }
         });
-        document.getElementById('id_guru').addEventListener('change', function() {
+        document.getElementById('guru_id').addEventListener('change', function() {
             updateMapelOptions();
             updateJadwalOptions();
         });
@@ -318,12 +347,12 @@ document.getElementById('scan_id').addEventListener('change', function() {
             if ($(this).val() === 'bulk') {
                 $('#single-input-container').addClass('d-none');
                 $('#bulk-input-container').removeClass('d-none');
-                $('#id_siswa, #status').prop('required', false);
+                $('#siswa_id, #status').prop('required', false);
                 populateBulkTable();
             } else {
                 $('#single-input-container').removeClass('d-none');
                 $('#bulk-input-container').addClass('d-none');
-                $('#id_siswa, #status').prop('required', true);
+                $('#siswa_id, #status').prop('required', true);
             }
         });
 
@@ -341,7 +370,7 @@ document.getElementById('scan_id').addEventListener('change', function() {
                         <td>${index + 1}</td>
                         <td>
                             <div class="font-weight-bold">${siswa.nama}</div>
-                            <input type="hidden" name="bulk_penilaian[${index}][id_siswa]" value="${siswa.id}">
+                            <input type="hidden" name="bulk_penilaian[${index}][siswa_id]" value="${siswa.id}">
                         </td>
                         <td>
                             <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">

@@ -33,12 +33,14 @@ class DashboardController extends BaseController
         $kamarPenuh = Kamar::all()->filter(fn($k) => $k->sisa <= 0)->count();
         $sisaKapasitas = $totalKapasitas - $totalPenghuni;
 
-        $jadwalPiketHariIni = JadwalPiket::with(['siswa', 'kamar'])
-                                ->whereDate('tanggal', date('Y-m-d'))
-                                ->where('status', 'belum')
-                                ->take(10)
-                                ->get();
-
+        // Ambil Jadwal Piket Hari Ini untuk Dashboard
+        $today = date('Y-m-d');
+        $jadwalToday = JadwalPiket::with(['siswa'])
+                        ->where('tanggal', $today)
+                        ->orderBy('shift', 'asc')
+                        ->orderBy('lokasi_piket', 'asc')
+                        ->get();
+        
         $asetByStatus = [
             'baik'              => Aset::where('status_kondisi', 'baik')->count(),
             'rusak'             => Aset::where('status_kondisi', 'rusak')->count(),
@@ -58,7 +60,7 @@ class DashboardController extends BaseController
             'totalKapasitas'    => $totalKapasitas,
             'kamarPenuh'        => $kamarPenuh,
             'sisaKapasitas'     => $sisaKapasitas,
-            'jadwalPiketHariIni'=> $jadwalPiketHariIni,
+            'jadwalToday'       => $jadwalToday->groupBy('lokasi_piket'),
             'asetByStatus'      => $asetByStatus,
         ]);
     }

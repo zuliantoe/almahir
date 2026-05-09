@@ -2,6 +2,14 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Keuangan\Controllers\KeuanganController;
+use Modules\Keuangan\Controllers\PemasukanController;
+use Modules\Keuangan\Controllers\PengeluaranController;
+use Modules\Keuangan\Controllers\SumberController;
+use Modules\Keuangan\Controllers\TujuanController;
+use Modules\Keuangan\Controllers\TransaksiController;
+use Modules\Keuangan\Controllers\UangSakuController;
+use Modules\Keuangan\Controllers\TagihanSantriController;
+use Modules\Keuangan\Controllers\PembayaranSantriController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,10 +23,16 @@ use Modules\Keuangan\Controllers\KeuanganController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [KeuanganController::class, 'index'])->name('index');
-    Route::get('/create', [KeuanganController::class, 'create'])->name('create');
-    Route::post('/', [KeuanganController::class, 'store'])->name('store');
-    Route::get('/{id}', [KeuanganController::class, 'show'])->name('show');
-    Route::get('/{id}/edit', [KeuanganController::class, 'edit'])->name('edit');
-    Route::put('/{id}', [KeuanganController::class, 'update'])->name('update');
-    Route::delete('/{id}', [KeuanganController::class, 'destroy'])->name('destroy');
+    Route::resource('pemasukans', PemasukanController::class);
+    Route::resource('pengeluarans', PengeluaranController::class);
+    Route::resource('sumbers', SumberController::class);
+    Route::resource('tujuans', TujuanController::class);
+    
+    Route::resource('uangsakus', UangSakuController::class);
+    Route::resource('tagihansantris', TagihanSantriController::class);
+    Route::resource('pembayaransantris', PembayaranSantriController::class);
+    
+    // Laporan Transaksi
+    Route::get('transaksis/print', [TransaksiController::class, 'print'])->name('transaksis.print');
+    Route::get('transaksis', [TransaksiController::class, 'index'])->name('transaksis.index');
 });

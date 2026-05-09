@@ -30,32 +30,43 @@
                             <!-- Guru Section -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="id_guru" class="font-weight-bold text-dark">Guru Pengampu <span class="text-danger">*</span></label>
-                                    <select name="id_guru" id="id_guru" class="form-control" required {{ $isGuru ? 'readonly' : '' }}>
+                                    <label for="guru_id" class="font-weight-bold text-dark">Guru Pengampu <span class="text-danger">*</span></label>
+                                    <select name="guru_id" id="guru_id" class="form-control" required {{ $isGuru ? 'readonly' : '' }}>
                                         <option value="">-- Pilih Guru --</option>
                                         @foreach($gurus as $guru)
-                                            <option value="{{ $guru->id }}" {{ ($isGuru && $loggedGuruId == $guru->id) || old('id_guru') == $guru->id ? 'selected' : '' }}>
+                                            <option value="{{ $guru->id }}" {{ ($isGuru && $loggedGuruId == $guru->id) || old('guru_id') == $guru->id ? 'selected' : '' }}>
                                                 {{ $guru->nama }}
                                             </option>
                                         @endforeach
                                     </select>
                                     @if($isGuru)
-                                        <input type="hidden" name="id_guru" value="{{ $loggedGuruId }}">
+                                        <input type="hidden" name="guru_id" value="{{ $loggedGuruId }}">
                                     @endif
                                 </div>
                             </div>
 
                             <!-- Tahun Ajaran Section (Badge Style) -->
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label class="font-weight-bold text-dark">Tahun Ajaran <span class="text-danger">*</span></label>
                                     <div class="form-control bg-white d-flex align-items-center justify-content-between" style="border-radius: 0.5rem; height: calc(2.25rem + 2px); border: 2px solid var(--success-color);">
-                                        <span class="font-weight-bold text-success">
-                                            <i class="fas fa-calendar-check mr-2"></i> {{ $activeTahunAjaran->tahunajaran ?? 'Pilih TA Aktif' }}
+                                        <span class="font-weight-bold text-success small">
+                                            <i class="fas fa-calendar-check mr-1"></i> {{ $activeTahunAjaran->tahunajaran ?? 'Pilih TA Aktif' }}
                                         </span>
-                                        <span class="badge badge-success">Aktif</span>
                                     </div>
-                                    <input type="hidden" name="id_tahun_ajaran" id="id_tahun_ajaran" value="{{ $activeTahunAjaran->id ?? '' }}">
+                                    <input type="hidden" name="tahunajaran_id" id="tahunajaran_id" value="{{ $activeTahunAjaran->id ?? '' }}">
+                                </div>
+                            </div>
+
+                            <!-- Jenis Nilai Section -->
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="jenis_nilai" class="font-weight-bold text-dark">Jenis Nilai <span class="text-danger">*</span></label>
+                                    <select name="jenis_nilai" id="jenis_nilai" class="form-control" required>
+                                        <option value="Harian" {{ old('jenis_nilai') == 'Harian' ? 'selected' : '' }}>Harian</option>
+                                        <option value="UTS" {{ old('jenis_nilai') == 'UTS' ? 'selected' : '' }}>UTS</option>
+                                        <option value="UAS" {{ old('jenis_nilai') == 'UAS' ? 'selected' : '' }}>UAS</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -64,11 +75,11 @@
                         <div class="row mb-4 p-3 bg-white shadow-sm mx-1" style="border-radius: 12px; border-left: 5px solid var(--success-color);">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="id_mapel" class="font-weight-bold text-dark">Mata Pelajaran <span class="text-danger">*</span></label>
-                                    <select name="id_mapel" id="id_mapel" class="form-control" required>
+                                    <label for="mapel_id" class="font-weight-bold text-dark">Mata Pelajaran <span class="text-danger">*</span></label>
+                                    <select name="mapel_id" id="mapel_id" class="form-control" required>
                                         <option value="">-- Pilih Mata Pelajaran --</option>
                                         @foreach($mapels as $mapel)
-                                            <option value="{{ $mapel->id }}" {{ old('id_mapel') == $mapel->id ? 'selected' : '' }}>
+                                            <option value="{{ $mapel->id }}" {{ old('mapel_id') == $mapel->id ? 'selected' : '' }}>
                                                 {{ $mapel->nama }}
                                             </option>
                                         @endforeach
@@ -84,17 +95,20 @@
                             </div>
                         </div>
 
-                        {{-- Class Selection Section --}}
+                        {{-- Rombel Selection Section --}}
                         <div class="row mb-4">
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <label for="kelas_id" class="font-weight-bold text-dark">Pilih Kelas Santri <span class="text-danger">*</span></label>
-                                    <select name="kelas_id" id="kelas_id" class="form-control" required>
-                                        <option value="">-- Pilih Kelas --</option>
-                                        @foreach($kelas as $k)
-                                            <option value="{{ $k->id }}" {{ old('kelas_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
+                                    <label for="rombel_id" class="font-weight-bold text-dark">Pilih Rombel Santri <span class="text-danger">*</span></label>
+                                    <select name="rombel_id" id="rombel_id" class="form-control select2-modern" required>
+                                        <option value="">-- Pilih Rombel --</option>
+                                        @foreach($rombels as $r)
+                                            <option value="{{ $r->id }}" {{ old('rombel_id') == $r->id ? 'selected' : '' }}>
+                                                {{ $r->nama_rombel }} ({{ $r->kelas->nama_kelas ?? '-' }})
+                                            </option>
                                         @endforeach
                                     </select>
+                                    <small class="text-muted">Rombel yang muncul adalah yang aktif di Tahun Ajaran ini.</small>
                                 </div>
                             </div>
                         </div>
@@ -120,6 +134,7 @@
                                         <tr>
                                             <th class="px-4" style="width: 50px;">No</th>
                                             <th>Santri</th>
+                                            <th class="text-center" style="width: 150px;">Riwayat</th>
                                             <th class="text-center" style="width: 280px;">
                                                 Nilai Akademik (0-100)
                                                 <button type="button" id="btn-set-all-nilai" class="btn btn-xs btn-outline-success ml-2" style="font-size: 0.7rem;">
@@ -155,11 +170,8 @@
 
 @push('scripts')
 <script>
-    const siswasData = @json($siswas);
-    const allMapelsData = @json($allMapels);
-
-    function populateSiswaTable() {
-        const kelasId = document.getElementById('kelas_id').value;
+    function fetchStudents() {
+        const rombelId = document.getElementById('rombel_id').value;
         const container = document.getElementById('siswaTableContainer');
         const body = document.getElementById('siswaListBody');
         const message = document.getElementById('noSiswaMessage');
@@ -167,72 +179,95 @@
 
         body.innerHTML = '';
         
-        if (!kelasId) {
+        if (!rombelId) {
             container.style.display = 'none';
             message.style.display = 'none';
             btn.style.display = 'none';
             return;
         }
 
-        const filteredSiswas = siswasData.filter(s => s.kelas_id == kelasId);
+        // Show loading state
+        body.innerHTML = '<tr><td colspan="4" class="text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i> Mengambil data santri...</td></tr>';
+        container.style.display = 'block';
 
-        if (filteredSiswas.length > 0) {
-            filteredSiswas.forEach((siswa, index) => {
-                body.innerHTML += `
-                    <tr>
-                        <td class="px-4 text-muted">${index + 1}</td>
-                        <td>
-                            <div class="font-weight-bold text-dark">${siswa.nama}</div>
-                            <small class="text-muted">NIS: ${siswa.nis || '-'}</small>
-                            <input type="hidden" name="penilaian[${index}][id_siswa]" value="${siswa.id}">
-                        </td>
-                        <td class="text-center px-4">
-                            <input type="number" name="penilaian[${index}][nilai]" class="form-control text-center font-weight-bold input-nilai-akademik" 
-                                   placeholder="-" min="0" max="100">
-                        </td>
-                    </tr>
-                `;
+        const url = "{{ route('penilaiandanpresensi.penilaianakademik.get-siswa-by-rombel', ':id') }}".replace(':id', rombelId);
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                body.innerHTML = '';
+                if (data.length > 0) {
+                    data.forEach((siswa, index) => {
+                        body.innerHTML += `
+                            <tr>
+                                <td class="px-4 text-muted">${index + 1}</td>
+                                <td>
+                                    <div class="font-weight-bold text-dark">${siswa.nama}</div>
+                                    <small class="text-muted">NIS: ${siswa.nis || '-'}</small>
+                                    <input type="hidden" name="penilaian[${index}][siswa_id]" value="${siswa.id}">
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-info btn-history" data-siswa-id="${siswa.id}" data-siswa-nama="${siswa.nama}">
+                                        <i class="fas fa-history"></i> Lihat
+                                    </button>
+                                </td>
+                                <td class="text-center px-4">
+                                    <input type="number" name="penilaian[${index}][nilai]" class="form-control text-center font-weight-bold input-nilai-akademik" 
+                                           placeholder="-" min="0" max="100">
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    container.style.display = 'block';
+                    message.style.display = 'none';
+                    btn.style.display = 'inline-block';
+                } else {
+                    container.style.display = 'none';
+                    message.style.display = 'block';
+                    btn.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                body.innerHTML = '<tr><td colspan="4" class="text-center text-danger py-4">Gagal mengambil data santri.</td></tr>';
             });
-            container.style.display = 'block';
-            message.style.display = 'none';
-            btn.style.display = 'inline-block';
-        } else {
-            container.style.display = 'none';
-            message.style.display = 'block';
-            btn.style.display = 'none';
-        }
+            
+        // Also fetch KKM if mapel is already selected
+        fetchKKM();
     }
 
-    function setKKM() {
-        const mapelId = document.getElementById('id_mapel').value;
-        if (!mapelId) return;
+    function fetchKKM() {
+        const rombelId = document.getElementById('rombel_id').value;
+        const mapelId = document.getElementById('mapel_id').value;
+        const kkmInput = document.getElementById('kkm');
 
-        const selectedMapel = allMapelsData.find(m => m.id == mapelId);
+        if (!rombelId || !mapelId) return;
 
-        if (selectedMapel) {
-            const mapelNama = selectedMapel.nama.toLowerCase();
-            const kategoriNama = selectedMapel.kategori ? selectedMapel.kategori.kategori : '';
-            const kkmInput = document.getElementById('kkm');
+        const url = "{{ route('penilaiandanpresensi.penilaianakademik.get-kkm', [':rombelId', ':mapelId']) }}"
+            .replace(':rombelId', rombelId)
+            .replace(':mapelId', mapelId);
 
-            const keywordsUmum = ['ipa', 'ips', 'matematika', 'inggris', 'indonesia', 'fisika', 'kimia', 'biologi', 'pkn', 'sejarah', 'seni', 'penjas', 'olahraga'];
-            const keywordsDiniyyah = ['tahfidz', 'arab', 'agama', 'fiqih', 'aqidah', 'hadits', 'diniyyah', 'quran', 'adab', 'sirah'];
-
-            let isUmum = kategoriNama === 'Nasional' || keywordsUmum.some(key => mapelNama.includes(key));
-            let isDiniyyah = kategoriNama === 'Internal' || keywordsDiniyyah.some(key => mapelNama.includes(key));
-
-            if (isUmum) {
-                kkmInput.value = 70;
-            } else if (isDiniyyah) {
-                kkmInput.value = 75;
-            } else {
-                kkmInput.value = 70;
-            }
-        }
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                kkmInput.value = data.kkm;
+            })
+            .catch(error => {
+                console.error('Error fetching KKM:', error);
+            });
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('kelas_id').addEventListener('change', populateSiswaTable);
-        document.getElementById('id_mapel').addEventListener('change', setKKM);
+        // Initialize Select2 if available
+        if ($.fn.select2) {
+            $('.select2-modern').select2({
+                theme: 'bootstrap4',
+                width: '100%'
+            });
+        }
+
+        document.getElementById('rombel_id').addEventListener('change', fetchStudents);
+        document.getElementById('mapel_id').addEventListener('change', fetchKKM);
         
         // Search Filter Logic
         $(document).on('keyup', '#searchSiswa', function() {
@@ -242,17 +277,17 @@
             });
         });
 
-        // Keyboard Navigation (Arrow keys)
+        // Keyboard Navigation
         $(document).on('keydown', '.input-nilai-akademik', function(e) {
             let inputs = $('.input-nilai-akademik:visible');
             let index = inputs.index(this);
 
-            if (e.which === 40) { // Down arrow
+            if (e.which === 40) { // Down
                 if (index + 1 < inputs.length) {
                     inputs.eq(index + 1).focus().select();
                 }
                 e.preventDefault();
-            } else if (e.which === 38) { // Up arrow
+            } else if (e.which === 38) { // Up
                 if (index > 0) {
                     inputs.eq(index - 1).focus().select();
                 }
@@ -263,38 +298,50 @@
         // Handle Set Semua Nilai
         $(document).on('click', '#btn-set-all-nilai', function() {
             Swal.fire({
-                title: 'Set Nilai untuk Semua Santri',
-                text: 'Masukkan nilai yang akan diterapkan ke seluruh santri di tabel ini.',
+                title: 'Set Nilai Masal',
+                text: 'Masukkan nilai yang akan diterapkan ke seluruh santri.',
                 input: 'number',
-                inputAttributes: {
-                    min: 0,
-                    max: 100,
-                    step: 1
-                },
+                inputAttributes: { min: 0, max: 100 },
                 showCancelButton: true,
                 confirmButtonText: 'Terapkan',
-                cancelButtonText: 'Batal',
                 confirmButtonColor: '#28a745',
             }).then((result) => {
                 if (result.isConfirmed && result.value !== '') {
                     $('.input-nilai-akademik').val(result.value);
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: `Nilai ${result.value} telah diterapkan ke semua santri.`,
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
                 }
             });
         });
 
-        if (document.getElementById('kelas_id').value) {
-            populateSiswaTable();
-        }
-        if (document.getElementById('id_mapel').value) {
-            setKKM();
-        }
+        // Handle History Click
+        $(document).on('click', '.btn-history', function() {
+            const siswaId = $(this).data('siswa-id');
+            const siswaNama = $(this).data('siswa-nama');
+            const mapelId = $('#mapel_id').val();
+
+            if (!mapelId) {
+                Swal.fire('Opps!', 'Pilih Mata Pelajaran terlebih dahulu.', 'warning');
+                return;
+            }
+
+            $.ajax({
+                url: "{{ route('penilaiandanpresensi.penilaianakademik.history') }}",
+                method: 'GET',
+                data: { siswa_id: siswaId, mapel_id: mapelId },
+                success: function(data) {
+                    let html = `<div class="text-left"><p class="mb-2">Santri: <b>${siswaNama}</b></p><table class="table table-sm table-bordered"><thead><tr><th>Tanggal</th><th>Jenis</th><th>Nilai</th></tr></thead><tbody>`;
+                    if (data.length > 0) {
+                        data.forEach(item => {
+                            let date = new Date(item.created_at).toLocaleDateString('id-ID');
+                            html += `<tr><td>${date}</td><td>${item.jenis_nilai}</td><td><b>${item.nilai}</b></td></tr>`;
+                        });
+                    } else {
+                        html += '<tr><td colspan="3" class="text-center">Belum ada riwayat.</td></tr>';
+                    }
+                    html += `</tbody></table></div>`;
+                    Swal.fire({ title: 'Riwayat Nilai', html: html, width: '500px' });
+                }
+            });
+        });
     });
 </script>
 @endpush

@@ -2,351 +2,249 @@
 
 @section('title', $title)
 
-@section('content-header')
-<div class="row mb-2">
-    <div class="col-sm-6">
-        <h1 class="m-0">{{ $title }}</h1>
-    </div>
-    <div class="col-sm-6">
-        <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item active">Manajemen Aset & Asrama</li>
-        </ol>
-    </div>
-</div>
-@endsection
-
 @section('content')
-<style>
-    .dashboard-header {
-        background: linear-gradient(135deg, #1e3799 0%, #0984e3 100%);
-        color: white;
-        padding: 30px;
-        border-radius: 15px;
-        margin-bottom: 30px;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        position: relative;
-        overflow: hidden;
-    }
-    .dashboard-header::after {
-        content: '\f1ad';
-        font-family: 'Font Awesome 5 Free';
-        font-weight: 900;
-        position: absolute;
-        right: -20px;
-        bottom: -20px;
-        font-size: 150px;
-        opacity: 0.1;
-    }
-    .stat-card {
-        border: none;
-        border-radius: 15px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        overflow: hidden;
-    }
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
-    }
-    .stat-icon {
-        width: 60px;
-        height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 12px;
-        font-size: 1.5rem;
-        margin-bottom: 15px;
-    }
-    .quick-menu-card {
-        background: white;
-        border: 1px solid #edf2f7;
-        border-radius: 12px;
-        padding: 20px;
-        text-align: center;
-        transition: all 0.3s ease;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: #2d3436;
-    }
-    .quick-menu-card:hover {
-        background: #f8faff;
-        border-color: #0984e3;
-        color: #0984e3;
-        transform: scale(1.03);
-    }
-    .quick-menu-card i {
-        font-size: 2rem;
-        margin-bottom: 12px;
-    }
-    .quick-menu-card span {
-        font-weight: 600;
-        font-size: 0.9rem;
-    }
-    .table-clean thead th {
-        background: #f8f9fa;
-        border-top: none;
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    .badge-soft {
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-weight: 500;
-    }
-</style>
-
 <div class="container-fluid">
-    {{-- Welcome Section --}}
-    <div class="dashboard-header">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h2 class="font-weight-bold mb-1">Assalamu'alaikum, Admin!</h2>
-                <p class="mb-0 opacity-75">Selamat datang di Pusat Manajemen Aset & Asrama Santri Al-Mahir.</p>
+    {{-- Header Section --}}
+    <div class="row mb-3">
+        <div class="col-12">
+            <h1 class="h3 mb-0 text-gray-800">{{ $title }}</h1>
+            <p class="text-muted small">Ringkasan pengelolaan aset dan asrama santri hari ini.</p>
+        </div>
+    </div>
+
+    {{-- Row 1: Aset Quick Info (4 Kotak) --}}
+    <div class="row">
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-info shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($totalAset ?? 0) }}</h3>
+                    <p>Total Aset</p>
+                </div>
+                <div class="icon"><i class="fas fa-boxes"></i></div>
+                <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="small-box-footer">Detail <i class="fas fa-arrow-circle-right"></i></a>
             </div>
-            <div class="col-md-4 text-right d-none d-md-block">
-                <div class="h1 mb-0"><i class="fas fa-university"></i></div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-success shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($totalPengajuan ?? 0) }}</h3>
+                    <p>Pengajuan</p>
+                </div>
+                <div class="icon"><i class="fas fa-file-invoice"></i></div>
+                <a href="{{ route('manajemenasetdanasrama.pengajuan.index') }}" class="small-box-footer">Detail <i class="fas fa-arrow-circle-right"></i></a>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-danger shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($totalKerusakan ?? 0) }}</h3>
+                    <p>Aset Rusak</p>
+                </div>
+                <div class="icon"><i class="fas fa-tools"></i></div>
+                <a href="{{ route('manajemenasetdanasrama.kerusakan.index') }}" class="small-box-footer">Detail <i class="fas fa-arrow-circle-right"></i></a>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-secondary shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($totalPemeliharaan ?? 0) }}</h3>
+                    <p>Perbaikan</p>
+                </div>
+                <div class="icon"><i class="fas fa-wrench"></i></div>
+                <a href="{{ route('manajemenasetdanasrama.pemeliharaan.index') }}" class="small-box-footer">Detail <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
     </div>
 
-    {{-- Stats Grid Row 1 --}}
+    {{-- Row 2: Asrama Quick Info (4 Kotak) --}}
     <div class="row">
-        {{-- Total Aset --}}
-        <div class="col-md-3 col-6 mb-4">
-            <div class="card stat-card shadow-sm h-100">
-                <div class="card-body">
-                    <div class="stat-icon text-info" style="background: #e3f2fd;">
-                        <i class="fas fa-boxes"></i>
-                    </div>
-                    <h6 class="text-muted mb-1 small uppercase font-weight-bold">Total Aset</h6>
-                    <h3 class="font-weight-bold mb-0 text-dark">{{ $totalAset }}</h3>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-purple shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($totalKamar ?? 0) }}</h3>
+                    <p>Total Kamar</p>
                 </div>
+                <div class="icon"><i class="fas fa-door-open"></i></div>
+                <a href="{{ route('manajemenasetdanasrama.kamar.index') }}" class="small-box-footer">Detail <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
-        {{-- Total Kamar --}}
-        <div class="col-md-3 col-6 mb-4">
-            <div class="card stat-card shadow-sm h-100">
-                <div class="card-body">
-                    <div class="stat-icon text-primary" style="background: #eef2ff;">
-                        <i class="fas fa-door-open"></i>
-                    </div>
-                    <h6 class="text-muted mb-1 small uppercase font-weight-bold">Total Kamar</h6>
-                    <h3 class="font-weight-bold mb-0 text-dark">{{ $totalKamar }}</h3>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-teal shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($totalPenghuni ?? 0) }}</h3>
+                    <p>Penghuni</p>
                 </div>
+                <div class="icon"><i class="fas fa-users"></i></div>
+                <a href="{{ route('manajemenasetdanasrama.penghuni.index') }}" class="small-box-footer">Detail <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
-        {{-- Total Penghuni --}}
-        <div class="col-md-3 col-6 mb-4">
-            <div class="card stat-card shadow-sm h-100">
-                <div class="card-body">
-                    <div class="stat-icon text-success" style="background: #e8f5e9;">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <h6 class="text-muted mb-1 small uppercase font-weight-bold">Total Penghuni</h6>
-                    <h3 class="font-weight-bold mb-0 text-dark">{{ $totalPenghuni }}</h3>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-warning shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($sisaKapasitas ?? 0) }}</h3>
+                    <p>Sisa Kasur</p>
                 </div>
+                <div class="icon"><i class="fas fa-bed"></i></div>
+                <a href="{{ route('manajemenasetdanasrama.kamar.index') }}" class="small-box-footer">Detail <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
-        {{-- Sisa Kapasitas --}}
-        <div class="col-md-3 col-6 mb-4">
-            <div class="card stat-card shadow-sm h-100">
-                <div class="card-body">
-                    <div class="stat-icon text-warning" style="background: #fff8e1;">
-                        <i class="fas fa-bed"></i>
-                    </div>
-                    <h6 class="text-muted mb-1 small uppercase font-weight-bold">Sisa Kasur</h6>
-                    <h3 class="font-weight-bold mb-0 text-dark">{{ $sisaKapasitas }} <small class="text-muted" style="font-size: 0.8rem;">/ {{ $totalKapasitas }}</small></h3>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-orange shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($kamarPenuh ?? 0) }}</h3>
+                    <p>Kamar Penuh</p>
                 </div>
+                <div class="icon"><i class="fas fa-door-closed"></i></div>
+                <a href="{{ route('manajemenasetdanasrama.kamar.index') }}" class="small-box-footer">Detail <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
     </div>
 
-    {{-- Stats Grid Row 2 --}}
-    <div class="row">
-        {{-- Pengajuan --}}
-        <div class="col-md-3 col-6 mb-4">
-            <div class="card stat-card shadow-sm h-100">
-                <div class="card-body">
-                    <div class="stat-icon text-purple" style="background: #f3e5f5;">
-                        <i class="fas fa-file-invoice"></i>
-                    </div>
-                    <h6 class="text-muted mb-1 small uppercase font-weight-bold">Pengajuan Aset</h6>
-                    <h3 class="font-weight-bold mb-0 text-dark">{{ $totalPengajuan }}</h3>
-                </div>
-            </div>
-        </div>
-        {{-- Kerusakan --}}
-        <div class="col-md-3 col-6 mb-4">
-            <div class="card stat-card shadow-sm h-100">
-                <div class="card-body">
-                    <div class="stat-icon text-danger" style="background: #ffebee;">
-                        <i class="fas fa-tools"></i>
-                    </div>
-                    <h6 class="text-muted mb-1 small uppercase font-weight-bold">Aset Rusak</h6>
-                    <h3 class="font-weight-bold mb-0 text-dark">{{ $totalKerusakan }}</h3>
-                </div>
-            </div>
-        </div>
-        {{-- Pemeliharaan --}}
-        <div class="col-md-3 col-6 mb-4">
-            <div class="card stat-card shadow-sm h-100">
-                <div class="card-body">
-                    <div class="stat-icon text-info" style="background: #e1f5fe;">
-                        <i class="fas fa-wrench"></i>
-                    </div>
-                    <h6 class="text-muted mb-1 small uppercase font-weight-bold">Dalam Perbaikan</h6>
-                    <h3 class="font-weight-bold mb-0 text-dark">{{ $totalPemeliharaan }}</h3>
-                </div>
-            </div>
-        </div>
-        {{-- Kamar Penuh --}}
-        <div class="col-md-3 col-6 mb-4">
-            <div class="card stat-card shadow-sm h-100">
-                <div class="card-body">
-                    <div class="stat-icon text-success" style="background: #e8f5e9;">
-                        <i class="fas fa-door-closed"></i>
-                    </div>
-                    <h6 class="text-muted mb-1 small uppercase font-weight-bold">Kamar Penuh</h6>
-                    <h3 class="font-weight-bold mb-0 text-dark">{{ $kamarPenuh }}</h3>
-                </div>
-            </div>
-        </div>
-    </div>
+    {{-- Row 3: Jadwal Piket (Full Width with Smart Balancing) --}}
+    <div class="row mt-2">
+        <div class="col-12">
+            <x-card title="Jadwal Piket Hari Ini" icon="fas fa-calendar-check" outline>
+                <x-slot name="tools">
+                    <span class="badge badge-light border px-2 py-1 mr-2">
+                        <i class="fas fa-clock mr-1 text-primary"></i> {{ now()->translatedFormat('l, d F Y') }}
+                    </span>
+                    <a href="{{ route('manajemenasetdanasrama.jadwal-piket.index') }}" class="btn btn-xs btn-primary shadow-sm">
+                        Kelola Semua <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </x-slot>
 
-    <div class="row">
-        {{-- Navigation Menu --}}
-        <div class="col-md-8">
-            <div class="card border-0 shadow-sm" style="border-radius: 15px;">
-                <div class="card-header bg-transparent border-0 pt-4 px-4">
-                    <h5 class="card-title font-weight-bold"><i class="fas fa-th-large mr-2 text-primary"></i> Menu Navigasi Cepat</h5>
-                </div>
-                <div class="card-body p-4">
-                    <div class="row no-gutters" style="margin: -5px;">
-                        {{-- Aset Menu --}}
-                        <div class="col-md-3 col-6 p-1">
-                            <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="text-decoration-none">
-                                <div class="quick-menu-card">
-                                    <i class="fas fa-cubes text-info"></i>
-                                    <span>Master Aset</span>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="col-md-3 col-6 p-1">
-                            <a href="{{ route('manajemenasetdanasrama.kamar.index') }}" class="text-decoration-none">
-                                <div class="quick-menu-card">
-                                    <i class="fas fa-bed text-primary"></i>
-                                    <span>Kamar Asrama</span>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="col-md-3 col-6 p-1">
-                            <a href="{{ route('manajemenasetdanasrama.penghuni.index') }}" class="text-decoration-none">
-                                <div class="quick-menu-card">
-                                    <i class="fas fa-user-friends text-success"></i>
-                                    <span>Daftar Penghuni</span>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="col-md-3 col-6 p-1">
-                            <a href="{{ route('manajemenasetdanasrama.jadwal-piket.index') }}" class="text-decoration-none">
-                                <div class="quick-menu-card">
-                                    <i class="fas fa-clipboard-list text-warning"></i>
-                                    <span>Jadwal Piket</span>
-                                </div>
-                            </a>
-                        </div>
-                        {{-- Row 2 --}}
-                        <div class="col-md-3 col-6 p-1">
-                            <a href="{{ route('manajemenasetdanasrama.pengajuan.index') }}" class="text-decoration-none">
-                                <div class="quick-menu-card">
-                                    <i class="fas fa-file-invoice text-purple" style="color: #6c5ce7;"></i>
-                                    <span>Pengajuan</span>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="col-md-3 col-6 p-1">
-                            <a href="{{ route('manajemenasetdanasrama.kerusakan.index') }}" class="text-decoration-none">
-                                <div class="quick-menu-card">
-                                    <i class="fas fa-tools text-danger"></i>
-                                    <span>Perbaikan</span>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="col-md-3 col-6 p-1">
-                            <a href="{{ route('manajemenasetdanasrama.trash.index') }}" class="text-decoration-none">
-                                <div class="quick-menu-card">
-                                    <i class="fas fa-trash-alt text-secondary"></i>
-                                    <span>Tong Sampah</span>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="col-md-3 col-6 p-1">
-                            <a href="{{ route('manajemenasetdanasrama.persetujuan.index') }}" class="text-decoration-none">
-                                <div class="quick-menu-card">
-                                    <i class="fas fa-check-circle text-success"></i>
-                                    <span>Approval</span>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Side: Piket Today --}}
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100" style="border-radius: 15px;">
-                <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                    <h5 class="card-title font-weight-bold mb-0"><i class="fas fa-broom mr-2 text-warning"></i> Piket Hari Ini</h5>
-                    <a href="{{ route('manajemenasetdanasrama.jadwal-piket.index') }}" class="btn btn-xs btn-link text-primary">Lihat Semua</a>
-                </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-clean mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="pl-4">Nama Santri</th>
-                                    <th>Kamar</th>
-                                    <th class="pr-4 text-center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($jadwalPiketHariIni as $item)
-                                <tr>
-                                    <td class="pl-4 py-3">
-                                        <div class="font-weight-bold small">{{ $item->siswa->nama ?? '-' }}</div>
-                                    </td>
-                                    <td class="py-3">
-                                        <span class="badge bg-light border text-muted small">{{ $item->kamar->nama_kamar ?? '-' }}</span>
-                                    </td>
-                                    <td class="pr-4 py-3 text-center">
-                                        @if($item->status == 'belum')
-                                            <i class="fas fa-clock text-warning" title="Belum Selesai"></i>
-                                        @else
-                                            <i class="fas fa-check-circle text-success" title="Selesai"></i>
-                                        @endif
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="3" class="text-center py-5">
-                                        <div class="text-muted small">
-                                            <i class="fas fa-mug-hot d-block h1 mb-2 opacity-25"></i>
-                                            Tidak ada jadwal piket hari ini
+                    @if($jadwalToday->isEmpty())
+                        <div class="text-center py-5 text-muted">
+                            <i class="fas fa-mug-hot fa-3x mb-3 opacity-25"></i>
+                            <h5 class="font-weight-bold">Alhamdulillah!</h5>
+                            <p class="mb-0">Tidak ada jadwal piket yang terdaftar untuk hari ini.</p>
+                        </div>
+                    @else
+                        @php
+                            // Smart Balancing Logic
+                            $leftColumn = collect();
+                            $rightColumn = collect();
+                            $leftTotal = 0;
+                            $rightTotal = 0;
+
+                            $sortedLocations = $jadwalToday->sortByDesc(function($items) {
+                                return $items->count();
+                            });
+
+                            foreach($sortedLocations as $location => $items) {
+                                if ($leftTotal <= $rightTotal) {
+                                    $leftColumn->put($location, $items);
+                                    $leftTotal += $items->count();
+                                } else {
+                                    $rightColumn->put($location, $items);
+                                    $rightTotal += $items->count();
+                                }
+                            }
+                        @endphp
+
+                        <div class="row p-3">
+                            {{-- Left Side --}}
+                            <div class="col-md-6">
+                                @foreach($leftColumn as $location => $items)
+                                    <div class="card shadow-none border mb-4">
+                                        <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0 font-weight-bold text-dark" style="font-size: 0.9rem;">
+                                                <i class="fas fa-map-marker-alt mr-2 text-primary"></i> {{ $location ?: 'Umum' }}
+                                            </h6>
+                                            <span class="badge badge-pill badge-white border text-muted" style="font-size: 0.65rem;">
+                                                {{ $items->count() }} Santri
+                                            </span>
                                         </div>
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                                        <div class="card-body p-0">
+                                            <table class="table table-sm table-hover mb-0">
+                                                <thead class="bg-gray-light text-muted small">
+                                                    <tr>
+                                                        <th class="pl-3 py-2 border-0">Nama Santri</th>
+                                                        <th width="80" class="py-2 border-0">Shift</th>
+                                                        <th width="90" class="text-center pr-3 py-2 border-0">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($items as $item)
+                                                    <tr>
+                                                        <td class="align-middle pl-3 py-2 font-weight-bold text-dark" style="font-size: 0.85rem;">{{ $item->siswa->nama ?? '-' }}</td>
+                                                        <td class="align-middle py-2"><span class="badge badge-light border text-capitalize" style="font-size: 0.65rem;">{{ $item->shift }}</span></td>
+                                                        <td class="text-center align-middle pr-3 py-2">
+                                                            @if($item->status == 'sudah')
+                                                                <span class="badge badge-success px-2 py-1" style="font-size: 0.6rem;">SELESAI</span>
+                                                            @else
+                                                                <span class="badge badge-warning px-2 py-1" style="font-size: 0.6rem;">BELUM</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            {{-- Right Side --}}
+                            <div class="col-md-6">
+                                @foreach($rightColumn as $location => $items)
+                                    <div class="card shadow-none border mb-4">
+                                        <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0 font-weight-bold text-dark" style="font-size: 0.9rem;">
+                                                <i class="fas fa-map-marker-alt mr-2 text-primary"></i> {{ $location ?: 'Umum' }}
+                                            </h6>
+                                            <span class="badge badge-pill badge-white border text-muted" style="font-size: 0.65rem;">
+                                                {{ $items->count() }} Santri
+                                            </span>
+                                        </div>
+                                        <div class="card-body p-0">
+                                            <table class="table table-sm table-hover mb-0">
+                                                <thead class="bg-gray-light text-muted small">
+                                                    <tr>
+                                                        <th class="pl-3 py-2 border-0">Nama Santri</th>
+                                                        <th width="80" class="py-2 border-0">Shift</th>
+                                                        <th width="90" class="text-center pr-3 py-2 border-0">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($items as $item)
+                                                    <tr>
+                                                        <td class="align-middle pl-3 py-2 font-weight-bold text-dark" style="font-size: 0.85rem;">{{ $item->siswa->nama ?? '-' }}</td>
+                                                        <td class="align-middle py-2"><span class="badge badge-light border text-capitalize" style="font-size: 0.65rem;">{{ $item->shift }}</span></td>
+                                                        <td class="text-center align-middle pr-3 py-2">
+                                                            @if($item->status == 'sudah')
+                                                                <span class="badge badge-success px-2 py-1" style="font-size: 0.6rem;">SELESAI</span>
+                                                            @else
+                                                                <span class="badge badge-warning px-2 py-1" style="font-size: 0.6rem;">BELUM</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
-            </div>
+            </x-card>
         </div>
     </div>
 </div>
+
+<style>
+    .small-box .icon {
+        top: 10px;
+        right: 15px;
+        font-size: 50px;
+        opacity: 0.3;
+    }
+    .bg-purple { background-color: #6f42c1 !important; color: #fff !important; }
+    .bg-teal { background-color: #20c997 !important; color: #fff !important; }
+    .bg-orange { background-color: #fd7e14 !important; color: #fff !important; }
+    .bg-gray-light { background-color: #f8fafc; }
+</style>
 @endsection

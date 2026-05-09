@@ -30,17 +30,17 @@
                             <!-- Guru Section -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="id_guru" class="font-weight-bold text-dark">Guru Pengampu <span class="text-danger">*</span></label>
-                                    <select name="id_guru" id="id_guru" class="form-control" required {{ $isGuru ? 'readonly' : '' }}>
+                                    <label for="guru_id" class="font-weight-bold text-dark">Guru Pengampu <span class="text-danger">*</span></label>
+                                    <select name="guru_id" id="guru_id" class="form-control" required {{ $isGuru ? 'readonly' : '' }}>
                                         <option value="">-- Pilih Guru --</option>
                                         @foreach($gurus as $guru)
-                                            <option value="{{ $guru->id }}" {{ $penilaianTahfidz->id_guru == $guru->id ? 'selected' : '' }}>
+                                            <option value="{{ $guru->id }}" {{ $penilaianTahfidz->guru_id == $guru->id ? 'selected' : '' }}>
                                                 {{ $guru->nama }}
                                             </option>
                                         @endforeach
                                     </select>
                                     @if($isGuru)
-                                        <input type="hidden" name="id_guru" value="{{ $loggedGuruId }}">
+                                        <input type="hidden" name="guru_id" value="{{ $loggedGuruId }}">
                                     @endif
                                 </div>
                             </div>
@@ -67,7 +67,7 @@
                                     <div class="form-control bg-light">
                                         <i class="fas fa-user-graduate mr-2 text-warning"></i> {{ $penilaianTahfidz->siswa->nama ?? '-' }}
                                     </div>
-                                    <input type="hidden" name="id_siswa" value="{{ $penilaianTahfidz->id_siswa }}">
+                                    <input type="hidden" name="siswa_id" value="{{ $penilaianTahfidz->siswa_id }}">
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -76,7 +76,7 @@
                                     <div class="form-control bg-light">
                                         <i class="fas fa-school mr-2 text-warning"></i> {{ $penilaianTahfidz->kelas->nama_kelas ?? '-' }}
                                     </div>
-                                    <input type="hidden" name="id_kelas" value="{{ $penilaianTahfidz->id_kelas }}">
+                                    <input type="hidden" name="kelas_id" value="{{ $penilaianTahfidz->kelas_id }}">
                                 </div>
                             </div>
                         </div>

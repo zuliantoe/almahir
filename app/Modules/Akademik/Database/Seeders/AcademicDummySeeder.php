@@ -23,7 +23,7 @@ class AcademicDummySeeder extends Seeder
     public function run(): void
     {
         Schema::disableForeignKeyConstraints();
-        
+
         // 1. Tahun Ajaran
         $tahun = TahunAjaran::updateOrCreate(
             ['tahunajaran' => '2024/2025'],
@@ -93,7 +93,7 @@ class AcademicDummySeeder extends Seeder
             $kelasObjects[] = Kelas::updateOrCreate(
                 ['nama_kelas' => $kl['nama']],
                 [
-                    'kode_kelas' => $kl['kode'], 
+                    'kode_kelas' => $kl['kode'],
                     'tingkat_id' => null, // UUID mismatch if tingkat uses uuid, let nullable if allowed or provide id
                 ]
             );
@@ -131,13 +131,13 @@ class AcademicDummySeeder extends Seeder
             foreach ($mapelObjects as $mIdx => $mapel) {
                 // Berbagi matpel ke guru agar data lebih padat
                 $guru = $guruObjects[$mIdx % count($guruObjects)];
-                
+
                 // Tambahkan di beberapa hari agar jadwal terlihat nyata
-                for($d = 0; $d < 2; $d++) {
+                for ($d = 0; $d < 2; $d++) {
                     JadwalPelajaran::updateOrCreate(
                         [
-                            'rombel_id' => $rombel->id, 
-                            'mapel_id' => $mapel->id, 
+                            'rombel_id' => $rombel->id,
+                            'mapel_id' => $mapel->id,
                             'hari' => $hariList[($mIdx + $d) % count($hariList)]
                         ],
                         [

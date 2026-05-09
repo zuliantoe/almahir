@@ -42,21 +42,41 @@
         <div id="filterTahfidz" class="collapse show">
             <div class="card-body pt-0">
                 <form method="GET" class="row">
-                    <div class="col-md-5 mb-2">
+                    @if(auth()->user()->ref_type !== \Modules\Siswa\Models\Siswa::class)
+                    <div class="col-md-2 mb-2">
+                        <label class="small font-weight-bold text-muted">ROMBEL</label>
+                        <select name="rombel_id" class="form-control select2-modern">
+                            <option value="">Semua Rombel</option>
+                            @foreach($rombels as $rombel)
+                                <option value="{{ $rombel->id }}" {{ request('rombel_id') == $rombel->id ? 'selected' : '' }}>{{ $rombel->nama_rombel }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
+                    <div class="col-md-3 mb-2">
+                        <label class="small font-weight-bold text-muted">TAHUN AJARAN</label>
+                        <select name="tahunajaran_id" class="form-control">
+                            <option value="">Semua Tahun Ajaran</option>
+                            @foreach($tahunAjarans as $ta)
+                                <option value="{{ $ta->id }}" {{ request('tahunajaran_id') == $ta->id ? 'selected' : '' }}>{{ $ta->tahunajaran }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
                         <label class="small font-weight-bold text-muted">CARI SURAH</label>
                         <input type="text" name="surah" class="form-control" placeholder="Contoh: Al-Baqarah" value="{{ request('surah') }}">
                     </div>
-                    <div class="col-md-4 mb-2">
-                        <label class="small font-weight-bold text-muted">STATUS CAPAIAN</label>
+                    <div class="col-md-2 mb-2">
+                        <label class="small font-weight-bold text-muted">STATUS</label>
                         <select name="status_capaian" class="form-control">
-                            <option value="">Semua Status</option>
+                            <option value="">Semua</option>
                             <option value="Lolos" {{ request('status_capaian') == 'Lolos' ? 'selected' : '' }}>Lolos</option>
                             <option value="Tidak Lolos" {{ request('status_capaian') == 'Tidak Lolos' ? 'selected' : '' }}>Tidak Lolos</option>
                         </select>
                     </div>
-                    <div class="col-md-3 mt-auto mb-2">
+                    <div class="col-md-2 mt-auto mb-2">
                         <button type="submit" class="btn btn-warning btn-block font-weight-bold">
-                            <i class="fas fa-search mr-1"></i> Terapkan
+                            <i class="fas fa-search mr-1"></i> Cari
                         </button>
                     </div>
                 </form>
@@ -84,7 +104,7 @@
                             <td class="px-4">
                                 <div class="font-weight-bold text-dark">{{ $item->siswa->nama ?? '-' }}</div>
                                 <span class="badge badge-outline-warning text-warning border-warning" style="font-size: 0.7rem; border: 1px solid;">
-                                    {{ $item->siswa->kelas->nama_kelas ?? '-' }}
+                                    {{ $item->siswa->rombelSiswa->where('status', 'aktif')->first()->rombel->nama_rombel ?? $item->siswa->kelas->nama_kelas ?? '-' }}
                                 </span>
                             </td>
                             <td>
@@ -149,7 +169,7 @@
                 </table>
             </div>
             <div class="px-4 py-3">
-                {{ $penilaianTahfidzs->links() }}
+                {{ $penilaianTahfidzs->appends(request()->all())->links() }}
             </div>
         </div>
     </div>

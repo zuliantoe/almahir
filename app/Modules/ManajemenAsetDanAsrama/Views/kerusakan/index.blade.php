@@ -132,45 +132,5 @@
     </div>
 </div>
 
-{{-- MODAL HAPUS --}}
-<div class="modal fade" id="modalHapus" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <form id="formHapus" action="" method="POST">
-                @csrf
-                @method('DELETE')
-                <div class="modal-header bg-danger">
-                    <h5 class="modal-title text-white">Hapus Kerusakan</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
-                </div>
-                <div class="modal-body">
-                    <p>Apakah Anda yakin ingin menghapus data kerusakan aset <strong id="hapus_nama"></strong>?</p>
-                    <div class="form-group">
-                        <label for="alasan_hapus">Alasan Penghapusan <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="alasan_hapus" name="alasan_hapus" rows="3" placeholder="Masukkan alasan penghapusan..." required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-danger">Ya, Hapus</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+@include('manajemenasetdanasrama::partials.modal-delete', ['id' => 'modalHapus', 'title' => 'Hapus Laporan Kerusakan'])
 @endsection
-
-@push('scripts')
-<script>
-    $(document).ready(function() {
-        $('#modalHapus').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget);
-            var modal = $(this);
-            modal.find('#hapus_nama').text(button.data('nama'));
-            modal.find('#alasan_hapus').val('');
-            var url = '{{ route("manajemenasetdanasrama.kerusakan.destroy", ":id") }}'.replace(':id', button.data('id'));
-            modal.find('#formHapus').attr('action', url);
-        });
-    });
-</script>
-@endpush

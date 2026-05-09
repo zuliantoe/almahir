@@ -16,10 +16,13 @@ class Presensi extends Model
     protected $table = 'presensi';
 
     protected $fillable = [
-        'id_siswa',
-        'id_guru',
-        'id_mapel',
-        'id_jadwal_pelajaran',
+        'siswa_id',
+        'guru_id',
+        'mapel_id',
+        'jadwal_pelajaran_id',
+        'tahunajaran_id',
+        'semester',
+        'author_id',
         'jam',
         'status',
         'kategori',
@@ -33,21 +36,31 @@ class Presensi extends Model
     // Relationships
     public function siswa()
     {
-        return $this->belongsTo(Siswa::class, 'id_siswa');
+        return $this->belongsTo(Siswa::class, 'siswa_id');
     }
 
     public function guru()
     {
-        return $this->belongsTo(Guru::class, 'id_guru');
+        return $this->belongsTo(Guru::class, 'guru_id');
     }
 
     public function mataPelajaran()
     {
-        return $this->belongsTo(MataPelajaran::class, 'id_mapel');
+        return $this->belongsTo(MataPelajaran::class, 'mapel_id');
     }
 
     public function jadwalPelajaran()
     {
-        return $this->belongsTo(JadwalPelajaran::class, 'id_jadwal_pelajaran');
+        return $this->belongsTo(JadwalPelajaran::class, 'jadwal_pelajaran_id');
+    }
+
+    public function tahunAjaran()
+    {
+        return $this->belongsTo(\App\Modules\Akademik\Models\TahunAjaran::class, 'tahunajaran_id');
+    }
+
+    public function author()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'author_id');
     }
 }

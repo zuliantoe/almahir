@@ -72,10 +72,10 @@
             <x-card title="Daftar Penghuni Aktif" icon="fas fa-users" class="card-outline card-success">
                 <x-slot name="tools">
                     <div class="no-print">
-                        <button onclick="window.print()" class="btn btn-sm btn-info mr-1 shadow-sm">
+                        <button type="button" data-toggle="modal" data-target="#modalCetakKamar" class="btn btn-sm btn-info mr-1 shadow-sm">
                             <i class="fas fa-print mr-1"></i> Cetak Laporan
                         </button>
-                        <a href="{{ route('manajemenasetdanasrama.penghuni.create', ['kamar_id' => $kamar->id]) }}" class="btn btn-sm btn-primary mr-1 shadow-sm">
+                        <a href="{{ route('manajemenasetdanasrama.penghuni.assign-multiple', $kamar->id) }}" class="btn btn-sm btn-primary mr-1 shadow-sm">
                             <i class="fas fa-user-plus mr-1"></i> Tambah Penghuni
                         </a>
                         <a href="{{ route('manajemenasetdanasrama.kamar.index') }}" class="btn btn-sm btn-secondary shadow-sm">
@@ -122,7 +122,16 @@
                                     <span class="badge {{ $badgeColor }}" style="font-weight: 500; padding: 5px 10px; border-radius: 6px;">{{ $item->jabatan ?? 'Anggota' }}</span>
                                 </td>
                                 <td>{{ $item->tanggal_masuk ? $item->tanggal_masuk->format('d M Y') : '-' }}</td>
-                                <td><small class="text-muted italic text-truncate" style="max-width: 200px; display: inline-block;">{{ $item->keterangan ?? '-' }}</small></td>
+                                <td>
+                                    @php
+                                        $ket = $item->keterangan ?? '-';
+                                        $isHistory = str_contains($ket, 'Pindahan') || str_contains($ket, 'Tukar');
+                                    @endphp
+                                    <small class="{{ $isHistory ? 'text-primary font-weight-bold' : 'text-muted' }} italic text-truncate" style="max-width: 200px; display: inline-block;">
+                                        @if($isHistory) <i class="fas fa-exchange-alt mr-1 small"></i> @endif
+                                        {{ $ket }}
+                                    </small>
+                                </td>
                                 <td class="text-center no-print">
                                     <div class="d-flex justify-content-center" style="gap: 5px;">
                                         <button type="button" class="btn btn-xs-custom btn-info btn-detail-penghuni" 
@@ -211,10 +220,10 @@
 
 {{-- MODAL DETAIL PENGHUNI --}}
 <div class="modal fade" id="modalDetailPenghuni" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-info text-white border-0">
-                <h5 class="modal-title font-weight-bold"><i class="fas fa-user-circle mr-2"></i> Detail Profil & Data Akademik Santri</h5>
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <div class="modal-header bg-info text-white border-0 py-3">
+                <h5 class="modal-title font-weight-bold"><i class="fas fa-id-card mr-2"></i> Profil Lengkap Santri</h5>
                 <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -222,94 +231,132 @@
             <div class="modal-body p-0">
                 <div class="row no-gutters">
                     {{-- Sisi Kiri: Foto & Status Utama --}}
-                    <div class="col-md-3 bg-light d-flex flex-column align-items-center p-4 border-right">
-                        <div class="position-relative mb-3">
-                            <img id="detail_avatar" src="" class="img-circle elevation-2" style="width: 160px; height: 160px; object-fit: cover; border: 5px solid #fff;">
+                    <div class="col-md-4 bg-light d-flex flex-column align-items-center p-5 border-right">
+                        <div class="position-relative mb-4">
+                            <div class="rounded-circle shadow-sm p-1 bg-white">
+                                <img id="detail_avatar" src="" class="rounded-circle" style="width: 180px; height: 180px; object-fit: cover;">
+                            </div>
+                            <div id="detail_badge_jabatan" class="position-absolute" style="bottom: 0; width: 100%; text-align: center;"></div>
                         </div>
-                        <h5 id="detail_nama" class="font-weight-bold mb-1 text-center text-primary"></h5>
-                        <span id="detail_nis" class="badge badge-secondary px-3 py-2 mb-3"></span>
-                        <div id="detail_badge_jabatan"></div>
+                        <h4 id="detail_nama" class="font-weight-bold mb-1 text-center text-primary"></h4>
+                        <p id="detail_nis" class="text-muted mb-4"></p>
                         
-                        <div class="mt-4 w-100">
-                            <div class="info-box bg-white shadow-none border mb-2">
-                                <span class="info-box-icon bg-info"><i class="fas fa-door-open"></i></span>
-                                <div class="info-box-content">
-                                    <span class="info-box-text small">Kamar</span>
-                                    <span id="detail_kamar_side" class="info-box-number small"></span>
+                        <div class="card bg-white border-0 shadow-sm w-100 mb-2" style="border-radius: 12px;">
+                            <div class="card-body p-3 d-flex align-items-center">
+                                <div class="bg-info-soft p-2 rounded-circle mr-3">
+                                    <i class="fas fa-door-open text-info"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted text-uppercase d-block font-weight-bold" style="font-size: 0.65rem;">Kamar Saat Ini</small>
+                                    <span id="detail_kamar_side" class="font-weight-bold text-dark"></span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {{-- Sisi Kanan: Detail Informasi --}}
-                    <div class="col-md-9 p-4">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6 class="text-info font-weight-bold mb-3 border-bottom pb-2"><i class="fas fa-user mr-2"></i> BIODATA DIRI</h6>
-                                <table class="table table-sm table-borderless">
-                                    <tr>
-                                        <th width="120" class="text-muted">Tempat, Tgl Lahir</th>
-                                        <td width="10">:</td>
-                                        <td id="detail_ttl"></td>
-                                    </tr>
-                                    <tr>
-                                        <th class="text-muted">Jenis Kelamin</th>
-                                        <td>:</td>
-                                        <td id="detail_jk"></td>
-                                    </tr>
-                                    <tr>
-                                        <th class="text-muted">Email</th>
-                                        <td>:</td>
-                                        <td id="detail_email"></td>
-                                    </tr>
-                                    <tr>
-                                        <th class="text-muted">Telepon/WA</th>
-                                        <td>:</td>
-                                        <td id="detail_telepon"></td>
-                                    </tr>
-                                    <tr>
-                                        <th class="text-muted">Alamat</th>
-                                        <td>:</td>
-                                        <td id="detail_alamat" class="small"></td>
-                                    </tr>
-                                </table>
+                    <div class="col-md-8 p-5">
+                        <div class="row mb-5">
+                            <div class="col-12 mb-4">
+                                <h6 class="text-uppercase font-weight-bold text-info" style="letter-spacing: 1px;">
+                                    <i class="fas fa-user-circle mr-2"></i> Data Personal
+                                </h6>
+                                <hr class="mt-2 mb-4">
                             </div>
                             <div class="col-md-6">
-                                <h6 class="text-info font-weight-bold mb-3 border-bottom pb-2"><i class="fas fa-graduation-cap mr-2"></i> DATA AKADEMIK & ASRAMA</h6>
-                                <table class="table table-sm table-borderless">
-                                    <tr>
-                                        <th width="120" class="text-muted">Tahun Masuk</th>
-                                        <td width="10">:</td>
-                                        <td id="detail_tahun_masuk"></td>
-                                    </tr>
-                                    <tr>
-                                        <th class="text-muted">Status Kamar</th>
-                                        <td>:</td>
-                                        <td id="detail_jabatan_text"></td>
-                                    </tr>
-                                    <tr>
-                                        <th class="text-muted">Tgl Masuk Kamar</th>
-                                        <td>:</td>
-                                        <td id="detail_masuk"></td>
-                                    </tr>
-                                    <tr>
-                                        <th class="text-muted">Keterangan</th>
-                                        <td>:</td>
-                                        <td id="detail_keterangan" class="italic small"></td>
-                                    </tr>
-                                </table>
+                                <label class="small text-muted font-weight-bold mb-1">TEMPAT, TGL LAHIR</label>
+                                <p id="detail_ttl" class="font-weight-bold text-dark"></p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small text-muted font-weight-bold mb-1">JENIS KELAMIN</label>
+                                <p id="detail_jk" class="font-weight-bold text-dark"></p>
+                            </div>
+                            <div class="col-md-6 mt-3">
+                                <label class="small text-muted font-weight-bold mb-1">EMAIL AKADEMIK</label>
+                                <p id="detail_email" class="font-weight-bold text-dark"></p>
+                            </div>
+                            <div class="col-md-6 mt-3">
+                                <label class="small text-muted font-weight-bold mb-1">NOMOR TELEPON/WA</label>
+                                <p id="detail_telepon" class="font-weight-bold text-dark text-success"></p>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <label class="small text-muted font-weight-bold mb-1">ALAMAT DOMISILI</label>
+                                <p id="detail_alamat" class="text-dark mb-0"></p>
+                            </div>
+                        </div>
 
-                                <div class="alert alert-info mt-3 p-2 shadow-sm">
-                                    <small><i class="fas fa-info-circle mr-1"></i> Data ini tersinkronisasi dengan database akademik santri Al-Mahir.</small>
+                        <div class="row">
+                            <div class="col-12 mb-4">
+                                <h6 class="text-uppercase font-weight-bold text-info" style="letter-spacing: 1px;">
+                                    <i class="fas fa-university mr-2"></i> Status Keasramaan
+                                </h6>
+                                <hr class="mt-2 mb-4">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small text-muted font-weight-bold mb-1">TAHUN MASUK</label>
+                                <p id="detail_tahun_masuk" class="font-weight-bold text-dark"></p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small text-muted font-weight-bold mb-1">TANGGAL MASUK KAMAR</label>
+                                <p id="detail_masuk" class="font-weight-bold text-dark text-info"></p>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <label class="small text-muted font-weight-bold mb-1">CATATAN/KETERANGAN</label>
+                                <div class="bg-light p-3 rounded" style="border-left: 4px solid #dee2e6;">
+                                    <p id="detail_keterangan" class="mb-0 italic text-muted"></p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer bg-light border-0">
-                <button type="button" class="btn btn-secondary shadow-sm" data-dismiss="modal">Tutup Profil</button>
+            <div class="modal-footer bg-light border-0 py-3 px-5">
+                <button type="button" class="btn btn-secondary px-4 shadow-sm font-weight-bold" style="border-radius: 8px;" data-dismiss="modal">Tutup Profil</button>
             </div>
+        </div>
+    </div>
+</div>
+{{-- MODAL CETAK KAMAR --}}
+<div class="modal fade" id="modalCetakKamar" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <div class="modal-header bg-info text-white border-0 py-3">
+                <h5 class="modal-title font-weight-bold"><i class="fas fa-print mr-2"></i> Pengaturan Cetak Kamar</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="formCetakKamar" action="{{ route('manajemenasetdanasrama.kamar.print', $kamar->id) }}" method="GET" target="_blank">
+                <div class="modal-body p-4">
+                    <div class="alert alert-info border-0 shadow-none mb-4" style="background: #e8f4f8; color: #1a4b63;">
+                        <i class="fas fa-info-circle mr-2"></i> Masukkan nama penandatangan untuk dicantumkan di bagian bawah laporan.
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="small font-weight-bold text-muted text-uppercase">Nama Musyrif Kamar</label>
+                        <div class="input-group shadow-sm">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white border-right-0"><i class="fas fa-user-tie text-info"></i></span>
+                            </div>
+                            <input type="text" name="musyrif" class="form-control border-left-0" placeholder="Contoh: Ustadz Ahmad" required>
+                        </div>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="small font-weight-bold text-muted text-uppercase">Nama Kepala Sekolah / Mudir</label>
+                        <div class="input-group shadow-sm">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white border-right-0"><i class="fas fa-user-graduate text-info"></i></span>
+                            </div>
+                            <input type="text" name="kepsek" class="form-control border-left-0" placeholder="Contoh: Dr. Sulaiman, M.Pd" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 py-3 px-4">
+                    <button type="button" class="btn btn-link text-muted font-weight-bold" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-info px-4 shadow-sm" style="border-radius: 8px;">
+                        <i class="fas fa-file-pdf mr-1"></i> Download Laporan PDF
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

@@ -29,7 +29,18 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('penilaianakademik')->name('penilaianakademik.')->group(function () {
         Route::get('/', [PenilaianAkademikController::class, 'index'])->name('index');
         Route::get('/create', [PenilaianAkademikController::class, 'create'])->name('create');
+        Route::get('/history', [PenilaianAkademikController::class, 'history'])->name('history');
+        Route::get('/get-siswa-by-rombel/{rombelId}', [PenilaianAkademikController::class, 'getSiswaByRombel'])->name('get-siswa-by-rombel');
+        Route::get('/get-kkm/{rombelId}/{mapelId}', [PenilaianAkademikController::class, 'getKkm'])->name('get-kkm');
         Route::post('/', [PenilaianAkademikController::class, 'store'])->name('store');
+        
+        // Export & Raport Routes
+        Route::get('/export-excel', [PenilaianAkademikController::class, 'exportExcel'])->name('export-excel');
+        Route::get('/export-pdf', [PenilaianAkademikController::class, 'exportPdf'])->name('export-pdf');
+        Route::get('/raport', [PenilaianAkademikController::class, 'raportIndex'])->name('raport.index');
+        Route::get('/raport/{id}', [PenilaianAkademikController::class, 'raportShow'])->name('raport.show');
+        Route::post('/raport/save-catatan', [PenilaianAkademikController::class, 'saveCatatan'])->name('raport.save-catatan');
+
         Route::get('/{id}', [PenilaianAkademikController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [PenilaianAkademikController::class, 'edit'])->name('edit');
         Route::put('/{id}', [PenilaianAkademikController::class, 'update'])->name('update');
@@ -51,7 +62,6 @@ Route::middleware(['auth'])->group(function () {
     // Presensi Routes
     Route::prefix('presensi')->name('presensi.')->group(function () {
         Route::get('/', [PresensiController::class, 'index'])->name('index');
-        Route::get('/scanning', [PresensiController::class, 'scanningIndex'])->name('scanning');
         Route::post('/scanning', [PresensiController::class, 'scanningStore'])->name('scanning.store');
         Route::get('/create', [PresensiController::class, 'create'])->name('create');
         Route::post('/', [PresensiController::class, 'store'])->name('store');

@@ -126,7 +126,16 @@
                                         <i class="far fa-calendar-times text-muted mr-1"></i> <span class="text-muted">{{ $item->tanggal_keluar ? \Carbon\Carbon::parse($item->tanggal_keluar)->format('d M Y') : 'Sekarang' }}</span>
                                     </div>
                                 </td>
-                                <td><span class="text-muted italic">{{ Str::limit($item->keterangan ?? '-', 40) }}</span></td>
+                                <td>
+                                    @php
+                                        $ket = $item->keterangan ?? '-';
+                                        $isHistory = str_contains($ket, 'Pindahan') || str_contains($ket, 'Tukar');
+                                    @endphp
+                                    <span class="{{ $isHistory ? 'text-primary font-weight-bold' : 'text-muted' }} italic" style="font-size: 0.85rem;">
+                                        @if($isHistory) <i class="fas fa-exchange-alt mr-1 small"></i> @endif
+                                        {{ Str::limit($ket, 60) }}
+                                    </span>
+                                </td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center" style="gap: 5px;">
                                         <button type="button" class="btn btn-xs-custom btn-info btn-detail-penghuni" 
@@ -187,28 +196,30 @@
 </div>
 
 {{-- MODAL HAPUS --}}
-<div class="modal fade" id="modalHapus" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <form id="formHapus" action="" method="POST">
-                @csrf
-                @method('DELETE')
-                <div class="modal-header bg-danger">
-                    <h5 class="modal-title text-white">Hapus Penghuni</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+<div class="modal fade" id="modalHapus" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <div class="modal-header bg-white border-0 pt-4 pb-0 justify-content-center">
+                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                    <i class="fas fa-user-minus text-danger fa-2x"></i>
                 </div>
-                <div class="modal-body">
-                    <p>Apakah Anda yakin ingin menghapus penghuni <strong id="hapus_nama"></strong> dari kamar?</p>
-                    <div class="form-group">
-                        <label for="alasan_hapus">Alasan Penghapusan <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="alasan_hapus" name="alasan_hapus" rows="3" placeholder="Masukkan alasan penghapusan..." required></textarea>
+            </div>
+            <div class="modal-body text-center p-4">
+                <h5 class="font-weight-bold">Keluarkan Penghuni?</h5>
+                <p class="text-muted small">Santri <span id="hapus_nama" class="text-dark font-weight-bold"></span> akan dikeluarkan dari kamar ini.</p>
+                <form id="formHapus" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <div class="form-group text-left">
+                        <label class="small font-weight-bold text-muted text-uppercase">Alasan Keluar <span class="text-danger">*</span></label>
+                        <textarea class="form-control bg-light border-0" id="alasan_hapus" name="alasan_hapus" rows="2" placeholder="Contoh: Lulus, Pindah..." required></textarea>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-danger">Ya, Hapus</button>
-                </div>
-            </form>
+            </div>
+            <div class="modal-footer border-0 bg-light p-3 justify-content-center">
+                    <button type="button" class="btn btn-link text-muted font-weight-bold mr-2" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger px-4 shadow-sm" style="border-radius: 8px;">Ya, Keluarkan</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>

@@ -8,202 +8,215 @@ use Illuminate\View\View;
 use App\Modules\ManajemenAsetDanAsrama\Models\JadwalPiket;
 use App\Modules\ManajemenAsetDanAsrama\Models\Kamar;
 use Modules\Siswa\Models\Siswa;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class JadwalPiketController extends BaseController
 {
     /**
      * Display a listing of jadwal piket.
+     * Logika: Paginate per Tanggal Unik, Default ke Hari Ini.
      */
     public function index(Request $request): View
     {
-        $query = JadwalPiket::with(['siswa', 'kamar']);
+        // 1. Ambil list tanggal unik yang punya jadwal
+        $dateQuery = JadwalPiket::select('tanggal')->distinct();
 
-        if ($request->filled('kamar_id')) {
-            $query->where('kamar_id', $request->kamar_id);
-        }
         if ($request->filled('tanggal_mulai')) {
-            $query->where('tanggal', '>=', $request->tanggal_mulai);
+            $dateQuery->where('tanggal', '>=', $request->tanggal_mulai);
         }
         if ($request->filled('tanggal_selesai')) {
-            $query->where('tanggal', '<=', $request->tanggal_selesai);
+            $dateQuery->where('tanggal', '<=', $request->tanggal_selesai);
+        }
+        if ($request->filled('lokasi_piket')) {
+            $dateQuery->where('lokasi_piket', $request->lokasi_piket);
         }
 
-        $jadwal = $query->orderBy('tanggal', 'desc')
-                    ->orderBy('kamar_id')
-                    ->paginate(15)
-                    ->withQueryString();
+        // Ambil semua tanggal unik, urutkan terbaru ke lama
+        $allDates = $dateQuery->orderBy('tanggal', 'desc')->pluck('tanggal')->toArray();
         
+        // --- LOGIKA SMART DEFAULT HARI INI ---
+        $today = now()->format('Y-m-d');
+        $allDatesFormatted = array_map(function($d) {
+            return \Carbon\Carbon::parse($d)->format('Y-m-d');
+        }, $allDates);
+        
+        $todayIndex = array_search($today, $allDatesFormatted);
+
+        $perPage = 1; 
+        $currentPage = $request->input('page');
+        
+        // Jika tidak ada parameter 'page', coba arahkan ke index hari ini
+        if (!$currentPage && $todayIndex !== false) {
+            $currentPage = $todayIndex + 1;
+        } else {
+            $currentPage = $currentPage ?: 1;
+        }
+
+        $currentDateSlice = array_slice($allDates, ($currentPage - 1) * $perPage, $perPage);
+        
+        $paginatedDates = new LengthAwarePaginator(
+            $currentDateSlice, 
+            count($allDates), 
+            $perPage, 
+            $currentPage, 
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        $activeDate = count($currentDateSlice) > 0 ? $currentDateSlice[0] : null;
+        
+        $jadwalQuery = JadwalPiket::with(['siswa', 'kamar']);
+        if ($activeDate) {
+            $jadwalQuery->where('tanggal', $activeDate);
+        } else {
+            $jadwalQuery->where('id', 0);
+        }
+
+        if ($request->filled('q')) {
+            $jadwalQuery->whereHas('siswa', function($q) use ($request) {
+                $q->where('nama', 'like', '%' . $request->q . '%');
+            });
+        }
+
+        $jadwalData = $jadwalQuery->orderBy('shift', 'asc')
+                                 ->orderBy('lokasi_piket', 'asc')
+                                 ->get();
+
+        $stats = [
+            'total'     => JadwalPiket::count(),
+            'hari_ini'  => JadwalPiket::whereDate('tanggal', now())->count(),
+            'selesai'   => JadwalPiket::where('status', 'sudah')->count(),
+            'belum'     => JadwalPiket::where('status', 'belum')->count(),
+        ];
+
+        $allSiswa = Siswa::orderBy('nama', 'asc')->get();
         $kamar = Kamar::all();
+        $locations = JadwalPiket::whereNotNull('lokasi_piket')->distinct()->pluck('lokasi_piket');
 
         return view('manajemenasetdanasrama::jadwal-piket.index', [
-            'title'  => 'Jadwal Piket Asrama',
-            'jadwal' => $jadwal,
-            'kamar'  => $kamar,
+            'title'        => 'Jadwal Piket Asrama',
+            'jadwal'       => $jadwalData,
+            'paginator'    => $paginatedDates,
+            'activeDate'   => $activeDate,
+            'kamar'        => $kamar,
+            'locations'    => $locations,
+            'totalSantri'  => count($allSiswa),
+            'allSiswa'     => $allSiswa,
+            'stats'        => $stats,
         ]);
     }
 
     /**
-     * Show the form for creating a new jadwal piket.
+     * Delete all schedules for a specific date.
      */
-    public function create(): View
+    public function destroyDay(string $date): RedirectResponse
     {
-        $siswa = Siswa::all();
-        $kamar = Kamar::all();
-        
-        return view('manajemenasetdanasrama::jadwal-piket.create', [
-            'title' => 'Tambah Jadwal Piket',
-            'siswa' => $siswa,
-            'kamar' => $kamar,
-        ]);
+        JadwalPiket::whereDate('tanggal', $date)->delete();
+
+        return redirect()->route('manajemenasetdanasrama.jadwal-piket.index')
+            ->with('success', "Seluruh jadwal piket pada tanggal " . \Carbon\Carbon::parse($date)->translatedFormat('d F Y') . " berhasil dihapus.");
     }
 
     /**
-     * Store a newly created jadwal piket in storage.
+     * Store bulk manual jadwal piket.
      */
+    public function bulkStore(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'tanggal_mulai'   => 'required|date',
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+            'shift'           => 'required',
+            'lokasi'          => 'required|array',
+            'siswa_id'        => 'required|array',
+        ]);
+
+        $count = 0;
+        $tanggalMulai = \Carbon\Carbon::parse($request->tanggal_mulai);
+        $tanggalSelesai = \Carbon\Carbon::parse($request->tanggal_selesai);
+
+        for ($date = $tanggalMulai->copy(); $date->lte($tanggalSelesai); $date->addDay()) {
+            foreach ($request->siswa_id as $index => $siswaId) {
+                if (!$siswaId) continue;
+                $lokasiIdx = $request->lokasi_mapping[$index];
+                $namaLokasi = $request->lokasi[$lokasiIdx];
+
+                JadwalPiket::updateOrCreate(
+                    ['tanggal' => $date->format('Y-m-d'), 'shift' => $request->shift, 'siswa_id' => $siswaId],
+                    ['lokasi_piket' => $namaLokasi, 'status' => 'belum']
+                );
+                $count++;
+            }
+        }
+
+        return redirect()->route('manajemenasetdanasrama.jadwal-piket.index')->with('success', "Berhasil menambahkan {$count} jadwal piket.");
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate($this->getValidationRules($request));
         $validated['status'] = 'belum';
-
         JadwalPiket::create($validated);
-
-        return redirect()->route('manajemenasetdanasrama.jadwal-piket.index')
-            ->with('success', 'Jadwal piket berhasil ditambahkan.');
+        return redirect()->route('manajemenasetdanasrama.jadwal-piket.index')->with('success', 'Jadwal piket berhasil ditambahkan.');
     }
 
-    /**
-     * Show the form for editing the specified jadwal piket.
-     */
     public function edit(string $id): View
     {
-        $jadwal = JadwalPiket::findOrFail($id);
-        $siswa = Siswa::all();
-        $kamar = Kamar::all();
-        
-        return view('manajemenasetdanasrama::jadwal-piket.edit', [
-            'title'  => 'Edit Jadwal Piket',
-            'jadwal' => $jadwal,
-            'siswa'  => $siswa,
-            'kamar'  => $kamar,
-        ]);
+        $jadwal = JadwalPiket::findOrFail($id); $siswa = Siswa::all(); $kamar = Kamar::all();
+        return view('manajemenasetdanasrama::jadwal-piket.edit', ['title' => 'Edit Jadwal Piket', 'jadwal' => $jadwal, 'siswa' => $siswa, 'kamar' => $kamar]);
     }
 
-    /**
-     * Update the specified jadwal piket in storage.
-     */
     public function update(Request $request, string $id): RedirectResponse
     {
         $jadwal = JadwalPiket::findOrFail($id);
         $validated = $request->validate($this->getValidationRules($request, $id));
-
         $jadwal->update($validated);
-
-        return redirect()->route('manajemenasetdanasrama.jadwal-piket.index')
-            ->with('success', 'Jadwal piket berhasil diperbarui.');
+        return redirect()->route('manajemenasetdanasrama.jadwal-piket.index')->with('success', 'Jadwal piket berhasil diperbarui.');
     }
 
-    /**
-     * Get common validation rules.
-     */
     private function getValidationRules(Request $request, ?string $id = null): array
     {
-        return [
-            'kamar_id' => 'required|exists:kamar,id',
-            'tanggal'  => 'required|date',
-            'siswa_id' => [
-                'required',
-                'exists:siswa,id',
-                \Illuminate\Validation\Rule::unique('jadwal_piket')->where(function ($query) use ($request) {
-                    return $query->where('kamar_id', $request->kamar_id)
-                                 ->where('tanggal', $request->tanggal);
-                })->ignore($id),
-            ],
-        ];
+        return ['tanggal' => 'required|date', 'siswa_id' => ['required', 'exists:siswa,id']];
     }
 
-    /**
-     * Remove the specified jadwal piket from storage.
-     */
     public function destroy(string $id): RedirectResponse
     {
-        $jadwal = JadwalPiket::findOrFail($id);
-        $jadwal->delete();
-
-        return redirect()->route('manajemenasetdanasrama.jadwal-piket.index')
-            ->with('success', 'Jadwal piket berhasil dihapus.');
+        $jadwal = JadwalPiket::findOrFail($id); $jadwal->delete();
+        return redirect()->route('manajemenasetdanasrama.jadwal-piket.index')->with('success', 'Jadwal piket berhasil dihapus.');
     }
 
-    /**
-     * Mark jadwal piket as completed.
-     */
     public function selesai(string $id): RedirectResponse
     {
-        $jadwal = JadwalPiket::findOrFail($id);
-        $jadwal->status = 'sudah';
-        $jadwal->save();
-
-        return redirect()->back()
-            ->with('success', 'Status piket diupdate menjadi selesai.');
+        $jadwal = JadwalPiket::findOrFail($id); $jadwal->status = 'sudah'; $jadwal->save();
+        return redirect()->back()->with('success', 'Status piket diupdate menjadi selesai.');
     }
 
-    /**
-     * Auto generate jadwal piket (Round Robin)
-     */
     public function autoGenerate(Request $request)
     {
-        $request->validate([
-            'kamar_id'       => 'required|exists:kamar,id',
-            'tanggal_mulai'  => 'required|date',
-            'tanggal_selesai'=> 'required|date|after_or_equal:tanggal_mulai',
-            'person_per_day' => 'required|integer|min:1'
-        ]);
-
+        $request->validate(['tanggal_mulai' => 'required|date', 'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai', 'shift' => 'required|in:pagi,sore,malam', 'lokasi' => 'required|array', 'jumlah_santri' => 'required|array']);
         try {
+            $locations = [];
+            foreach ($request->lokasi as $index => $nama) { $locations[] = ['nama' => $nama, 'kuota' => $request->jumlah_santri[$index] ?? 0]; }
             $service = new \App\Modules\ManajemenAsetDanAsrama\Services\JadwalPiketService();
-            $generated = $service->generateForKamar(
-                $request->kamar_id,
-                $request->tanggal_mulai,
-                $request->tanggal_selesai,
-                $request->person_per_day
-            );
-
-            if ($generated === 0) {
-                return redirect()->back()->with('warning', 'Tidak ada jadwal yang di-generate (Mungkin tidak ada santri di kamar tersebut, atau jadwal di tanggal tersebut sudah penuh).');
-            }
-
+            $generated = $service->generateSmart($request->tanggal_mulai, $request->tanggal_selesai, $request->shift, $locations);
+            if ($generated === 0) { return redirect()->back()->with('warning', 'Tidak ada jadwal yang di-generate.'); }
             return redirect()->back()->with('success', "Berhasil me-generate {$generated} jadwal piket.");
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
+        } catch (\Exception $e) { return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage()); }
     }
 
-    /**
-     * Print printer-friendly version of the schedule.
-     */
     public function print(Request $request)
     {
         $query = JadwalPiket::with(['kamar', 'siswa']);
-
-        if ($request->filled('kamar_id')) {
-            $query->where('kamar_id', $request->kamar_id);
-        }
-
-        if ($request->filled('tanggal_mulai')) {
-            $query->where('tanggal', '>=', $request->tanggal_mulai);
-        }
-
-        if ($request->filled('tanggal_selesai')) {
-            $query->where('tanggal', '<=', $request->tanggal_selesai);
-        }
-
+        if ($request->filled('tanggal_mulai')) { $query->where('tanggal', '>=', $request->tanggal_mulai); }
+        if ($request->filled('tanggal_selesai')) { $query->where('tanggal', '<=', $request->tanggal_selesai); }
+        if ($request->filled('lokasi_piket')) { $query->where('lokasi_piket', $request->lokasi_piket); }
+        if ($request->filled('q')) { $query->whereHas('siswa', function($q) use ($request) { $q->where('nama', 'like', '%' . $request->q . '%'); }); }
         $jadwal = $query->orderBy('tanggal', 'asc')->get();
-        $kamar = Kamar::find($request->kamar_id);
+        return view('manajemenasetdanasrama::jadwal-piket.print', ['title' => 'Cetak Jadwal Piket', 'jadwal' => $jadwal, 'request'=> $request]);
+    }
 
-        return view('manajemenasetdanasrama::jadwal-piket.print', [
-            'title'  => 'Cetak Jadwal Piket',
-            'jadwal' => $jadwal,
-            'kamar'  => $kamar,
-            'request'=> $request
-        ]);
+    public function resetAll(): RedirectResponse
+    {
+        JadwalPiket::truncate();
+        return redirect()->route('manajemenasetdanasrama.jadwal-piket.index')->with('success', 'Semua jadwal piket berhasil di-reset.');
     }
 }

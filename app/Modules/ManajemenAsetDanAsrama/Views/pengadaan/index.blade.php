@@ -181,64 +181,98 @@
 </div>
 
 {{-- MODAL SELESAI PENGADAAN --}}
-<div class="modal fade" id="modalSelesai" tabindex="-1" role="dialog" aria-labelledby="modalSelesaiLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <form id="formSelesai" action="" method="POST">
+<div class="modal fade" id="modalSelesai" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <form id="formSelesai" method="POST">
                 @csrf
-                <div class="modal-header bg-success">
-                    <h5 class="modal-title text-white" id="modalSelesaiLabel">Selesaikan Pengadaan & Tambahkan Aset</h5>
+                <div class="modal-header bg-success text-white border-0 py-3">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-check-circle mr-2"></i> Konfirmasi Kedatangan Barang
+                    </h5>
                     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <strong><i class="fas fa-info-circle"></i> Ringkasan Pengadaan:</strong><br>
-                        Aset: <strong id="selesai_nama_aset"></strong><br>
-                        Vendor: <span id="selesai_vendor"></span><br>
-                        Biaya: <span id="selesai_biaya"></span>
+                <div class="modal-body p-4">
+                    <div class="alert alert-light border shadow-sm mb-4" style="border-left: 5px solid #28a745; background: #f8fff9;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted text-uppercase font-weight-bold d-block">Nama Aset</small>
+                                <strong id="selesai_nama_aset" class="text-dark"></strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted text-uppercase font-weight-bold d-block">Vendor</small>
+                                <span id="selesai_vendor" class="text-dark"></span>
+                            </div>
+                            <div class="col-md-3 text-right">
+                                <small class="text-muted text-uppercase font-weight-bold d-block">Biaya Riil</small>
+                                <span id="selesai_biaya" class="font-weight-bold text-success"></span>
+                            </div>
+                        </div>
                     </div>
-                    <p>Konfirmasi bahwa barang sudah datang dan daftarkan ke Master Aset:</p>
+
+                    <h6 class="font-weight-bold text-primary mb-3"><i class="fas fa-edit mr-2"></i> Detail Registrasi Aset</h6>
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="tanggal_datang">Tanggal Barang Datang <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="tanggal_datang" name="tanggal_datang" value="{{ date('Y-m-d') }}" required>
+                            <div class="form-group mb-3">
+                                <label class="small font-weight-bold text-muted">TANGGAL DATANG <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-white border-right-0"><i class="fas fa-calendar-alt"></i></span>
+                                    </div>
+                                    <input type="date" class="form-control border-left-0" id="tanggal_datang" name="tanggal_datang" value="{{ date('Y-m-d') }}" required>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="kode_aset">Kode Aset <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="kode_aset" name="kode_aset" placeholder="Contoh: AST-001" required>
+                            <div class="form-group mb-3">
+                                <label class="small font-weight-bold text-muted">KODE ASET BARU <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-white border-right-0"><i class="fas fa-barcode"></i></span>
+                                    </div>
+                                    <input type="text" class="form-control border-left-0" name="kode_aset" placeholder="AST-XXX" required>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="nama_aset">Nama Aset <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="selesai_nama_input" name="nama_aset" required readonly>
+
+                    <div class="form-group mb-3">
+                        <label class="small font-weight-bold text-muted">NAMA ASET (FINAL) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control bg-light" id="selesai_nama_input" name="nama_aset" required readonly>
                     </div>
-                    <div class="form-group">
-                        <label for="kamar_id">Pilih Kamar (Lokasi Penempatan) <span class="text-danger">*</span></label>
-                        <select class="form-control" id="kamar_id" name="kamar_id" required>
-                            <option value="">-- Pilih Kamar --</option>
+
+                    <div class="form-group mb-3">
+                        <label class="small font-weight-bold text-muted">LOKASI PENEMPATAN <span class="text-danger">*</span></label>
+                        <select class="form-control shadow-sm" name="kamar_id" required>
+                            <option value="">-- Pilih Kamar / Lokasi --</option>
                             @foreach($kamar as $k)
-                            <option value="{{ $k->id }}">{{ $k->nama_kamar }} (Kapasitas: {{ $k->kapasitas }})</option>
+                            <option value="{{ $k->id }}">{{ $k->nama_kamar }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label for="kondisi">Kondisi Saat Diterima</label>
-                        <textarea class="form-control" id="kondisi" name="kondisi" rows="2" placeholder="Contoh: Baik, sesuai spesifikasi"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="deskripsi_aset">Deskripsi Aset</label>
-                        <textarea class="form-control" id="deskripsi_aset" name="deskripsi_aset" rows="2" placeholder="Detail tambahan mengenai aset"></textarea>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="small font-weight-bold text-muted">KONDISI SAAT DITERIMA</label>
+                                <textarea class="form-control" name="kondisi" rows="2" placeholder="Contoh: Baik / Segel Utuh"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="small font-weight-bold text-muted">DESKRIPSI ASET</label>
+                                <textarea class="form-control" name="deskripsi_aset" rows="2" placeholder="Contoh: Warna Hitam, Merk LG"></textarea>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-success"><i class="fas fa-check mr-1"></i> Konfirmasi & Simpan ke Master Aset</button>
+                <div class="modal-footer bg-light border-0 py-3 px-4 justify-content-between">
+                    <button type="button" class="btn btn-link text-muted font-weight-bold" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success px-4 shadow-sm font-weight-bold" style="border-radius: 8px;">
+                        <i class="fas fa-save mr-2"></i> Daftarkan ke Master Aset
+                    </button>
                 </div>
             </form>
         </div>

@@ -10,21 +10,21 @@
             @method('PUT')
 
             <div class="form-group">
-                <label for="id_siswa">Siswa <span class="text-danger">*</span></label>
-                <select name="id_siswa" id="id_siswa" class="form-control" required>
+                <label for="siswa_id">Siswa <span class="text-danger">*</span></label>
+                <select name="siswa_id" id="siswa_id" class="form-control" required>
                     <option value="">-- Pilih Siswa --</option>
                     @foreach($siswas as $siswa)
-                        <option value="{{ $siswa->id }}" {{ old('id_siswa', $izinSakit->id_siswa) == $siswa->id ? 'selected' : '' }}>{{ $siswa->nama }}</option>
+                        <option value="{{ $siswa->id }}" {{ old('siswa_id', $izinSakit->siswa_id) == $siswa->id ? 'selected' : '' }}>{{ $siswa->nama }}</option>
                     @endforeach
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="id_kelas">Kelas <span class="text-danger">*</span></label>
-                <select name="id_kelas" id="id_kelas" class="form-control" required>
-                    <option value="">-- Pilih Kelas --</option>
-                    @foreach($kelas as $k)
-                        <option value="{{ $k->id }}" {{ old('id_kelas', $izinSakit->id_kelas) == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
+                <label for="rombel_id">Rombel <span class="text-danger">*</span></label>
+                <select name="rombel_id" id="rombel_id" class="form-control select2" required>
+                    <option value="">-- Pilih Rombel --</option>
+                    @foreach($rombels as $r)
+                        <option value="{{ $r->id }}" {{ old('rombel_id', $izinSakit->kelas_id) == $r->id ? 'selected' : '' }}>{{ $r->nama_rombel }}</option>
                     @endforeach
                 </select>
             </div>

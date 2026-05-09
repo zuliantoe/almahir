@@ -16,6 +16,12 @@ return new class extends Migration
         // 1. Remove guru_id from kelas
         Schema::table('kelas', function (Blueprint $table) {
             if (Schema::hasColumn('kelas', 'guru_id')) {
+                // Drop index if it exists to avoid SQLite error
+                try {
+                    $table->dropIndex('kelas_guru_id_index');
+                } catch (\Exception $e) {
+                    // Ignore if index doesn't exist
+                }
                 $table->dropColumn('guru_id');
             }
         });

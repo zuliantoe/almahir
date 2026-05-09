@@ -10,7 +10,7 @@
             <dd class="col-sm-9">{{ $izinSakit->siswa->nama ?? '-' }}</dd>
 
             <dt class="col-sm-3">Kelas</dt>
-            <dd class="col-sm-9">{{ $izinSakit->kelas->nama_kelas ?? '-' }}</dd>
+            <dd class="col-sm-9">{{ $izinSakit->rombel->nama_kelas ?? '-' }}</dd>
 
             <dt class="col-sm-3">Jenis</dt>
             <dd class="col-sm-9">
@@ -37,8 +37,11 @@
             @if($izinSakit->bukti_foto)
             <dt class="col-sm-3">Bukti (Foto/Surat)</dt>
             <dd class="col-sm-9">
+                <div class="mb-2">
+                    <img src="{{ asset('storage/' . $izinSakit->bukti_foto) }}" class="img-fluid rounded shadow-sm border" style="max-width: 300px;">
+                </div>
                 <a href="{{ asset('storage/' . $izinSakit->bukti_foto) }}" target="_blank" class="btn btn-sm btn-info">
-                    <i class="fas fa-image mr-1"></i> Lihat Bukti
+                    <i class="fas fa-search-plus mr-1"></i> Perbesar Gambar
                 </a>
             </dd>
             @endif

@@ -16,6 +16,15 @@ return new class extends Migration
             if (!Schema::hasColumn('penilaian', 'tahunajaran_id')) {
                 $table->unsignedBigInteger('tahunajaran_id')->nullable()->after('id_tahun_ajaran');
             }
+            if (!Schema::hasColumn('penilaian', 'semester')) {
+                $table->string('semester', 20)->nullable()->after('tahunajaran_id');
+            }
+            if (!Schema::hasColumn('penilaian', 'author_id')) {
+                $table->uuid('author_id')->nullable()->after('semester');
+            }
+            if (!Schema::hasColumn('penilaian', 'kkm')) {
+                $table->integer('kkm')->default(75)->after('nilai');
+            }
             // Add foreign key if possible (SQLite has limitations but Laravel handles it)
             // $table->foreign('tahunajaran_id')->references('id')->on('tahun_ajaran')->onDelete('set null');
         });
@@ -56,7 +65,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('penilaian', function (Blueprint $table) {
-            $table->dropColumn('tahunajaran_id');
+            $table->dropColumn(['tahunajaran_id', 'semester', 'author_id', 'kkm']);
         });
         
         Schema::table('penilaian_tahfidz', function (Blueprint $table) {

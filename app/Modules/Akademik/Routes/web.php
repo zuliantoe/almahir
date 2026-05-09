@@ -18,6 +18,7 @@ use Modules\Akademik\Controllers\KurikulumController;
 use Modules\Akademik\Controllers\MasterKurikulumController;
 use Modules\Akademik\Controllers\BebanMengajarController;
 use Modules\Akademik\Controllers\RombelController;
+use Modules\Akademik\Controllers\KenaikanKelasController;
 
 /*
 |--------------------------------------------------------------------------
@@ -56,7 +57,13 @@ Route::middleware(['web', 'auth', \Modules\Akademik\Middleware\ReadOnlyRoleMiddl
     Route::resource('master-kurikulum', MasterKurikulumController::class);
     Route::post('kurikulum/bulk-store', [KurikulumController::class, 'bulkStore'])->name('kurikulum.bulk-store');
     Route::resource('kurikulum', KurikulumController::class);
+    Route::get('rombel/history', [RombelController::class, 'history'])->name('rombel.history');
     Route::resource('rombel', RombelController::class);
+
+    Route::get('kenaikan-kelas', [KenaikanKelasController::class, 'index'])->name('kenaikan-kelas.index');
+    Route::get('kenaikan-kelas/get-rombel', [KenaikanKelasController::class, 'getRombel'])->name('kenaikan-kelas.get-rombel');
+    Route::get('kenaikan-kelas/get-siswa', [KenaikanKelasController::class, 'getSiswa'])->name('kenaikan-kelas.get-siswa');
+    Route::post('kenaikan-kelas/process', [KenaikanKelasController::class, 'process'])->name('kenaikan-kelas.process');
 });
 
 // Public route for Calendar Sync (iCal) - Must be outside 'auth' so Google can fetch it

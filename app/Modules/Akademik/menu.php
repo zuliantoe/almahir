@@ -50,9 +50,27 @@ return [
         [
             'label' => 'Rombongan Belajar',
             'icon' => 'fas fa-users',
-            'route' => 'akademik.rombel.index',
-            'match' => 'akademik/rombel*',
-            'roles' => ['SUPER_ADMIN', 'STAFF']
+            'roles' => ['SUPER_ADMIN', 'STAFF'],
+            'children' => [
+                [
+                    'label' => 'Daftar Rombel',
+                    'route' => 'akademik.rombel.index',
+                    'match' => 'akademik/rombel',
+                    'roles' => ['SUPER_ADMIN', 'STAFF']
+                ],
+                [
+                    'label' => 'Riwayat Perpindahan',
+                    'route' => 'akademik.rombel.history',
+                    'match' => 'akademik/rombel/history',
+                    'roles' => ['SUPER_ADMIN', 'STAFF']
+                ],
+                [
+                    'label' => 'Kenaikan/Perpindahan',
+                    'route' => 'akademik.kenaikan-kelas.index',
+                    'match' => 'akademik/kenaikan-kelas*',
+                    'roles' => ['SUPER_ADMIN', 'STAFF']
+                ],
+            ]
         ],
         [
             'label' => 'Data Master',

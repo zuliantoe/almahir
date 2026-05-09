@@ -17,10 +17,16 @@ class Rombel extends Model
     protected $fillable = [
         'nama_rombel',
         'kelas_id',
+        'tingkat_id',
         'tahunajaran_id',
         'guru_id',
         'keterangan'
     ];
+
+    public function tingkat(): BelongsTo
+    {
+        return $this->belongsTo(Tingkat::class, 'tingkat_id');
+    }
 
     public function kelas(): BelongsTo
     {

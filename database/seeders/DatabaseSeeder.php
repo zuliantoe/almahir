@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         // 1. Roles & Permissions
         $this->call(RoleSeeder::class);
+        $this->call(UserSeeder::class); // Default Admin
         if (class_exists(AcademicRoleSeeder::class)) {
             $this->call(AcademicRoleSeeder::class);
         }

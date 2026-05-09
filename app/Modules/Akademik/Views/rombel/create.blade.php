@@ -39,11 +39,21 @@
                     </div>
 
                     <div class="form-group mb-3">
+                        <label class="font-weight-bold">Tingkat <span class="text-danger">*</span></label>
+                        <select id="tingkat_id" class="form-control" required>
+                            <option value="">-- Pilih Tingkat --</option>
+                            @foreach($tingkat as $t)
+                                <option value="{{ $t->id }}">{{ $t->nama_tingkat }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="form-group mb-3">
                         <label class="font-weight-bold">Kelas <span class="text-danger">*</span></label>
-                        <select name="kelas_id" class="form-control @error('kelas_id') is-invalid @enderror" required>
+                        <select name="kelas_id" id="kelas_id" class="form-control @error('kelas_id') is-invalid @enderror" required disabled>
                             <option value="">-- Pilih Kelas --</option>
                             @foreach($kelas as $k)
-                                <option value="{{ $k->id }}" {{ old('kelas_id') == $k->id ? 'selected' : '' }}>
+                                <option value="{{ $k->id }}" data-tingkat="{{ $k->tingkat_id }}" {{ old('kelas_id') == $k->id ? 'selected' : '' }}>
                                     {{ $k->nama_kelas }}
                                 </option>
                             @endforeach
@@ -191,6 +201,25 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        const tingkatSelect = document.getElementById('tingkat_id');
+        const kelasSelect = document.getElementById('kelas_id');
+        const kelasOptions = Array.from(kelasSelect.options);
+
+        tingkatSelect.addEventListener('change', function() {
+            const tingkatId = this.value;
+            
+            // Clear current options
+            kelasSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+            
+            if (tingkatId) {
+                const filtered = kelasOptions.filter(opt => opt.getAttribute('data-tingkat') == tingkatId);
+                filtered.forEach(opt => kelasSelect.appendChild(opt.cloneNode(true)));
+                kelasSelect.disabled = false;
+            } else {
+                kelasSelect.disabled = true;
+            }
+        });
+
         const searchInput = document.getElementById('siswaSearch');
         const rows = document.querySelectorAll('.siswa-row');
         const selectAll = document.getElementById('selectAllSiswa');

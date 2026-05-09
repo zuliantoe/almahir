@@ -40,11 +40,21 @@
                     </div>
 
                     <div class="form-group mb-3">
+                        <label class="font-weight-bold">Tingkat <span class="text-danger">*</span></label>
+                        <select id="tingkat_id" class="form-control" required>
+                            <option value="">-- Pilih Tingkat --</option>
+                            @foreach($tingkat as $t)
+                                <option value="{{ $t->id }}" {{ $rombel->tingkat_id == $t->id ? 'selected' : '' }}>{{ $t->nama_tingkat }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="form-group mb-3">
                         <label class="font-weight-bold">Kelas <span class="text-danger">*</span></label>
-                        <select name="kelas_id" class="form-control @error('kelas_id') is-invalid @enderror" required>
+                        <select name="kelas_id" id="kelas_id" class="form-control @error('kelas_id') is-invalid @enderror" required>
                             <option value="">-- Pilih Kelas --</option>
                             @foreach($kelas as $k)
-                                <option value="{{ $k->id }}" {{ old('kelas_id', $rombel->kelas_id) == $k->id ? 'selected' : '' }}>
+                                <option value="{{ $k->id }}" data-tingkat="{{ $k->tingkat_id }}" {{ old('kelas_id', $rombel->kelas_id) == $k->id ? 'selected' : '' }}>
                                     {{ $k->nama_kelas }}
                                 </option>
                             @endforeach
@@ -192,11 +202,44 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        const tingkatSelect = document.getElementById('tingkat_id');
+        const kelasSelect = document.getElementById('kelas_id');
+        const kelasOptions = Array.from(kelasSelect.options);
+
+        function filterKelas() {
+            const tingkatId = tingkatSelect.value;
+            const currentKelasId = kelasSelect.value;
+            
+            // Clear current options
+            kelasSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+            
+            if (tingkatId) {
+                const filtered = kelasOptions.filter(opt => opt.getAttribute('data-tingkat') == tingkatId);
+                filtered.forEach(opt => {
+                    const newOpt = opt.cloneNode(true);
+                    if (newOpt.value == currentKelasId) newOpt.selected = true;
+                    kelasSelect.appendChild(newOpt);
+                });
+                kelasSelect.disabled = false;
+            } else {
+                kelasSelect.disabled = true;
+            }
+        }
+
+        tingkatSelect.addEventListener('change', filterKelas);
+
         const searchInput = document.getElementById('siswaSearch');
         const rows = document.querySelectorAll('.siswa-row');
         const selectAll = document.getElementById('selectAllSiswa');
         const checks = document.querySelectorAll('.siswa-check');
         const countSpan = document.getElementById('selectedCount');
+
+        // Initial filter call to make sure correct classes are shown for existing Tingkat
+        if (tingkatSelect.value) {
+            // But we don't want to clear it if it's already correct on load (standard edit)
+            // Actually, we should call it to ensure ONLY current tingkat classes are in the list
+            filterKelas();
+        }
 
         // Search logic
         searchInput.addEventListener('keyup', function() {

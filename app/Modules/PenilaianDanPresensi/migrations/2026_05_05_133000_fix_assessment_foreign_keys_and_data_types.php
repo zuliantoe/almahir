@@ -31,12 +31,12 @@ return new class extends Migration
             $table->timestamps();
 
             // Correct FKs pointing to sys_users and other tables
-            $table->foreign('id_siswa')->references('id')->on('siswa')->onDelete('cascade');
-            $table->foreign('id_guru')->references('id')->on('guru')->onDelete('cascade');
-            $table->foreign('id_mapel')->references('id')->on('mata_pelajaran')->onDelete('cascade');
-            $table->foreign('id_tahun_ajaran')->references('id')->on('tahun_ajaran')->onDelete('cascade');
-            $table->foreign('tahunajaran_id')->references('id')->on('tahun_ajaran')->onDelete('set null');
-            $table->foreign('author_id')->references('id')->on('sys_users')->onDelete('set null');
+            $table->foreign('id_siswa', 'penilaian_siswa_fk_v1')->references('id')->on('siswa')->onDelete('cascade');
+            $table->foreign('id_guru', 'penilaian_guru_fk_v1')->references('id')->on('guru')->onDelete('cascade');
+            $table->foreign('id_mapel', 'penilaian_mapel_fk_v1')->references('id')->on('mata_pelajaran')->onDelete('cascade');
+            $table->foreign('id_tahun_ajaran', 'penilaian_ta_fk_v1')->references('id')->on('tahun_ajaran')->onDelete('cascade');
+            $table->foreign('tahunajaran_id', 'penilaian_ta_id_fk_v1')->references('id')->on('tahun_ajaran')->onDelete('set null');
+            $table->foreign('author_id', 'penilaian_author_fk_v1')->references('id')->on('sys_users')->onDelete('set null');
         });
 
         // Copy data for Penilaian
@@ -63,10 +63,10 @@ return new class extends Migration
             $table->string('scan_id')->nullable();
             $table->timestamps();
 
-            $table->foreign('id_siswa')->references('id')->on('siswa')->onDelete('cascade');
-            $table->foreign('id_guru')->references('id')->on('guru')->onDelete('cascade');
-            $table->foreign('tahunajaran_id')->references('id')->on('tahun_ajaran')->onDelete('set null');
-            $table->foreign('author_id')->references('id')->on('sys_users')->onDelete('set null');
+            $table->foreign('id_siswa', 'presensi_siswa_fk_v1')->references('id')->on('siswa')->onDelete('cascade');
+            $table->foreign('id_guru', 'presensi_guru_fk_v1')->references('id')->on('guru')->onDelete('cascade');
+            $table->foreign('tahunajaran_id', 'presensi_ta_id_fk_v1')->references('id')->on('tahun_ajaran')->onDelete('set null');
+            $table->foreign('author_id', 'presensi_author_fk_v1')->references('id')->on('sys_users')->onDelete('set null');
         });
 
         // Copy data for Presensi
@@ -95,10 +95,10 @@ return new class extends Migration
             $table->string('status_capaian')->nullable();
             $table->timestamps();
 
-            $table->foreign('id_siswa')->references('id')->on('siswa')->onDelete('cascade');
-            $table->foreign('id_guru')->references('id')->on('guru')->onDelete('cascade');
-            $table->foreign('tahunajaran_id')->references('id')->on('tahun_ajaran')->onDelete('set null');
-            $table->foreign('author_id')->references('id')->on('sys_users')->onDelete('set null');
+            $table->foreign('id_siswa', 'tahfidz_siswa_fk_v1')->references('id')->on('siswa')->onDelete('cascade');
+            $table->foreign('id_guru', 'tahfidz_guru_fk_v1')->references('id')->on('guru')->onDelete('cascade');
+            $table->foreign('tahunajaran_id', 'tahfidz_ta_id_fk_v1')->references('id')->on('tahun_ajaran')->onDelete('set null');
+            $table->foreign('author_id', 'tahfidz_author_fk_v1')->references('id')->on('sys_users')->onDelete('set null');
         });
 
         // Copy data for Tahfidz

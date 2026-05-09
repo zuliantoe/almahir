@@ -30,11 +30,11 @@ return new class extends Migration
                 $table->integer('kkm')->default(75);
                 $table->timestamps();
 
-                $table->foreign('siswa_id')->references('id')->on('siswa')->onDelete('cascade');
-                $table->foreign('guru_id')->references('id')->on('guru')->onDelete('cascade');
-                $table->foreign('mapel_id')->references('id')->on('mata_pelajaran')->onDelete('cascade');
-                $table->foreign('tahunajaran_id')->references('id')->on('tahun_ajaran')->onDelete('cascade');
-                $table->foreign('author_id')->references('id')->on('sys_users')->onDelete('set null');
+                $table->foreign('siswa_id', 'penilaian_siswa_fk_v2')->references('id')->on('siswa')->onDelete('cascade');
+                $table->foreign('guru_id', 'penilaian_guru_fk_v2')->references('id')->on('guru')->onDelete('cascade');
+                $table->foreign('mapel_id', 'penilaian_mapel_fk_v2')->references('id')->on('mata_pelajaran')->onDelete('cascade');
+                $table->foreign('tahunajaran_id', 'penilaian_ta_fk_v2')->references('id')->on('tahun_ajaran')->onDelete('cascade');
+                $table->foreign('author_id', 'penilaian_author_fk_v2')->references('id')->on('sys_users')->onDelete('set null');
             });
 
             // Use COALESCE for tahunajaran_id to merge id_tahun_ajaran and tahunajaran_id
@@ -62,10 +62,10 @@ return new class extends Migration
                 $table->string('scan_id')->nullable();
                 $table->timestamps();
 
-                $table->foreign('siswa_id')->references('id')->on('siswa')->onDelete('cascade');
-                $table->foreign('guru_id')->references('id')->on('guru')->onDelete('cascade');
-                $table->foreign('tahunajaran_id')->references('id')->on('tahun_ajaran')->onDelete('set null');
-                $table->foreign('author_id')->references('id')->on('sys_users')->onDelete('set null');
+                $table->foreign('siswa_id', 'presensi_siswa_fk_v2')->references('id')->on('siswa')->onDelete('cascade');
+                $table->foreign('guru_id', 'presensi_guru_fk_v2')->references('id')->on('guru')->onDelete('cascade');
+                $table->foreign('tahunajaran_id', 'presensi_ta_id_fk_v2')->references('id')->on('tahun_ajaran')->onDelete('set null');
+                $table->foreign('author_id', 'presensi_author_fk_v2')->references('id')->on('sys_users')->onDelete('set null');
             });
 
             DB::statement("INSERT INTO presensi (id, siswa_id, guru_id, mapel_id, jadwal_pelajaran_id, tahunajaran_id, semester, author_id, jam, status, kategori, scan_id, created_at, updated_at) 
@@ -94,10 +94,10 @@ return new class extends Migration
                 $table->string('status_capaian')->nullable();
                 $table->timestamps();
 
-                $table->foreign('siswa_id')->references('id')->on('siswa')->onDelete('cascade');
-                $table->foreign('guru_id')->references('id')->on('guru')->onDelete('cascade');
-                $table->foreign('tahunajaran_id')->references('id')->on('tahun_ajaran')->onDelete('set null');
-                $table->foreign('author_id')->references('id')->on('sys_users')->onDelete('set null');
+                $table->foreign('siswa_id', 'tahfidz_siswa_fk_v2')->references('id')->on('siswa')->onDelete('cascade');
+                $table->foreign('guru_id', 'tahfidz_guru_fk_v2')->references('id')->on('guru')->onDelete('cascade');
+                $table->foreign('tahunajaran_id', 'tahfidz_ta_id_fk_v2')->references('id')->on('tahun_ajaran')->onDelete('set null');
+                $table->foreign('author_id', 'tahfidz_author_fk_v2')->references('id')->on('sys_users')->onDelete('set null');
             });
 
             DB::statement("INSERT INTO penilaian_tahfidz (id, siswa_id, kelas_id, guru_id, tahunajaran_id, semester, author_id, tanggal, surat_awal, surat_akhir, ayat_awal, ayat_akhir, nilai, status_capaian, created_at, updated_at) 
@@ -129,9 +129,9 @@ return new class extends Migration
                 $table->uuid('author_id')->nullable();
                 $table->timestamps();
 
-                $table->foreign('siswa_id')->references('id')->on('siswa')->onDelete('cascade');
-                $table->foreign('tahunajaran_id')->references('id')->on('tahun_ajaran')->onDelete('set null');
-                $table->foreign('author_id')->references('id')->on('sys_users')->onDelete('set null');
+                $table->foreign('siswa_id', 'izin_sakit_siswa_fk_v2')->references('id')->on('siswa')->onDelete('cascade');
+                $table->foreign('tahunajaran_id', 'izin_sakit_ta_id_fk_v2')->references('id')->on('tahun_ajaran')->onDelete('set null');
+                $table->foreign('author_id', 'izin_sakit_author_fk_v2')->references('id')->on('sys_users')->onDelete('set null');
             });
 
             DB::statement("INSERT INTO izin_sakit (id, siswa_id, kelas_id, mapel_id, jadwal_pelajaran_id, jenis, tipe_izin, tgl_mulai, tgl_selesai, keterangan, bukti_foto, status, konfirmasi_oleh, waktu_konfirmasi, tahunajaran_id, semester, author_id, created_at, updated_at) 

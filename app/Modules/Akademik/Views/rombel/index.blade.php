@@ -22,6 +22,54 @@
         <x-alert type="success" :message="session('success')" dismissible />
     @endif
 
+    <div class="card border-0 shadow-sm mb-4 bg-light">
+        <div class="card-body p-3">
+            <form action="{{ route('akademik.rombel.index') }}" method="GET" class="row align-items-end">
+                <div class="col-md-4 mb-2 mb-md-0">
+                    <label class="small font-weight-bold text-muted mb-1">Cari Rombel</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white border-right-0"><i class="fas fa-search text-muted"></i></span>
+                        </div>
+                        <input type="text" name="search" class="form-control border-left-0" placeholder="Nama Rombel / Kelas..." value="{{ request('search') }}">
+                    </div>
+                </div>
+                <div class="col-md-3 mb-2 mb-md-0">
+                    <label class="small font-weight-bold text-muted mb-1">Tahun Ajaran</label>
+                    <select name="tahunajaran_id" class="form-control select2">
+                        <option value="">Semua Tahun</option>
+                        @foreach($tahun_ajaran as $ta)
+                            <option value="{{ $ta->id }}" {{ request('tahunajaran_id') == $ta->id ? 'selected' : '' }}>
+                                {{ $ta->tahunajaran }} ({{ $ta->semester }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2 mb-md-0">
+                    <label class="small font-weight-bold text-muted mb-1">Tingkat</label>
+                    <select name="tingkat_id" class="form-control select2">
+                        <option value="">Semua Tingkat</option>
+                        @foreach($tingkat as $t)
+                            <option value="{{ $t->id }}" {{ request('tingkat_id') == $t->id ? 'selected' : '' }}>
+                                {{ $t->nama_tingkat }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex">
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-filter mr-1"></i> Filter
+                    </button>
+                    @if(request()->anyFilled(['search', 'tahunajaran_id', 'tingkat_id']))
+                        <a href="{{ route('akademik.rombel.index') }}" class="btn btn-outline-secondary ml-2" title="Reset Filter">
+                            <i class="fas fa-undo"></i>
+                        </a>
+                    @endif
+                </div>
+            </form>
+        </div>
+    </div>
+
     <x-card title="Rombongan Belajar" icon="fas fa-users-class" type="primary" outline shadow>
         <div class="table-responsive">
             <table class="table table-hover align-items-center mb-0">
@@ -47,8 +95,11 @@
                                 </div>
                             </td>
                             <td>
-                                <div class="badge badge-soft-primary p-2 px-3">
-                                    <i class="fas fa-door-open mr-1"></i> {{ $r->kelas->nama_kelas ?? '-' }}
+                                <div class="d-flex flex-column">
+                                    <div class="badge badge-soft-primary p-2 px-3 mb-1">
+                                        <i class="fas fa-door-open mr-1"></i> {{ $r->kelas->nama_kelas ?? '-' }}
+                                    </div>
+                                    <small class="text-muted ml-1"><i class="fas fa-layer-group mr-1"></i> {{ $r->tingkat->nama_tingkat ?? '-' }}</small>
                                 </div>
                             </td>
                             <td>
@@ -84,10 +135,10 @@
                                     <a href="{{ route('akademik.rombel.edit', $r->id) }}" class="btn btn-sm btn-warning shadow-sm mx-1 text-white" title="Edit Data">
                                         <i class="fas fa-pencil-alt"></i>
                                     </a>
-                                    <form action="{{ route('akademik.rombel.destroy', $r->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus Rombel ini?')">
+                                    <form action="{{ route('akademik.rombel.destroy', $r->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger shadow-sm" title="Hapus">
+                                        <button type="submit" class="btn btn-sm btn-danger shadow-sm btn-delete" title="Hapus">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </form>

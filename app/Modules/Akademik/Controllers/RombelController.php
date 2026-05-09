@@ -16,10 +16,39 @@ use Modules\Siswa\Models\Siswa;
 
 class RombelController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $rombel = Rombel::with(['kelas', 'tahunAjaran', 'walikelas'])->paginate(10);
-        return view('akademik::rombel.index', compact('rombel'));
+        $query = Rombel::with(['kelas.tingkat', 'tahunAjaran', 'walikelas']);
+
+        // Filter by Tahun Ajaran
+        if ($request->filled('tahunajaran_id')) {
+            $query->where('tahunajaran_id', $request->tahunajaran_id);
+        }
+
+        // Filter by Tingkat (via Kelas)
+        if ($request->filled('tingkat_id')) {
+            $query->whereHas('kelas', function($q) use ($request) {
+                $q->where('tingkat_id', $request->tingkat_id);
+            });
+        }
+
+        // Search by Rombel Name or Class Name
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nama_rombel', 'like', "%$search%")
+                  ->orWhereHas('kelas', function($qk) use ($search) {
+                      $qk->where('nama_kelas', 'like', "%$search%");
+                  });
+            });
+        }
+
+        $rombel = $query->latest()->paginate(10)->withQueryString();
+        
+        $tahun_ajaran = TahunAjaran::orderBy('id', 'desc')->get();
+        $tingkat = \App\Modules\Akademik\Models\Tingkat::all();
+
+        return view('akademik::rombel.index', compact('rombel', 'tahun_ajaran', 'tingkat'));
     }
 
     public function create()
@@ -46,16 +75,22 @@ class RombelController extends Controller
             $tahun_ajaran = TahunAjaran::orderBy('id', 'desc')->limit(3)->get();
         }
         
-        return view('akademik::rombel.create', compact('kelas', 'gurus', 'siswas', 'tahun_ajaran'));
+        $tingkat = \App\Modules\Akademik\Models\Tingkat::all();
+        
+        return view('akademik::rombel.create', compact('kelas', 'gurus', 'siswas', 'tahun_ajaran', 'tingkat'));
     }
 
     public function store(StoreRombelRequest $request)
     {
         DB::beginTransaction();
         try {
-            $rombel = Rombel::create($request->only([
+            $kelas = Kelas::findOrFail($request->kelas_id);
+            $data = $request->only([
                 'nama_rombel', 'kelas_id', 'tahunajaran_id', 'guru_id', 'keterangan'
-            ]));
+            ]);
+            $data['tingkat_id'] = $kelas->tingkat_id;
+
+            $rombel = Rombel::create($data);
 
             $siswaData = collect($request->siswa_ids)->map(fn($id) => [
                 'rombel_id' => $rombel->id,
@@ -116,16 +151,22 @@ class RombelController extends Controller
             ->where('tahunajaran_id', $rombel->tahunajaran_id)
             ->pluck('siswa_id')->toArray();
 
-        return view('akademik::rombel.edit', compact('rombel', 'kelas', 'gurus', 'siswas', 'tahun_ajaran', 'selected_siswas'));
+        $tingkat = \App\Modules\Akademik\Models\Tingkat::all();
+
+        return view('akademik::rombel.edit', compact('rombel', 'kelas', 'gurus', 'siswas', 'tahun_ajaran', 'selected_siswas', 'tingkat'));
     }
 
     public function update(UpdateRombelRequest $request, Rombel $rombel)
     {
         DB::beginTransaction();
         try {
-            $rombel->update($request->only([
+            $kelas = Kelas::findOrFail($request->kelas_id);
+            $data = $request->only([
                 'nama_rombel', 'kelas_id', 'tahunajaran_id', 'guru_id', 'keterangan'
-            ]));
+            ]);
+            $data['tingkat_id'] = $kelas->tingkat_id;
+
+            $rombel->update($data);
 
             // Pintar: Jangan asal delete. Jika tahun/kelas berubah, ini adalah "Kenakan Kelas" versi edit.
             // Untuk mempermudah sesuai request user: "edit aja kelas tapi masih romblenya"
@@ -167,6 +208,26 @@ class RombelController extends Controller
             DB::rollBack();
             return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+    }
+
+    public function history(Request $request)
+    {
+        $query = RombelSiswa::with(['rombel', 'tahunAjaran', 'kelas.tingkat', 'siswa'])
+            ->select('rombel_id', 'tahunajaran_id', 'kelas_id', 'status', DB::raw('count(siswa_id) as total_siswa'))
+            ->groupBy('rombel_id', 'tahunajaran_id', 'kelas_id', 'status');
+
+        if ($request->filled('tahunajaran_id')) {
+            $query->where('tahunajaran_id', $request->tahunajaran_id);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $history = $query->orderBy('tahunajaran_id', 'desc')->paginate(15)->withQueryString();
+        $tahun_ajaran = TahunAjaran::orderBy('id', 'desc')->get();
+
+        return view('akademik::rombel.history', compact('history', 'tahun_ajaran'));
     }
 
     public function destroy(Rombel $rombel)

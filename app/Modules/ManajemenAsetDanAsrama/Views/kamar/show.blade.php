@@ -78,6 +78,12 @@
                         <a href="{{ route('manajemenasetdanasrama.penghuni.assign-multiple', $kamar->id) }}" class="btn btn-sm btn-primary mr-1 shadow-sm">
                             <i class="fas fa-user-plus mr-1"></i> Tambah Penghuni
                         </a>
+                        <form action="{{ route('manajemenasetdanasrama.kamar.empty', $kamar->id) }}" method="POST" class="d-inline" onsubmit="return confirm('PERINGATAN: Anda yakin ingin mengosongkan kamar ini? Semua santri yang aktif di kamar ini akan otomatis di-checkout secara masal.')">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-danger mr-1 shadow-sm">
+                                <i class="fas fa-broom mr-1"></i> Kosongkan Kamar
+                            </button>
+                        </form>
                         <a href="{{ route('manajemenasetdanasrama.kamar.index') }}" class="btn btn-sm btn-secondary shadow-sm">
                             <i class="fas fa-arrow-left mr-1"></i> Kembali
                         </a>
@@ -168,8 +174,8 @@
                             @empty
                             <tr>
                                 <td colspan="6" class="text-center py-5">
-                                    <img src="https://illustrations.popsy.co/gray/empty-inbox.svg" alt="Empty" style="width: 100px; opacity: 0.5;">
-                                    <p class="mt-2 text-muted">Belum ada penghuni aktif di kamar ini.</p>
+                                    <i class="fas fa-box-open fa-3x text-muted mb-3" style="opacity: 0.5;"></i>
+                                    <p class="text-muted">Belum ada penghuni aktif di kamar ini.</p>
                                 </td>
                             </tr>
                             @endforelse

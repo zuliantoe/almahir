@@ -14,7 +14,7 @@ class KamarController extends BaseController
      */
     public function index(Request $request): View
     {
-        $kamar = Kamar::with(['penghuni.siswa'])->paginate(15);
+        $kamar = Kamar::with(['penghuniAktif.siswa'])->paginate(15);
         
         return view('manajemenasetdanasrama::kamar.index', [
             'title' => 'Data Kamar',
@@ -52,13 +52,21 @@ class KamarController extends BaseController
             ->orderBy('id', 'asc')
             ->get();
 
-        // Ambil riwayat penghuni sebelumnya
-        $riwayatPenghuni = $kamar->penghuni()
-            ->with('siswa')
+        // Ambil riwayat penghuni sebelumnya (Isolasi Mutlak Berdasarkan Detik Eksekusi Terakhir)
+        $latestHistory = $kamar->penghuni()
             ->whereNotNull('tanggal_keluar')
             ->where('tanggal_keluar', '<=', now())
-            ->orderBy('tanggal_keluar', 'desc')
-            ->get();
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
+        $riwayatPenghuni = collect();
+        if ($latestHistory) {
+            // Tarik rombongan yang dieksekusi keluar pada JAM, MENIT, dan DETIK yang sama persis
+            $riwayatPenghuni = $kamar->penghuni()
+                ->with('siswa')
+                ->where('updated_at', $latestHistory->updated_at)
+                ->get();
+        }
 
         return view('manajemenasetdanasrama::kamar.show', [
             'title'           => 'Detail Kamar: ' . $kamar->nama_kamar,
@@ -158,5 +166,42 @@ class KamarController extends BaseController
             'musyrif'       => $request->query('musyrif'),
             'kepsek'        => $request->query('kepsek'),
         ]);
+    }
+
+    /**
+     * Empty all residents in the specified kamar.
+     */
+    public function emptyAll(string $id): RedirectResponse
+    {
+        $kamar = Kamar::findOrFail($id);
+        
+        // Dapatkan semua penghuni yang masih aktif
+        $activePenghuni = $kamar->penghuni()
+            ->where(function($query) {
+                $query->whereNull('tanggal_keluar')
+                      ->orWhere('tanggal_keluar', '>', now());
+            })->get();
+
+        $now = now();
+        foreach ($activePenghuni as $penghuni) {
+            $penghuni->update([
+                'tanggal_keluar' => $now,
+                'keterangan'     => "Keluaran dari {$kamar->nama_kamar}",
+                'updated_at'     => $now
+            ]);
+        }
+
+        if ($activePenghuni->count() > 0) {
+            // Regenerate jadwal piket karena kamar kosong
+            /** @var \App\Modules\ManajemenAsetDanAsrama\Services\JadwalPiketService $piketService */
+            $piketService = new \App\Modules\ManajemenAsetDanAsrama\Services\JadwalPiketService();
+            $piketService->regenerateFutureJadwal($id);
+            
+            return redirect()->route('manajemenasetdanasrama.kamar.show', $id)
+                ->with('success', "Berhasil mengosongkan {$activePenghuni->count()} santri dari kamar {$kamar->nama_kamar}.");
+        }
+
+        return redirect()->route('manajemenasetdanasrama.kamar.show', $id)
+            ->with('info', "Kamar sudah dalam keadaan kosong.");
     }
 }

@@ -189,6 +189,16 @@
                         </a>
                     </li>
 
+                    {{-- Shortcut Modul Asrama --}}
+                    @if(Auth::check() && Auth::user()->hasRole(['SUPER_ADMIN']))
+                    <li class="nav-item mt-2 mb-2">
+                        <a href="{{ route('manajemenasetdanasrama.index') }}" class="nav-link bg-info">
+                            <i class="nav-icon fas fa-building"></i>
+                            <p>Modul Aset & Asrama</p>
+                        </a>
+                    </li>
+                    @endif
+
                     {{-- PORTAL SISWA --}}
                     @if(Auth::check() && Auth::user()->ref_type === \Modules\Siswa\Models\Siswa::class)
                     <li class="nav-header">PORTAL SISWA</li>

@@ -115,9 +115,15 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge badge-info badge-soft">
-                                        <i class="fas fa-door-open mr-1"></i> {{ $item->kamar->nama_kamar ?? '-' }}
-                                    </span>
+                                    @if($item->tanggal_keluar && \Carbon\Carbon::parse($item->tanggal_keluar)->lte(now()))
+                                        <span class="badge badge-secondary badge-soft">
+                                            <i class="fas fa-door-closed mr-1"></i> Belum dapat kamar
+                                        </span>
+                                    @else
+                                        <span class="badge badge-info badge-soft">
+                                            <i class="fas fa-door-open mr-1"></i> {{ $item->kamar->nama_kamar ?? '-' }}
+                                        </span>
+                                    @endif
                                 </td>
                                 <td>
                                     <div style="font-size: 0.85rem;">

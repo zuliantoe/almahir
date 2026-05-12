@@ -20,6 +20,16 @@ class Kamar extends Model
         return $this->hasMany(KamarPenghuni::class, 'kamar_id');
     }
 
+    // Relasi: Hanya penghuni yang saat ini aktif
+    public function penghuniAktif()
+    {
+        return $this->hasMany(KamarPenghuni::class, 'kamar_id')
+            ->where(function ($q) {
+                $q->whereNull('tanggal_keluar')
+                  ->orWhere('tanggal_keluar', '>', now());
+            });
+    }
+
     // Relasi: 1 kamar punya banyak aset
     public function aset()
     {

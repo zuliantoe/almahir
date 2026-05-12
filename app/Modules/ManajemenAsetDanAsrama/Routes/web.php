@@ -89,6 +89,7 @@ Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
         Route::put('{id}', [KamarController::class, 'update'])->name('update');
         Route::delete('{id}', [KamarController::class, 'destroy'])->name('destroy');
         Route::get('{id}/print', [KamarController::class, 'print'])->name('print');
+        Route::post('{id}/empty', [KamarController::class, 'emptyAll'])->name('empty');
     });
     
     // Penghuni Kamar

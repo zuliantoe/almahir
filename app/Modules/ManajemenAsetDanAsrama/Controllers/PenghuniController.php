@@ -16,7 +16,8 @@ class PenghuniController extends BaseController
      */
     public function index(Request $request): View
     {
-        $query = KamarPenghuni::with(['kamar', 'siswa']);
+        // Hanya ambil penghuni yang berstatus AKTIF saat ini
+        $query = KamarPenghuni::with(['kamar', 'siswa'])->aktif();
 
         if ($request->filled('kamar_id')) {
             $query->where('kamar_id', $request->kamar_id);
@@ -281,21 +282,33 @@ class PenghuniController extends BaseController
     }
 
     /**
-     * Remove the specified penghuni from storage.
+     * Remove the specified penghuni from storage (Soft Checkout / Histori Tetap Ada).
      */
-    public function destroy(string $id): RedirectResponse
+    public function destroy(Request $request, string $id): RedirectResponse
     {
         $penghuni = KamarPenghuni::findOrFail($id);
         $kamarId = $penghuni->kamar_id;
-        $penghuni->delete();
+        $kamarNama = $penghuni->kamar->nama_kamar ?? 'Kamar';
+        
+        $alasan = $request->input('alasan_hapus');
+        
+        $newKet = "Keluaran dari {$kamarNama}";
+        if ($alasan) {
+            $newKet = "Keluar: {$alasan} ({$newKet})";
+        }
+        
+        $penghuni->update([
+            'tanggal_keluar' => now(),
+            'keterangan'     => $newKet
+        ]);
 
         // Regenerate jadwal piket
         /** @var \App\Modules\ManajemenAsetDanAsrama\Services\JadwalPiketService $piketService */
         $piketService = new \App\Modules\ManajemenAsetDanAsrama\Services\JadwalPiketService();
         $piketService->regenerateFutureJadwal($kamarId);
 
-        return redirect()->route('manajemenasetdanasrama.penghuni.index')
-            ->with('success', 'Penghuni kamar berhasil dihapus dan jadwal piket disesuaikan.');
+        return redirect()->back()
+            ->with('success', 'Santri berhasil dikeluarkan dari kamar, riwayat tersimpan, dan jadwal piket disesuaikan.');
     }
 
     /**
@@ -343,6 +356,8 @@ class PenghuniController extends BaseController
             if (empty($siswaId)) continue;
 
             $jabatan = $request->jabatan[$index] ?? 'Anggota';
+            $keteranganManual = $request->keterangan[$index] ?? null;
+            $keteranganFinal = $keteranganManual ? "{$jabatan} - {$keteranganManual}" : $jabatan;
 
             // ABSOLUTE RULE: Jika input masal ada yang jadi Ketua, turunkan yang lama
             if ($jabatan == 'Ketua Kamar') {
@@ -360,7 +375,7 @@ class PenghuniController extends BaseController
                 'siswa_id'      => $siswaId,
                 'jabatan'       => $jabatan,
                 'tanggal_masuk' => $request->tanggal_masuk,
-                'keterangan'    => $jabatan,
+                'keterangan'    => $keteranganFinal,
             ]);
             $count++;
         }

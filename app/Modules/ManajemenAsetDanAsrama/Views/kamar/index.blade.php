@@ -79,15 +79,15 @@
                                 <td>
                                     <strong>{{ $item->nama_kamar }}</strong>
                                     <div class="mt-1">
-                                        @forelse($item->penghuni->take(3) as $p)
+                                        @forelse($item->penghuniAktif->take(3) as $p)
                                             <span class="badge badge-light border text-dark mb-1" style="font-weight: 400; font-size: 0.7rem;">
                                                 <i class="fas fa-user-circle mr-1 text-primary"></i> {{ Str::words($p->siswa->nama ?? 'N/A', 1, '') }}
                                             </span>
                                         @empty
                                             <small class="text-muted italic">Kosong</small>
                                         @endforelse
-                                        @if($item->penghuni->count() > 3)
-                                            <span class="badge badge-light border text-muted mb-1" style="font-size: 0.7rem;">+{{ $item->penghuni->count() - 3 }}</span>
+                                        @if($item->penghuniAktif->count() > 3)
+                                            <span class="badge badge-light border text-muted mb-1" style="font-size: 0.7rem;">+{{ $item->penghuniAktif->count() - 3 }}</span>
                                         @endif
                                     </div>
                                 </td>

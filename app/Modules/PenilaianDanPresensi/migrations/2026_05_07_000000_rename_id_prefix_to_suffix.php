@@ -5,8 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -40,7 +39,7 @@ return new class extends Migration
             // Use COALESCE for tahunajaran_id to merge id_tahun_ajaran and tahunajaran_id
             DB::statement("INSERT INTO penilaian (id, siswa_id, guru_id, mapel_id, tahunajaran_id, jenis_nilai, semester, author_id, nilai, kkm, created_at, updated_at) 
                            SELECT id, id_siswa, id_guru, id_mapel, COALESCE(id_tahun_ajaran, tahunajaran_id), jenis_nilai, semester, author_id, nilai, kkm, created_at, updated_at FROM penilaian_old");
-            
+
             Schema::dropIfExists('penilaian_old');
         }
 
@@ -70,7 +69,7 @@ return new class extends Migration
 
             DB::statement("INSERT INTO presensi (id, siswa_id, guru_id, mapel_id, jadwal_pelajaran_id, tahunajaran_id, semester, author_id, jam, status, kategori, scan_id, created_at, updated_at) 
                            SELECT id, id_siswa, id_guru, id_mapel, id_jadwal_pelajaran, tahunajaran_id, semester, author_id, jam, status, kategori, scan_id, created_at, updated_at FROM presensi_old");
-            
+
             Schema::dropIfExists('presensi_old');
         }
 

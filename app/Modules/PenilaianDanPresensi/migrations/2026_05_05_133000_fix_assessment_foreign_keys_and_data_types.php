@@ -5,8 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -42,7 +41,7 @@ return new class extends Migration
         // Copy data for Penilaian
         DB::statement('INSERT INTO penilaian (id, id_siswa, id_guru, id_mapel, id_tahun_ajaran, tahunajaran_id, jenis_nilai, semester, author_id, nilai, kkm, created_at, updated_at) 
                        SELECT id, id_siswa, id_guru, id_mapel, id_tahun_ajaran, tahunajaran_id, jenis_nilai, semester, author_id, nilai, kkm, created_at, updated_at FROM penilaian_old');
-        
+
         Schema::dropIfExists('penilaian_old');
 
 
@@ -72,7 +71,7 @@ return new class extends Migration
         // Copy data for Presensi
         DB::statement('INSERT INTO presensi (id, id_siswa, id_guru, id_mapel, id_jadwal_pelajaran, tahunajaran_id, semester, author_id, jam, status, kategori, created_at, updated_at) 
                        SELECT id, id_siswa, id_guru, id_mapel, id_jadwal_pelajaran, tahunajaran_id, semester, author_id, jam, status, kategori, created_at, updated_at FROM presensi_old');
-        
+
         Schema::dropIfExists('presensi_old');
 
 

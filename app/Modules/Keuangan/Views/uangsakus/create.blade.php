@@ -29,7 +29,7 @@
                                     <option value="">-- Pilih Santri --</option>
                                     @foreach ($siswas as $siswa)
                                         <option value="{{ $siswa->id }}" {{ old('siswa_id') == $siswa->id ? 'selected' : '' }}>
-                                            {{ $siswa->nama }} ({{ $siswa->nis }})
+                                            {{ $siswa->nama }} ({{ $siswa->kelas->tingkat->nama_tingkat ?? 'Tanpa Kelas' }})
                                         </option>
                                     @endforeach
                                 </select>
@@ -60,7 +60,6 @@
                                 </div>
                             </div>
 
-                            <!-- Tanggal -->
                             <div class="col-md-6 mb-4">
                                 <label for="tanggal" class="small font-weight-bold text-muted mb-2">Tanggal <span class="text-danger">*</span></label>
                                 <input type="date" 
@@ -74,12 +73,12 @@
                                 @enderror
                             </div>
 
+
                             <!-- Status -->
                             <div class="col-md-6 mb-4">
                                 <label for="status" class="small font-weight-bold text-muted mb-2">Status <span class="text-danger">*</span></label>
                                 <select name="status" id="status" class="form-control bg-light border-0 shadow-sm rounded-lg @error('status') is-invalid @enderror" required>
-                                    <option value="Belum Diterima" {{ old('status') == 'Belum Diterima' ? 'selected' : '' }}>Belum Diterima</option>
-                                    <option value="Diterima Bendahara" {{ old('status') == 'Diterima Bendahara' || !old('status') ? 'selected' : '' }}>Diterima Bendahara</option>
+                                    <option value="Belum Diterima Santri" {{ old('status') == 'Belum Diterima Santri' || !old('status') ? 'selected' : '' }}>Belum Diterima Santri</option>
                                     <option value="Sudah Diterima Santri" {{ old('status') == 'Sudah Diterima Santri' ? 'selected' : '' }}>Sudah Diterima Santri</option>
                                 </select>
                                 @error('status')

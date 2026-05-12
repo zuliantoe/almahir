@@ -84,6 +84,7 @@
             color: #6c757d;
             display: block;
             margin-top: 2px;
+            white-space: pre-line;
         }
         
         .row-total-hari {

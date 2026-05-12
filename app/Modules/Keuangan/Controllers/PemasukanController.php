@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Modules\Keuangan\Models\Pemasukan;
 use Modules\Keuangan\Models\Sumber;
+use Modules\Keuangan\Models\UangSaku;
 use Carbon\Carbon;
 
 /**
@@ -79,12 +80,29 @@ class PemasukanController extends Controller
         $pemasukan->deskripsi   = $request->deskripsi;
         $pemasukan->save();
 
+        // Sync back to Uang Saku if linked and status is "Belum Diterima Santri"
+        if ($pemasukan->uang_saku_id) {
+            $uangsaku = UangSaku::find($pemasukan->uang_saku_id);
+            if ($uangsaku && $uangsaku->status === 'Belum Diterima Santri') {
+                $uangsaku->update([
+                    'jumlah' => $pemasukan->jumlah,
+                    'tanggal' => $pemasukan->tanggal
+                ]);
+            }
+        }
+
         return redirect()->route('keuangan.pemasukans.index')->with('success', 'Pemasukan berhasil diperbarui!');
     }
 
     public function destroy(string $id): RedirectResponse
     {
         $pemasukan = Pemasukan::findOrFail($id);
+        
+        // If this pemasukan is linked to a Uang Saku, delete the Uang Saku as well
+        if ($pemasukan->uang_saku_id) {
+            UangSaku::where('id', $pemasukan->uang_saku_id)->delete();
+        }
+
         $pemasukan->delete();
 
         return redirect()->route('keuangan.pemasukans.index')->with('success', 'Pemasukan berhasil dihapus!');

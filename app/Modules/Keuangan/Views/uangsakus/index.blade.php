@@ -6,7 +6,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Manajemen Uang Saku Santri</h1>
         <div class="text-muted">
-            {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}
+            {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('l, j F Y') }}
         </div>
     </div>
 
@@ -40,11 +40,30 @@
             $totalBelumDiberikan = $filteredData->where('status', '!=', 'Sudah Diterima Santri')->sum('jumlah');
             $totalSudahDiberikan = $filteredData->where('status', 'Sudah Diterima Santri')->sum('jumlah');
 
-            $santriBelumDiberikan = $filteredData->where('status', '!=', 'Sudah Diterima Santri')->pluck('siswa_id')->unique()->count();
-            $santriSudahDiberikan = $filteredData->where('status', 'Sudah Diterima Santri')->pluck('siswa_id')->unique()->count();
+            // Group by santri for more accurate per-person status
+            $groupedBySantri = $filteredData->groupBy('siswa_id');
+            
+            $santriBelumDiberikan = $groupedBySantri->filter(function($items) {
+                // Santri Belum Menerima: Jika punya minimal satu data yang belum diterima
+                return $items->where('status', '!=', 'Sudah Diterima Santri')->count() > 0;
+            })->count();
+
+            $santriSudahDiberikan = $groupedBySantri->filter(function($items) {
+                // Santri Sudah Menerima: Jika SEMUA datanya sudah diterima
+                return $items->where('status', '!=', 'Sudah Diterima Santri')->count() === 0;
+            })->count();
 
             // Kanban board logic
-            $sortedData = $filteredData->sortByDesc('tanggal');
+            // === SORTING ===
+            // Kanban board logic: Sort by date first, then by the most recent update time
+            $sortedData = $filteredData->sort(function($a, $b) {
+                // Primary sort: Date (tanggal) descending
+                if ($a->tanggal != $b->tanggal) {
+                    return $a->tanggal > $b->tanggal ? -1 : 1;
+                }
+                // Secondary sort: Updated at descending
+                return $a->updated_at > $b->updated_at ? -1 : 1;
+            });
             $groupedData = $sortedData->groupBy(function($item) { 
                 return \Carbon\Carbon::parse($item->tanggal)->format('Y-m-d'); 
             });
@@ -62,6 +81,8 @@
                 $page,
                 ['path' => request()->url(), 'query' => request()->query()]
             );
+
+            $currentPageItemsCount = collect($paginatedGroups->items())->flatten(1)->count();
         @endphp
 
         <!-- Total Uang Saku Belum Diberikan -->
@@ -71,7 +92,7 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Total Uang Saku Belum Diberikan
+                                Total Uang Saku Belum Diterima Santri
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
                                 Rp{{ number_format($totalBelumDiberikan, 0, ',', '.') }}
@@ -92,7 +113,7 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Total Uang Saku Sudah Diberikan
+                                Total Uang Saku Sudah Diterima Santri
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
                                 Rp{{ number_format($totalSudahDiberikan, 0, ',', '.') }}
@@ -113,7 +134,7 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                Total Santri Belum Diberikan
+                                Santri Belum Menerima Uang Saku
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
                                 {{ $santriBelumDiberikan }} Santri
@@ -134,7 +155,7 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Total Santri Sudah Diberikan
+                                Santri Sudah Menerima Uang Saku
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
                                 {{ $santriSudahDiberikan }} Santri
@@ -238,9 +259,9 @@
                         <div class="col-12 col-md-4 mb-2 mb-md-0">
                             <h6 class="m-0 font-weight-bold text-primary">Board Uang Saku</h6>
                         </div>
-                        <div class="col-12 col-md-8 text-md-end">
+                        <div class="col-12 col-md-8 text-center text-md-end">
                             <div class="text-muted small">
-                                <span>{{ $filteredData->count() }}</span> uang saku di {{ $groupedData->count() }} hari
+                                <span>{{ $currentPageItemsCount }}</span> uang saku di halaman {{ $paginatedGroups->currentPage() }}
                                 @if($searchKeyword)
                                     untuk "{{ $searchKeyword }}"
                                 @endif
@@ -258,15 +279,21 @@
                             <div class="kanban-column">
                                 <div class="kanban-column-header">
                                     <div class="column-title">
-                                        <h6 class="column-day mb-0">{{ \Carbon\Carbon::parse($date)->translatedFormat('l') }}</h6>
-                                        <small class="column-date text-muted">{{ \Carbon\Carbon::parse($date)->format('d M Y') }}</small>
+                                        <h6 class="column-day mb-0">{{ \Carbon\Carbon::parse($date)->locale('id')->translatedFormat('l') }}</h6>
+                                        <small class="column-date text-muted">{{ \Carbon\Carbon::parse($date)->locale('id')->translatedFormat('j M Y') }}</small>
                                     </div>
                                     <div class="column-stats mt-2">
                                          <div class="d-flex justify-content-between w-100 px-1">
-                                             <small class="text-primary font-weight-bold">Total: Rp{{ number_format($dailyItems->sum('jumlah'), 0, ',', '.') }}</small>
-                                             <small class="text-muted">{{ $dailyItems->count() }} data</small>
+                                            <div class="text-xs">
+                                                <span class="text-muted">Total:</span>
+                                                <span class="font-weight-bold text-primary">Rp{{ number_format($dailyItems->sum('jumlah'), 0, ',', '.') }}</span>
+                                            </div>
+                                            <div class="text-xs">
+                                                <span class="font-weight-bold text-muted">{{ $dailyItems->count() }}</span>
+                                                <span class="text-muted">Data</span>
+                                            </div>
                                          </div>
-                                     </div>
+                                    </div>
                                 </div>
 
                                 <div class="kanban-column-body">
@@ -286,18 +313,27 @@
                                                     <p class="card-description">{{ $item->deskripsi ?? 'Tanpa keterangan' }}</p>
                                                 </div>
                                                 <div class="mt-2">
-                                                    <span class="badge {{ $item->status == 'Sudah Diterima Santri' ? 'badge-info' : 'badge-light border' }} small">
-                                                        {{ $item->status }}
-                                                    </span>
+                                                    <div class="btn-group btn-group-sm w-100" role="group" style="border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                                        <form action="{{ route('keuangan.uangsakus.updateStatus', $item->id) }}" method="POST" class="flex-fill m-0">
+                                                            @csrf @method('PATCH')
+                                                            <input type="hidden" name="status" value="Belum Diterima Santri">
+                                                            <button type="submit" class="btn {{ $item->status == 'Belum Diterima Santri' ? 'btn-primary' : 'btn-light' }} w-100 rounded-0 py-2 border-end" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                                <i class="fas {{ $item->status == 'Belum Diterima Santri' ? 'fa-check-circle' : 'fa-circle' }} me-1"></i> Belum Diterima
+                                                            </button>
+                                                        </form>
+                                                        <form action="{{ route('keuangan.uangsakus.updateStatus', $item->id) }}" method="POST" class="flex-fill m-0">
+                                                            @csrf @method('PATCH')
+                                                            <input type="hidden" name="status" value="Sudah Diterima Santri">
+                                                            <button type="submit" class="btn {{ $item->status == 'Sudah Diterima Santri' ? 'btn-primary' : 'btn-light' }} w-100 rounded-0 py-2" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                                <i class="fas {{ $item->status == 'Sudah Diterima Santri' ? 'fa-check-circle' : 'fa-circle' }} me-1"></i> Sudah Diterima
+                                                            </button>
+                                                        </form>
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            <div class="income-card-footer">
-                                                <div class="card-time">
-                                                    <i class="fas fa-clock text-muted me-1"></i>
-                                                    <small>{{ $item->created_at->setTimezone('Asia/Jakarta')->format('H:i') }} WIB</small>
-                                                </div>
-                                                <div class="card-actions">
+                                            <div class="income-card-footer d-flex flex-column align-items-stretch">
+                                                <div class="card-actions justify-content-end mb-2">
                                                     <a href="{{ route('keuangan.uangsakus.show', $item->id) }}" class="btn-action bg-primary" title="Detail">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
@@ -310,6 +346,10 @@
                                                             <i class="fas fa-trash"></i>
                                                         </button>
                                                     </form>
+                                                </div>
+                                                <div class="card-time text-start">
+                                                    <i class="fas fa-clock text-muted me-1" style="font-size: 0.8rem;"></i>
+                                                    <small class="text-muted" style="font-size: 0.75rem;">{{ $item->updated_at->setTimezone('Asia/Jakarta')->format('H.i') }} WIB, {{ $item->updated_at->locale('id')->translatedFormat('d F Y') }}</small>
                                                 </div>
                                             </div>
                                         </div>
@@ -380,8 +420,12 @@
     .text-gray-800 { color: var(--text) !important; }
 
     .text-xs {
-        font-size: 0.7rem !important;
+        font-size: 0.8rem !important;
         font-family: 'Nunito', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    }
+
+    .column-stats .text-xs {
+        font-size: 0.75rem !important;
     }
     
     .h5 {
@@ -479,6 +523,29 @@
         overflow-y: auto;
         padding: 5px;
         min-height: 100px;
+    }
+
+    .kanban-column-body::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .kanban-column-body::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.05);
+        border-radius: 4px;
+    }
+
+    .kanban-column-body::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 4px;
+        transition: background 0.3s ease;
+    }
+
+    .kanban-column-body::-webkit-scrollbar-thumb:hover {
+        background: #aaa;
+    }
+
+    .kanban-column-body::-webkit-scrollbar-thumb:active {
+        background: #888;
     }
 
     .income-card-modern {

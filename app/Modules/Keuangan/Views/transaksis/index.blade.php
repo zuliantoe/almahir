@@ -243,7 +243,7 @@
                                                         <div class="{{ $trx['jenis'] == 'Pemasukan' ? 'text-success' : 'text-danger' }}">
                                                             {{ $trx['jenis'] }}
                                                         </div>
-                                                        <small class="text-muted">{{ $trx['deskripsi'] ?: '-' }}</small>
+                                                        <small class="text-muted" style="white-space: pre-line;">{{ $trx['deskripsi'] ?: '-' }}</small>
                                                     </div>
                                                     <span class="badge {{ $trx['jenis'] == 'Pemasukan' ? 'bg-success' : 'bg-danger' }} text-white px-2 py-1" style="border-radius: 4px;">
                                                         {{ $trx['keterangan'] }}

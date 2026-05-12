@@ -9,6 +9,7 @@ class Pemasukan extends Model
     protected $table = 'pemasukans';
 
     protected $fillable = [
+        'uang_saku_id',
         'sumber_id',
         'jumlah',
         'tanggal',

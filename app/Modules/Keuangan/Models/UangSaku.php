@@ -29,8 +29,8 @@ class UangSaku extends Model
     }
     
     // Accessor untuk status default
-    public function ambilAtributStatus($value)
+    public function getStatusAttribute($value)
     {
-        return $value ?: 'Diterima Bendahara';
+        return $value ?: 'Belum Diterima Santri';
     }
 }

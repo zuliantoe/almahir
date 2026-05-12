@@ -40,7 +40,7 @@
                         <div class="col-md-6 mb-4">
                             <label class="small font-weight-bold text-muted mb-2">Tanggal Transaksi</label>
                             <div class="p-3 bg-light rounded-lg border-0 shadow-sm text-dark">
-                                {{ \Carbon\Carbon::parse($pemasukan->tanggal)->translatedFormat('l, d F Y') }}
+                                {{ \Carbon\Carbon::parse($pemasukan->tanggal)->locale('id')->translatedFormat('l, d F Y') }}
                             </div>
                         </div>
                         
@@ -48,14 +48,14 @@
                         <div class="col-md-6 mb-4">
                             <label class="small font-weight-bold text-muted mb-2">Waktu Dicatat</label>
                             <div class="p-3 bg-light rounded-lg border-0 shadow-sm text-dark">
-                                {{ $pemasukan->created_at ? $pemasukan->created_at->setTimezone('Asia/Jakarta')->translatedFormat('d F Y H.i') . ' WIB' : '-' }}
+                                {{ $pemasukan->updated_at ? $pemasukan->updated_at->setTimezone('Asia/Jakarta')->locale('id')->translatedFormat('H.i') . ' WIB, ' . $pemasukan->updated_at->locale('id')->translatedFormat('d F Y') : '-' }}
                             </div>
                         </div>
 
                         <!-- Deskripsi -->
                         <div class="col-12 mb-4">
                             <label class="small font-weight-bold text-muted mb-2">Deskripsi</label>
-                            <div class="p-3 bg-light rounded-lg border-0 shadow-sm text-dark" style="min-height: 80px;">
+                            <div class="p-3 bg-light rounded-lg border-0 shadow-sm text-dark" style="min-height: 80px; white-space: pre-line;">
                                 {{ $pemasukan->deskripsi ?: '-' }}
                             </div>
                         </div>

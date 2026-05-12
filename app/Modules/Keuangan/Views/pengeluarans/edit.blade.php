@@ -24,16 +24,35 @@
                         
                         <div class="row">
                             <!-- Tujuan Pengeluaran -->
-                            <div class="col-md-6 mb-4">
-                                <label for="tujuan_id" class="small font-weight-bold text-muted mb-2">Tujuan Pengeluaran <span class="text-danger">*</span></label>
-                                <select name="tujuan_id" id="tujuan_id" class="form-control bg-light border-0 shadow-sm rounded-lg @error('tujuan_id') is-invalid @enderror" required>
-                                    <option value="">-- Pilih Tujuan Pengeluaran --</option>
-                                    @foreach ($tujuans as $tujuan)
-                                        <option value="{{ $tujuan->id }}" {{ (old('tujuan_id') ?? $pengeluaran->tujuan_id) == $tujuan->id ? 'selected' : '' }}>
-                                            {{ $tujuan->nama }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                             <div class="col-md-6 mb-4">
+                                <label for="tujuan_id" class="small font-weight-bold text-muted mb-2">
+                                    Tujuan Pengeluaran 
+                                    @if(!$pengeluaran->uang_saku_id)
+                                        <span class="text-danger">*</span>
+                                    @endif
+                                </label>
+                                @if($pengeluaran->uang_saku_id)
+                                    <select class="form-control bg-light border-0 shadow-sm rounded-lg no-arrow" disabled>
+                                        @foreach ($tujuans as $tujuan)
+                                            <option value="{{ $tujuan->id }}" {{ $pengeluaran->tujuan_id == $tujuan->id ? 'selected' : '' }}>
+                                                {{ $tujuan->nama }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <input type="hidden" name="tujuan_id" value="{{ $pengeluaran->tujuan_id }}">
+                                    <small class="text-danger mt-1 d-block" style="font-size: 0.7rem;">
+                                        <i class="fas fa-exclamation-circle mr-1"></i> Tujuan pengeluaran tidak bisa diubah
+                                    </small>
+                                @else
+                                    <select name="tujuan_id" id="tujuan_id" class="form-control bg-light border-0 shadow-sm rounded-lg @error('tujuan_id') is-invalid @enderror" required>
+                                        <option value="">-- Pilih Tujuan Pengeluaran --</option>
+                                        @foreach ($tujuans as $tujuan)
+                                            <option value="{{ $tujuan->id }}" {{ (old('tujuan_id') ?? $pengeluaran->tujuan_id) == $tujuan->id ? 'selected' : '' }}>
+                                                {{ $tujuan->nama }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                @endif
                                 @error('tujuan_id')
                                     <div class="invalid-feedback ml-2">{{ $message }}</div>
                                 @enderror
@@ -76,13 +95,24 @@
                             </div>
 
                             <!-- Deskripsi -->
-                            <div class="col-md-6 mb-4">
-                                <label for="deskripsi" class="small font-weight-bold text-muted mb-2">Deskripsi <span class="text-muted font-weight-normal">(Opsional)</span></label>
+                             <div class="col-md-6 mb-4">
+                                <label for="deskripsi" class="small font-weight-bold text-muted mb-2">
+                                    Deskripsi 
+                                    @if(!$pengeluaran->uang_saku_id)
+                                        <span class="text-muted font-weight-normal">(Opsional)</span>
+                                    @endif
+                                </label>
                                 <textarea name="deskripsi" 
                                           id="deskripsi" 
                                           class="form-control bg-light border-0 shadow-sm rounded-lg @error('deskripsi') is-invalid @enderror" 
                                           rows="2"
-                                          placeholder="Tambahkan deskripsi pengeluaran">{{ old('deskripsi', $pengeluaran->deskripsi) }}</textarea>
+                                          placeholder="Tambahkan deskripsi pengeluaran"
+                                          {{ $pengeluaran->uang_saku_id ? 'readonly' : '' }}>{{ old('deskripsi', $pengeluaran->deskripsi) }}</textarea>
+                                @if($pengeluaran->uang_saku_id)
+                                    <small class="text-danger mt-1 d-block" style="font-size: 0.7rem;">
+                                        <i class="fas fa-info-circle mr-1"></i> Deskripsi ini hanya bisa diedit di halaman edit uang saku
+                                    </small>
+                                @endif
                                 @error('deskripsi')
                                     <div class="invalid-feedback ml-2">{{ $message }}</div>
                                 @enderror
@@ -114,6 +144,14 @@
     }
     .input-group-text.bg-light {
         border-right: 1px solid #e3e6f0 !important;
+    }
+    
+    .no-arrow {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-image: none !important;
+        cursor: not-allowed;
     }
 </style>
 @endpush

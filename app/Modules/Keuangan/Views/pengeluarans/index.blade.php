@@ -6,7 +6,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Pengeluaran</h1>
         <div class="text-muted">
-            {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}
+            {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('l, j F Y') }}
         </div>
     </div>
 
@@ -71,8 +71,16 @@
             })->first();
             $sourceName = $mostFrequentSource ? $mostFrequentSource->first()->tujuan->nama : '-';
 
-            // === SORTING (Default: Terbaru) ===
-            $sortedIncomes = $filteredIncomes->sortByDesc('tanggal');
+            // === SORTING ===
+            // Kanban board logic: Sort by date first, then by the most recent update time
+            $sortedIncomes = $filteredIncomes->sort(function($a, $b) {
+                // Primary sort: Date (tanggal) descending
+                if ($a->tanggal != $b->tanggal) {
+                    return $a->tanggal > $b->tanggal ? -1 : 1;
+                }
+                // Secondary sort: Updated at descending
+                return $a->updated_at > $b->updated_at ? -1 : 1;
+            });
 
             // === GROUPING UNTUK BOARD KANBAN ===
             $groupedIncomes = $sortedIncomes->groupBy(function($item) { 
@@ -94,7 +102,8 @@
                 ['path' => request()->url(), 'query' => request()->query()]
             );
 
-            $currentPageItems = $sortedIncomes->count();
+            $currentPageItemsCount = collect($paginatedGroups->items())->flatten(1)->count();
+            $currentPageItems = $sortedIncomes->count(); // This is the grand total
             $totalDays = $groupedIncomes->count();
         @endphp
 
@@ -290,9 +299,9 @@
                         <div class="col-12 col-md-4 mb-2 mb-md-0">
                             <h6 class="m-0 font-weight-bold text-primary">Board Pengeluaran</h6>
                         </div>
-                        <div class="col-12 col-md-8 text-md-end">
+                        <div class="col-12 col-md-8 text-center text-md-end">
                             <div class="text-muted small">
-                                <span id="incomeCount">{{ $currentPageItems }}</span> pengeluaran di {{ $groupedIncomes->count() }} hari
+                                <span id="incomeCount">{{ $currentPageItemsCount }}</span> pengeluaran di halaman {{ $paginatedGroups->currentPage() }}
                                 @if($searchKeyword)
                                     untuk "{{ $searchKeyword }}"
                                 @endif
@@ -311,8 +320,8 @@
                     <div class="kanban-container">
                         @foreach($paginatedGroups as $date => $dailyIncomes)
                             @php
-                                $dayName = \Carbon\Carbon::parse($date)->translatedFormat('l');
-                                $formattedDate = \Carbon\Carbon::parse($date)->format('d M Y');
+                                $dayName = \Carbon\Carbon::parse($date)->locale('id')->translatedFormat('l');
+                                $formattedDate = \Carbon\Carbon::parse($date)->locale('id')->translatedFormat('j M Y');
                                 $dailyTotal = $dailyIncomes->sum('jumlah');
                             @endphp
                             
@@ -322,11 +331,17 @@
                                         <h6 class="column-day">{{ $dayName }}</h6>
                                         <small class="column-date text-muted">{{ $formattedDate }}</small>
                                     </div>
-                                    <div class="column-stats">
-                                        <div class="stat-income">
-                                            <i class="fas fa-money-bill-wave text-danger me-1"></i>
-                                            <span class="stat-amount">Rp{{ number_format($dailyTotal, 0, ',', '.') }}</span>
-                                        </div>
+                                    <div class="column-stats mt-2">
+                                         <div class="d-flex justify-content-between w-100 px-1">
+                                            <div class="text-xs">
+                                                <span class="text-muted">Total:</span>
+                                                <span class="font-weight-bold text-danger">Rp{{ number_format($dailyTotal, 0, ',', '.') }}</span>
+                                            </div>
+                                            <div class="text-xs">
+                                                <span class="font-weight-bold text-muted">{{ $dailyIncomes->count() }}</span>
+                                                <span class="text-muted">Pengeluaran</span>
+                                            </div>
+                                         </div>
                                     </div>
                                 </div>
 
@@ -336,7 +351,7 @@
                                             $sourceName = $income->tujuan->nama ?? '-';
                                             $incomeId = $income->id;
                                             $incomeAmount = $income->jumlah;
-                                            $incomeTime = optional($income->created_at)->setTimezone('Asia/Jakarta')->format('H.i') ?? '-';
+                                            $incomeTime = optional($income->updated_at)->setTimezone('Asia/Jakarta')->format('H.i') ?? '-';
                                             $incomeDescription = $income->deskripsi;
                                         @endphp
                                         
@@ -365,17 +380,7 @@
                                             </div>
 
                                             <div class="income-card-footer">
-                                                <div class="card-time">
-                                                    <i class="fas fa-clock text-muted me-1"></i>
-                                                    <small class="time-text">
-                                                        @if($incomeTime != '-' && $incomeTime != '00.00')
-                                                            {{ $incomeTime }} WIB
-                                                        @else
-                                                            <span class="text-muted">-</span>
-                                                        @endif
-                                                    </small>
-                                                </div>
-                                                <div class="card-actions">
+                                                <div class="card-actions justify-content-end d-flex gap-1 mb-2">
                                                     <a href="{{ route('keuangan.pengeluarans.show', $incomeId) }}" 
                                                        class="btn-action btn-view" 
                                                        title="Detail Pengeluaran">
@@ -399,19 +404,17 @@
                                                         </button>
                                                     </form>
                                                 </div>
+                                                <div class="card-time text-start">
+                                                    <i class="fas fa-clock text-muted me-1" style="font-size: 0.8rem;"></i>
+                                                    <small class="text-muted" style="font-size: 0.75rem;">
+                                                        {{ optional($income->updated_at)->setTimezone('Asia/Jakarta')->format('H.i') }} WIB, {{ optional($income->updated_at)->locale('id')->translatedFormat('d F Y') }}
+                                                    </small>
+                                                </div>
                                             </div>
                                         </div>
                                     @endforeach
                                 </div>
 
-                                <div class="kanban-column-footer">
-                                    <div class="column-total text-danger">
-                                        <span class="total-text">Total: +Rp{{ number_format($dailyTotal, 0, ',', '.') }}</span>
-                                    </div>
-                                    <div class="column-count">
-                                        <span class="count-text">{{ $dailyIncomes->count() }} pengeluaran</span>
-                                    </div>
-                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -492,8 +495,12 @@
 
     /* Font & Text Styles - SAMA DENGAN REFERENSI */
     .text-xs {
-        font-size: 0.7rem !important;
+        font-size: 0.8rem !important;
         font-family: 'Nunito', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    }
+
+    .column-stats .text-xs {
+        font-size: 0.75rem !important;
     }
     
     .h5 {
@@ -528,180 +535,48 @@
         color: var(--warning) !important;
     }
 
-    /* RESPONSIVE FONT SIZES - SAMA DENGAN REFERENSI */
+    /* RESPONSIVE FONT SIZES - SAMA DENGAN UANG SAKU */
     @media (max-width: 576px) {
-        .col-xl-6, .col-lg-6, .col-md-6 {
-            flex: 0 0 100%;
-            max-width: 100%;
-            margin-bottom: 1rem;
-        }
-        
-        .card-body {
-            padding: 1rem !important;
-        }
-        
-        .card-body .row.no-gutters.align-items-center {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            margin: 0 -5px;
-        }
-        
-        .card-body .col.mr-2 {
-            flex: 1;
-            margin-right: 0.75rem;
-            padding: 0 5px;
-        }
-        
-        .card-body .col-auto {
-            flex-shrink: 0;
-            padding: 0 5px;
-        }
-        
-        .text-xs {
-            font-size: 0.7rem !important;
-        }
-        
-        .h5 {
-            font-size: 1.1rem !important;
-        }
-        
-        .fa-2x {
-            font-size: 1.5rem !important;
-        }
+        .col-xl-6, .col-lg-6, .col-md-6 { flex: 0 0 100%; max-width: 100%; margin-bottom: 1rem; }
+        .card-body { padding: 1rem !important; }
+        .text-xs { font-size: 0.7rem !important; }
+        .h5 { font-size: 1.1rem !important; }
+        .fa-2x { font-size: 1.5rem !important; }
     }
 
     @media (min-width: 577px) and (max-width: 768px) {
-        .col-xl-6, .col-lg-6 {
-            flex: 0 0 50%;
-            max-width: 50%;
-        }
-        
-        .col-md-6 {
-            flex: 0 0 50%;
-            max-width: 50%;
-        }
-        
-        .card-body {
-            padding: 1rem !important;
-        }
-        
-        .text-xs {
-            font-size: 0.72rem !important;
-        }
-        
-        .h5 {
-            font-size: 1.15rem !important;
-        }
-        
-        .fa-2x {
-            font-size: 1.6rem !important;
-        }
+        .col-xl-6, .col-lg-6, .col-md-6 { flex: 0 0 50%; max-width: 50%; }
+        .card-body { padding: 1rem !important; }
+        .text-xs { font-size: 0.72rem !important; }
+        .h5 { font-size: 1.15rem !important; }
+        .fa-2x { font-size: 1.6rem !important; }
     }
 
     @media (min-width: 769px) and (max-width: 992px) {
-        .col-xl-6, .col-lg-6 {
-            flex: 0 0 50%;
-            max-width: 50%;
-        }
-        
-        .col-md-6 {
-            flex: 0 0 50%;
-            max-width: 50%;
-        }
-        
-        .card-body {
-            padding: 1.25rem !important;
-        }
-        
-        .text-xs {
-            font-size: 0.75rem !important;
-        }
-        
-        .h5 {
-            font-size: 1.2rem !important;
-        }
-        
-        .fa-2x {
-            font-size: 1.7rem !important;
-        }
+        .col-xl-6, .col-lg-6, .col-md-6 { flex: 0 0 50%; max-width: 50%; }
+        .card-body { padding: 1.25rem !important; }
+        .text-xs { font-size: 0.75rem !important; }
+        .h5 { font-size: 1.2rem !important; }
+        .fa-2x { font-size: 1.7rem !important; }
     }
 
     @media (min-width: 993px) and (max-width: 1200px) {
-        .col-xl-6 {
-            flex: 0 0 50%;
-            max-width: 50%;
-        }
-        
-        .col-lg-6 {
-            flex: 0 0 50%;
-            max-width: 50%;
-        }
-        
-        .card-body {
-            padding: 1.25rem !important;
-        }
-        
-        .text-xs {
-            font-size: 0.75rem !important;
-        }
-        
-        .h5 {
-            font-size: 1.25rem !important;
-        }
-        
-        .fa-2x {
-            font-size: 1.8rem !important;
-        }
+        .col-xl-6, .col-lg-6 { flex: 0 0 50%; max-width: 50%; }
+        .card-body { padding: 1.25rem !important; }
+        .text-xs { font-size: 0.75rem !important; }
+        .h5 { font-size: 1.25rem !important; }
+        .fa-2x { font-size: 1.8rem !important; }
     }
 
     @media (min-width: 1201px) {
-        .col-xl-6 {
-            flex: 0 0 50%;
-            max-width: 50%;
-        }
-        
-        .card-body {
-            padding: 1.5rem !important;
-        }
-        
-        .text-xs {
-            font-size: 0.8rem !important;
-        }
-        
-        .h5 {
-            font-size: 1.35rem !important;
-        }
-        
-        .fa-2x {
-            font-size: 2rem !important;
-        }
+        .col-xl-6 { flex: 0 0 50%; max-width: 50%; }
+        .card-body { padding: 1.5rem !important; }
+        .text-xs { font-size: 0.8rem !important; }
+        .h5 { font-size: 1.35rem !important; }
+        .fa-2x { font-size: 2rem !important; }
     }
 
-    @media (max-width: 400px) {
-        .col-xl-6, .col-lg-6, .col-md-6 {
-            flex: 0 0 100%;
-            max-width: 100%;
-        }
-        
-        .card-body {
-            padding: 0.875rem !important;
-        }
-        
-        .text-xs {
-            font-size: 0.65rem !important;
-        }
-        
-        .h5 {
-            font-size: 1rem !important;
-        }
-        
-        .fa-2x {
-            font-size: 1.3rem !important;
-        }
-    }
-
-    /* Kanban Container */
+    /* Kanban & Modern Card Style */
     .kanban-container {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -710,76 +585,39 @@
     }
 
     .kanban-column {
-        background: var(--card-bg);
+        background: #f8f9fc;
         border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.1);
-        backdrop-filter: var(--glass-blur);
-        box-shadow: var(--shadow-soft);
-        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.05);
         display: flex;
         flex-direction: column;
-        max-height: 600px;
+        max-height: 700px;
+        padding: 15px;
+        transition: all 0.3s ease;
     }
 
     .kanban-column:hover {
         transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
     }
 
     .kanban-column-header {
-        padding: 12px 15px;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        background: rgba(0,0,0,0.02);
-        flex-shrink: 0;
+        padding: 0 5px 15px 5px;
+        border-bottom: 2px solid #e3e6f0;
+        margin-bottom: 15px;
     }
 
-    .column-title h6 {
-        margin: 0;
-        color: var(--text);
-        font-weight: 600;
-        font-size: 0.95rem;
-    }
-
-    .column-title small {
-        color: var(--text-muted);
-        font-size: 0.8rem;
-    }
-
-    .column-stats {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 8px;
-        font-size: 0.75rem;
-        flex-wrap: wrap;
-        gap: 5px;
-    }
-
-    .stat-income {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        flex: 1;
-        min-width: 0;
-    }
-
-    .stat-amount {
-        font-size: 0.7rem;
-        font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+    .column-day { margin: 0; color: var(--text); font-weight: 700; font-size: 1rem; }
+    .column-date { color: var(--text-muted); font-size: 0.85rem; }
 
     .kanban-column-body {
         flex: 1;
-        padding: 10px;
         overflow-y: auto;
-        max-height: 450px;
+        padding: 5px;
         min-height: 100px;
     }
 
     .kanban-column-body::-webkit-scrollbar {
-        width: 4px;
+        width: 8px;
     }
 
     .kanban-column-body::-webkit-scrollbar-track {
@@ -788,93 +626,68 @@
     }
 
     .kanban-column-body::-webkit-scrollbar-thumb {
-        background: var(--primary);
-        border-radius: 2px;
+        background: #ccc;
+        border-radius: 4px;
+        transition: background 0.3s ease;
+    }
+
+    .kanban-column-body::-webkit-scrollbar-thumb:hover {
+        background: #aaa;
+    }
+
+    .kanban-column-body::-webkit-scrollbar-thumb:active {
+        background: #888;
     }
 
     .income-card-modern {
         background: white;
         border-radius: 12px;
-        padding: 12px 15px;
-        margin-bottom: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         border-left: 5px solid #e74a3b;
         transition: all 0.3s ease;
-        cursor: pointer;
-        min-height: 140px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
         background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
     }
 
     .income-card-modern:hover {
         transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(231, 74, 59, 0.2);
-        border-left-color: #c0392b;
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
     }
 
     .income-card-header {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
+        align-items: center;
         margin-bottom: 10px;
-        gap: 8px;
-        flex-wrap: wrap;
-        flex-shrink: 0;
     }
 
-    .card-source-badge {
-        padding: 6px 10px;
-        border-radius: 8px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        white-space: nowrap;
-        flex-shrink: 0;
-        background: linear-gradient(135deg, #e74a3b, #c0392b);
-        color: white;
-    }
+    .card-source-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; color: white; font-weight: 700; background: linear-gradient(135deg, #e74a3b, #c0392b); }
 
-    .card-amount {
-        font-weight: 700;
-        font-size: 0.85rem;
-        text-align: right;
-        flex-shrink: 0;
-    }
+    .card-amount { font-weight: 700; font-size: 0.95rem; text-align: right; }
 
     .income-card-body {
         margin-bottom: 10px;
-        flex: 1;
-        min-height: 50px;
-        overflow: hidden;
     }
 
-    .card-description-wrapper {
-        background: rgba(231, 74, 59, 0.05);
-        padding: 8px 10px;
-        border-radius: 6px;
-        border-left: 3px solid rgba(231, 74, 59, 0.3);
-    }
+    .card-description-wrapper { background: rgba(78, 115, 223, 0.05); color: #2e59d9; padding: 10px; border-radius: 8px; font-size: 0.85rem; margin-top: 10px; }
 
     .card-description {
         margin: 0;
         color: var(--text);
-        font-size: 0.78rem;
+        font-size: 0.85rem;
         line-height: 1.4;
         word-break: break-word;
+        white-space: pre-line;
     }
 
     .income-card-footer {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-top: 10px;
-        border-top: 1px solid rgba(0,0,0,0.1);
-        gap: 8px;
-        flex-wrap: wrap;
-        flex-shrink: 0;
+        flex-direction: column;
+        align-items: stretch;
+        padding-top: 12px;
+        border-top: 1px solid #eee;
+        margin-top: 12px;
     }
 
     .card-time {

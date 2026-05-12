@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Modules\Keuangan\Models\Pengeluaran;
 use Modules\Keuangan\Models\Tujuan;
+use Modules\Keuangan\Models\UangSaku;
 use Carbon\Carbon;
 
 /**
@@ -79,12 +80,29 @@ class PengeluaranController extends Controller
         $pengeluaran->deskripsi   = $request->deskripsi;
         $pengeluaran->save();
 
+        // Sync back to Uang Saku if linked and status is "Sudah Diterima Santri"
+        if ($pengeluaran->uang_saku_id) {
+            $uangsaku = UangSaku::find($pengeluaran->uang_saku_id);
+            if ($uangsaku && $uangsaku->status === 'Sudah Diterima Santri') {
+                $uangsaku->update([
+                    'jumlah' => $pengeluaran->jumlah,
+                    'tanggal' => $pengeluaran->tanggal
+                ]);
+            }
+        }
+
         return redirect()->route('keuangan.pengeluarans.index')->with('success', 'Pengeluaran berhasil diperbarui!');
     }
 
     public function destroy(string $id): RedirectResponse
     {
         $pengeluaran = Pengeluaran::findOrFail($id);
+
+        // If this pengeluaran is linked to a Uang Saku, delete the Uang Saku as well
+        if ($pengeluaran->uang_saku_id) {
+            UangSaku::where('id', $pengeluaran->uang_saku_id)->delete();
+        }
+
         $pengeluaran->delete();
 
         return redirect()->route('keuangan.pengeluarans.index')->with('success', 'Pengeluaran berhasil dihapus!');

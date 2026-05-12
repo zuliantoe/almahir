@@ -29,6 +29,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('tujuans', TujuanController::class);
     
     Route::resource('uangsakus', UangSakuController::class);
+    Route::patch('uangsakus/{id}/status', [UangSakuController::class, 'updateStatus'])->name('uangsakus.updateStatus');
     Route::resource('tagihansantris', TagihanSantriController::class);
     Route::resource('pembayaransantris', PembayaranSantriController::class);
     

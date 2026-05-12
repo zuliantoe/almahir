@@ -17,7 +17,7 @@ return new class extends Migration
 
             $table->decimal('jumlah', 15, 2); 
             $table->date('tanggal'); 
-            $table->string('status')->default('Diterima Bendahara');
+            $table->string('status')->default('Belum Diterima Santri');
             $table->text('deskripsi')->nullable();
             $table->timestamps();
         });

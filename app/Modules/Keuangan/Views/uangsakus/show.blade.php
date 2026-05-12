@@ -7,11 +7,11 @@
     <div class="d-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">Detail Uang Saku</h1>
         <div class="d-flex gap-2">
-            <a href="{{ route('keuangan.uangsakus.index') }}" class="btn btn-sm btn-secondary shadow-sm">
-                <i class="fas fa-arrow-left fa-sm mr-2"></i> Kembali
+            <a href="{{ route('keuangan.uangsakus.index') }}" class="btn btn-sm btn-secondary shadow-sm mr-2">
+                <i class="fas fa-arrow-left fa-sm mr-2 d-none d-sm-inline-block"></i> Kembali
             </a>
             <a href="{{ route('keuangan.uangsakus.edit', $uangsaku->id) }}" class="btn btn-sm btn-primary shadow-sm">
-                <i class="fas fa-edit fa-sm mr-2"></i> Edit
+                <i class="fas fa-edit fa-sm mr-2 d-none d-sm-inline-block"></i> Edit
             </a>
         </div>
     </div>
@@ -48,7 +48,7 @@
                         <div class="col-md-6 mb-4">
                             <label class="small font-weight-bold text-muted mb-1 text-uppercase">Tanggal Transaksi</label>
                             <div class="h5 font-weight-bold text-gray-800">
-                                {{ \Carbon\Carbon::parse($uangsaku->tanggal)->translatedFormat('d F Y') }}
+                                {{ \Carbon\Carbon::parse($uangsaku->tanggal)->locale('id')->translatedFormat('d F Y') }}
                             </div>
                         </div>
 
@@ -63,9 +63,9 @@
                         </div>
 
                         <div class="col-md-6 mb-4">
-                            <label class="small font-weight-bold text-muted mb-1 text-uppercase">Dibuat Pada</label>
+                            <label class="small font-weight-bold text-muted mb-1 text-uppercase">Waktu Dicatat</label>
                             <div class="text-gray-800">
-                                {{ $uangsaku->created_at->translatedFormat('d F Y, H:i') }} WIB
+                                {{ $uangsaku->updated_at->setTimezone('Asia/Jakarta')->locale('id')->translatedFormat('H.i') }} WIB, {{ $uangsaku->updated_at->locale('id')->translatedFormat('d F Y') }}
                             </div>
                         </div>
 

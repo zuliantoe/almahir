@@ -15,8 +15,8 @@ return new class extends Migration
             Schema::table('rombel_siswa', function (Blueprint $table) {
                 if (!Schema::hasColumn('rombel_siswa', 'status')) {
                     $table->enum('status', ['aktif', 'lulus', 'naik', 'keluar'])
-                          ->default('aktif')
-                          ->after('siswa_id');
+                        ->default('aktif')
+                        ->after('siswa_id');
                 }
             });
         }

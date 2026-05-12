@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
         // 2. Base User Data (Guru & Siswa)
         $this->call(GuruDataSeeder::class);
         $this->call(SiswaDataSeeder::class);
+        $this->call(PendaftaranDataSeeder::class);
 
         // 3. Academic Structure
         if (class_exists(\App\Modules\Akademik\Database\Seeders\SpecificAcademicSeeder::class)) {

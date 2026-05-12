@@ -7,9 +7,8 @@ use Modules\Pendaftaran\Models\Pendaftaran;
 use Modules\Pendaftaran\Models\Seleksi;
 use Modules\Pendaftaran\Models\TemplateSeleksi;
 use Faker\Factory as Faker;
-use Illuminate\Support\Facades\DB;
 
-class PendaftaranDummySeeder extends Seeder
+class PendaftaranDataSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -17,13 +16,28 @@ class PendaftaranDummySeeder extends Seeder
     public function run(): void
     {
         $faker = Faker::create('id_ID');
-        $template = TemplateSeleksi::with('items')->first() ?? $this->createDefaultTemplate();
+        
+        // Cek atau buat template seleksi
+        $template = TemplateSeleksi::first();
+        if (!$template) {
+            $template = TemplateSeleksi::create([
+                'nama_template' => 'Template Seleksi Standar',
+                'deskripsi' => 'Template otomatis untuk testing'
+            ]);
+            $template->items()->createMany([
+                ['nama_tes' => 'Tes Baca Al-Quran', 'metode' => 'offline', 'pengampu' => 'Ust. Ahmad'],
+                ['nama_tes' => 'Tes Akademik', 'metode' => 'offline', 'pengampu' => 'Bpk. Budi'],
+                ['nama_tes' => 'Wawancara Orang Tua', 'metode' => 'offline', 'pengampu' => 'Ibu Siti']
+            ]);
+        }
 
         $statuses = [
-            'diterima' => 10,
-            'pending' => 10,
-            'diproses' => 10
+            'pending' => 10,  // Ditunda
+            'diproses' => 10,
+            'diterima' => 10
         ];
+
+        $this->command->info('Menciptakan data Pendaftaran (10 per status)...');
 
         foreach ($statuses as $status => $count) {
             for ($i = 0; $i < $count; $i++) {
@@ -35,7 +49,6 @@ class PendaftaranDummySeeder extends Seeder
                     'jenis_kelamin' => $faker->randomElement(['L', 'P']),
                     'berat_badan' => $faker->numberBetween(20, 50),
                     'tinggi_badan' => $faker->numberBetween(110, 160),
-                    'riwayat_sakit' => $faker->optional(0.3)->sentence,
                     'kelurahan' => $faker->citySuffix,
                     'kecamatan' => $faker->city,
                     'kota' => $faker->city,
@@ -44,19 +57,16 @@ class PendaftaranDummySeeder extends Seeder
                     'nama_ayah' => $faker->name('male'),
                     'pekerjaan_ayah' => $faker->jobTitle,
                     'no_hp_ayah' => $faker->numerify('08##########'),
-                    'alamat_ayah' => $faker->address,
                     'nama_ibu' => $faker->name('female'),
                     'pekerjaan_ibu' => $faker->jobTitle,
                     'no_hp_ibu' => $faker->numerify('08##########'),
-                    'alamat_ibu' => $faker->address,
                     'email' => $faker->unique()->safeEmail,
                     'status' => $status,
                     'tanggal_daftar' => now()->subDays($faker->numberBetween(1, 30)),
                     'tanggal_diterima' => ($status === 'diterima') ? now() : null,
-                    'catatan' => $faker->optional(0.5)->sentence,
                 ]);
 
-                // If status is 'diproses', add selections based on template
+                // Jika status diproses, tambahkan jadwal seleksi
                 if ($status === 'diproses') {
                     foreach ($template->items as $item) {
                         Seleksi::create([
@@ -66,33 +76,11 @@ class PendaftaranDummySeeder extends Seeder
                             'jam' => '08:00:00',
                             'pengampu' => $item->pengampu ?? 'Staf Akademik',
                             'metode' => $item->metode ?? 'offline',
-                            'lokasi' => $item->lokasi ?? 'Gedung Utama',
-                            'link' => $item->link,
-                            'nilai' => null,
+                            'lokasi' => 'Gedung Utama',
                         ]);
                     }
                 }
             }
         }
-    }
-
-    private function createDefaultTemplate()
-    {
-        $template = TemplateSeleksi::create([
-            'nama_template' => 'Template Seleksi Standar',
-            'deskripsi' => 'Template otomatis untuk testing'
-        ]);
-
-        $items = [
-            ['nama_tes' => 'Tes Baca Al-Quran', 'metode' => 'offline', 'pengampu' => 'Ust. Ahmad'],
-            ['nama_tes' => 'Tes Akademik', 'metode' => 'offline', 'pengampu' => 'Bpk. Budi'],
-            ['nama_tes' => 'Wawancara Orang Tua', 'metode' => 'offline', 'pengampu' => 'Ibu Siti']
-        ];
-
-        foreach ($items as $item) {
-            $template->items()->create($item);
-        }
-
-        return $template;
     }
 }

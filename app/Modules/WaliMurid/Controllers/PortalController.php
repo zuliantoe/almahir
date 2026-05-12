@@ -21,7 +21,7 @@ class PortalController extends Controller
         }
 
         $wali = $user->ref;
-        $siswas = $wali->siswa()->with(['kelas', 'currentRombel'])->get();
+        $siswas = $wali->siswa()->with(['kelas'])->get();
 
         return view('walimurid::portal.dashboard', [
             'title' => 'Portal Wali Murid',

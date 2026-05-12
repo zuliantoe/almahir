@@ -27,6 +27,7 @@ class UserManagerController extends Controller
         'SISWA' => Siswa::class,
         'GURU' => Guru::class,
         'WALI_MURID' => WaliMurid::class,
+        'PEGAWAI' => \Modules\PegawaiManager\Models\Pegawai::class,
     ];
 
     /**
@@ -198,13 +199,14 @@ class UserManagerController extends Controller
         
         // Get data that doesn't already have a linked user
         $data = $modelClass::whereDoesntHave('user')
-            ->select('id', 'nama', $this->getIdentifierField($roleName))
+            ->select('id', 'nama', 'email', $this->getIdentifierField($roleName))
             ->get()
             ->map(function ($item) use ($roleName) {
                 $identifier = $this->getIdentifierField($roleName);
                 return [
                     'id' => $item->id,
                     'nama' => $item->nama,
+                    'email' => $item->email,
                     'identifier' => $item->$identifier ?? null,
                 ];
             });
@@ -221,6 +223,7 @@ class UserManagerController extends Controller
             'SISWA' => 'nis',
             'GURU' => 'nip',
             'WALI_MURID' => 'telepon',
+            'PEGAWAI' => 'id',
             default => 'id',
         };
     }
@@ -234,6 +237,7 @@ class UserManagerController extends Controller
             'SISWA' => Siswa::class,
             'GURU' => Guru::class,
             'WALI_MURID' => WaliMurid::class,
+            'PEGAWAI' => \Modules\PegawaiManager\Models\Pegawai::class,
             default => '',
         };
     }
@@ -255,6 +259,7 @@ class UserManagerController extends Controller
                 Siswa::class => 'Siswa',
                 Guru::class => 'Guru',
                 WaliMurid::class => 'Wali Murid',
+                \Modules\PegawaiManager\Models\Pegawai::class => 'Pegawai',
                 default => 'Unknown',
             };
 

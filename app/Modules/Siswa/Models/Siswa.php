@@ -110,7 +110,7 @@ class Siswa extends Model
 
     public function currentRombel()
     {
-        return $this->rombel()->wherePivot('status', 'aktif')->latest()->first();
+        return $this->rombel()->wherePivot('status', 'aktif')->latest('rombel_siswa.created_at');
     }
 
     /**

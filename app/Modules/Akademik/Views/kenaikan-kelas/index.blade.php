@@ -100,7 +100,7 @@
                                         <th width="50" class="text-center">#</th>
                                         <th>Nama Siswa</th>
                                         <th class="text-center">NIS</th>
-                                        <th class="text-center">Status Saat Ini</th>
+                                        <th class="text-center">Status Akhir</th>
                                     </tr>
                                 </thead>
                                 <tbody id="siswaListBody">
@@ -160,7 +160,7 @@ $(document).ready(function() {
                 let html = '';
                 data.forEach(function(rs) {
                     html += `
-                        <tr style="cursor:pointer" onclick="$(this).find('input').click()">
+                        <tr>
                             <td class="text-center">
                                 <div class="custom-control custom-checkbox">
                                     <input type="checkbox" name="siswa_ids[]" value="${rs.siswa.id}" class="custom-control-input siswa-check" id="s_${rs.siswa.id}" checked>
@@ -172,7 +172,17 @@ $(document).ready(function() {
                             </td>
                             <td class="text-center"><code class="text-primary">${rs.siswa.nis}</code></td>
                             <td class="text-center">
-                                <span class="badge badge-soft-success">Aktif di Rombel</span>
+                                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                    <label class="btn btn-outline-success btn-xs active">
+                                        <input type="radio" name="status[${rs.siswa.id}]" value="naik" checked> Naik
+                                    </label>
+                                    <label class="btn btn-outline-warning btn-xs">
+                                        <input type="radio" name="status[${rs.siswa.id}]" value="tidak_naik"> Tinggal
+                                    </label>
+                                    <label class="btn btn-outline-danger btn-xs">
+                                        <input type="radio" name="status[${rs.siswa.id}]" value="lulus"> Lulus
+                                    </label>
+                                </div>
                             </td>
                         </tr>
                     `;

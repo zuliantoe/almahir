@@ -41,34 +41,99 @@
                     </div>
                 </x-slot>
 
-                {{-- FILTER PANEL --}}
-                <div class="card-body border-bottom bg-light p-4">
+                {{-- FILTER PANEL SIMETRIS --}}
+                <style>
+                    /* Penyetaraan Mutlak Ukuran Seluruh Komponen Filter agar Kembar Siam Seukuran Select2 */
+                    .filter-bar-synced .form-control,
+                    .filter-bar-synced .input-group-text,
+                    .filter-bar-synced .btn,
+                    .filter-bar-synced .select2-container--bootstrap4 .select2-selection--single {
+                        height: 38px !important;
+                        border-radius: 6px !important;
+                        border: 1px solid #ced4da !important;
+                        box-shadow: none !important;
+                        font-size: 0.9rem !important;
+                    }
+                    /* Pusatkan teks dalam Select2 ke tengah boks 38px tanpa merusak panah */
+                    .filter-bar-synced .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+                        line-height: 36px !important;
+                        padding-top: 0 !important;
+                        padding-bottom: 0 !important;
+                        padding-left: 12px !important;
+                    }
+                    .filter-bar-synced .select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow {
+                        height: 36px !important;
+                        top: 1px !important;
+                    }
+                    /* Jahitan mulus border khusus untuk input group pencarian agar menyatu sempurna */
+                    .filter-bar-synced .input-group .input-group-text {
+                        border-top-right-radius: 0 !important;
+                        border-bottom-right-radius: 0 !important;
+                        border-right: 0 !important;
+                        background-color: #ffffff !important;
+                    }
+                    .filter-bar-synced .input-group .form-control {
+                        border-top-left-radius: 0 !important;
+                        border-bottom-left-radius: 0 !important;
+                        border-left: 0 !important;
+                    }
+                    /* Amankan bodi input kalender dari inflasi internal bawaan browser */
+                    .filter-bar-synced input[type="date"] {
+                        padding: 0 12px !important;
+                        line-height: 36px !important;
+                    }
+                    .filter-bar-synced .btn {
+                        border: none !important;
+                        font-weight: 600 !important;
+                    }
+                </style>
+                <div class="card-body border-bottom bg-light p-4 filter-bar-synced">
                     <form action="{{ route('manajemenasetdanasrama.jadwal-piket.index') }}" method="GET">
                         <div class="row align-items-end">
+                            {{-- CARI SANTRI --}}
                             <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
                                 <label class="small font-weight-bold text-muted uppercase mb-1">Cari Santri</label>
-                                <div class="input-group shadow-sm">
-                                    <div class="input-group-prepend"><span class="input-group-text bg-white border-right-0 text-muted"><i class="fas fa-search"></i></span></div>
-                                    <input type="text" class="form-control border-left-0" name="q" placeholder="Nama..." value="{{ request('q') }}">
+                                <div class="input-group">
+                                    <div class="input-group-prepend"><span class="input-group-text text-muted"><i class="fas fa-search"></i></span></div>
+                                    <input type="text" class="form-control" name="q" placeholder="Ketik nama..." value="{{ request('q') }}">
                                 </div>
                             </div>
-                            <div class="col-lg-2 col-md-6 mb-3 mb-lg-0">
-                                <label class="small font-weight-bold text-muted uppercase mb-1">Lokasi</label>
-                                <select class="form-control select2 shadow-sm" name="lokasi_piket" onchange="this.form.submit()">
+
+                            {{-- LOKASI PIKET --}}
+                            <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
+                                <label class="small font-weight-bold text-muted uppercase mb-1">Lokasi Piket</label>
+                                <select class="form-control select2" name="lokasi_piket" data-placeholder="Semua Lokasi" onchange="this.form.submit()">
                                     <option value="">Semua Lokasi</option>
-                                    @foreach($locations as $loc) <option value="{{ $loc }}" {{ request('lokasi_piket') == $loc ? 'selected' : '' }}>{{ $loc }}</option> @endforeach
+                                    @foreach($locations as $loc) 
+                                        <option value="{{ $loc }}" {{ request('lokasi_piket') == $loc ? 'selected' : '' }}>{{ $loc }}</option> 
+                                    @endforeach
                                 </select>
                             </div>
-                            <div class="col-lg-5 col-md-8 mb-3 mb-lg-0">
-                                <label class="small font-weight-bold text-muted uppercase mb-1">Rentang Tanggal</label>
-                                <div class="row no-gutters">
-                                    <div class="col-5"><input type="date" class="form-control shadow-sm" name="tanggal_mulai" value="{{ request('tanggal_mulai') }}"></div>
-                                    <div class="col-2 text-center align-self-center text-muted">-</div>
-                                    <div class="col-5"><input type="date" class="form-control shadow-sm" name="tanggal_selesai" value="{{ request('tanggal_selesai') }}"></div>
-                                </div>
+
+                            {{-- TANGGAL MULAI --}}
+                            <div class="col-lg-2 col-md-6 mb-3 mb-lg-0">
+                                <label class="small font-weight-bold text-muted uppercase mb-1">Mulai Tanggal</label>
+                                <input type="date" class="form-control" name="tanggal_mulai" value="{{ request('tanggal_mulai') }}">
                             </div>
-                            <div class="col-lg-2 col-md-4">
-                                <button type="submit" class="btn btn-primary btn-block shadow-sm">Filter</button>
+
+                            {{-- TANGGAL SELESAI --}}
+                            <div class="col-lg-2 col-md-6 mb-3 mb-lg-0">
+                                <label class="small font-weight-bold text-muted uppercase mb-1">Sampai Tanggal</label>
+                                <input type="date" class="form-control" name="tanggal_selesai" value="{{ request('tanggal_selesai') }}">
+                            </div>
+
+                            {{-- TOMBOL AKSI SIMETRIS --}}
+                            <div class="col-lg-2 col-md-12">
+                                <div class="d-flex" style="gap: 8px;">
+                                    <button type="submit" class="btn btn-primary flex-grow-1 font-weight-bold">
+                                        Filter
+                                    </button>
+                                    @if(request()->filled('q') || request()->filled('lokasi_piket') || request()->filled('tanggal_mulai') || request()->filled('tanggal_selesai'))
+                                        <a href="{{ route('manajemenasetdanasrama.jadwal-piket.index') }}" class="btn btn-outline-secondary px-3 d-inline-flex align-items-center justify-content-center" title="Reset Filter">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </a>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -178,8 +243,7 @@
                         </div>
                     @else
                         <div class="text-center py-5 text-muted bg-white border shadow-sm" style="border-radius: 20px;">
-                            <img src="https://illustrations.popsy.co/gray/search.svg" alt="Empty" style="width: 150px; opacity: 0.5;">
-                            <h5 class="mt-4 font-weight-bold text-dark">Tidak ada jadwal ditemukan!</h5>
+                            <h5 class="font-weight-bold text-dark mb-0">Tidak ada jadwal ditemukan!</h5>
                         </div>
                     @endif
 
@@ -293,6 +357,9 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     $(document).ready(function() {
+        if ($('.select2').length) {
+            $('.select2').select2({ theme: 'bootstrap4', width: '100%' });
+        }
         const totalSantriCount = {{ $totalSantri }};
 
         // Modal Hapus Item

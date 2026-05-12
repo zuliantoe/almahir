@@ -141,6 +141,14 @@ class JadwalPiketService
             ->get();
             
         if ($futureJadwal->isEmpty()) {
+            // Jika jadwal masa depan kosong tapi kamar ini punya penghuni aktif, 
+            // otomatis BUATKAN tabel/putaran jadwal piket baru selama 30 hari ke depan.
+            $hasPenghuni = KamarPenghuni::where('kamar_id', $kamarId)->aktif()->exists();
+            if ($hasPenghuni) {
+                $startDate = Carbon::today()->format('Y-m-d');
+                $endDate   = Carbon::today()->addDays(30)->format('Y-m-d');
+                $this->generateForKamar($kamarId, $startDate, $endDate, 1);
+            }
             return;
         }
 

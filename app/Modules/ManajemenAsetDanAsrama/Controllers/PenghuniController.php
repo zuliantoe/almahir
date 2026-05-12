@@ -22,6 +22,9 @@ class PenghuniController extends BaseController
         if ($request->filled('kamar_id')) {
             $query->where('kamar_id', $request->kamar_id);
         }
+        if ($request->filled('siswa_id')) {
+            $query->where('siswa_id', $request->siswa_id);
+        }
 
         $penghuni = $query->latest()
                         ->paginate(15)
@@ -31,6 +34,7 @@ class PenghuniController extends BaseController
             'title'    => 'Data Penghuni Kamar',
             'penghuni' => $penghuni,
             'kamar'    => Kamar::all(),
+            'allSiswa' => Siswa::aktif()->orderBy('nama')->get(),
         ]);
     }
 

@@ -64,10 +64,12 @@
                     </a>
                 </x-slot>
 
-                <div class="card-body border-bottom">
-                    <form action="{{ route('manajemenasetdanasrama.penghuni.index') }}" method="GET" class="row">
-                        <div class="col-md-4 mb-2">
-                            <select name="kamar_id" class="form-control form-control-sm select2">
+                <div class="card-body border-bottom bg-light py-3 px-4">
+                    <form action="{{ route('manajemenasetdanasrama.penghuni.index') }}" method="GET" class="row align-items-center">
+                        {{-- DROPDOWN FILTER KAMAR --}}
+                        <div class="col-md-4 mb-2 mb-md-0">
+                            <label class="small font-weight-bold text-muted uppercase mb-1">Filter Kamar</label>
+                            <select name="kamar_id" class="form-control select2" data-placeholder="-- Semua Kamar --">
                                 <option value="">-- Semua Kamar --</option>
                                 @foreach($kamar as $k)
                                     <option value="{{ $k->id }}" {{ request('kamar_id') == $k->id ? 'selected' : '' }}>
@@ -76,14 +78,31 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-2 mb-2">
-                            <button type="submit" class="btn btn-sm btn-primary btn-block"><i class="fas fa-search"></i> Filter</button>
+
+                        {{-- DROPDOWN CARI SANTRI --}}
+                        <div class="col-md-5 mb-2 mb-md-0">
+                            <label class="small font-weight-bold text-muted uppercase mb-1">Pencarian Santri</label>
+                            <select name="siswa_id" class="form-control select2" data-placeholder="-- Cari Nama / NIS Santri --">
+                                <option value="">-- Cari Nama / NIS Santri --</option>
+                                @foreach($allSiswa as $s)
+                                    <option value="{{ $s->id }}" {{ request('siswa_id') == $s->id ? 'selected' : '' }}>
+                                        {{ $s->nama }} (NIS: {{ $s->nis }})
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
-                        @if(request()->has('kamar_id'))
-                        <div class="col-md-2 mb-2">
-                            <a href="{{ route('manajemenasetdanasrama.penghuni.index') }}" class="btn btn-sm btn-secondary btn-block">Reset</a>
+
+                        {{-- TOMBOL FILTER & RESET --}}
+                        <div class="col-md-3 mt-md-4 d-flex" style="gap: 8px;">
+                            <button type="submit" class="btn btn-primary flex-grow-1 shadow-sm font-weight-bold" style="border-radius: 8px;">
+                                Filter
+                            </button>
+                            @if(request()->filled('kamar_id') || request()->filled('siswa_id'))
+                                <a href="{{ route('manajemenasetdanasrama.penghuni.index') }}" class="btn btn-outline-secondary shadow-sm" title="Reset Filter" style="border-radius: 8px;">
+                                    <i class="fas fa-sync-alt"></i>
+                                </a>
+                            @endif
                         </div>
-                        @endif
                     </form>
                 </div>
 
@@ -178,8 +197,7 @@
                             @empty
                             <tr>
                                 <td colspan="6" class="text-center py-5">
-                                    <img src="https://illustrations.popsy.co/gray/empty-inbox.svg" alt="Empty" style="width: 120px; opacity: 0.5;">
-                                    <p class="mt-3 text-muted">Belum ada data penghuni</p>
+                                    <p class="text-muted mb-0 font-weight-bold">Belum ada data penghuni</p>
                                 </td>
                             </tr>
                             @endforelse
@@ -345,10 +363,12 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     $(document).ready(function() {
-        $('.select2').select2({
-            theme: 'bootstrap4',
-            placeholder: "-- Pilih Kamar --",
-            allowClear: true
+        $('.select2').each(function() {
+            $(this).select2({
+                theme: 'bootstrap4',
+                placeholder: $(this).data('placeholder') || "-- Pilih --",
+                allowClear: true
+            });
         });
 
         $('.btn-detail-penghuni').on('click', function() {

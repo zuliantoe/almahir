@@ -138,17 +138,31 @@ class JadwalPiketController extends BaseController
             foreach ($request->siswa_id as $index => $siswaId) {
                 if (!$siswaId) continue;
                 $lokasiIdx = $request->lokasi_mapping[$index];
-                $namaLokasi = $request->lokasi[$lokasiIdx];
+                
+                // Seragamkan format nama lokasi jadi Huruf Depan Besar biar menyatu sempurna
+                $namaLokasi = ucwords(strtolower(trim($request->lokasi[$lokasiIdx])));
+
+                // Cari kamar aktif santri ini saat ini
+                $kamarId = \App\Modules\ManajemenAsetDanAsrama\Models\KamarPenghuni::where('siswa_id', $siswaId)
+                    ->aktif()
+                    ->value('kamar_id');
 
                 JadwalPiket::updateOrCreate(
                     ['tanggal' => $date->format('Y-m-d'), 'shift' => $request->shift, 'siswa_id' => $siswaId],
-                    ['lokasi_piket' => $namaLokasi, 'status' => 'belum']
+                    [
+                        'lokasi_piket' => $namaLokasi, 
+                        'kamar_id'     => $kamarId, 
+                        'status'       => 'belum'
+                    ]
                 );
                 $count++;
             }
         }
 
-        return redirect()->route('manajemenasetdanasrama.jadwal-piket.index')->with('success', "Berhasil menambahkan {$count} jadwal piket.");
+        // Arahkan langsung ke filter tanggal mulai agar user langsung melihat hasilnya
+        return redirect()->route('manajemenasetdanasrama.jadwal-piket.index', [
+            'tanggal_mulai' => $tanggalMulai->format('Y-m-d')
+        ])->with('success', "Berhasil menambahkan/memperbarui {$count} jadwal piket manual.");
     }
 
     public function store(Request $request): RedirectResponse
@@ -161,16 +175,55 @@ class JadwalPiketController extends BaseController
 
     public function edit(string $id): View
     {
-        $jadwal = JadwalPiket::findOrFail($id); $siswa = Siswa::all(); $kamar = Kamar::all();
-        return view('manajemenasetdanasrama::jadwal-piket.edit', ['title' => 'Edit Jadwal Piket', 'jadwal' => $jadwal, 'siswa' => $siswa, 'kamar' => $kamar]);
+        $jadwal = JadwalPiket::with(['siswa', 'kamar'])->findOrFail($id);
+        
+        // Ambil kandidat penugasan piket lain di tanggal dan shift yang identik untuk disilang
+        $candidates = JadwalPiket::with(['siswa', 'kamar'])
+            ->where('tanggal', $jadwal->tanggal)
+            ->where('shift', $jadwal->shift)
+            ->where('id', '!=', $id)
+            ->get();
+
+        return view('manajemenasetdanasrama::jadwal-piket.edit', [
+            'title'      => 'Tukar Lokasi Penugasan Piket (Switch)',
+            'jadwal'     => $jadwal,
+            'candidates' => $candidates,
+        ]);
     }
 
     public function update(Request $request, string $id): RedirectResponse
     {
         $jadwal = JadwalPiket::findOrFail($id);
-        $validated = $request->validate($this->getValidationRules($request, $id));
-        $jadwal->update($validated);
-        return redirect()->route('manajemenasetdanasrama.jadwal-piket.index')->with('success', 'Jadwal piket berhasil diperbarui.');
+        
+        $request->validate([
+            'target_jadwal_id' => 'required|exists:jadwal_piket,id',
+        ]);
+
+        $targetJadwal = JadwalPiket::findOrFail($request->target_jadwal_id);
+
+        // Pastikan target berada di putaran tanggal dan shift yang sama
+        if ($targetJadwal->tanggal != $jadwal->tanggal || $targetJadwal->shift != $jadwal->shift) {
+            return redirect()->back()->with('error', 'Target penugasan piket tidak valid untuk disilang.');
+        }
+
+        // SWAP MURNI LOKASI PIKET & ASOSIASI KAMAR
+        // Baris data masing-masing anak tetap utuh, sehingga tidak memicu Unique Constraint.
+        $oldLokasi = $jadwal->lokasi_piket;
+        $oldKamarId = $jadwal->kamar_id;
+
+        $jadwal->update([
+            'lokasi_piket' => $targetJadwal->lokasi_piket,
+            'kamar_id'     => $targetJadwal->kamar_id,
+        ]);
+
+        $targetJadwal->update([
+            'lokasi_piket' => $oldLokasi,
+            'kamar_id'     => $oldKamarId,
+        ]);
+
+        return redirect()->route('manajemenasetdanasrama.jadwal-piket.index', [
+            'tanggal_mulai' => \Carbon\Carbon::parse($jadwal->tanggal)->format('Y-m-d')
+        ])->with('success', "Lokasi tugas piket berhasil disilang antara {$jadwal->siswa->nama} dan {$targetJadwal->siswa->nama}.");
     }
 
     private function getValidationRules(Request $request, ?string $id = null): array

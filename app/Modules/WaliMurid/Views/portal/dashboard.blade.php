@@ -48,7 +48,7 @@
                         <div class="info-grid mb-4">
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted small">Kelas</span>
-                                <span class="font-weight-bold text-primary small">{{ $siswa->kelas->nama ?? 'Belum Ditentukan' }}</span>
+                                <span class="font-weight-bold text-primary small">{{ $siswa->kelas->nama_kelas ?? 'Belum Ditentukan' }}</span>
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted small">Status</span>

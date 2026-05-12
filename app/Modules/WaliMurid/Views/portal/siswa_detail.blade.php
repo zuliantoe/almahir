@@ -88,7 +88,7 @@
                         </div>
                         <div class="col-md-6 mb-4">
                             <label class="text-muted small font-weight-bold text-uppercase">Kelas Saat Ini</label>
-                            <p class="h6 font-weight-bold text-primary">{{ $siswa->kelas->nama ?? 'Belum Ditentukan' }}</p>
+                            <p class="h6 font-weight-bold text-primary">{{ $siswa->kelas->nama_kelas ?? 'Belum Ditentukan' }}</p>
                         </div>
                         <div class="col-md-6 mb-4">
                             <label class="text-muted small font-weight-bold text-uppercase">Status Siswa</label>

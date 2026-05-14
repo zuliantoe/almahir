@@ -67,6 +67,8 @@ class IzinSakitController extends Controller
         }
         $siswa = ModelsSiswa::find($user->ref_id);
 
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+
         // Find student's active rombel
         $activeRombel = RombelSiswa::where('siswa_id', $siswa->id)
             ->where('status', 'aktif')

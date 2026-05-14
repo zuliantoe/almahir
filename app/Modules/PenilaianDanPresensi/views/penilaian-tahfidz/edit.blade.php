@@ -72,10 +72,11 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="font-weight-bold text-dark">Kelas</label>
+                                    <label class="font-weight-bold text-dark">Rombel / Kelas</label>
                                     <div class="form-control bg-light">
-                                        <i class="fas fa-school mr-2 text-warning"></i> {{ $penilaianTahfidz->kelas->nama_kelas ?? '-' }}
+                                        <i class="fas fa-school mr-2 text-warning"></i> {{ $penilaianTahfidz->rombel->nama_rombel ?? $penilaianTahfidz->kelas->nama_kelas ?? '-' }}
                                     </div>
+                                    <input type="hidden" name="rombel_id" value="{{ $penilaianTahfidz->rombel_id }}">
                                     <input type="hidden" name="kelas_id" value="{{ $penilaianTahfidz->kelas_id }}">
                                 </div>
                             </div>

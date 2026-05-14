@@ -26,7 +26,7 @@ class PenilaianTahfidzController extends Controller
     public function index(Request $request): View
     {
         $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
-        $query = PenilaianTahfidz::with(['siswa.kelas', 'guru']);
+        $query = PenilaianTahfidz::with(['siswa.kelas', 'rombel', 'guru']);
         
         // Filter for students: they only see their own scores
         if (auth()->user()->ref_type === ModelsSiswa::class) {
@@ -36,10 +36,7 @@ class PenilaianTahfidzController extends Controller
 
         // Apply filters
         if ($request->filled('rombel_id')) {
-            $rombelId = $request->rombel_id;
-            $query->whereHas('siswa.rombelSiswa', function($rq) use ($rombelId) {
-                $rq->where('rombel_id', $rombelId)->where('status', 'aktif');
-            });
+            $query->where('rombel_id', $request->rombel_id);
         }
         
         // Support legacy filter
@@ -116,6 +113,7 @@ class PenilaianTahfidzController extends Controller
     {
         $validated = $request->validate([
             'siswa_id' => 'required|exists:siswa,id',
+            'rombel_id' => 'required|exists:rombel,id',
             'kelas_id' => 'required|exists:kelas,id',
             'tanggal' => 'required|date',
             'surat_awal' => 'required|array',
@@ -146,6 +144,7 @@ class PenilaianTahfidzController extends Controller
         foreach ($ayatAwals as $index => $ayatAwal) {
             PenilaianTahfidz::create([
                 'siswa_id' => $validated['siswa_id'],
+                'rombel_id' => $validated['rombel_id'],
                 'kelas_id' => $validated['kelas_id'],
                 'guru_id' => $validated['guru_id'],
                 'tahunajaran_id' => $activeTA->id ?? null,
@@ -214,6 +213,7 @@ class PenilaianTahfidzController extends Controller
     {
         $validated = $request->validate([
             'siswa_id' => 'required|exists:siswa,id',
+            'rombel_id' => 'required|exists:rombel,id',
             'kelas_id' => 'required|exists:kelas,id',
             'tanggal' => 'required|date',
             'surat_awal' => 'required|string|max:255',

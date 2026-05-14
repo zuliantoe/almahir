@@ -48,24 +48,62 @@ Modul ini merupakan konsumen data (downstream) dari beberapa modul berikut:
 
 ---
 
-## 4. Panduan Penggunaan & Pengembangan
-
-### 1. Menampilkan Tabel Nilai di Raport
-Data nilai dikelompokkan berdasarkan kategori mapel (Umum/Diniyyah) yang diambil dari relasi `mataPelajaran->kategori`.
-```php
-// Contoh pemanggilan di Controller
-$scores = PenilaianAkademik::with(['mataPelajaran.kategori'])
-    ->where('siswa_id', $id)
-    ->get()
-    ->groupBy('mataPelajaran.kategori.kategori');
-```
-
-### 2. Integrasi Izin/Sakit ke Absensi
-Saat menghitung jumlah ketidakhadiran di raport, sistem akan menjumlahkan data dari tabel `presensi` dan memvalidasi durasi dari tabel `izin_sakit`.
-
-### 3. Perhitungan Rerata Kelas
-Rerata kelas dihitung secara dinamis dengan mengambil nilai seluruh siswa dalam satu `kelas_id` pada mata pelajaran yang sama, kemudian dibagi jumlah siswa.
-
+## 4. Alur Sistem Keseluruhan
+ 
+### A. Alur Presensi & Kedisiplinan
+1.  **Pengumpulan Data**: Data absensi masuk melalui 3 pintu (Scan Mandiri Siswa, Scan Kartu oleh Guru, atau Input Manual Admin).
+2.  **Validasi Waktu**: Sistem membandingkan waktu absensi dengan `JadwalPelajaran`. Jika melebihi batas toleransi, status otomatis tercatat sebagai **Telat**.
+3.  **Sinkronisasi Perizinan**: Jika ada data `IzinSakit` yang disetujui, sistem secara otomatis akan meng-override (menindih) data absen pada jam tersebut menjadi Izin/Sakit.
+4.  **Rekapitulasi**: Data diproses menjadi persentase kehadiran bulanan dan semesteran yang akan tampil di raport.
+ 
+### B. Alur Penilaian Akademik & Tahfidz
+1.  **Input Nilai**: Guru menginput nilai per Rombel dan per Mata Pelajaran (Harian, UTS, UAS).
+2.  **Kalkulasi**: Sistem menghitung nilai akhir berdasarkan bobot yang ditentukan (default: rata-rata).
+3.  **Validasi KKM**: Nilai dibandingkan dengan KKM dari Modul Akademik untuk menentukan predikat (A, B, C, D).
+4.  **Tahfidz**: Pencatatan setoran hafalan secara linear (Surat Awal -> Surat Akhir) untuk memantau progres hafalan santri.
+ 
 ---
-
+ 
+## 5. Rencana Pengembangan (Roadmap)
+ 
+Fitur-fitur berikut direncanakan untuk meningkatkan fungsionalitas modul:
+ 
+1.  **Sistem Rekapitulasi Lanjutan**:
+    *   Pembuatan modul **Rekap Tahunan** yang menggabungkan seluruh nilai dan kehadiran dalam satu dashboard statistik.
+    *   Dashboard khusus Kepala Sekolah untuk memantau performa akademik seluruh kelas secara visual (grafik).
+2.  **Export Data**:
+    *   Fitur ekspor seluruh rekapan presensi dan nilai ke format **Excel** dan **PDF** untuk keperluan administrasi offline.
+3.  **Notifikasi Real-time**:
+    *   Integrasi WhatsApp/Email Gateway untuk mengirim notifikasi otomatis kepada Orang Tua saat siswa tercatat *Alpha* atau saat nilai ujian di bawah KKM.
+4.  **Analisis Prediktif**:
+    *   Sistem peringatan dini bagi siswa yang memiliki tren penurunan nilai secara signifikan selama 3 bulan berturut-turut.
+ 
+## 6. Logika Perhitungan (Calculations)
+ 
+Modul ini menggunakan beberapa formula standar untuk menghasilkan nilai raport dan statistik:
+ 
+### A. Nilai Akhir Mata Pelajaran
+Sistem menghitung nilai akhir dengan menggabungkan tiga komponen utama:
+- **Formula**: `(Rata-rata Harian + Nilai UTS + Nilai UAS) / Jumlah Komponen`
+- **Rata-rata Harian**: Jumlah seluruh nilai kategori 'Harian' dibagi jumlah entri.
+- **Jumlah Komponen**: Sistem hanya membagi dengan komponen yang sudah terisi (misal: jika belum UTS/UAS, maka pembaginya hanya 1 yaitu rata-rata harian).
+ 
+### B. Penentuan Predikat
+Predikat ditentukan berdasarkan ambang batas (threshold) berikut:
+- **A (Sangat Baik)**: Nilai ≥ 90
+- **B (Baik)**: Nilai ≥ 80
+- **C (Cukup)**: Nilai ≥ 70
+- **D (Kurang)**: Nilai < 70
+ 
+### C. Rerata Kelas (Class Average)
+Nilai ini ditampilkan di raport untuk membandingkan performa santri dengan teman sekelasnya:
+- **Alur**: Sistem menghitung Nilai Akhir untuk **setiap santri** dalam satu Rombel, kemudian menjumlahkannya dan membaginya dengan total santri di Rombel tersebut.
+ 
+### D. Statistik Kehadiran
+- **Persentase Kehadiran**: `(Total Hadir / Total Hari Efektif) * 100`.
+- **Total Hari Efektif**: Dihitung berdasarkan jadwal pelajaran yang ada di kalender akademik hingga hari ini.
+ 
+---
+ 
 *Dokumentasi ini dibuat untuk memastikan konsistensi pengembangan fitur penilaian di SIAKAD Almahira.*
+

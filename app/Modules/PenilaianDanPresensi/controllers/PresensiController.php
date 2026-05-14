@@ -76,7 +76,9 @@ class PresensiController extends Controller
         
         $allMapelsQuery = JadwalPelajaran::where('rombel_id', $rombelId);
         if ($tahunAjaranId) {
-            $allMapelsQuery->where('tahunajaran_id', $tahunAjaranId);
+            $allMapelsQuery->whereHas('rombel', function($q) use ($tahunAjaranId) {
+                $q->where('tahunajaran_id', $tahunAjaranId);
+            });
         }
         
         $allMapels = $allMapelsQuery->with('mataPelajaran')
@@ -90,7 +92,9 @@ class PresensiController extends Controller
             $scheduledDaysQuery = JadwalPelajaran::where('rombel_id', $rombelId)
                 ->where('mapel_id', $mapel->id);
             if ($tahunAjaranId) {
-                $scheduledDaysQuery->where('tahunajaran_id', $tahunAjaranId);
+                $scheduledDaysQuery->whereHas('rombel', function($q) use ($tahunAjaranId) {
+                    $q->where('tahunajaran_id', $tahunAjaranId);
+                });
             }
             $scheduledDays = $scheduledDaysQuery->pluck('hari')->toArray();
             

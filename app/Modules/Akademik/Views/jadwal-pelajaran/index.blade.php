@@ -47,8 +47,11 @@
                     <label>Hari</label>
                     <select name="hari" class="form-control">
                         <option value="">— Semua Hari —</option>
-                        @foreach(['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] as $h)
-                            <option value="{{ $h }}" {{ request('hari') == $h ? 'selected' : '' }}>{{ $h }}</option>
+                        @php
+                            $hariFilter = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+                        @endphp
+                        @foreach($hariFilter as $val => $label)
+                            <option value="{{ $val }}" {{ request('hari') == $val ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -124,7 +127,11 @@
                             <small class="text-muted">{{ optional(optional($item->rombel)->kelas)->nama_kelas }}</small>
                         </td>
                         <td>
-                            <span class="badge badge-light border">{{ $item->hari }}</span><br>
+                            @php
+                                $hariNames = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+                                $hariLabel = $hariNames[$item->hari] ?? $item->hari;
+                            @endphp
+                            <span class="badge badge-light border">{{ $hariLabel }}</span><br>
                             <small class="text-muted"><i class="far fa-clock"></i> {{ substr($item->jamawal, 0, 5) }} – {{ substr($item->jamakhir, 0, 5) }}</small>
                         </td>
                         <td class="text-center">

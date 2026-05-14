@@ -104,7 +104,7 @@
                             <td class="px-4">
                                 <div class="font-weight-bold text-dark">{{ $item->siswa->nama ?? '-' }}</div>
                                 <span class="badge badge-outline-warning text-warning border-warning" style="font-size: 0.7rem; border: 1px solid;">
-                                    {{ $item->siswa->rombelSiswa->where('status', 'aktif')->first()->rombel->nama_rombel ?? $item->siswa->kelas->nama_kelas ?? '-' }}
+                                    {{ $item->rombel->nama_rombel ?? $item->siswa->kelas->nama_kelas ?? '-' }}
                                 </span>
                             </td>
                             <td>

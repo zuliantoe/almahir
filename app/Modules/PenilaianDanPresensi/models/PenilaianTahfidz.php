@@ -17,6 +17,7 @@ class PenilaianTahfidz extends Model
     protected $fillable = [
         'siswa_id',
         'kelas_id',
+        'rombel_id',
         'guru_id',
         'tahunajaran_id',
         'semester',
@@ -45,13 +46,12 @@ class PenilaianTahfidz extends Model
 
     public function rombel()
     {
-        return $this->belongsTo(AkademikKelas::class, 'kelas_id');
+        return $this->belongsTo(\App\Modules\Akademik\Models\Rombel::class, 'rombel_id');
     }
 
-    // Alias for backward compatibility
     public function kelas()
     {
-        return $this->rombel();
+        return $this->belongsTo(AkademikKelas::class, 'kelas_id');
     }
 
     public function guru()

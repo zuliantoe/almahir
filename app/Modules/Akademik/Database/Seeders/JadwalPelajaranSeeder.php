@@ -26,7 +26,7 @@ class JadwalPelajaranSeeder extends Seeder
         for ($i = 1; $i <= 10; $i++) {
             JadwalPelajaran::create([
                 'rombel_id' => $rombel->id,
-                'hari' => 'Senin',
+                'hari' => rand(1, 6), // 1=Senin, 6=Sabtu
                 'jamke' => $i,
                 'jamawal' => '07:00:00',
                 'jamakhir' => '08:00:00',

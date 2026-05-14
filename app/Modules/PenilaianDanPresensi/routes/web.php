@@ -28,6 +28,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/history', [PenilaianAkademikController::class, 'history'])->name('history');
         Route::get('/get-siswa-by-rombel/{rombelId}', [PenilaianAkademikController::class, 'getSiswaByRombel'])->name('get-siswa-by-rombel');
         Route::get('/get-kkm/{rombelId}/{mapelId}', [PenilaianAkademikController::class, 'getKkm'])->name('get-kkm');
+        Route::get('/get-data-by-guru/{guruId}', [PenilaianAkademikController::class, 'getDataByGuru'])->name('get-data-by-guru');
         Route::post('/', [PenilaianAkademikController::class, 'store'])->name('store');
         
         // Export & Raport Routes
@@ -72,6 +73,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('penilaiantahfidz')->name('penilaiantahfidz.')->group(function () {
         Route::get('/', [PenilaianTahfidzController::class, 'index'])->name('index');
         Route::get('/create', [PenilaianTahfidzController::class, 'create'])->name('create');
+        Route::get('/get-siswa-by-rombel/{rombelId}', [PenilaianTahfidzController::class, 'getSiswaByRombel'])->name('get-siswa-by-rombel');
         Route::post('/', [PenilaianTahfidzController::class, 'store'])->name('store');
         Route::get('/{id}', [PenilaianTahfidzController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [PenilaianTahfidzController::class, 'edit'])->name('edit');

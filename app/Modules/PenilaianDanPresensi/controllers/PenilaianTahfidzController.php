@@ -5,6 +5,7 @@ namespace Modules\PenilaianDanPresensi\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 use Modules\PenilaianDanPresensi\Models\PenilaianTahfidz;
 use Modules\Guru\Models\Guru as ModelsGuru;
@@ -32,6 +33,24 @@ class PenilaianTahfidzController extends Controller
         if (auth()->user()->ref_type === ModelsSiswa::class) {
             $siswaId = auth()->user()->ref_id;
             $query->where('siswa_id', $siswaId);
+        }
+
+        // Filter for Guru: they see students in their class OR what they input themselves
+        if (auth()->user()->ref_type === ModelsGuru::class) {
+            $guruId = auth()->user()->ref_id;
+            
+            $query->where(function($q) use ($guruId) {
+                // 1. Scores they input themselves
+                $q->where('guru_id', $guruId);
+                
+                // 2. Scores for students in their class (Wali Kelas)
+                $q->orWhereHas('siswa.rombelSiswa', function($sq) use ($guruId) {
+                    $sq->where('status', 'aktif')
+                       ->whereHas('rombel', function($rq) use ($guruId) {
+                           $rq->where('guru_id', $guruId);
+                       });
+                });
+            });
         }
 
         // Apply filters
@@ -86,11 +105,9 @@ class PenilaianTahfidzController extends Controller
 
         $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
         
-        $rombelQuery = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0);
-        if ($isGuru) {
-            $rombelQuery->where('wali_kelas_id', $loggedGuruId);
-        }
-        $rombels = $rombelQuery->orderBy('nama_rombel')->get();
+        $rombels = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0)
+            ->orderBy('nama_rombel')
+            ->get();
 
         $gurus = ModelsGuru::orderBy('nama')->get();
         $siswas = ModelsSiswa::with('kelas')->orderBy('nama')->get();
@@ -248,5 +265,26 @@ class PenilaianTahfidzController extends Controller
 
         return redirect()->route('penilaiandanpresensi.penilaiantahfidz.index')
             ->with('success', 'Data berhasil dihapus.');
+    }
+
+    /**
+     * Get students by rombel (AJAX).
+     */
+    public function getSiswaByRombel(string $rombelId): JsonResponse
+    {
+        try {
+            $rombel = Rombel::with(['aktifSiswa'])->findOrFail($rombelId);
+            $siswas = $rombel->aktifSiswa->map(function($s) {
+                return [
+                    'id' => $s->id,
+                    'nama' => $s->nama,
+                    'kelas_id' => $s->kelas_id
+                ];
+            })->sortBy('nama')->values();
+
+            return response()->json($siswas);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

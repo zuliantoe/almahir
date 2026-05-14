@@ -31,7 +31,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="guru_id" class="font-weight-bold text-dark">Guru Pengampu <span class="text-danger">*</span></label>
-                                    <select name="guru_id" id="guru_id" class="form-control" required {{ $isGuru ? 'readonly' : '' }}>
+                                    <select name="guru_id" id="guru_id" class="form-control" required {{ $isGuru ? 'disabled' : '' }}>
                                         <option value="">-- Pilih Guru --</option>
                                         @foreach($gurus as $guru)
                                             <option value="{{ $guru->id }}" {{ ($isGuru && $loggedGuruId == $guru->id) || old('guru_id') == $guru->id ? 'selected' : '' }}>
@@ -40,18 +40,18 @@
                                         @endforeach
                                     </select>
                                     @if($isGuru)
-                                        <input type="hidden" name="guru_id" value="{{ $loggedGuruId }}">
+                                        <input type="hidden" name="guru_id" id="guru_id_hidden" value="{{ $loggedGuruId }}">
                                     @endif
                                 </div>
                             </div>
 
-                            <!-- Tahun Ajaran Section (Badge Style) -->
+                            <!-- Tahun Ajaran Section -->
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label class="font-weight-bold text-dark">Tahun Ajaran <span class="text-danger">*</span></label>
                                     <div class="form-control bg-white d-flex align-items-center justify-content-between" style="border-radius: 0.5rem; height: calc(2.25rem + 2px); border: 2px solid var(--success-color);">
                                         <span class="font-weight-bold text-success small">
-                                            <i class="fas fa-calendar-check mr-1"></i> {{ $activeTahunAjaran->tahunajaran ?? 'Pilih TA Aktif' }}
+                                            <i class="fas fa-calendar-check mr-1"></i> {{ $activeTahunAjaran->tahunajaran ?? 'Aktif' }}
                                         </span>
                                     </div>
                                     <input type="hidden" name="tahunajaran_id" id="tahunajaran_id" value="{{ $activeTahunAjaran->id ?? '' }}">
@@ -100,7 +100,7 @@
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label for="rombel_id" class="font-weight-bold text-dark">Pilih Rombel Santri <span class="text-danger">*</span></label>
-                                    <select name="rombel_id" id="rombel_id" class="form-control select2-modern" required>
+                                    <select name="rombel_id" id="rombel_id" class="form-control" required>
                                         <option value="">-- Pilih Rombel --</option>
                                         @foreach($rombels as $r)
                                             <option value="{{ $r->id }}" {{ old('rombel_id') == $r->id ? 'selected' : '' }}>
@@ -258,16 +258,79 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize Select2 if available
-        if ($.fn.select2) {
-            $('.select2-modern').select2({
+        // Initialize Select2 manually and safely
+        function initSelect2() {
+            const el = $('#rombel_id');
+            // Check if select2 is already initialized by checking for the class or data
+            if (el.hasClass('select2-hidden-accessible')) {
+                el.select2('destroy');
+            }
+            // Clear any potential leftover containers just in case
+            el.next('.select2-container').remove();
+            
+            el.select2({
                 theme: 'bootstrap4',
                 width: '100%'
             });
         }
+        
+        // Initial load
+        refreshGuruData(); 
 
-        document.getElementById('rombel_id').addEventListener('change', fetchStudents);
-        document.getElementById('mapel_id').addEventListener('change', fetchKKM);
+        $(document).on('change', '#rombel_id', fetchStudents);
+        $(document).on('change', '#mapel_id', fetchKKM);
+
+        // AJAX for Teacher/Year Change
+        function refreshGuruData() {
+            let guruId = $('#guru_id').val();
+            if (!guruId) {
+                guruId = $('#guru_id_hidden').val();
+            }
+            const taId = $('#tahunajaran_id').val();
+            const mapelSelect = $('#mapel_id');
+            const rombelSelect = $('#rombel_id');
+
+            if (!guruId || !taId) return;
+
+            // Show loading
+            mapelSelect.html('<option value="">Sedang memuat...</option>');
+            rombelSelect.html('<option value="">Sedang memuat...</option>');
+
+            const url = "{{ route('penilaiandanpresensi.penilaianakademik.get-data-by-guru', ':id') }}".replace(':id', guruId) + "?tahunajaran_id=" + taId;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // Update Mapels
+                    let mapelHtml = '<option value="">-- Pilih Mata Pelajaran --</option>';
+                    data.mapels.forEach(m => {
+                        mapelHtml += `<option value="${m.id}">${m.nama}</option>`;
+                    });
+                    mapelSelect.html(mapelHtml);
+
+                    // Update Rombels
+                    let rombelHtml = '<option value="">-- Pilih Rombel --</option>';
+                    data.rombels.forEach(r => {
+                        rombelHtml += `<option value="${r.id}">${r.nama_rombel}</option>`;
+                    });
+                    
+                    rombelSelect.html(rombelHtml);
+                    initSelect2(); // This will handle destroy and re-init cleanly
+                    rombelSelect.trigger('change');
+                    
+                    // Reset student list
+                    document.getElementById('siswaTableContainer').style.display = 'none';
+                    document.getElementById('noSiswaMessage').style.display = 'none';
+                    document.getElementById('submitBtn').style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error fetching teacher data:', error);
+                    mapelSelect.html('<option value="">Gagal memuat data</option>');
+                    rombelSelect.html('<option value="">Gagal memuat data</option>');
+                });
+        }
+
+        $('#guru_id').on('change', refreshGuruData);
         
         // Search Filter Logic
         $(document).on('keyup', '#searchSiswa', function() {

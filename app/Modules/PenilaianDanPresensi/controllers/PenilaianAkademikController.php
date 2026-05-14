@@ -41,26 +41,22 @@ class PenilaianAkademikController extends Controller
             $query->where('siswa_id', $siswaId);
         }
 
-        // Filter for Guru: they only see students in their class (if they are Wali Kelas)
+        // Filter for Guru: they see students in their class OR what they input themselves
         if (auth()->user()->ref_type === ModelsGuru::class) {
             $guruId = auth()->user()->ref_id;
-            $mySiswaIds = ModelsSiswa::whereHas('rombelSiswa', function($q) use ($guruId) {
-                $q->where('status', 'aktif')
-                  ->whereHas('rombel', function($rq) use ($guruId) {
-                      $rq->where('wali_kelas_id', $guruId);
-                  });
-            })->pluck('id');
             
-            // If they are a wali kelas, restrict to their students
-            // If not a wali kelas, maybe they can see nothing or only what they input?
-            // Usually Guru can see what they input OR their class.
-            // User says "kelas nya wali kelas itu yang nampil"
-            if ($mySiswaIds->isNotEmpty()) {
-                $query->whereIn('siswa_id', $mySiswaIds);
-            } else {
-                // If not a wali kelas, show only scores they input
-                $query->where('guru_id', $guruId);
-            }
+            $query->where(function($q) use ($guruId) {
+                // 1. Scores they input themselves
+                $q->where('guru_id', $guruId);
+                
+                // 2. Scores for students in their class (Wali Kelas)
+                $q->orWhereHas('siswa.rombelSiswa', function($sq) use ($guruId) {
+                    $sq->where('status', 'aktif')
+                       ->whereHas('rombel', function($rq) use ($guruId) {
+                           $rq->where('guru_id', $guruId);
+                       });
+                });
+            });
         }
 
         // Apply dynamic filters
@@ -116,30 +112,33 @@ class PenilaianAkademikController extends Controller
         $isGuru = $user->ref_type === ModelsGuru::class;
         $loggedGuruId = $isGuru ? $user->ref_id : null;
 
-        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
-
-        // Get Rombels for the active year
-        $rombelQuery = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0);
-        if ($isGuru) {
-            $rombelQuery->where(function($q) use ($loggedGuruId) {
-                $q->where('wali_kelas_id', $loggedGuruId)
-                  ->orWhereHas('jadwalPelajaran', function($jq) use ($loggedGuruId) {
-                      $jq->where('guru_id', $loggedGuruId);
-                  });
-            });
+        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first();
+        if (!$activeTahunAjaran) {
+            $activeTahunAjaran = TahunAjaran::orderBy('tahunajaran', 'desc')->first();
         }
-        $rombels = $rombelQuery->orderBy('nama_rombel')->get();
 
-        $gurus = ModelsGuru::orderBy('nama')->get();
-        $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
-        
+        // Get Rombels (Teaching or Wali Kelas)
+        $rombels = collect();
+        $mapels = collect();
+
+        $rombels = collect();
+        if ($activeTahunAjaran) {
+            $rombels = Rombel::where('tahunajaran_id', $activeTahunAjaran->id)
+                ->orderBy('nama_rombel')
+                ->get();
+        }
+
         // Subject selection
         if ($isGuru) {
-            $myMapelIds = JadwalPelajaran::where('guru_id', $loggedGuruId)->pluck('mapel_id')->unique();
+            $myMapelIds = JadwalPelajaran::where('guru_id', $loggedGuruId)
+                ->pluck('mapel_id')->unique();
             $mapels = MataPelajaran::whereIn('id', $myMapelIds)->with('kategori')->orderBy('nama')->get();
         } else {
             $mapels = MataPelajaran::with('kategori')->orderBy('nama')->get();
         }
+
+        $gurus = ModelsGuru::orderBy('nama')->get();
+        $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
 
         return view('penilaiandanpresensi::penilaianakademik.create', [
             'title' => 'Tambah Penilaian Akademik',
@@ -400,12 +399,10 @@ class PenilaianAkademikController extends Controller
         $loggedGuruId = $user->ref_id;
 
         // Determine which rombels this user can see for the dropdown
-        $rombelsQuery = \App\Modules\Akademik\Models\Rombel::where('tahunajaran_id', $activeTA->id ?? 0)->orderBy('nama_rombel');
-        if (!$isAdmin && $isGuru) {
-            // Only rombels where this guru is Wali Kelas
-            $rombelsQuery->where('wali_kelas_id', $loggedGuruId);
-        }
-        $rombels = $rombelsQuery->get();
+        // Show ALL rombels for the year (Like in Input Nilai)
+        $rombels = \App\Modules\Akademik\Models\Rombel::where('tahunajaran_id', $activeTA->id ?? 0)
+            ->orderBy('nama_rombel')
+            ->get();
 
         $query = ModelsSiswa::query();
         
@@ -670,6 +667,39 @@ class PenilaianAkademikController extends Controller
             ->value('kkm') ?? 75;
             
         return response()->json(['kkm' => $kkm]);
+    }
+
+    /**
+     * Get Mapels and Rombels for a specific Guru (AJAX).
+     */
+    public function getDataByGuru(Request $request, string $guruId): JsonResponse
+    {
+        $taId = $request->tahunajaran_id;
+        
+        if (!$taId) {
+            $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first();
+            if (!$activeTahunAjaran) {
+                $activeTahunAjaran = TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+            }
+            $taId = $activeTahunAjaran->id ?? 0;
+        }
+
+        // 2. Get ALL Rombels for the selected Year (Like in Index)
+        $rombels = Rombel::where('tahunajaran_id', $taId)
+            ->orderBy('nama_rombel')
+            ->get();
+
+        // 3. Get Mapels based on teacher's schedule in those Rombels
+        $mapelIds = JadwalPelajaran::where('guru_id', $guruId)
+            ->whereIn('rombel_id', $rombels->pluck('id'))
+            ->pluck('mapel_id')->unique();
+            
+        $mapels = MataPelajaran::whereIn('id', $mapelIds)->orderBy('nama')->get();
+
+        return response()->json([
+            'mapels' => $mapels,
+            'rombels' => $rombels
+        ]);
     }
 }
 

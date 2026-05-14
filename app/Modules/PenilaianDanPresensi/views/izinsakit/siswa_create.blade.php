@@ -53,19 +53,19 @@
                                 <div class="form-group mb-4">
                                     <label class="font-weight-bold text-dark">Tipe Pengajuan</label>
                                     <select name="tipe_izin" id="tipe_izin" class="form-control select2-modern" required>
-                                        <option value="Harian">Harian (Penuh)</option>
-                                        <option value="Per Matpel">Per Mata Pelajaran</option>
+                                        <option value="Harian" {{ $request->tipe == 'Harian' ? 'selected' : '' }}>Harian (Penuh)</option>
+                                        <option value="Per Matpel" {{ $request->tipe == 'Per Matpel' ? 'selected' : '' }}>Per Mata Pelajaran</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
 
-                        <div id="matpel-container" class="form-group mb-4 d-none">
+                        <div id="matpel-container" class="form-group mb-4 {{ $request->tipe == 'Per Matpel' ? '' : 'd-none' }}">
                             <label class="font-weight-bold text-dark">Mata Pelajaran</label>
                             <select name="mapel_id" id="mapel_id" class="form-control select2-modern">
                                 <option value="">-- Pilih Mata Pelajaran --</option>
                                 @foreach($mapels as $mapel)
-                                    <option value="{{ $mapel->id }}">{{ $mapel->nama }}</option>
+                                    <option value="{{ $mapel->id }}" {{ $request->mapel_id == $mapel->id ? 'selected' : '' }}>{{ $mapel->nama }}</option>
                                 @endforeach
                             </select>
                         </div>

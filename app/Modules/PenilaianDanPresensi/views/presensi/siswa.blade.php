@@ -75,15 +75,30 @@
                                         <small class="d-block text-muted mt-1">Pukul: {{ \Carbon\Carbon::parse($presensi->jam)->format('H:i') }}</small>
                                     </div>
                                 @else
-                                    <form action="{{ route('penilaiandanpresensi.presensi.siswa.store') }}" method="POST">
-                                        @csrf
-                                        <input type="hidden" name="jadwal_pelajaran_id" value="{{ $jadwal->id }}">
-                                        <input type="hidden" name="guru_id" value="{{ $jadwal->guru_id }}">
-                                        <input type="hidden" name="mapel_id" value="{{ $jadwal->mapel_id }}">
-                                        <button type="submit" class="btn btn-primary px-4 shadow-sm" style="border-radius: 10px;">
-                                            <i class="fas fa-fingerprint mr-1"></i> Absen
-                                        </button>
-                                    </form>
+                                    @php
+                                        $isOver = date('H:i') > $jadwal->jamakhir;
+                                    @endphp
+                                    
+                                    @if($isOver)
+                                        <span class="badge badge-secondary px-3 py-2" style="border-radius: 10px; opacity: 0.7;">
+                                            <i class="fas fa-hourglass-end mr-1"></i> Waktu Habis
+                                        </span>
+                                    @else
+                                        <div class="d-flex align-items-center">
+                                            <form action="{{ route('penilaiandanpresensi.presensi.siswa.store') }}" method="POST" class="mr-2">
+                                                @csrf
+                                                <input type="hidden" name="jadwal_pelajaran_id" value="{{ $jadwal->id }}">
+                                                <input type="hidden" name="guru_id" value="{{ $jadwal->guru_id }}">
+                                                <input type="hidden" name="mapel_id" value="{{ $jadwal->mapel_id }}">
+                                                <button type="submit" class="btn btn-primary px-4 shadow-sm" style="border-radius: 10px;">
+                                                    <i class="fas fa-fingerprint mr-1"></i> Absen
+                                                </button>
+                                            </form>
+                                            <a href="{{ route('penilaiandanpresensi.izinsakit.siswa.create', ['mapel_id' => $jadwal->mapel_id, 'tipe' => 'Per Matpel']) }}" class="btn btn-outline-info px-3 shadow-sm" style="border-radius: 10px;">
+                                                <i class="fas fa-envelope mr-1"></i> Izin
+                                            </a>
+                                        </div>
+                                    @endif
                                 @endif
                             </div>
                         </div>
@@ -156,6 +171,17 @@
 
         {{-- Right Column: Stats --}}
         <div class="col-lg-4">
+            {{-- Advice Card --}}
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px; background: #1e1e2d; color: white;">
+                <div class="card-body p-4 text-center">
+                    <div class="rounded-circle bg-primary mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <i class="fas fa-lightbulb fa-2x"></i>
+                    </div>
+                    <h5 class="font-weight-bold mb-3">Tips Kehadiran</h5>
+                    <p class="opacity-75 small mb-0">"Barangsiapa yang menempuh jalan untuk mencari ilmu, maka Allah akan mudahkan baginya jalan menuju surga." (HR. Muslim)</p>
+                </div>
+            </div>
+
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px;">
                 <div class="card-header bg-white py-3 border-0">
                     <h5 class="mb-0 font-weight-bold"><i class="fas fa-chart-line mr-2 text-primary"></i> Statistik Kehadiran</h5>
@@ -184,17 +210,6 @@
                     @empty
                         <p class="text-center text-muted">Belum ada data statistik.</p>
                     @endforelse
-                </div>
-            </div>
-
-            {{-- Advice Card --}}
-            <div class="card border-0 shadow-sm" style="border-radius: 20px; background: #1e1e2d; color: white;">
-                <div class="card-body p-4 text-center">
-                    <div class="rounded-circle bg-primary mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                        <i class="fas fa-lightbulb fa-2x"></i>
-                    </div>
-                    <h5 class="font-weight-bold mb-3">Tips Kehadiran</h5>
-                    <p class="opacity-75 small mb-0">"Barangsiapa yang menempuh jalan untuk mencari ilmu, maka Allah akan mudahkan baginya jalan menuju surga." (HR. Muslim)</p>
                 </div>
             </div>
         </div>

@@ -41,26 +41,22 @@ class PenilaianAkademikController extends Controller
             $query->where('siswa_id', $siswaId);
         }
 
-        // Filter for Guru: they only see students in their class (if they are Wali Kelas)
+        // Filter for Guru: they see students in their class OR what they input themselves
         if (auth()->user()->ref_type === ModelsGuru::class) {
             $guruId = auth()->user()->ref_id;
-            $mySiswaIds = ModelsSiswa::whereHas('rombelSiswa', function($q) use ($guruId) {
-                $q->where('status', 'aktif')
-                  ->whereHas('rombel', function($rq) use ($guruId) {
-                      $rq->where('wali_kelas_id', $guruId);
-                  });
-            })->pluck('id');
             
-            // If they are a wali kelas, restrict to their students
-            // If not a wali kelas, maybe they can see nothing or only what they input?
-            // Usually Guru can see what they input OR their class.
-            // User says "kelas nya wali kelas itu yang nampil"
-            if ($mySiswaIds->isNotEmpty()) {
-                $query->whereIn('siswa_id', $mySiswaIds);
-            } else {
-                // If not a wali kelas, show only scores they input
-                $query->where('guru_id', $guruId);
-            }
+            $query->where(function($q) use ($guruId) {
+                // 1. Scores they input themselves
+                $q->where('guru_id', $guruId);
+                
+                // 2. Scores for students in their class (Wali Kelas)
+                $q->orWhereHas('siswa.rombelSiswa', function($sq) use ($guruId) {
+                    $sq->where('status', 'aktif')
+                       ->whereHas('rombel', function($rq) use ($guruId) {
+                           $rq->where('guru_id', $guruId);
+                       });
+                });
+            });
         }
 
         // Apply dynamic filters
@@ -116,30 +112,33 @@ class PenilaianAkademikController extends Controller
         $isGuru = $user->ref_type === ModelsGuru::class;
         $loggedGuruId = $isGuru ? $user->ref_id : null;
 
-        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
-
-        // Get Rombels for the active year
-        $rombelQuery = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0);
-        if ($isGuru) {
-            $rombelQuery->where(function($q) use ($loggedGuruId) {
-                $q->where('wali_kelas_id', $loggedGuruId)
-                  ->orWhereHas('jadwalPelajaran', function($jq) use ($loggedGuruId) {
-                      $jq->where('guru_id', $loggedGuruId);
-                  });
-            });
+        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first();
+        if (!$activeTahunAjaran) {
+            $activeTahunAjaran = TahunAjaran::orderBy('tahunajaran', 'desc')->first();
         }
-        $rombels = $rombelQuery->orderBy('nama_rombel')->get();
 
-        $gurus = ModelsGuru::orderBy('nama')->get();
-        $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
-        
+        // Get Rombels (Teaching or Wali Kelas)
+        $rombels = collect();
+        $mapels = collect();
+
+        $rombels = collect();
+        if ($activeTahunAjaran) {
+            $rombels = Rombel::where('tahunajaran_id', $activeTahunAjaran->id)
+                ->orderBy('nama_rombel')
+                ->get();
+        }
+
         // Subject selection
         if ($isGuru) {
-            $myMapelIds = JadwalPelajaran::where('guru_id', $loggedGuruId)->pluck('mapel_id')->unique();
+            $myMapelIds = JadwalPelajaran::where('guru_id', $loggedGuruId)
+                ->pluck('mapel_id')->unique();
             $mapels = MataPelajaran::whereIn('id', $myMapelIds)->with('kategori')->orderBy('nama')->get();
         } else {
             $mapels = MataPelajaran::with('kategori')->orderBy('nama')->get();
         }
+
+        $gurus = ModelsGuru::orderBy('nama')->get();
+        $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
 
         return view('penilaiandanpresensi::penilaianakademik.create', [
             'title' => 'Tambah Penilaian Akademik',
@@ -400,12 +399,10 @@ class PenilaianAkademikController extends Controller
         $loggedGuruId = $user->ref_id;
 
         // Determine which rombels this user can see for the dropdown
-        $rombelsQuery = \App\Modules\Akademik\Models\Rombel::where('tahunajaran_id', $activeTA->id ?? 0)->orderBy('nama_rombel');
-        if (!$isAdmin && $isGuru) {
-            // Only rombels where this guru is Wali Kelas
-            $rombelsQuery->where('wali_kelas_id', $loggedGuruId);
-        }
-        $rombels = $rombelsQuery->get();
+        // Show ALL rombels for the year (Like in Input Nilai)
+        $rombels = \App\Modules\Akademik\Models\Rombel::where('tahunajaran_id', $activeTA->id ?? 0)
+            ->orderBy('nama_rombel')
+            ->get();
 
         $query = ModelsSiswa::query();
         
@@ -502,21 +499,31 @@ class PenilaianAkademikController extends Controller
             ->get();
 
         // Get class-wide assessments (same Rombel) to calculate Class Average (Rerata Kelas)
-        $classScores = PenilaianAkademik::whereHas('siswa.rombelSiswa', function($q) use ($rombelId) {
+        $allClassScores = PenilaianAkademik::with(['mataPelajaran'])
+            ->whereHas('siswa.rombelSiswa', function($q) use ($rombelId) {
                 $q->where('rombel_id', $rombelId)->where('status', 'aktif');
             })
             ->where('tahunajaran_id', $activeTA->id ?? 0)
-            ->get()
-            ->groupBy('mapel_id');
+            ->get();
+
+        $classScoresGrouped = [];
+        foreach ($allClassScores as $cs) {
+            $normName = $this->normalizeMapelName($cs->mataPelajaran->nama);
+            $key = strtolower($normName);
+            if (!isset($classScoresGrouped[$key])) $classScoresGrouped[$key] = [];
+            $classScoresGrouped[$key][] = $cs;
+        }
 
         // Group by Mapel and Jenis Nilai
         $rekap = [];
         foreach ($scores as $score) {
-            $mapelId = $score->mapel_id;
-            if (!isset($rekap[$mapelId])) {
-                $rekap[$mapelId] = [
-                    'nama' => $score->mataPelajaran->nama,
-                    'kategori' => $score->mataPelajaran->kategori->kategori ?? 'Umum',
+            $normName = $this->normalizeMapelName($score->mataPelajaran->nama);
+            $key = strtolower($normName);
+            
+            if (!isset($rekap[$key])) {
+                $rekap[$key] = [
+                    'nama' => $normName,
+                    'kategori' => $this->normalizeCategoryName($score->mataPelajaran->kategori->kategori ?? 'Umum'),
                     'kkm' => $score->kkm,
                     'harian' => [],
                     'uts' => null,
@@ -526,16 +533,16 @@ class PenilaianAkademikController extends Controller
             }
 
             if ($score->jenis_nilai == 'Harian') {
-                $rekap[$mapelId]['harian'][] = $score->nilai;
+                $rekap[$key]['harian'][] = $score->nilai;
             } elseif ($score->jenis_nilai == 'UTS') {
-                $rekap[$mapelId]['uts'] = $score->nilai;
+                $rekap[$key]['uts'] = $score->nilai;
             } elseif ($score->jenis_nilai == 'UAS') {
-                $rekap[$mapelId]['uas'] = $score->nilai;
+                $rekap[$key]['uas'] = $score->nilai;
             }
         }
 
         // Calculate Averages and Final Grades
-        foreach ($rekap as $mid => &$item) {
+        foreach ($rekap as $key => &$item) {
             $avgHarian = count($item['harian']) > 0 ? array_sum($item['harian']) / count($item['harian']) : 0;
             $item['avg_harian'] = round($avgHarian, 2);
             
@@ -549,9 +556,9 @@ class PenilaianAkademikController extends Controller
             $item['final'] = $divider > 0 ? round($total / $divider, 2) : 0;
             $item['predikat'] = $this->getPredikat($item['final']);
 
-            // Calculate Class Average for this subject
-            if (isset($classScores[$mid])) {
-                $subjectClassScores = $classScores[$mid];
+            // Calculate Class Average for this normalized subject
+            if (isset($classScoresGrouped[$key])) {
+                $subjectClassScores = $classScoresGrouped[$key];
                 $totalClassNilai = 0;
                 $studentCount = 0;
                 
@@ -630,6 +637,51 @@ class PenilaianAkademikController extends Controller
     }
 
     /**
+     * Normalize Mata Pelajaran name to handle duplicates and variants.
+     */
+    private function normalizeMapelName($name)
+    {
+        $n = trim($name);
+        $low = strtolower($n);
+        
+        // Tahfidz variants
+        if (str_contains($low, 'tahfidz')) return 'Tahfidz Al-Qur\'an';
+        
+        // Science & Social
+        if (str_contains($low, 'ipa')) return 'IPA (Ilmu Pengetahuan Alam)';
+        if (str_contains($low, 'ips')) return 'IPS (Ilmu Pengetahuan Sosial)';
+        
+        // Religious subjects
+        if (str_contains($low, 'fiqih')) return 'Fiqih';
+        if (str_contains($low, 'hadits') || str_contains($low, 'hadis')) return 'Hadits';
+        if (str_contains($low, 'aqidah') || str_contains($low, 'akidah')) return 'Aqidah Akhlak';
+        if (str_contains($low, 'tarikh')) return 'Tarikh / Sejarah Islam';
+        
+        // Languages
+        if (str_contains($low, 'arab')) return 'Bahasa Arab';
+        if (str_contains($low, 'inggris')) return 'Bahasa Inggris';
+        if (str_contains($low, 'indonesia')) return 'Bahasa Indonesia';
+        
+        // Others
+        if (str_contains($low, 'matematika')) return 'Matematika';
+        if (str_contains($low, 'jasmani') || str_contains($low, 'olahraga') || str_contains($low, 'penjas')) return 'Pendidikan Jasmani & Olahraga';
+        
+        return $n;
+    }
+
+    /**
+     * Normalize Category name to handle duplicates/typos.
+     */
+    private function normalizeCategoryName($name)
+    {
+        $n = trim($name);
+        $low = strtolower($n);
+        if ($low == 'umum') return 'Umum';
+        if (str_contains($low, 'diniyah') || str_contains($low, 'diniyyah')) return 'Diniyyah';
+        return $n;
+    }
+
+    /**
      * Get history of scores for a student and subject (AJAX).
      */
     public function history(Request $request): \Illuminate\Http\JsonResponse
@@ -670,6 +722,39 @@ class PenilaianAkademikController extends Controller
             ->value('kkm') ?? 75;
             
         return response()->json(['kkm' => $kkm]);
+    }
+
+    /**
+     * Get Mapels and Rombels for a specific Guru (AJAX).
+     */
+    public function getDataByGuru(Request $request, string $guruId): JsonResponse
+    {
+        $taId = $request->tahunajaran_id;
+        
+        if (!$taId) {
+            $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first();
+            if (!$activeTahunAjaran) {
+                $activeTahunAjaran = TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+            }
+            $taId = $activeTahunAjaran->id ?? 0;
+        }
+
+        // 2. Get ALL Rombels for the selected Year (Like in Index)
+        $rombels = Rombel::where('tahunajaran_id', $taId)
+            ->orderBy('nama_rombel')
+            ->get();
+
+        // 3. Get Mapels based on teacher's schedule in those Rombels
+        $mapelIds = JadwalPelajaran::where('guru_id', $guruId)
+            ->whereIn('rombel_id', $rombels->pluck('id'))
+            ->pluck('mapel_id')->unique();
+            
+        $mapels = MataPelajaran::whereIn('id', $mapelIds)->orderBy('nama')->get();
+
+        return response()->json([
+            'mapels' => $mapels,
+            'rombels' => $rombels
+        ]);
     }
 }
 

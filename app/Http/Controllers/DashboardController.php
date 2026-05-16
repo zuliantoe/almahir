@@ -35,12 +35,17 @@ class DashboardController extends Controller
         $totalSiswa = 0;
         $totalKelas = 0;
 
+        // Fetch module menus for the grid
+        $menuRegistry = app(\App\Services\MenuRegistry::class);
+        $moduleMenus = $menuRegistry->getMenusForUser();
+
         return view('dashboard', [
             'totalSdm' => $totalSdm,
             'totalGuru' => $totalGuru,
             'totalStaff' => $totalStaff,
             'totalSiswa' => $totalSiswa,
             'totalKelas' => $totalKelas,
+            'moduleMenus' => $moduleMenus,
         ]);
     }
 }

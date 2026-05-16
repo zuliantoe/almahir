@@ -59,13 +59,15 @@ class IzinSakitController extends Controller
     /**
      * Show the form for creating a new resource for Siswa.
      */
-    public function siswaCreate(): View
+    public function siswaCreate(Request $request): View
     {
         $user = auth()->user();
         if ($user->ref_type !== \Modules\Siswa\Models\Siswa::class) {
             abort(403, 'Akses ditolak.');
         }
         $siswa = ModelsSiswa::find($user->ref_id);
+
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
 
         // Find student's active rombel
         $activeRombel = RombelSiswa::where('siswa_id', $siswa->id)
@@ -90,6 +92,7 @@ class IzinSakitController extends Controller
         return view('penilaiandanpresensi::izinsakit.siswa_create', [
             'title' => 'Pengajuan Izin/Sakit Baru',
             'mapels' => $mapels,
+            'request' => $request,
         ]);
     }
 
@@ -166,6 +169,17 @@ class IzinSakitController extends Controller
         }
 
         $query = IzinSakit::with(['siswa', 'rombel']);
+
+        // Filter for Guru: they see students in their class OR what they input themselves
+        if ($user->ref_type === ModelsGuru::class) {
+            $guruId = $user->ref_id;
+            $query->where(function($q) use ($guruId) {
+                $q->where('author_id', auth()->id()) // Created by them
+                  ->orWhereHas('rombel', function($rq) use ($guruId) {
+                      $rq->where('guru_id', $guruId); // Their class as Wali Kelas
+                  });
+            });
+        }
 
         // Apply filters
         if ($request->filled('rombel_id')) {

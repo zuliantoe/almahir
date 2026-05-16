@@ -92,6 +92,43 @@
             </div>
         </div>
     </div>
+    
+    {{-- 🧩 Module Grid: Access all modules quickly --}}
+    @if(isset($moduleMenus) && count($moduleMenus) > 0)
+    <div class="row mt-4 mb-2">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-3">
+                <h5 class="font-weight-bold text-dark mb-0"><i class="fas fa-th-large mr-2 text-primary"></i> Akses Modul Sistem</h5>
+                <div class="ml-3 flex-grow-1 border-top opacity-1"></div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        @foreach($moduleMenus as $section)
+            @foreach($section['items'] as $item)
+                @php
+                    $itemUrl = '#';
+                    if (!empty($item['route'])) {
+                        try { $itemUrl = route($item['route']); } catch (\Exception $e) { $itemUrl = '#'; }
+                    } elseif (!empty($item['url'])) {
+                        $itemUrl = $item['url'];
+                    }
+                @endphp
+                <div class="col-6 col-md-4 col-lg-2 mb-4">
+                    <a href="{{ $itemUrl }}" class="card dashboard-card border-0 shadow-sm text-center p-3 h-100 hover-translate" style="border-radius: 18px; text-decoration: none;">
+                        <div class="card-body p-2">
+                            <div class="mb-3 mx-auto d-flex align-items-center justify-content-center bg-light-soft text-primary shadow-xs" style="width: 55px; height: 55px; border-radius: 15px;">
+                                <i class="{{ $item['icon'] ?? 'fas fa-cube' }} fa-lg"></i>
+                            </div>
+                            <h6 class="font-weight-bold text-dark mb-1 small">{{ $item['label'] }}</h6>
+                            <span class="badge badge-light text-muted p-1" style="font-size: 0.65rem; font-weight: 500;">{{ $section['header'] }}</span>
+                        </div>
+                    </a>
+                </div>
+            @endforeach
+        @endforeach
+    </div>
+    @endif
 
     <div class="row mt-3">
         {{-- 📘 Overview Section --}}

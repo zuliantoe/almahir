@@ -154,7 +154,7 @@
                     <div class="col-md-2 mb-2">
                         <input type="date" name="tanggal" class="form-control" value="{{ request('tanggal', date('Y-m-d')) }}" placeholder="Tanggal">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-2 mb-2">
                         <button type="submit" class="btn btn-primary btn-block">
                             <i class="fas fa-search mr-1"></i> Cari
                         </button>

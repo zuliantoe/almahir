@@ -75,10 +75,12 @@
                             <th class="text-center" style="width:100px;">Jam</th>
                             @foreach($hariList as $hari)
                                 @php
-                                    $isToday = \Carbon\Carbon::now()->locale('id')->translatedFormat('l') === $hari;
+                                    $hariNames = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+                                    $hariLabel = $hariNames[$hari] ?? $hari;
+                                    $isToday = \Carbon\Carbon::now()->dayOfWeekIso == $hari;
                                 @endphp
                                 <th class="text-center {{ $isToday ? 'bg-primary text-white' : '' }}">
-                                    {{ $hari }}
+                                    {{ $hariLabel }}
                                     @if($isToday)
                                         <br><small>(Hari Ini)</small>
                                     @endif
@@ -132,12 +134,14 @@
         <div class="row">
             @foreach($hariList as $hari)
                 @php
+                    $hariNames = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+                    $hariLabel = $hariNames[$hari] ?? $hari;
                     $jadwalHari = $rawJadwal->where('hari', $hari);
-                    $isToday = \Carbon\Carbon::now()->locale('id')->translatedFormat('l') === $hari;
+                    $isToday = \Carbon\Carbon::now()->dayOfWeekIso == $hari;
                 @endphp
                 @if($jadwalHari->isNotEmpty())
                 <div class="col-md-4 mb-3">
-                    <x-card :title="$hari" :type="$isToday ? 'primary' : 'secondary'" outline>
+                    <x-card :title="$hariLabel" :type="$isToday ? 'primary' : 'secondary'" outline>
                         @if($isToday)
                             <x-slot name="tools">
                                 <span class="badge badge-primary">Hari Ini</span>

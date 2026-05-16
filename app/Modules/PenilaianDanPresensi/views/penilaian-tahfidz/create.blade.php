@@ -30,7 +30,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="guru_id" class="font-weight-bold text-dark">Guru Pengampu <span class="text-danger">*</span></label>
-                                    <select name="guru_id" id="guru_id" class="form-control select2" required {{ $isGuru ? 'readonly' : '' }}>
+                                    <select name="guru_id" id="guru_id" class="form-control select2" required {{ $isGuru ? 'disabled' : '' }}>
                                         <option value="">-- Pilih Guru --</option>
                                         @foreach($gurus as $guru)
                                             <option value="{{ $guru->id }}" {{ ($isGuru && $loggedGuruId == $guru->id) || old('guru_id') == $guru->id ? 'selected' : '' }}>
@@ -39,7 +39,7 @@
                                         @endforeach
                                     </select>
                                     @if($isGuru)
-                                        <input type="hidden" name="guru_id" value="{{ $loggedGuruId }}">
+                                        <input type="hidden" name="guru_id" id="guru_id_hidden" value="{{ $loggedGuruId }}">
                                     @endif
                                 </div>
                             </div>
@@ -232,8 +232,9 @@
             return;
         }
 
-        // Fetch students via AJAX (using the same endpoint we created for PenilaianAkademik)
-        fetch(`/penilaiandanpresensi/penilaianakademik/get-siswa-by-rombel/${rombelId}`)
+        const url = "{{ route('penilaiandanpresensi.penilaiantahfidz.get-siswa-by-rombel', ':id') }}".replace(':id', rombelId);
+        
+        fetch(url)
             .then(response => response.json())
             .then(data => {
                 siswaSelect.innerHTML = '<option value="">-- Pilih Santri --</option>';
@@ -258,7 +259,8 @@
             });
     }
 
-    document.getElementById('rombel_id').addEventListener('change', updateSiswaOptions);
+    // Use jQuery for Select2 change detection
+    $(document).on('change', '#rombel_id', updateSiswaOptions);
 
     document.addEventListener('DOMContentLoaded', function() {
         const juzMapping = {

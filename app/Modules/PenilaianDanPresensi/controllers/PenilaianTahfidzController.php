@@ -5,6 +5,7 @@ namespace Modules\PenilaianDanPresensi\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 use Modules\PenilaianDanPresensi\Models\PenilaianTahfidz;
 use Modules\Guru\Models\Guru as ModelsGuru;
@@ -26,7 +27,7 @@ class PenilaianTahfidzController extends Controller
     public function index(Request $request): View
     {
         $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
-        $query = PenilaianTahfidz::with(['siswa.kelas', 'guru']);
+        $query = PenilaianTahfidz::with(['siswa.kelas', 'rombel', 'guru']);
         
         // Filter for students: they only see their own scores
         if (auth()->user()->ref_type === ModelsSiswa::class) {
@@ -34,12 +35,27 @@ class PenilaianTahfidzController extends Controller
             $query->where('siswa_id', $siswaId);
         }
 
+        // Filter for Guru: they see students in their class OR what they input themselves
+        if (auth()->user()->ref_type === ModelsGuru::class) {
+            $guruId = auth()->user()->ref_id;
+            
+            $query->where(function($q) use ($guruId) {
+                // 1. Scores they input themselves
+                $q->where('guru_id', $guruId);
+                
+                // 2. Scores for students in their class (Wali Kelas)
+                $q->orWhereHas('siswa.rombelSiswa', function($sq) use ($guruId) {
+                    $sq->where('status', 'aktif')
+                       ->whereHas('rombel', function($rq) use ($guruId) {
+                           $rq->where('guru_id', $guruId);
+                       });
+                });
+            });
+        }
+
         // Apply filters
         if ($request->filled('rombel_id')) {
-            $rombelId = $request->rombel_id;
-            $query->whereHas('siswa.rombelSiswa', function($rq) use ($rombelId) {
-                $rq->where('rombel_id', $rombelId)->where('status', 'aktif');
-            });
+            $query->where('rombel_id', $request->rombel_id);
         }
         
         // Support legacy filter
@@ -89,11 +105,9 @@ class PenilaianTahfidzController extends Controller
 
         $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
         
-        $rombelQuery = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0);
-        if ($isGuru) {
-            $rombelQuery->where('wali_kelas_id', $loggedGuruId);
-        }
-        $rombels = $rombelQuery->orderBy('nama_rombel')->get();
+        $rombels = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0)
+            ->orderBy('nama_rombel')
+            ->get();
 
         $gurus = ModelsGuru::orderBy('nama')->get();
         $siswas = ModelsSiswa::with('kelas')->orderBy('nama')->get();
@@ -116,6 +130,7 @@ class PenilaianTahfidzController extends Controller
     {
         $validated = $request->validate([
             'siswa_id' => 'required|exists:siswa,id',
+            'rombel_id' => 'required|exists:rombel,id',
             'kelas_id' => 'required|exists:kelas,id',
             'tanggal' => 'required|date',
             'surat_awal' => 'required|array',
@@ -146,6 +161,7 @@ class PenilaianTahfidzController extends Controller
         foreach ($ayatAwals as $index => $ayatAwal) {
             PenilaianTahfidz::create([
                 'siswa_id' => $validated['siswa_id'],
+                'rombel_id' => $validated['rombel_id'],
                 'kelas_id' => $validated['kelas_id'],
                 'guru_id' => $validated['guru_id'],
                 'tahunajaran_id' => $activeTA->id ?? null,
@@ -214,6 +230,7 @@ class PenilaianTahfidzController extends Controller
     {
         $validated = $request->validate([
             'siswa_id' => 'required|exists:siswa,id',
+            'rombel_id' => 'required|exists:rombel,id',
             'kelas_id' => 'required|exists:kelas,id',
             'tanggal' => 'required|date',
             'surat_awal' => 'required|string|max:255',
@@ -248,5 +265,26 @@ class PenilaianTahfidzController extends Controller
 
         return redirect()->route('penilaiandanpresensi.penilaiantahfidz.index')
             ->with('success', 'Data berhasil dihapus.');
+    }
+
+    /**
+     * Get students by rombel (AJAX).
+     */
+    public function getSiswaByRombel(string $rombelId): JsonResponse
+    {
+        try {
+            $rombel = Rombel::with(['aktifSiswa'])->findOrFail($rombelId);
+            $siswas = $rombel->aktifSiswa->map(function($s) {
+                return [
+                    'id' => $s->id,
+                    'nama' => $s->nama,
+                    'kelas_id' => $s->kelas_id
+                ];
+            })->sortBy('nama')->values();
+
+            return response()->json($siswas);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

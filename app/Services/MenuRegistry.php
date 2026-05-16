@@ -111,23 +111,25 @@ class MenuRegistry
         }
 
         $filteredMenus = [];
+        $isSuperAdmin = $user->hasRole('SUPER_ADMIN');
 
         foreach ($this->getMenus() as $menu) {
-            // Check top-level role
-            if (!empty($menu['roles']) && !$user->hasRole($menu['roles'])) {
+            // Check top-level role - Bypass for Super Admin
+            if (!$isSuperAdmin && !empty($menu['roles']) && !$user->hasRole($menu['roles'])) {
                 continue;
             }
 
             if (!empty($menu['items'])) {
                 $filteredItems = [];
                 foreach ($menu['items'] as $item) {
-                    if (!empty($item['roles']) && !$user->hasRole($item['roles'])) {
+                    // Bypass role check for Super Admin
+                    if (!$isSuperAdmin && !empty($item['roles']) && !$user->hasRole($item['roles'])) {
                         continue;
                     }
 
                     if (!empty($item['children'])) {
-                        $filteredChildren = array_filter($item['children'], function ($child) use ($user) {
-                            if (empty($child['roles'])) {
+                        $filteredChildren = array_filter($item['children'], function ($child) use ($user, $isSuperAdmin) {
+                            if ($isSuperAdmin || empty($child['roles'])) {
                                 return true;
                             }
                             return $user->hasRole($child['roles']);

@@ -76,7 +76,9 @@ class PresensiController extends Controller
         
         $allMapelsQuery = JadwalPelajaran::where('rombel_id', $rombelId);
         if ($tahunAjaranId) {
-            $allMapelsQuery->where('tahunajaran_id', $tahunAjaranId);
+            $allMapelsQuery->whereHas('rombel', function($q) use ($tahunAjaranId) {
+                $q->where('tahunajaran_id', $tahunAjaranId);
+            });
         }
         
         $allMapels = $allMapelsQuery->with('mataPelajaran')
@@ -90,7 +92,9 @@ class PresensiController extends Controller
             $scheduledDaysQuery = JadwalPelajaran::where('rombel_id', $rombelId)
                 ->where('mapel_id', $mapel->id);
             if ($tahunAjaranId) {
-                $scheduledDaysQuery->where('tahunajaran_id', $tahunAjaranId);
+                $scheduledDaysQuery->whereHas('rombel', function($q) use ($tahunAjaranId) {
+                    $q->where('tahunajaran_id', $tahunAjaranId);
+                });
             }
             $scheduledDays = $scheduledDaysQuery->pluck('hari')->toArray();
             
@@ -105,7 +109,7 @@ class PresensiController extends Controller
 
             $presentCount = Presensi::where('siswa_id', $siswa->id)
                 ->where('mapel_id', $mapel->id)
-                ->where('status', 'Hadir')
+                ->whereIn('status', ['Hadir', 'Telat'])
                 ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
                 ->count();
             
@@ -198,13 +202,23 @@ class PresensiController extends Controller
             return back()->with('error', $msg);
         }
 
+        $jadwal = \App\Modules\Akademik\Models\JadwalPelajaran::find($jadwalId);
+        $currentTime = date('H:i');
+
+        // Check if lesson has ended
+        if ($jadwal && $currentTime > $jadwal->jamakhir) {
+            $msg = 'Sesi pelajaran ini sudah berakhir.';
+            if ($request->ajax()) return response()->json(['message' => $msg], 422);
+            return back()->with('error', $msg);
+        }
+
         // Determine status: check if late
         $status = 'Hadir';
         $currentTime = date('H:i');
         $jadwal = \App\Modules\Akademik\Models\JadwalPelajaran::find($jadwalId);
         
-        // If current time is after jamawal (with 1 minute grace), mark as Telat
-        if ($currentTime > date('H:i', strtotime($jadwal->jamawal . ' + 1 minutes'))) {
+        // If current time is after jamawal (with 10 minutes grace), mark as Telat
+        if ($currentTime > date('H:i', strtotime($jadwal->jamawal . ' + 10 minutes'))) {
             $status = 'Telat';
         }
 
@@ -219,7 +233,6 @@ class PresensiController extends Controller
             'jam' => date('H:i'),
             'status' => $status,
             'kategori' => $status === 'Telat' ? 'Telat' : 'Hadir',
-            'keterangan' => $status === 'Telat' ? 'Terlambat melakukan absensi' : 'Absensi Mandiri'
         ]);
 
         $successMsg = $status === 'Telat' ? 'Berhasil absen, namun Anda tercatat TERLAMBAT.' : 'Berhasil melakukan absen.';
@@ -279,8 +292,85 @@ class PresensiController extends Controller
             }
         }
 
-        $query = Presensi::with(['siswa', 'guru']);
-        $statsQuery = Presensi::query();
+        // --- AUTOMATED ALPHA GENERATION (REAL-TIME) ---
+        $targetTanggal = $request->tanggal ?? date('Y-m-d');
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        
+        if ($activeTA) {
+            $dayOfWeek = date('N', strtotime($targetTanggal));
+            $currentTime = date('H:i');
+            $isToday = $targetTanggal == date('Y-m-d');
+
+            // Pre-fetch existing for this date/rombel to avoid N+1
+            $existingKeys = Presensi::whereDate('created_at', $targetTanggal)
+                ->get()
+                ->pluck('id', fn($item) => $item->siswa_id . '-' . $item->jadwal_pelajaran_id)
+                ->toArray();
+
+            $jadwalQuery = JadwalPelajaran::where('hari', $dayOfWeek);
+            if ($request->filled('rombel_id')) {
+                $jadwalQuery->where('rombel_id', $request->rombel_id);
+            } else {
+                $jadwalQuery->whereHas('rombel', function($q) use ($activeTA) {
+                    $q->where('tahunajaran_id', $activeTA->id);
+                });
+            }
+            
+            $jadwalsForAlpha = $jadwalQuery->get()->groupBy('rombel_id');
+            $alphaBatch = [];
+
+            foreach ($jadwalsForAlpha as $rId => $schedules) {
+                $rombel = Rombel::with(['aktifSiswa'])->find($rId);
+                if (!$rombel) continue;
+
+                foreach ($schedules as $j) {
+                    if ($isToday && $currentTime < $j->jamawal) continue;
+
+                    foreach ($rombel->aktifSiswa as $s) {
+                        $key = $s->id . '-' . $j->id;
+                        if (!isset($existingKeys[$key])) {
+                            $alphaBatch[] = [
+                                'siswa_id' => $s->id,
+                                'guru_id' => $j->guru_id ?? 1,
+                                'mapel_id' => $j->mapel_id,
+                                'jadwal_pelajaran_id' => $j->id,
+                                'tahunajaran_id' => $activeTA->id,
+                                'semester' => $activeTA->semester,
+                                'author_id' => auth()->id() ?? 1,
+                                'jam' => $j->jamawal,
+                                'status' => 'Alpha',
+                                'kategori' => 'Alpha',
+                                'created_at' => $targetTanggal . ' ' . $j->jamawal . ':00',
+                                'updated_at' => now(),
+                            ];
+                            if (count($alphaBatch) >= 50) {
+                                Presensi::insert($alphaBatch);
+                                $alphaBatch = [];
+                            }
+                        }
+                    }
+                }
+            }
+            if (count($alphaBatch) > 0) Presensi::insert($alphaBatch);
+        }
+
+        $query = Presensi::with(['siswa', 'guru', 'mataPelajaran', 'tahunAjaran', 'jadwalPelajaran']);
+
+        // Filter for Guru: they see students in their class OR what they input themselves
+        if (auth()->user()->ref_type === ModelsGuru::class) {
+            $guruId = auth()->user()->ref_id;
+            $query->where(function($q) use ($guruId) {
+                $q->where('guru_id', $guruId) // Created/taught by them
+                  ->orWhereHas('siswa.rombelSiswa', function($sq) use ($guruId) {
+                      $sq->where('status', 'aktif')
+                         ->whereHas('rombel', function($rq) use ($guruId) {
+                             $rq->where('guru_id', $guruId); // Their class as Wali Kelas
+                         });
+                  });
+            });
+        }
+        
+        $statsQuery = clone $query; // Keep stats in sync with filtered results
 
         // Filter for students: they only see their own attendance
         if (auth()->user()->ref_type === \Modules\Siswa\Models\Siswa::class) {
@@ -339,7 +429,9 @@ class PresensiController extends Controller
             $statsQuery->whereDate('created_at', $request->tanggal);
         }
 
-        $presensis = $query->latest()->paginate(10);
+        $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first() ?: \App\Modules\Akademik\Models\TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+        
+        $presensis = $query->latest()->paginate(15);
 
         // Calculate stats based on current filters
         $stats = [
@@ -351,11 +443,15 @@ class PresensiController extends Controller
             'total' => $statsQuery->count(),
         ];
 
-        $mapels = MataPelajaran::orderBy('nama')->get()->keyBy('id');
-        $rombels = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0)->orderBy('nama_rombel')->get();
-        $jadwals = JadwalPelajaran::orderBy('hari')->get()->keyBy('id');
+        // Get UNIQUE Mapels by name to avoid doubles/triples
+        $mapels = MataPelajaran::orderBy('nama')->get()->unique('nama');
+        
+        $rombels = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0)
+            ->orderBy('nama_rombel')
+            ->get();
+            
+        $jadwals = JadwalPelajaran::orderBy('hari')->get();
 
-        $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
         return view('penilaiandanpresensi::presensi.index', [
             'title' => 'Daftar Presensi',
             'presensis' => $presensis,
@@ -450,6 +546,12 @@ class PresensiController extends Controller
                 return response()->json(['success' => false, 'message' => 'QR Code tidak valid (Jadwal #' . $jadwalId . ' tidak ditemukan).'], 404);
             }
 
+            // Check if lesson has ended
+            $currentTime = date('H:i');
+            if ($jadwal->jamakhir && $currentTime > $jadwal->jamakhir) {
+                return response()->json(['success' => false, 'message' => 'Sesi pelajaran ' . ($jadwal->mataPelajaran->nama ?? '') . ' sudah berakhir.'], 400);
+            }
+
             // Check if already present today for this session
             $exists = Presensi::where('siswa_id', $siswa->id)
                 ->where('jadwal_pelajaran_id', $jadwal->id)
@@ -465,6 +567,13 @@ class PresensiController extends Controller
 
             $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
 
+            // Determine status: check if late (10 mins grace)
+            $status = 'Hadir';
+            $currentTime = date('H:i');
+            if ($jadwal->jamawal && $currentTime > date('H:i', strtotime($jadwal->jamawal . ' + 10 minutes'))) {
+                $status = 'Telat';
+            }
+
             $presensi = Presensi::create([
                 'siswa_id' => $siswa->id,
                 'guru_id' => $jadwal->guru_id,
@@ -474,7 +583,7 @@ class PresensiController extends Controller
                 'semester' => $activeTA->semester ?? null,
                 'author_id' => auth()->id(),
                 'jam' => Carbon::now()->format('H:i'),
-                'status' => 'Hadir',
+                'status' => $status,
                 'kategori' => 'Hadir',
                 'scan_id' => 'STUDENT_SCAN',
             ]);
@@ -533,7 +642,22 @@ class PresensiController extends Controller
             ], 400);
         }
 
+        // Check if lesson has ended
+        $currentTime = date('H:i');
+        $jadwal = JadwalPelajaran::find($validated['jadwal_pelajaran_id']);
+        if ($jadwal && $jadwal->jamakhir && $currentTime > $jadwal->jamakhir) {
+            return response()->json(['success' => false, 'message' => 'Sesi pelajaran sudah berakhir.'], 400);
+        }
+
         $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+
+        // Determine status: check if late (10 mins grace)
+        $status = 'Hadir';
+        $currentTime = date('H:i');
+        $jadwal = JadwalPelajaran::find($validated['jadwal_pelajaran_id']);
+        if ($jadwal && $jadwal->jamawal && $currentTime > date('H:i', strtotime($jadwal->jamawal . ' + 10 minutes'))) {
+            $status = 'Telat';
+        }
 
         $presensi = Presensi::create([
             'siswa_id' => $siswa->id,
@@ -544,7 +668,7 @@ class PresensiController extends Controller
             'semester' => $activeTA->semester ?? null,
             'author_id' => auth()->id(),
             'jam' => Carbon::now()->format('H:i'),
-            'status' => 'Hadir',
+            'status' => $status,
             'kategori' => 'Hadir',
             'scan_id' => $validated['scan_id'],
         ]);

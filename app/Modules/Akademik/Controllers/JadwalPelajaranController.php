@@ -27,7 +27,7 @@ class JadwalPelajaranController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        $hariList = [1, 2, 3, 4, 5, 6]; // 1=Senin, 6=Sabtu
 
         if ($user && $user->hasRole('GURU')) {
             if ($request->get('tampil') === 'all' || $request->hasAny(['rombel_id', 'hari', 'guru_id', 'mapel_id', 'tahun_ajaran_id'])) {
@@ -55,7 +55,7 @@ class JadwalPelajaranController extends Controller
             ->when($request->filled('tahun_ajaran_id'), function($q) use ($request) {
                 return $q->whereHas('rombel', fn($sq) => $sq->where('tahunajaran_id', $request->tahun_ajaran_id));
             })
-            ->orderByRaw("FIELD(hari, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu')")
+            ->orderBy('hari')
             ->orderBy('jamke')
             ->paginate(15)
             ->withQueryString();
@@ -154,7 +154,15 @@ class JadwalPelajaranController extends Controller
         $rombels  = Rombel::with('kelas')->get();
         $mapels   = MataPelajaran::all();
         $gurus    = Guru::aktif()->get();
-        $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+        $hariList = [
+            1 => 'Senin', 
+            2 => 'Selasa', 
+            3 => 'Rabu', 
+            4 => 'Kamis', 
+            5 => 'Jumat', 
+            6 => 'Sabtu', 
+            7 => 'Minggu'
+        ];
 
         return view('akademik::jadwal-pelajaran.create', compact('rombels', 'mapels', 'gurus', 'hariList'));
     }
@@ -186,7 +194,15 @@ class JadwalPelajaranController extends Controller
         $rombels  = Rombel::with('kelas')->get();
         $mapels   = MataPelajaran::all();
         $gurus    = Guru::aktif()->get();
-        $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+        $hariList = [
+            1 => 'Senin', 
+            2 => 'Selasa', 
+            3 => 'Rabu', 
+            4 => 'Kamis', 
+            5 => 'Jumat', 
+            6 => 'Sabtu', 
+            7 => 'Minggu'
+        ];
 
         return view('akademik::jadwal-pelajaran.edit', compact('jadwalPelajaran', 'rombels', 'mapels', 'gurus', 'hariList'));
     }

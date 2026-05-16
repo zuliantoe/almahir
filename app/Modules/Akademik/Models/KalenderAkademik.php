@@ -11,7 +11,7 @@ class KalenderAkademik extends Model
     use HasFactory;
 
     protected $table = 'kalender_akademik';
-    protected $fillable = ['tahunajaran_id','kegiatan_id','nama_kegiatan','tanggal_awal','tanggal_akhir','deskripsi','status'
+    protected $fillable = ['tahunajaran_id','semester','kegiatan_id','nama_kegiatan','tanggal_awal','tanggal_akhir','deskripsi','status'
     ];
     protected $casts = [
         'tanggal_awal'=> 'date',

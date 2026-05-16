@@ -40,7 +40,7 @@
                         <option value="">Semua Tahun</option>
                         @foreach($tahun_ajaran as $ta)
                             <option value="{{ $ta->id }}" {{ request('tahunajaran_id') == $ta->id ? 'selected' : '' }}>
-                                {{ $ta->tahunajaran }} ({{ $ta->semester }})
+                                {{ $ta->tahunajaran }}
                             </option>
                         @endforeach
                     </select>
@@ -105,9 +105,6 @@
                             <td>
                                 <div class="d-flex flex-column">
                                     <span class="font-weight-bold">{{ $r->tahunAjaran->tahunajaran ?? '-' }}</span>
-                                    <small class="text-primary font-weight-bold text-uppercase" style="letter-spacing: 1px;">
-                                        {{ $r->tahunAjaran->semester ?? '-' }}
-                                    </small>
                                 </div>
                             </td>
                             <td>

@@ -4,6 +4,26 @@
 
 @section('content')
 <div class="container-fluid">
+    @if(isset($ongoingEvents) && count($ongoingEvents))
+    <div class="row">
+        <div class="col-12">
+            @foreach($ongoingEvents as $event)
+            <div class="alert alert-{{ $event->jenisKegiatan->warna ? 'info' : 'primary' }} shadow-sm border-left-info" style="border-left: 5px solid {{ $event->jenisKegiatan->warna ?? '#4e73df' }} !important;">
+                <div class="d-flex align-items-center">
+                    <div class="mr-3">
+                        <i class="fas fa-calendar-check fa-2x opacity-50"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 font-weight-bold">AGENDA BERJALAN: {{ $event->nama_kegiatan }}</h6>
+                        <small>{{ $event->tanggal_awal->translatedFormat('d M') }} - {{ $event->tanggal_akhir->translatedFormat('d M Y') }} | {{ $event->deskripsi }}</small>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
     {{-- Header Section --}}
     <div class="row mb-3">
         <div class="col-12">
@@ -12,6 +32,7 @@
         </div>
     </div>
 
+    @if(auth()->user()->hasRole('SUPER_ADMIN') || auth()->user()->hasRole('STAFF'))
     {{-- Statistik Row --}}
     <div class="row">
         {{-- Total Siswa --}}
@@ -70,11 +91,39 @@
             </div>
         </div>
     </div>
+    @else
+    {{-- Welcome Card for Guru/Siswa --}}
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-gradient-primary text-white shadow-lg border-0 rounded-xl mb-4">
+                <div class="card-body p-4 d-flex align-items-center">
+                    <div class="mr-4">
+                        <i class="fas fa-user-circle fa-5x opacity-7"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-weight-bold mb-1">Selamat Datang, {{ auth()->user()->name }}!</h2>
+                        <p class="mb-0 opacity-8">Anda login sebagai <strong>{{ auth()->user()->hasRole('GURU') ? 'Guru / Pengajar' : 'Santri / Siswa' }}</strong>.</p>
+                        <hr class="border-light opacity-3 my-2">
+                        <div class="d-flex">
+                            <x-btn :href="route('akademik.jadwal-pelajaran.index')" class="btn-light btn-sm mr-2 font-weight-bold text-primary px-3 rounded-pill">
+                                <i class="fas fa-clock mr-1"></i> Lihat Jadwal Saya
+                            </x-btn>
+                            <x-btn :href="route('akademik.kalender-akademik.index')" class="btn-outline-light btn-sm font-weight-bold px-3 rounded-pill">
+                                <i class="fas fa-calendar-alt mr-1"></i> Agenda Sekolah
+                            </x-btn>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     {{-- Main Content --}}
     <div class="row mt-3">
         {{-- Left Column: Chart & Quick Actions --}}
         <div class="col-md-8">
+            @if(auth()->user()->hasRole('SUPER_ADMIN') || auth()->user()->hasRole('STAFF'))
             <x-card title="Komposisi Data Akademik" icon="fas fa-chart-bar" type="primary" outline>
                 <div class="position-relative mb-4" style="height: 300px;">
                     <canvas id="statistikChart"></canvas>
@@ -127,6 +176,51 @@
                     </div>
                 </div>
             </x-card>
+            @else
+            <x-card :title="'Jadwal ' . (auth()->user()->hasRole('GURU') ? 'Mengajar' : 'Belajar') . ' Hari Ini'" icon="fas fa-clock" type="primary" outline>
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-2">
+                    {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Jam</th>
+                                <th>Mapel</th>
+                                <th>{{ auth()->user()->hasRole('GURU') ? 'Rombel' : 'Guru' }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($jadwalHariIni ?? [] as $jadwal)
+                            <tr>
+                                <td class="small font-weight-bold">{{ substr($jadwal->jamawal, 0, 5) }}</td>
+                                <td class="small">{{ $jadwal->mataPelajaran->nama }}</td>
+                                <td class="small text-muted">
+                                    {{ auth()->user()->hasRole('GURU') ? $jadwal->rombel->nama_rombel : $jadwal->guru->nama }}
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-muted small">
+                                    <i class="fas fa-coffee mb-2 d-block fa-2x"></i>
+                                    Tidak ada jadwal hari ini.
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                @if(count($jadwalHariIni ?? []) > 0)
+                <div class="mt-3 text-center">
+                    <x-btn :href="route('akademik.jadwal-pelajaran.index')" class="btn-sm btn-light border w-100">
+                        Lihat Jadwal Lengkap
+                    </x-btn>
+                </div>
+                @endif
+            </x-card>
+            @endif
         </div>
 
         {{-- Right Column: Notifications & Recent Activities --}}
@@ -167,6 +261,7 @@
                 <a href="{{ route('akademik.kalender-akademik.index') }}" class="btn btn-block btn-sm btn-outline-warning mt-2">Lihat Kalender Penuh</a>
             </x-card>
 
+            @if(auth()->user()->hasRole('SUPER_ADMIN') || auth()->user()->hasRole('STAFF'))
             <x-card title="Baru Saja Bergabung" icon="fas fa-history" type="info" outline>
                 <div class="nav-tabs-custom">
                     <ul class="nav nav-tabs mb-3" id="recent-tab" role="tablist">
@@ -215,6 +310,7 @@
                     </div>
                 </div>
             </x-card>
+            @endif
         </div>
     </div>
 </div>

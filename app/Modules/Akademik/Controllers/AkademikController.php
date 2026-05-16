@@ -20,13 +20,14 @@ class AkademikController extends Controller
         $today = \Carbon\Carbon::now()->locale('id')->translatedFormat('l');
         $todayDate = \Carbon\Carbon::now()->toDateString();
 
-        // 1. Context Guru
-        // No forced redirect, allow Guru to see the main Academic Overview
-
-        // 2. Context Siswa
-        if ($user && $user->hasRole('SISWA')) {
-            return redirect()->route('siswa.dashboard');
+        /*
+        // 1. Redirect Guru/Siswa who are NOT Admin/Staff
+        if ($user && ($user->hasRole('GURU') || $user->hasRole('SISWA'))) {
+            if (!$user->hasRole('SUPER_ADMIN') && !$user->hasRole('STAFF')) {
+                return redirect()->route('akademik.jadwal-pelajaran.index');
+            }
         }
+        */
 
         // Default Admin / Staff Context
         $todayDate = \Carbon\Carbon::now()->toDateString();
@@ -38,13 +39,46 @@ class AkademikController extends Controller
         $siswaTerbaru = \Modules\Siswa\Models\Siswa::latest()->take(5)->get();
         $guruTerbaru = \Modules\Guru\Models\Guru::latest()->take(5)->get();
 
-        // Upcoming events (next 30 days) for Admin Dashboard Notifications
+        // Upcoming events (next 30 days)
         $upcomingEvents = \App\Modules\Akademik\Models\KalenderAkademik::with('jenisKegiatan')
             ->whereDate('tanggal_awal', '>', $todayDate)
             ->whereDate('tanggal_awal', '<=', \Carbon\Carbon::now()->addDays(30))
             ->orderBy('tanggal_awal')
             ->take(5)
             ->get();
+
+        // Ongoing events (today is between start and end)
+        $ongoingEvents = \App\Modules\Akademik\Models\KalenderAkademik::with('jenisKegiatan')
+            ->whereDate('tanggal_awal', '<=', $todayDate)
+            ->whereDate('tanggal_akhir', '>=', $todayDate)
+            ->get();
+
+        // Jadwal Pelajaran Hari Ini (for Guru/Siswa)
+        $jadwalHariIni = collect();
+        if ($user->hasRole('GURU')) {
+            $guru = $user->guru;
+            if ($guru) {
+                $jadwalHariIni = \App\Modules\Akademik\Models\JadwalPelajaran::with(['rombel', 'mataPelajaran'])
+                    ->where('guru_id', $guru->id)
+                    ->where('hari', $today)
+                    ->orderBy('jamawal')
+                    ->get();
+            }
+        } elseif ($user->hasRole('SISWA')) {
+            $siswa = $user->siswa;
+            if ($siswa) {
+                $rombelSiswa = \App\Modules\Akademik\Models\RombelSiswa::where('siswa_id', $siswa->id)
+                    ->where('status', 'aktif')
+                    ->first();
+                if ($rombelSiswa) {
+                    $jadwalHariIni = \App\Modules\Akademik\Models\JadwalPelajaran::with(['guru', 'mataPelajaran'])
+                        ->where('rombel_id', $rombelSiswa->rombel_id)
+                        ->where('hari', $today)
+                        ->orderBy('jamawal')
+                        ->get();
+                }
+            }
+        }
 
         return view('akademik::index', [
             'title' => 'Dashboard Akademik',
@@ -55,6 +89,10 @@ class AkademikController extends Controller
             'siswaTerbaru' => $siswaTerbaru,
             'guruTerbaru' => $guruTerbaru,
             'upcomingEvents' => $upcomingEvents,
+            'ongoingEvents' => $ongoingEvents,
+            'jadwalHariIni' => $jadwalHariIni,
+            'today' => $today,
+            'todayDate' => $todayDate,
         ]);
     }
 

@@ -3,21 +3,21 @@
 return [
     'header' => 'SISTEM AKADEMIK',
     'order' => 10,
-    'roles' => ['SUPER_ADMIN', 'STAFF'],
+    'roles' => ['SUPER_ADMIN', 'STAFF', 'GURU', 'SISWA'],
     'items' => [
         [
             'label' => 'Dashboard Akademik',
             'icon' => 'fas fa-graduation-cap',
             'route' => 'akademik.index',
             'match' => 'akademik',
-            'roles' => ['SUPER_ADMIN', 'STAFF']
+            'roles' => ['SUPER_ADMIN', 'STAFF', 'GURU', 'SISWA']
         ],
         [
             'label' => 'Jadwal Pelajaran',
             'icon' => 'fas fa-book-reader',
             'route' => 'akademik.jadwal-pelajaran.index',
             'match' => 'akademik/jadwal-pelajaran*',
-            'roles' => ['SUPER_ADMIN', 'STAFF']
+            'roles' => ['SUPER_ADMIN', 'STAFF', 'GURU', 'SISWA']
         ],
         [
             'label' => 'Beban Mengajar',
@@ -31,7 +31,7 @@ return [
             'icon' => 'fas fa-calendar-alt',
             'route' => 'akademik.kalender-akademik.index',
             'match' => 'akademik/kalender-akademik*',
-            'roles' => ['SUPER_ADMIN', 'STAFF']
+            'roles' => ['SUPER_ADMIN', 'STAFF', 'GURU', 'SISWA']
         ],
         [
             'label' => 'Kurikulum',
@@ -102,6 +102,13 @@ return [
                     'roles' => ['SUPER_ADMIN', 'STAFF']
                 ],
             ]
+        ],
+        [
+            'label' => 'Laporan Akademik',
+            'icon' => 'fas fa-chart-bar',
+            'route' => 'akademik.laporan.index',
+            'match' => 'akademik/laporan*',
+            'roles' => ['SUPER_ADMIN', 'STAFF', 'KEPALA_SEKOLAH', 'GURU', 'SISWA']
         ]
     ]
 ];

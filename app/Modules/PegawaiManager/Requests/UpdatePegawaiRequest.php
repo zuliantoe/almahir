@@ -26,7 +26,6 @@ class UpdatePegawaiRequest extends FormRequest
                 'required',
                 'email',
                 Rule::unique('sys_users', 'email')->ignore($pegawai->user_id),
-                Rule::unique('pegawai', 'email')->ignore($pegawai->id),
             ],
             'no_hp' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',

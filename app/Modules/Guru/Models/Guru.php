@@ -21,17 +21,16 @@ class Guru extends Model
 
     protected $fillable = [
         'nip',
+        'user_id',
+        'type_pegawai_id',
         'nama',
-        'email',
         'tanggal_lahir',
         'tempat_lahir',
         'jenis_kelamin',
         'alamat',
-        'telepon',
-        'foto',
-        'jabatan',
-        'mata_pelajaran',
+        'tanggal_masuk',
         'status',
+        'sisa_cuti',
     ];
 
     protected $casts = [

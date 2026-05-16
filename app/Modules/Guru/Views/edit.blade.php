@@ -50,11 +50,8 @@
             </div>
 
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-12">
                     <x-input name="jabatan" label="Jabatan" placeholder="Guru Tetap, Kepala Sekolah, dll" :value="old('jabatan', $guru->jabatan)" />
-                </div>
-                <div class="col-md-6">
-                    <x-input name="mata_pelajaran" label="Mata Pelajaran" placeholder="Matematika, IPA, dll" :value="old('mata_pelajaran', $guru->mata_pelajaran)" />
                 </div>
             </div>
 

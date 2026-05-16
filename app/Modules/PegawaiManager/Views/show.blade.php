@@ -151,7 +151,7 @@
                                     <div class="bg-primary-light rounded-circle p-2 mr-3 text-primary" style="background: #e3f2fd;">
                                         <i class="fas fa-envelope fa-fw"></i>
                                     </div>
-                                    <span class="h6 mb-0">{{ $pegawai->email ?? '-' }}</span>
+                                    <span class="h6 mb-0">{{ $pegawai->user->email ?? '-' }}</span>
                                 </div>
                             </div>
                         </div>
@@ -162,7 +162,7 @@
                                     <div class="bg-success-light rounded-circle p-2 mr-3 text-success" style="background: #d1e7dd;">
                                         <i class="fas fa-phone-alt fa-fw"></i>
                                     </div>
-                                    <span class="h6 mb-0">{{ $pegawai->no_hp ?? '-' }}</span>
+                                    <span class="h6 mb-0">{{ $pegawai->user->phone ?? '-' }}</span>
                                 </div>
                             </div>
                         </div>

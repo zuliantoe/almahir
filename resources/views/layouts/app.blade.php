@@ -316,6 +316,16 @@
         .preview-close:hover {
             transform: rotate(90deg);
         }
+
+        /* HR Alert Bell Ring Animation */
+        @keyframes bellRing {
+            0%, 100% { transform: rotate(0deg); }
+            10%       { transform: rotate(15deg); }
+            20%       { transform: rotate(-12deg); }
+            30%       { transform: rotate(10deg); }
+            40%       { transform: rotate(-8deg); }
+            50%       { transform: rotate(0deg); }
+        }
     </style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">

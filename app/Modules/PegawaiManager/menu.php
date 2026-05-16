@@ -24,6 +24,13 @@ return [
             'roles' => ['SUPER_ADMIN', 'STAFF'],
         ],
         [
+            'label' => 'Calon Pegawai',
+            'icon'  => 'fas fa-user-plus',
+            'route' => 'pegawaimanager.calon-pegawai.index',
+            'match' => 'pegawaimanager/calon-pegawai*',
+            'roles' => ['SUPER_ADMIN', 'STAFF'],
+        ],
+        [
             'label' => 'Jenis Pegawai',
             'icon'  => 'fas fa-tags',
             'route' => 'pegawaimanager.types.index',

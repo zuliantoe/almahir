@@ -15,7 +15,7 @@ class Perizinan extends Model
     protected $table = 'pengajuan_izin_pegawai';
 
     protected $fillable = [
-        'user_id', // Ini sebenarnya pegawai_id berdasarkan migrasi lama
+        'user_id',
         'jenis_izin',
         'tanggal_mulai',
         'tanggal_selesai',
@@ -24,6 +24,9 @@ class Perizinan extends Model
         'status',
         'keterangan_admin',
         'approved_by',
+        'potong_gaji',
+        'potong_kuota',
+        'total_hari',
     ];
 
     protected $casts = [
@@ -37,5 +40,26 @@ class Perizinan extends Model
     public function pegawai(): BelongsTo
     {
         return $this->belongsTo(Pegawai::class, 'user_id');
+    }
+
+    /**
+     * Helper untuk menentukan dampak berdasarkan jenis izin
+     */
+    public static function getImpactSettings(string $jenis): array
+    {
+        return match ($jenis) {
+            'cuti' => [
+                'potong_gaji' => false,
+                'potong_kuota' => true,
+            ],
+            'izin', 'sakit' => [
+                'potong_gaji' => true,
+                'potong_kuota' => false,
+            ],
+            default => [
+                'potong_gaji' => false,
+                'potong_kuota' => false,
+            ],
+        };
     }
 }

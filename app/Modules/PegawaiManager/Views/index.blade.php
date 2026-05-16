@@ -10,23 +10,23 @@
     <x-card title="Daftar Pegawai" icon="fas fa-users">
 
         <x-slot name="tools">
-            @can('guru.create')
+            @if(auth()->user()->hasRole('SUPER_ADMIN') || auth()->user()->can('guru.create'))
             <a href="{{ route('pegawaimanager.import') }}" class="btn btn-warning btn-sm rounded-pill px-3 shadow-sm mr-2 btn-animate font-weight-bold text-dark" title="Import data masal dari CSV">
                 <i class="fas fa-cloud-upload-alt mr-1"></i> Import CSV
             </a>
-            @endcan
+            @endif
 
-            @can('guru.view')
+            @if(auth()->user()->hasRole('SUPER_ADMIN') || auth()->user()->can('guru.view'))
             <a href="{{ route('pegawaimanager.export') }}" class="btn btn-success btn-sm rounded-pill px-3 shadow-sm mr-2 btn-animate" title="Unduh data dalam format CSV/Excel">
                 <i class="fas fa-file-excel mr-1"></i> Export Data
             </a>
-            @endcan
+            @endif
             
-            @can('guru.create')
+            @if(auth()->user()->hasRole('SUPER_ADMIN') || auth()->user()->can('guru.create'))
             <a href="{{ route('pegawaimanager.create') }}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm btn-animate gradient-primary border-0">
                 <i class="fas fa-plus mr-1"></i> Tambah Pegawai
             </a>
-            @endcan
+            @endif
         </x-slot>
 
         {{-- Filter & Search Section: Glassmorphism Layout --}}
@@ -117,7 +117,7 @@
                                      style="width: 45px; height: 45px; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); object-fit: cover;">
                                 <div>
                                     <div class="font-weight-bold text-dark mb-0">{{ $item->nama }}</div>
-                                    <small class="text-muted"><i class="far fa-envelope mr-1"></i> {{ $item->email }}</small>
+                                    <small class="text-muted"><i class="far fa-envelope mr-1"></i> {{ $item->user->email ?? '-' }}</small>
                                 </div>
                             </div>
                         </td>

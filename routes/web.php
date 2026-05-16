@@ -70,6 +70,10 @@ Route::middleware(['auth', 'role:SUPER_ADMIN'])->group(function () {
     // AJAX route for fetching linkable data
     Route::get('users/api/linkable-data', [UserManagerController::class, 'getLinkableData'])
         ->name('users.linkable-data');
+
+    // ─── Database Backup ───────────────────────────────────────────
+    Route::get('/system/backup-database', [\App\Http\Controllers\BackupController::class, 'download'])
+        ->name('system.backup');
 });
 
 /*

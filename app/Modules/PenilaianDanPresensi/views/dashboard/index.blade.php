@@ -13,7 +13,7 @@
                     <div class="card-body p-5">
                         <div class="row align-items-center">
                             <div class="col-md-8">
-                                <h1 class="display-4 font-weight-bold mb-3">Assalamualaikum, أهلاً وسهلاً!</h1>
+                                <h1 class="display-4 font-weight-bold mb-3">ٱلسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ ٱللَّٰهِ وَبَرَكَاتُهُ, أهلاً وسهلاً</h1>
                                 <p class="lead mb-4 opacity-75">أهلاً وسهلاً، <strong>{{ auth()->user()->name }}</strong>. Teruslah belajar dan berproses menjadi pribadi yang bermanfaat bagi ummat.</p>
                                 <div class="d-flex flex-wrap">
                                     <a href="{{ route('penilaiandanpresensi.presensi.siswa.index') }}" class="btn btn-outline-light btn-lg px-4 mr-3 mb-2" style="border-radius: 50px;">
@@ -36,11 +36,11 @@
                     <div class="card-body p-5">
                         <div class="row align-items-center">
                             <div class="col-md-8">
-                                <h1 class="display-4 font-weight-bold mb-3">Assalamualaikum, أهلاً وسهلاً!</h1>
+                                <h1 class="display-4 font-weight-bold mb-3">ٱلسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ ٱللَّٰهِ وَبَرَكَاتُهُ, أهلاً وسهلاً</h1>
                                 <p class="lead mb-4 opacity-75">أهلاً وسهلاً, <strong>{{ auth()->user()->name }}</strong>. Mari kita mulai hari ini dengan semangat untuk mendidik generasi rabbani.</p>
                                 <div class="d-flex flex-wrap">
                                     <a href="{{ route('penilaiandanpresensi.presensi.index') }}" class="btn btn-light btn-lg px-4 mr-3 mb-2 shadow-sm text-primary" style="border-radius: 50px;">
-                                        <i class="fas fa-user-check mr-2"></i> Input Presensi
+                                        <i class="fas fa-user-check mr-2"></i> Daftar Presensi
                                     </a>
                                     <a href="{{ route('penilaiandanpresensi.penilaianakademik.create') }}" class="btn btn-outline-light btn-lg px-4 mb-2" style="border-radius: 50px;">
                                         <i class="fas fa-edit mr-2"></i> Input Nilai
@@ -87,7 +87,7 @@
                 <div class="icon-circle bg-info-light text-info mb-3 mx-auto">
                     <i class="fas fa-award fa-lg"></i>
                 </div>
-                <h3 class="font-weight-bold mb-0 text-dark">-</h3>
+                <h3 class="font-weight-bold mb-0 text-dark">{{ $ranking }}</h3>
                 <p class="text-muted small mb-0">Peringkat Kelas</p>
             </div>
         </div>

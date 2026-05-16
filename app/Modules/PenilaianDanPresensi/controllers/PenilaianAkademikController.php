@@ -499,21 +499,31 @@ class PenilaianAkademikController extends Controller
             ->get();
 
         // Get class-wide assessments (same Rombel) to calculate Class Average (Rerata Kelas)
-        $classScores = PenilaianAkademik::whereHas('siswa.rombelSiswa', function($q) use ($rombelId) {
+        $allClassScores = PenilaianAkademik::with(['mataPelajaran'])
+            ->whereHas('siswa.rombelSiswa', function($q) use ($rombelId) {
                 $q->where('rombel_id', $rombelId)->where('status', 'aktif');
             })
             ->where('tahunajaran_id', $activeTA->id ?? 0)
-            ->get()
-            ->groupBy('mapel_id');
+            ->get();
+
+        $classScoresGrouped = [];
+        foreach ($allClassScores as $cs) {
+            $normName = $this->normalizeMapelName($cs->mataPelajaran->nama);
+            $key = strtolower($normName);
+            if (!isset($classScoresGrouped[$key])) $classScoresGrouped[$key] = [];
+            $classScoresGrouped[$key][] = $cs;
+        }
 
         // Group by Mapel and Jenis Nilai
         $rekap = [];
         foreach ($scores as $score) {
-            $mapelId = $score->mapel_id;
-            if (!isset($rekap[$mapelId])) {
-                $rekap[$mapelId] = [
-                    'nama' => $score->mataPelajaran->nama,
-                    'kategori' => $score->mataPelajaran->kategori->kategori ?? 'Umum',
+            $normName = $this->normalizeMapelName($score->mataPelajaran->nama);
+            $key = strtolower($normName);
+            
+            if (!isset($rekap[$key])) {
+                $rekap[$key] = [
+                    'nama' => $normName,
+                    'kategori' => $this->normalizeCategoryName($score->mataPelajaran->kategori->kategori ?? 'Umum'),
                     'kkm' => $score->kkm,
                     'harian' => [],
                     'uts' => null,
@@ -523,16 +533,16 @@ class PenilaianAkademikController extends Controller
             }
 
             if ($score->jenis_nilai == 'Harian') {
-                $rekap[$mapelId]['harian'][] = $score->nilai;
+                $rekap[$key]['harian'][] = $score->nilai;
             } elseif ($score->jenis_nilai == 'UTS') {
-                $rekap[$mapelId]['uts'] = $score->nilai;
+                $rekap[$key]['uts'] = $score->nilai;
             } elseif ($score->jenis_nilai == 'UAS') {
-                $rekap[$mapelId]['uas'] = $score->nilai;
+                $rekap[$key]['uas'] = $score->nilai;
             }
         }
 
         // Calculate Averages and Final Grades
-        foreach ($rekap as $mid => &$item) {
+        foreach ($rekap as $key => &$item) {
             $avgHarian = count($item['harian']) > 0 ? array_sum($item['harian']) / count($item['harian']) : 0;
             $item['avg_harian'] = round($avgHarian, 2);
             
@@ -546,9 +556,9 @@ class PenilaianAkademikController extends Controller
             $item['final'] = $divider > 0 ? round($total / $divider, 2) : 0;
             $item['predikat'] = $this->getPredikat($item['final']);
 
-            // Calculate Class Average for this subject
-            if (isset($classScores[$mid])) {
-                $subjectClassScores = $classScores[$mid];
+            // Calculate Class Average for this normalized subject
+            if (isset($classScoresGrouped[$key])) {
+                $subjectClassScores = $classScoresGrouped[$key];
                 $totalClassNilai = 0;
                 $studentCount = 0;
                 
@@ -624,6 +634,51 @@ class PenilaianAkademikController extends Controller
         if ($nilai >= 80) return 'B';
         if ($nilai >= 70) return 'C';
         return 'D';
+    }
+
+    /**
+     * Normalize Mata Pelajaran name to handle duplicates and variants.
+     */
+    private function normalizeMapelName($name)
+    {
+        $n = trim($name);
+        $low = strtolower($n);
+        
+        // Tahfidz variants
+        if (str_contains($low, 'tahfidz')) return 'Tahfidz Al-Qur\'an';
+        
+        // Science & Social
+        if (str_contains($low, 'ipa')) return 'IPA (Ilmu Pengetahuan Alam)';
+        if (str_contains($low, 'ips')) return 'IPS (Ilmu Pengetahuan Sosial)';
+        
+        // Religious subjects
+        if (str_contains($low, 'fiqih')) return 'Fiqih';
+        if (str_contains($low, 'hadits') || str_contains($low, 'hadis')) return 'Hadits';
+        if (str_contains($low, 'aqidah') || str_contains($low, 'akidah')) return 'Aqidah Akhlak';
+        if (str_contains($low, 'tarikh')) return 'Tarikh / Sejarah Islam';
+        
+        // Languages
+        if (str_contains($low, 'arab')) return 'Bahasa Arab';
+        if (str_contains($low, 'inggris')) return 'Bahasa Inggris';
+        if (str_contains($low, 'indonesia')) return 'Bahasa Indonesia';
+        
+        // Others
+        if (str_contains($low, 'matematika')) return 'Matematika';
+        if (str_contains($low, 'jasmani') || str_contains($low, 'olahraga') || str_contains($low, 'penjas')) return 'Pendidikan Jasmani & Olahraga';
+        
+        return $n;
+    }
+
+    /**
+     * Normalize Category name to handle duplicates/typos.
+     */
+    private function normalizeCategoryName($name)
+    {
+        $n = trim($name);
+        $low = strtolower($n);
+        if ($low == 'umum') return 'Umum';
+        if (str_contains($low, 'diniyah') || str_contains($low, 'diniyyah')) return 'Diniyyah';
+        return $n;
     }
 
     /**

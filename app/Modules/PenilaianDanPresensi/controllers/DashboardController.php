@@ -54,12 +54,74 @@ class DashboardController extends Controller
                 ->take(5)
                 ->get();
 
+            // Calculate Ranking in Rombel
+            $activeRombel = \App\Modules\Akademik\Models\RombelSiswa::where('siswa_id', $siswa?->id)
+                ->where('status', 'aktif')
+                ->whereHas('rombel', function($q) use ($activeTA) {
+                    $q->where('tahunajaran_id', $activeTA->id ?? 0);
+                })->first();
+            
+            $rombelId = $activeRombel ? $activeRombel->rombel_id : 0;
+            $ranking = '-';
+            
+            if ($rombelId > 0) {
+                $allRombelSiswaIds = \App\Modules\Akademik\Models\RombelSiswa::where('rombel_id', $rombelId)
+                    ->where('status', 'aktif')
+                    ->pluck('siswa_id');
+
+                $allScores = PenilaianAkademik::whereIn('siswa_id', $allRombelSiswaIds)
+                    ->where('tahunajaran_id', $activeTA->id ?? 0)
+                    ->get();
+
+                $studentAverages = [];
+                foreach ($allRombelSiswaIds as $rsid) {
+                    $studentScores = $allScores->where('siswa_id', $rsid);
+                    if ($studentScores->isEmpty()) {
+                        $studentAverages[$rsid] = 0;
+                        continue;
+                    }
+
+                    $rekap = [];
+                    foreach ($studentScores as $score) {
+                        $mid = $score->mapel_id;
+                        if (!isset($rekap[$mid])) {
+                            $rekap[$mid] = ['harian' => [], 'uts' => null, 'uas' => null];
+                        }
+                        if ($score->jenis_nilai == 'Harian') $rekap[$mid]['harian'][] = $score->nilai;
+                        elseif ($score->jenis_nilai == 'UTS') $rekap[$mid]['uts'] = $score->nilai;
+                        elseif ($score->jenis_nilai == 'UAS') $rekap[$mid]['uas'] = $score->nilai;
+                    }
+
+                    $totalFinal = 0;
+                    $mapelCount = 0;
+                    foreach ($rekap as $item) {
+                        $avgH = count($item['harian']) > 0 ? array_sum($item['harian']) / count($item['harian']) : 0;
+                        $div = 0; $sum = 0;
+                        if ($avgH > 0) { $sum += $avgH; $div++; }
+                        if ($item['uts'] !== null) { $sum += $item['uts']; $div++; }
+                        if ($item['uas'] !== null) { $sum += $item['uas']; $div++; }
+                        
+                        if ($div > 0) {
+                            $totalFinal += ($sum / $div);
+                            $mapelCount++;
+                        }
+                    }
+                    $studentAverages[$rsid] = $mapelCount > 0 ? $totalFinal / $mapelCount : 0;
+                }
+
+                arsort($studentAverages);
+                $ranks = array_keys($studentAverages);
+                $myRank = array_search($siswa?->id, $ranks) + 1;
+                $ranking = $myRank . ' / ' . count($ranks);
+            }
+
             return view('penilaiandanpresensi::dashboard.index', [
                 'title' => 'Dashboard Santri',
                 'activeTA' => $activeTA,
                 'statsPresensi' => $statsPresensi,
                 'penilaianAkademik' => $penilaianAkademik,
                 'penilaianTahfidz' => $penilaianTahfidz,
+                'ranking' => $ranking,
                 'isSiswa' => true,
             ]);
         }
@@ -102,13 +164,20 @@ class DashboardController extends Controller
                 'avg_nilai' => PenilaianAkademik::where('guru_id', $guru?->id)->avg('nilai') ?? 0
             ];
 
+            $recentPenilaianTahfidz = PenilaianTahfidz::with(['siswa'])
+                ->where('guru_id', $guru?->id)
+                ->where('tahunajaran_id', $activeTA->id ?? 0)
+                ->latest()
+                ->take(5)
+                ->get();
+
             return view('penilaiandanpresensi::dashboard.index', [
                 'title' => 'Dashboard Penilaian & Presensi',
                 'activeTA' => $activeTA,
                 'statsPresensi' => $statsPresensi,
                 'pendingIzin' => $pendingIzin,
                 'penilaianAkademik' => $recentPenilaianAkademik,
-                'penilaianTahfidz' => collect(),
+                'penilaianTahfidz' => $recentPenilaianTahfidz,
                 'isGuru' => true,
                 'guruStats' => $guruStats,
             ]);

@@ -1,5 +1,5 @@
 {{-- Main Navbar --}}
-<nav class="main-header navbar navbar-expand navbar-white navbar-light border-bottom-0 shadow-sm" style="height: 65px;">
+<nav class="main-header navbar navbar-expand navbar-white navbar-light border-bottom-0 shadow-sm no-print" style="height: 65px;">
     {{-- Left navbar links --}}
     <ul class="navbar-nav">
         <li class="nav-item">

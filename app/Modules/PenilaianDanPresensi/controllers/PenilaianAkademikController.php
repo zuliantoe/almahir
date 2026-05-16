@@ -523,7 +523,7 @@ class PenilaianAkademikController extends Controller
             if (!isset($rekap[$key])) {
                 $rekap[$key] = [
                     'nama' => $normName,
-                    'kategori' => $this->normalizeCategoryName($score->mataPelajaran->kategori->kategori ?? 'Umum'),
+                    'kategori' => $this->identifyCategory($normName, $score->mataPelajaran->kategori->kategori ?? 'Umum'),
                     'kkm' => $score->kkm,
                     'harian' => [],
                     'uts' => null,
@@ -613,27 +613,43 @@ class PenilaianAkademikController extends Controller
             ->get();
 
         // Get Raport Note
-        $catatan = RaportCatatan::where('siswa_id', $siswa->id)
+        $catatan = \Modules\PenilaianDanPresensi\Models\RaportCatatan::where('siswa_id', $siswa->id)
             ->where('tahunajaran_id', $activeTA->id ?? 0)
             ->first();
 
+        $rombelSiswa = \App\Modules\Akademik\Models\RombelSiswa::with('rombel.walikelas')
+            ->where('siswa_id', $siswa->id)
+            ->where('status', 'aktif')
+            ->whereHas('rombel', function($q) use ($activeTA) {
+                $q->where('tahunajaran_id', $activeTA->id ?? 0);
+            })->first();
+        
+        $activeRombel = $rombelSiswa ? $rombelSiswa->rombel : null;
+        
+        // Get Kepala Sekolah
+        $kepalaSekolah = \Modules\Guru\Models\Guru::where('jabatan', 'like', '%Kepala%')->first();
+
         return view('penilaiandanpresensi::penilaianakademik.raport_show', [
-            'title' => 'Raport Santri: ' . $siswa->nama,
+            'title' => 'Cetak Raport - ' . $siswa->nama,
             'siswa' => $siswa,
             'activeTA' => $activeTA,
+            'activeRombel' => $activeRombel,
+            'kepalaSekolah' => $kepalaSekolah,
+            'scores' => $scores,
             'rekapGrouped' => $rekapGrouped,
-            'attendance' => $attendance,
             'tahfidz' => $tahfidz,
+            'attendance' => $attendance,
             'catatan' => $catatan,
         ]);
     }
 
     private function getPredikat($nilai)
     {
-        if ($nilai >= 90) return 'A';
-        if ($nilai >= 80) return 'B';
-        if ($nilai >= 70) return 'C';
-        return 'D';
+        if ($nilai >= 93) return 'Mumtaz';
+        if ($nilai >= 85) return 'Jayyid Jiddan';
+        if ($nilai >= 75) return 'Jayyid';
+        if ($nilai >= 65) return 'Maqbul';
+        return 'Dhaif';
     }
 
     /**
@@ -667,6 +683,21 @@ class PenilaianAkademikController extends Controller
         if (str_contains($low, 'jasmani') || str_contains($low, 'olahraga') || str_contains($low, 'penjas')) return 'Pendidikan Jasmani & Olahraga';
         
         return $n;
+    }
+
+    /**
+     * Identify category based on subject name or default category.
+     */
+    private function identifyCategory($mapelName, $defaultCat)
+    {
+        $low = strtolower($mapelName);
+        if (str_contains($low, 'olahraga') || 
+            str_contains($low, 'mufradat') || 
+            str_contains($low, 'muhadatsah') || 
+            str_contains($low, 'muhadharah')) {
+            return 'Pengembangan Diri';
+        }
+        return $this->normalizeCategoryName($defaultCat);
     }
 
     /**

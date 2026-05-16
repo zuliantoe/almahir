@@ -13,7 +13,7 @@
         }
     }
 @endphp
-<aside class="main-sidebar {{ $sidebarClass }} elevation-4">
+<aside class="main-sidebar {{ $sidebarClass }} elevation-4 no-print">
     {{-- Brand Logo --}}
     <a href="{{ $homeUrl }}" class="brand-link">
         <img src="https://adminlte.io/themes/v3/dist/img/AdminLTELogo.png" 

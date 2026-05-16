@@ -195,7 +195,7 @@
                                 </span>
                             </td>
                             <td>
-                                <div class="text-dark font-weight-500">{{ $mapels->get($item->mapel_id)->nama ?? '-' }}</div>
+                                <div class="text-dark font-weight-500">{{ $item->mataPelajaran->nama ?? '-' }}</div>
                                 <small class="text-muted">{{ $item->guru->nama ?? '-' }}</small>
                             </td>
                             <td>

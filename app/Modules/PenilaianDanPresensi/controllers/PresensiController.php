@@ -43,6 +43,20 @@ class PresensiController extends Controller
         $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
         $tahunAjaranId = $activeTahunAjaran ? $activeTahunAjaran->id : null;
 
+        // --- CLEANUP PREMATURE ALPHA FOR THIS STUDENT ---
+        $currentTime = date('H:i');
+        $prematureAlphaIds = Presensi::where('siswa_id', $siswa->id)
+            ->whereDate('created_at', Carbon::today())
+            ->where('status', 'Alpha')
+            ->whereHas('jadwalPelajaran', function($q) use ($currentTime) {
+                $q->where('jamakhir', '>', $currentTime);
+            })
+            ->pluck('id');
+        
+        if ($prematureAlphaIds->count() > 0) {
+            Presensi::whereIn('id', $prematureAlphaIds)->delete();
+        }
+
         $hariIni = date('N'); // 1 = Senin, 7 = Minggu
         
         // Get the actual rombel_id from RombelSiswa (Active only)
@@ -191,12 +205,12 @@ class PresensiController extends Controller
 
         $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
 
-        $sudahAbsen = Presensi::where('siswa_id', $siswa->id)
+        $existing = Presensi::where('siswa_id', $siswa->id)
             ->where('jadwal_pelajaran_id', $jadwalId)
             ->whereDate('created_at', date('Y-m-d'))
-            ->exists();
+            ->first();
 
-        if ($sudahAbsen) {
+        if ($existing && !in_array($existing->status, ['Alpha'])) {
             $msg = 'Anda sudah melakukan absen untuk mata pelajaran ini.';
             if ($request->ajax()) return response()->json(['message' => $msg], 422);
             return back()->with('error', $msg);
@@ -214,26 +228,32 @@ class PresensiController extends Controller
 
         // Determine status: check if late
         $status = 'Hadir';
-        $currentTime = date('H:i');
-        $jadwal = \App\Modules\Akademik\Models\JadwalPelajaran::find($jadwalId);
-        
-        // If current time is after jamawal (with 10 minutes grace), mark as Telat
         if ($currentTime > date('H:i', strtotime($jadwal->jamawal . ' + 10 minutes'))) {
             $status = 'Telat';
         }
 
-        Presensi::create([
-            'siswa_id' => $siswa->id,
-            'guru_id' => $guruId,
-            'mapel_id' => $mapelId,
-            'jadwal_pelajaran_id' => $jadwalId,
-            'tahunajaran_id' => $activeTA->id ?? null,
-            'semester' => $activeTA->semester ?? null,
-            'author_id' => auth()->id(),
-            'jam' => date('H:i'),
-            'status' => $status,
-            'kategori' => $status === 'Telat' ? 'Telat' : 'Hadir',
-        ]);
+        if ($existing && $existing->status === 'Alpha') {
+            $existing->update([
+                'guru_id' => $guruId,
+                'jam' => date('H:i'),
+                'status' => $status,
+                'kategori' => $status === 'Telat' ? 'Telat' : 'Hadir',
+                'author_id' => auth()->id(),
+            ]);
+        } else {
+            Presensi::create([
+                'siswa_id' => $siswa->id,
+                'guru_id' => $guruId,
+                'mapel_id' => $mapelId,
+                'jadwal_pelajaran_id' => $jadwalId,
+                'tahunajaran_id' => $activeTA->id ?? null,
+                'semester' => $activeTA->semester ?? null,
+                'author_id' => auth()->id(),
+                'jam' => date('H:i'),
+                'status' => $status,
+                'kategori' => $status === 'Telat' ? 'Telat' : 'Hadir',
+            ]);
+        }
 
         $successMsg = $status === 'Telat' ? 'Berhasil absen, namun Anda tercatat TERLAMBAT.' : 'Berhasil melakukan absen.';
         if ($request->ajax()) return response()->json(['message' => $successMsg, 'status' => $status]);
@@ -301,11 +321,47 @@ class PresensiController extends Controller
             $currentTime = date('H:i');
             $isToday = $targetTanggal == date('Y-m-d');
 
-            // Pre-fetch existing for this date/rombel to avoid N+1
-            $existingKeys = Presensi::whereDate('created_at', $targetTanggal)
+            // Pre-fetch existing for this date to avoid N+1. 
+            // Key by student-mapel to handle duplicate schedules gracefully.
+            $existingMapels = Presensi::whereDate('created_at', $targetTanggal)
+                ->whereIn('status', ['Hadir', 'Telat', 'Izin', 'Sakit'])
+                ->get()
+                ->pluck('id', fn($item) => $item->siswa_id . '-' . $item->mapel_id)
+                ->toArray();
+                
+            $existingAll = Presensi::whereDate('created_at', $targetTanggal)
                 ->get()
                 ->pluck('id', fn($item) => $item->siswa_id . '-' . $item->jadwal_pelajaran_id)
                 ->toArray();
+
+            // CLEANUP: If it's today, delete Alpha records for schedules that haven't ended yet
+            // OR if the student already has a non-Alpha record for that mapel today
+            if ($isToday) {
+                $prematureAlphaIds = Presensi::whereDate('created_at', $targetTanggal)
+                    ->where('status', 'Alpha')
+                    ->where(function($q) use ($currentTime, $existingMapels) {
+                        $q->whereHas('jadwalPelajaran', function($sq) use ($currentTime) {
+                            $sq->where('jamakhir', '>', $currentTime);
+                        });
+                        // Also delete if they are already present for this mapel (fixes duplicates)
+                        foreach ($existingMapels as $key => $id) {
+                            $parts = explode('-', $key);
+                            $q->orWhere(function($sub) use ($parts) {
+                                $sub->where('siswa_id', $parts[0])->where('mapel_id', $parts[1]);
+                            });
+                        }
+                    })
+                    ->pluck('id');
+                
+                if ($prematureAlphaIds->count() > 0) {
+                    Presensi::whereIn('id', $prematureAlphaIds)->delete();
+                    // Refresh existing keys
+                    $existingAll = Presensi::whereDate('created_at', $targetTanggal)
+                        ->get()
+                        ->pluck('id', fn($item) => $item->siswa_id . '-' . $item->jadwal_pelajaran_id)
+                        ->toArray();
+                }
+            }
 
             $jadwalQuery = JadwalPelajaran::where('hari', $dayOfWeek);
             if ($request->filled('rombel_id')) {
@@ -324,11 +380,16 @@ class PresensiController extends Controller
                 if (!$rombel) continue;
 
                 foreach ($schedules as $j) {
-                    if ($isToday && $currentTime < $j->jamawal) continue;
+                    if ($isToday && $currentTime < $j->jamakhir) continue;
 
                     foreach ($rombel->aktifSiswa as $s) {
                         $key = $s->id . '-' . $j->id;
-                        if (!isset($existingKeys[$key])) {
+                        $mapelKey = $s->id . '-' . $j->mapel_id;
+                        
+                        // Don't create Alpha if:
+                        // 1. Specific schedule already has a record
+                        // 2. Student is already present for this SUBJECT today (fixes duplicate schedule issue)
+                        if (!isset($existingAll[$key]) && !isset($existingMapels[$mapelKey])) {
                             $alphaBatch[] = [
                                 'siswa_id' => $s->id,
                                 'guru_id' => $j->guru_id ?? 1,
@@ -343,6 +404,10 @@ class PresensiController extends Controller
                                 'created_at' => $targetTanggal . ' ' . $j->jamawal . ':00',
                                 'updated_at' => now(),
                             ];
+                            // Mark as existing so we don't double-add in the same batch
+                            $existingAll[$key] = true;
+                            $existingMapels[$mapelKey] = true;
+
                             if (count($alphaBatch) >= 50) {
                                 Presensi::insert($alphaBatch);
                                 $alphaBatch = [];
@@ -558,7 +623,7 @@ class PresensiController extends Controller
                 ->whereDate('created_at', Carbon::today())
                 ->first();
 
-            if ($exists) {
+            if ($exists && !in_array($exists->status, ['Alpha'])) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Anda SUDAH ABSEN untuk mata pelajaran ' . ($jadwal->mataPelajaran->nama ?? 'ini') . '.',
@@ -574,19 +639,30 @@ class PresensiController extends Controller
                 $status = 'Telat';
             }
 
-            $presensi = Presensi::create([
-                'siswa_id' => $siswa->id,
-                'guru_id' => $jadwal->guru_id,
-                'mapel_id' => $jadwal->mapel_id,
-                'jadwal_pelajaran_id' => $jadwal->id,
-                'tahunajaran_id' => $activeTA->id ?? null,
-                'semester' => $activeTA->semester ?? null,
-                'author_id' => auth()->id(),
-                'jam' => Carbon::now()->format('H:i'),
-                'status' => $status,
-                'kategori' => 'Hadir',
-                'scan_id' => 'STUDENT_SCAN',
-            ]);
+            if ($exists && $exists->status === 'Alpha') {
+                $exists->update([
+                    'guru_id' => $jadwal->guru_id,
+                    'jam' => Carbon::now()->format('H:i'),
+                    'status' => $status,
+                    'kategori' => 'Hadir',
+                    'author_id' => auth()->id(),
+                ]);
+                $presensi = $exists;
+            } else {
+                $presensi = Presensi::create([
+                    'siswa_id' => $siswa->id,
+                    'guru_id' => $jadwal->guru_id,
+                    'mapel_id' => $jadwal->mapel_id,
+                    'jadwal_pelajaran_id' => $jadwal->id,
+                    'tahunajaran_id' => $activeTA->id ?? null,
+                    'semester' => $activeTA->semester ?? null,
+                    'author_id' => auth()->id(),
+                    'jam' => Carbon::now()->format('H:i'),
+                    'status' => $status,
+                    'kategori' => 'Hadir',
+                    'scan_id' => 'STUDENT_SCAN',
+                ]);
+            }
 
             return response()->json([
                 'success' => true,

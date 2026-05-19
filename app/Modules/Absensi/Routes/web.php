@@ -17,8 +17,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/store', [AbsensiController::class, 'store'])->name('store');
     Route::post('/update', [AbsensiController::class, 'update'])->name('update');
 
-    // Admin/Manage Routes
-    Route::get('/manage', [\Modules\Absensi\Controllers\ManageAbsensiController::class, 'index'])->name('manage.index');
-    Route::get('/manage/export', [\Modules\Absensi\Controllers\ManageAbsensiController::class, 'export'])->name('manage.export');
-    Route::get('/manage/qr-generator', [\Modules\Absensi\Controllers\ManageAbsensiController::class, 'qrGenerator'])->name('manage.qr-generator');
+    // Admin/Manage Routes (Only accessible by SUPER_ADMIN)
+    Route::middleware(['role:SUPER_ADMIN'])->group(function () {
+        Route::get('/manage', [\Modules\Absensi\Controllers\ManageAbsensiController::class, 'index'])->name('manage.index');
+        Route::get('/manage/export', [\Modules\Absensi\Controllers\ManageAbsensiController::class, 'export'])->name('manage.export');
+        Route::get('/manage/qr-generator', [\Modules\Absensi\Controllers\ManageAbsensiController::class, 'qrGenerator'])->name('manage.qr-generator');
+    });
 });

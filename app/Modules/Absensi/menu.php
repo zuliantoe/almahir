@@ -28,7 +28,7 @@ return [
             'icon'  => 'fas fa-desktop',
             'route' => 'absensi.manage.index',
             'match' => 'absensi/manage',
-            'roles' => ['SUPER_ADMIN', 'STAFF'],
+            'roles' => ['SUPER_ADMIN'],
         ],
         [
             'label' => 'Layar Lobi (QR Code)',

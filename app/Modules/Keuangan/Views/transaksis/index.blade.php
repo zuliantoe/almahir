@@ -118,7 +118,7 @@
                         <div class="col-12 col-lg-7 mb-4 mb-lg-0">
                             <form id="filterForm" method="GET" action="{{ route('keuangan.transaksis.index') }}">
                                 <div class="row g-2 align-items-end">
-                                    <div class="col-6 col-md-4">
+                                    <div class="col-12 col-md-4">
                                         <label class="form-label small text-muted font-weight-bold mb-1 d-block">Tahun</label>
                                         <select name="year" class="form-select custom-select shadow-sm w-100" onchange="this.form.submit()">
                                             @foreach($allYears as $yearItem)
@@ -128,7 +128,7 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="col-6 col-md-5">
+                                    <div class="col-6 col-md-4">
                                         <label class="form-label small text-muted font-weight-bold mb-1 d-block">Bulan</label>
                                         <select name="month" class="form-select custom-select shadow-sm w-100" onchange="this.form.submit()">
                                             <option value="all" {{ $currentMonth == 'all' ? 'selected' : '' }}>Semua Bulan</option>
@@ -137,6 +137,14 @@
                                                     {{ $monthName }}
                                                 </option>
                                             @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <label class="form-label small text-muted font-weight-bold mb-1 d-block">Jenis Transaksi</label>
+                                        <select name="type" class="form-select custom-select shadow-sm w-100" onchange="this.form.submit()">
+                                            <option value="all" {{ $currentType == 'all' ? 'selected' : '' }}>Semua Transaksi</option>
+                                            <option value="Pemasukan" {{ $currentType == 'Pemasukan' ? 'selected' : '' }}>Pemasukan</option>
+                                            <option value="Pengeluaran" {{ $currentType == 'Pengeluaran' ? 'selected' : '' }}>Pengeluaran</option>
                                         </select>
                                     </div>
                                 </div>
@@ -149,8 +157,8 @@
                                 <!-- Row 1: Print & Export -->
                                 <div class="row g-2 mb-3">
                                     @php
-                                        $printUrl = route('keuangan.transaksis.print', ['year' => $currentYear, 'month' => $currentMonth]);
-                                        $pdfUrl = route('keuangan.transaksis.print', ['year' => $currentYear, 'month' => $currentMonth, 'export' => 'pdf']);
+                                        $printUrl = route('keuangan.transaksis.print', ['year' => $currentYear, 'month' => $currentMonth, 'type' => $currentType]);
+                                        $pdfUrl = route('keuangan.transaksis.print', ['year' => $currentYear, 'month' => $currentMonth, 'type' => $currentType, 'export' => 'pdf']);
                                     @endphp
                                     <div class="col-6">
                                         <a href="{{ $printUrl }}" target="_blank" class="btn btn-primary w-100 shadow-sm py-2" title="Print Laporan">
@@ -190,6 +198,9 @@
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">Preview Laporan Transaksi</h6>
+                    <div class="small text-muted mt-1">
+                        Jenis Transaksi : {{ $currentType == 'all' ? 'Semua Transaksi' : $currentType }}
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -198,14 +209,18 @@
                                 <tr class="text-center">
                                     <th width="15%">Tanggal</th>
                                     <th>Keterangan (Pemasukan/Pengeluaran)</th>
-                                    <th width="20%">Kredit (Pemasukan)</th>
-                                    <th width="20%">Debit (Pengeluaran)</th>
+                                    @if($currentType == 'all' || $currentType == 'Pemasukan')
+                                        <th width="20%">Kredit (Pemasukan)</th>
+                                    @endif
+                                    @if($currentType == 'all' || $currentType == 'Pengeluaran')
+                                        <th width="20%">Debit (Pengeluaran)</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
                                 @if($groupedTransactions->isEmpty())
                                 <tr>
-                                    <td colspan="4" class="text-center py-4 text-muted">Tidak ada data transaksi pada periode ini.</td>
+                                    <td colspan="{{ $currentType == 'all' ? '4' : '3' }}" class="text-center py-4 text-muted">Tidak ada data transaksi pada periode ini.</td>
                                 </tr>
                                 @else
                                     @php
@@ -228,7 +243,7 @@
                                         <!-- Header Hari -->
                                         <tr style="background-color: #dbe4f9;">
                                             <td class="font-weight-bold text-center">{{ $formattedDate }}</td>
-                                            <td class="font-weight-bold" colspan="3">{{ $dayName }} - {{ $transactions->count() }} transaksi</td>
+                                            <td class="font-weight-bold" colspan="{{ $currentType == 'all' ? '3' : '2' }}">{{ $dayName }} - {{ $transactions->count() }} transaksi</td>
                                         </tr>
 
                                         <!-- Detail Transaksi -->
@@ -250,42 +265,56 @@
                                                     </span>
                                                 </div>
                                             </td>
+                                            @if($currentType == 'all' || $currentType == 'Pemasukan')
                                             <td class="text-right text-success font-weight-bold">
                                                 {{ $trx['jenis'] == 'Pemasukan' ? 'Rp' . number_format($trx['jumlah'], 0, ',', '.') : '-' }}
                                             </td>
+                                            @endif
+                                            @if($currentType == 'all' || $currentType == 'Pengeluaran')
                                             <td class="text-right text-danger font-weight-bold">
                                                 {{ $trx['jenis'] == 'Pengeluaran' ? 'Rp' . number_format($trx['jumlah'], 0, ',', '.') : '-' }}
                                             </td>
+                                            @endif
                                         </tr>
                                         @endforeach
                                         
                                         <!-- Footer Hari -->
                                         <tr class="bg-light">
                                             <td colspan="2" class="text-right font-weight-bold">Total:</td>
+                                            @if($currentType == 'all' || $currentType == 'Pemasukan')
                                             <td class="text-right text-success font-weight-bold">Rp{{ number_format($dailyKredit, 0, ',', '.') }}</td>
+                                            @endif
+                                            @if($currentType == 'all' || $currentType == 'Pengeluaran')
                                             <td class="text-right text-danger font-weight-bold">
                                                 {{ $dailyDebit > 0 ? 'Rp' . number_format($dailyDebit, 0, ',', '.') : 'Rp0' }}
                                             </td>
+                                            @endif
                                         </tr>
                                     @endforeach
                                     
                                     <!-- Spacer -->
                                     <tr style="border: none; background-color: transparent;">
-                                        <td colspan="4" style="border: none; height: 30px;"></td>
+                                        <td colspan="{{ $currentType == 'all' ? '4' : '3' }}" style="border: none; height: 30px;"></td>
                                     </tr>
 
                                     <!-- Grand Total -->
                                     <tr style="background-color: #e9ecef;">
                                         <td colspan="2" class="text-right font-weight-bold text-uppercase">TOTAL {{ $currentMonth != 'all' ? 'BULAN INI' : 'TAHUN INI' }}:</td>
+                                        @if($currentType == 'all' || $currentType == 'Pemasukan')
                                         <td class="text-right text-success font-weight-bold">Rp{{ number_format($grandTotalKredit, 0, ',', '.') }}</td>
+                                        @endif
+                                        @if($currentType == 'all' || $currentType == 'Pengeluaran')
                                         <td class="text-right text-danger font-weight-bold">Rp{{ number_format($grandTotalDebit, 0, ',', '.') }}</td>
+                                        @endif
                                     </tr>
+                                    @if($currentType == 'all')
                                     <tr style="background-color: #fff3cd;">
                                         <td colspan="2" class="text-right font-weight-bold">SALDO AKHIR {{ $currentMonth != 'all' ? 'BULAN' : 'TAHUN' }}:</td>
                                         <td colspan="2" class="text-center font-weight-bold {{ ($grandTotalKredit - $grandTotalDebit) < 0 ? 'text-danger' : 'text-success' }}">
                                             Rp{{ number_format($grandTotalKredit - $grandTotalDebit, 0, ',', '.') }}
                                         </td>
                                     </tr>
+                                    @endif
                                 @endif
                             </tbody>
                         </table>
@@ -574,13 +603,13 @@
 <script>
     function confirmExport(url) {
         Swal.fire({
-            title: 'Konfirmasi Export PDF',
-            text: "Apakah Anda yakin ingin mendownload laporan ini?",
-            icon: 'question',
+            title: 'Export ke PDF',
+            text: "Sistem akan membuka jendela cetak. Pastikan Anda memilih 'Simpan sebagai PDF' (Save as PDF) pada opsi Tujuan (Destination).",
+            icon: 'info',
             showCancelButton: true,
-            confirmButtonColor: '#4e73df',
+            confirmButtonColor: '#dc3545',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Ya, Download!',
+            confirmButtonText: 'Lanjutkan',
             cancelButtonText: 'Batal',
             reverseButtons: true
         }).then((result) => {

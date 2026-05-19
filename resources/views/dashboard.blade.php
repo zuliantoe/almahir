@@ -25,8 +25,8 @@
                             </p>
                         </div>
                         <div class="col-auto text-right text-muted d-none d-sm-block">
-                            <div class="small font-weight-bold">{{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}</div>
-                            <div class="small" id="dashboard-clock">00:00:00</div>
+                            <div class="small font-weight-bold">{{ \Carbon\Carbon::now()->locale('id')->translatedFormat('l, d F Y') }}</div>
+                            <div class="small" id="dashboard-clock">00:00:00 WIB</div>
                         </div>
                     </div>
                 </div>
@@ -224,7 +224,7 @@
         const now = new Date();
         const display = now.toLocaleTimeString('id-ID', { hour12: false });
         const clockElement = document.getElementById('dashboard-clock');
-        if(clockElement) clockElement.textContent = display;
+        if(clockElement) clockElement.textContent = display + ' WIB';
     }
     setInterval(updateDashboardClock, 1000);
     updateDashboardClock();

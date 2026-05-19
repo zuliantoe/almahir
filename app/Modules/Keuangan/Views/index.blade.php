@@ -2,119 +2,240 @@
 
 @section('title', 'Dashboard Keuangan')
 
-@section('content-header')
-    <div class="row mb-2">
-        <div class="col-sm-6">
-            <h1 class="m-0">Dashboard Keuangan</h1>
-        </div>
-        <div class="col-sm-6">
-            <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="#">Home</a></li>
-                <li class="breadcrumb-item active">Keuangan</li>
-            </ol>
-        </div>
-    </div>
-@endsection
-
 @section('content')
 <div class="container-fluid">
-    {{-- Info boxes --}}
+    {{-- 🌟 Personalized Welcome Card (Sistem Akademik Standard) --}}
     <div class="row">
-        <div class="col-12 col-sm-6 col-md-4">
-            <div class="info-box shadow-sm">
-                <span class="info-box-icon bg-success elevation-1"><i class="fas fa-arrow-down"></i></span>
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm border-0" style="border-radius: 12px; border-left: 5px solid #1cc88a; background: #fff;">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-auto d-none d-md-block">
+                            <img src="{{ Auth::user()->avatar_url ?? asset('images/default-avatar.png') }}" 
+                                 class="img-circle elevation-1 border" 
+                                 onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=random'"
+                                 style="width: 75px; height: 75px; object-fit: cover; background: #f4f6f9; padding: 3px;">
+                        </div>
+                        <div class="col">
+                            <h4 class="font-weight-bold text-dark mb-1">
+                                Selamat Datang di Modul Keuangan, {{ Auth::user()->name }}!
+                            </h4>
+                            <p class="text-muted mb-0">
+                                Menampilkan ringkasan keuangan untuk bulan <strong>{{ $monthName }} {{ now()->year }}</strong>.
+                                <span class="d-none d-lg-inline ml-1 border-left pl-2">Sistem Akademik <strong>AL MAHIR</strong>.</span>
+                            </p>
+                        </div>
+                        <div class="col-auto text-right text-muted d-none d-sm-block">
+                            <div class="small font-weight-bold">{{ \Carbon\Carbon::now()->locale('id')->translatedFormat('l, d F Y') }}</div>
+                            <div class="small" id="dashboard-clock">00:00:00 WIB</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- 📊 Dynamic Statistics Row --}}
+    <div class="row">
+        {{-- Total Saldo --}}
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box shadow-sm border-0 bg-white" style="border-radius: 10px;">
+                <span class="info-box-icon elevation-1 text-white custom-icon-box" 
+                      style="background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);">
+                    <i class="fas fa-wallet fa-fw"></i>
+                </span>
                 <div class="info-box-content">
-                    <span class="info-box-text">Total Pemasukan</span>
-                    <span class="info-box-number text-success">Rp 0</span>
+                    <span class="info-box-text text-uppercase text-muted small font-weight-bold">Saldo ({{ $monthName }})</span>
+                    <span class="info-box-number font-weight-bolder mb-0 {{ $saldo < 0 ? 'text-danger' : 'text-dark' }}" style="font-size: 1.15rem;">
+                        Rp {{ number_format($saldo, 0, ',', '.') }}
+                    </span>
                 </div>
             </div>
         </div>
         
-        <div class="col-12 col-sm-6 col-md-4">
-            <div class="info-box shadow-sm mb-3">
-                <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-arrow-up"></i></span>
+        {{-- Total Pemasukan --}}
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box mb-3 shadow-sm border-0 bg-white" style="border-radius: 10px;">
+                <span class="info-box-icon elevation-1 text-white custom-icon-box"
+                      style="background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);">
+                    <i class="fas fa-arrow-down fa-fw"></i>
+                </span>
                 <div class="info-box-content">
-                    <span class="info-box-text">Total Pengeluaran</span>
-                    <span class="info-box-number text-danger">Rp 0</span>
+                    <span class="info-box-text text-uppercase text-muted small font-weight-bold">Pemasukan ({{ $monthName }})</span>
+                    <span class="info-box-number font-weight-bolder mb-0 text-dark" style="font-size: 1.15rem;">
+                        Rp {{ number_format($totalPemasukan, 0, ',', '.') }}
+                    </span>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-sm-6 col-md-4">
-            <div class="info-box shadow-sm mb-3">
-                <span class="info-box-icon bg-info elevation-1"><i class="fas fa-wallet"></i></span>
+        {{-- Total Pengeluaran --}}
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box mb-3 shadow-sm border-0 bg-white" style="border-radius: 10px;">
+                <span class="info-box-icon elevation-1 text-white custom-icon-box"
+                      style="background: linear-gradient(135deg, #e74a3b 0%, #be2617 100%);">
+                    <i class="fas fa-arrow-up fa-fw"></i>
+                </span>
                 <div class="info-box-content">
-                    <span class="info-box-text">Saldo Saat Ini</span>
-                    <span class="info-box-number text-info">Rp 0</span>
+                    <span class="info-box-text text-uppercase text-muted small font-weight-bold">Pengeluaran ({{ $monthName }})</span>
+                    <span class="info-box-number font-weight-bolder mb-0 text-dark" style="font-size: 1.15rem;">
+                        Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        {{-- Uang Saku (Total / Transaksi) --}}
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box mb-3 shadow-sm border-0 bg-white" style="border-radius: 10px;">
+                <span class="info-box-icon elevation-1 text-white custom-icon-box"
+                      style="background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);">
+                    <i class="fas fa-coins fa-fw"></i>
+                </span>
+                <div class="info-box-content">
+                    <span class="info-box-text text-uppercase text-muted small font-weight-bold">Uang Saku ({{ $monthName }})</span>
+                    <span class="info-box-number font-weight-bolder mb-0 text-dark" style="font-size: 1.15rem;">
+                        Rp {{ number_format($totalUangSaku, 0, ',', '.') }}
+                    </span>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        {{-- Recent Activity --}}
-        <div class="col-md-8">
-            <x-card title="Aktivitas Terakhir" icon="fas fa-history" type="primary">
-                <div class="table-responsive">
-                    <table class="table table-hover table-sm">
-                        <thead class="text-muted">
-                            <tr>
-                                <th>Tanggal</th>
-                                <th>Keterangan</th>
-                                <th>Tipe</th>
-                                <th class="text-right">Nominal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td colspan="4" class="text-center py-4 text-muted">
-                                    Belum ada aktivitas terbaru.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+    <div class="row mt-3">
+        {{-- 📘 Overview Section --}}
+        <div class="col-lg-8">
+            <x-card title="Panduan Modul Keuangan" icon="fas fa-book-open" type="success" :outline="true">
+                <div class="text-center py-4">
+                    <h5 class="text-success font-weight-bold mb-3 small-text">SISTEM KEUANGAN TERINTEGRASI</h5>
+                    <p class="text-muted px-lg-5" style="line-height: 1.8; font-size: 0.95rem;">
+                        Kelola seluruh arus kas instansi melalui modul ini. Transaksi pemasukan dan pengeluaran 
+                        akan otomatis memengaruhi total saldo. Sistem juga mendukung pencatatan uang saku santri secara terpusat.
+                    </p>
                 </div>
-                <x-slot name="footer">
-                    <a href="{{ route('keuangan.transaksis.index') }}" class="btn btn-sm btn-link text-primary p-0">
-                        Lihat Semua Transaksi <i class="fas fa-arrow-right ml-1"></i>
-                    </a>
-                </x-slot>
+                <hr class="my-4">
+                <div class="row text-center mb-3">
+                    <div class="col-md-4">
+                        <div class="p-2">
+                            <i class="fas fa-exchange-alt text-primary mb-2" style="font-size: 1.5rem;"></i>
+                            <h6 class="font-weight-bold text-dark small">Pencatatan Otomatis</h6>
+                            <p class="text-xs text-muted mb-0">Uang saku santri otomatis tersinkronisasi ke buku kas.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-2 border-left border-right">
+                            <i class="fas fa-shield-alt text-success mb-2" style="font-size: 1.5rem;"></i>
+                            <h6 class="font-weight-bold text-dark small">Integritas Data</h6>
+                            <p class="text-xs text-muted mb-0">Proteksi edit untuk transaksi otomatis menjaga akurasi.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-2">
+                            <i class="fas fa-file-pdf text-danger mb-2" style="font-size: 1.5rem;"></i>
+                            <h6 class="font-weight-bold text-dark small">Laporan Instan</h6>
+                            <p class="text-xs text-muted mb-0">Cetak riwayat transaksi bulanan & tahunan dengan sekali klik.</p>
+                        </div>
+                    </div>
+                </div>
             </x-card>
         </div>
 
-        {{-- Quick Actions --}}
-        <div class="col-md-4">
-            <x-card title="Aksi Keuangan" type="secondary" :outline="true">
-                <div class="list-group list-group-flush">
-                    <a href="{{ route('keuangan.pemasukans.index') }}" class="list-group-item list-group-item-action py-3">
-                        <i class="fas fa-plus-circle mr-2 text-success"></i>
-                        Input Pemasukan Baru
+        {{-- 🚀 Quick Actions Section --}}
+        <div class="col-lg-4">
+            <x-card title="Aksi Pintar" icon="fas fa-rocket" type="success" :outline="true" class="shadow-sm">
+                <div class="list-group list-group-flush mt-2">
+                    
+                    <a href="{{ route('keuangan.transaksis.index') }}" class="list-group-item list-group-item-action border-0 py-3 mb-2 bg-light-soft hover-translate shadow-sm" style="border-radius: 10px;">
+                        <div class="d-flex align-items-center">
+                            <div class="mr-3 text-white p-2 rounded-circle shadow-sm" style="background: linear-gradient(135deg, #4e73df 0%, #224abe 100%); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+                            <div>
+                                <span class="d-block font-weight-bold text-dark" style="font-size: 0.9rem;">Laporan Transaksi</span>
+                                <small class="text-muted">Lihat rekapitulasi arus kas</small>
+                            </div>
+                        </div>
                     </a>
-                    <a href="{{ route('keuangan.pengeluarans.index') }}" class="list-group-item list-group-item-action py-3">
-                        <i class="fas fa-minus-circle mr-2 text-danger"></i>
-                        Input Pengeluaran Baru
+
+                    <a href="{{ route('keuangan.pemasukans.index') }}" class="list-group-item list-group-item-action border-0 py-3 mb-2 bg-light-soft hover-translate shadow-sm" style="border-radius: 10px;">
+                        <div class="d-flex align-items-center">
+                            <div class="mr-3 text-white p-2 rounded-circle shadow-sm" style="background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-arrow-down"></i>
+                            </div>
+                            <div>
+                                <span class="d-block font-weight-bold text-dark" style="font-size: 0.9rem;">Kelola Pemasukan</span>
+                                <small class="text-muted">Catat dana masuk instansi</small>
+                            </div>
+                        </div>
                     </a>
-                    <a href="#" class="list-group-item list-group-item-action py-3">
-                        <i class="fas fa-coins mr-2 text-warning"></i>
-                        Manajemen Uang Saku
+
+                    <a href="{{ route('keuangan.pengeluarans.index') }}" class="list-group-item list-group-item-action border-0 py-3 mb-2 bg-light-soft hover-translate shadow-sm" style="border-radius: 10px;">
+                        <div class="d-flex align-items-center">
+                            <div class="mr-3 text-white p-2 rounded-circle shadow-sm" style="background: linear-gradient(135deg, #e74a3b 0%, #be2617 100%); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                            <div>
+                                <span class="d-block font-weight-bold text-dark" style="font-size: 0.9rem;">Kelola Pengeluaran</span>
+                                <small class="text-muted">Catat penggunaan dana kas</small>
+                            </div>
+                        </div>
                     </a>
-                    <a href="#" class="list-group-item list-group-item-action py-3">
-                        <i class="fas fa-file-invoice mr-2 text-primary"></i>
-                        Buat Tagihan Santri
+
+                    <a href="{{ route('keuangan.uangsakus.index') }}" class="list-group-item list-group-item-action border-0 py-3 mb-2 bg-light-soft hover-translate shadow-sm" style="border-radius: 10px;">
+                        <div class="d-flex align-items-center">
+                            <div class="mr-3 text-white p-2 rounded-circle shadow-sm" style="background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <div>
+                                <span class="d-block font-weight-bold text-dark" style="font-size: 0.9rem;">Uang Saku Santri</span>
+                                <small class="text-muted">Deposit & distribusi uang saku</small>
+                            </div>
+                        </div>
                     </a>
+
                 </div>
             </x-card>
-
-            <div class="card bg-gradient-primary shadow">
-                <div class="card-body">
-                    <h5><i class="fas fa-info-circle mr-2"></i> Laporan Cepat</h5>
-                    <p class="small">Export laporan keuangan periode ini ke format PDF secara instan.</p>
-                    <a href="{{ route('keuangan.transaksis.index') }}" class="btn btn-light btn-sm btn-block font-weight-bold">
-                        Buka Laporan
-                    </a>
-                </div>
-            </div>
         </div>
     </div>
 </div>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+    
+    .bg-light-soft { background-color: #f8f9fc; transition: all 0.2s ease; }
+    .hover-translate:hover { transform: translateY(-3px); background-color: #fff; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1) !important; z-index: 10; }
+    .text-xs { font-size: 0.75rem; }
+    .small-text { letter-spacing: 1px; }
+
+    /* Custom Icon Box Standardizer */
+    .custom-icon-box {
+        width: 65px !important;
+        height: 65px !important;
+        border-radius: 12px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin-right: 15px;
+    }
+    .custom-icon-box i {
+        font-size: 1.8rem !important;
+    }
+    .info-box {
+        align-items: center !important;
+        padding: 10px 15px !important;
+    }
+</style>
+
+@push('scripts')
+<script>
+    function updateDashboardClock() {
+        const now = new Date();
+        const display = now.toLocaleTimeString('id-ID', { hour12: false });
+        const clockElement = document.getElementById('dashboard-clock');
+        if(clockElement) clockElement.textContent = display + ' WIB';
+    }
+    setInterval(updateDashboardClock, 1000);
+    updateDashboardClock();
+</script>
+@endpush
 @endsection

@@ -176,30 +176,38 @@
             <td width="15%"><b>Tanggal Cetak</b></td>
             <td width="35%">: {{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}</td>
         </tr>
+        <tr>
+            <td width="15%"><b>Jenis Transaksi</b></td>
+            <td width="85%" colspan="3">: {{ $currentType == 'all' ? 'Semua Transaksi' : $currentType }}</td>
+        </tr>
     </table>
 
     <div class="table-pull-up">
         <table class="main-table">
             <thead>
             <tr style="border: none !important;">
-                <th colspan="4" class="page-spacer-header" style="border: none !important; background: transparent !important;"></th>
+                <th colspan="{{ $currentType == 'all' ? '4' : '3' }}" class="page-spacer-header" style="border: none !important; background: transparent !important;"></th>
             </tr>
             <tr>
                 <th width="15%">Tanggal</th>
                 <th width="45%">Keterangan (Pemasukan/Pengeluaran)</th>
+                @if($currentType == 'all' || $currentType == 'Pemasukan')
                 <th width="20%">Kredit<br>(Pemasukan)</th>
+                @endif
+                @if($currentType == 'all' || $currentType == 'Pengeluaran')
                 <th width="20%">Debit<br>(Pengeluaran)</th>
+                @endif
             </tr>
         </thead>
         <tfoot>
             <tr style="border: none !important;">
-                <td colspan="4" class="page-spacer-footer" style="border: none !important; background: transparent !important;"></td>
+                <td colspan="{{ $currentType == 'all' ? '4' : '3' }}" class="page-spacer-footer" style="border: none !important; background: transparent !important;"></td>
             </tr>
         </tfoot>
         <tbody>
             @if($groupedTransactions->isEmpty())
                 <tr>
-                    <td colspan="4" class="text-center" style="padding: 20px;">Tidak ada data transaksi pada periode ini.</td>
+                    <td colspan="{{ $currentType == 'all' ? '4' : '3' }}" class="text-center" style="padding: 20px;">Tidak ada data transaksi pada periode ini.</td>
                 </tr>
             @else
                 @php
@@ -221,7 +229,7 @@
                     
                     <tr class="row-date">
                         <td class="text-center">{{ $formattedDate }}</td>
-                        <td colspan="3">{{ $dayName }} - {{ $transactions->count() }} transaksi</td>
+                        <td colspan="{{ $currentType == 'all' ? '3' : '2' }}">{{ $dayName }} - {{ $transactions->count() }} transaksi</td>
                     </tr>
 
                     @foreach($transactions as $trx)
@@ -241,40 +249,54 @@
                             </div>
                             <div style="clear: both;"></div>
                         </td>
+                        @if($currentType == 'all' || $currentType == 'Pemasukan')
                         <td class="text-right text-success font-weight-bold">
                             {{ $trx['jenis'] == 'Pemasukan' ? 'Rp' . number_format($trx['jumlah'], 0, ',', '.') : '-' }}
                         </td>
+                        @endif
+                        @if($currentType == 'all' || $currentType == 'Pengeluaran')
                         <td class="text-right text-danger font-weight-bold">
                             {{ $trx['jenis'] == 'Pengeluaran' ? 'Rp' . number_format($trx['jumlah'], 0, ',', '.') : '-' }}
                         </td>
+                        @endif
                     </tr>
                     @endforeach
                     
                     <tr class="row-total-hari">
                         <td colspan="2" class="text-right font-weight-bold">Total:</td>
+                        @if($currentType == 'all' || $currentType == 'Pemasukan')
                         <td class="text-right text-success font-weight-bold">Rp{{ number_format($dailyKredit, 0, ',', '.') }}</td>
+                        @endif
+                        @if($currentType == 'all' || $currentType == 'Pengeluaran')
                         <td class="text-right text-danger font-weight-bold">
                             {{ $dailyDebit > 0 ? 'Rp' . number_format($dailyDebit, 0, ',', '.') : 'Rp0' }}
                         </td>
+                        @endif
                     </tr>
                 @endforeach
                 
                 <!-- Spacer -->
                 <tr style="border: none; background-color: transparent;">
-                    <td colspan="4" style="border: none; height: 30px;"></td>
+                    <td colspan="{{ $currentType == 'all' ? '4' : '3' }}" style="border: none; height: 30px;"></td>
                 </tr>
 
                 <tr class="row-grand-total">
                     <td colspan="2" class="text-right text-uppercase">TOTAL {{ $currentMonth != 'all' ? 'BULAN INI' : 'TAHUN INI' }}:</td>
+                    @if($currentType == 'all' || $currentType == 'Pemasukan')
                     <td class="text-right text-success">Rp{{ number_format($grandTotalKredit, 0, ',', '.') }}</td>
+                    @endif
+                    @if($currentType == 'all' || $currentType == 'Pengeluaran')
                     <td class="text-right text-danger">Rp{{ number_format($grandTotalDebit, 0, ',', '.') }}</td>
+                    @endif
                 </tr>
+                @if($currentType == 'all')
                 <tr class="row-saldo">
                     <td colspan="2" class="text-right">SALDO AKHIR {{ $currentMonth != 'all' ? 'BULAN' : 'TAHUN' }}:</td>
                     <td colspan="2" class="text-center {{ ($grandTotalKredit - $grandTotalDebit) < 0 ? 'text-danger' : 'text-success' }}">
                         Rp{{ number_format($grandTotalKredit - $grandTotalDebit, 0, ',', '.') }}
                     </td>
                 </tr>
+                @endif
             @endif
         </tbody>
     </table>
@@ -296,59 +318,21 @@
 </div> <!-- End of laporan-content -->
 
 @if($isPdf)
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        var element = document.getElementById('laporan-content');
+    window.onload = function() {
+        // Ubah title dokumen sementara untuk nama file default saat Save as PDF
+        document.title = 'Laporan_Keuangan_{{ str_replace(' ', '_', $periode) }}';
         
-        // Show loading overlay
-        var overlay = document.createElement('div');
-        overlay.style.position = 'fixed';
-        overlay.style.top = '0';
-        overlay.style.left = '0';
-        overlay.style.width = '100%';
-        overlay.style.height = '100%';
-        overlay.style.backgroundColor = 'white';
-        overlay.style.zIndex = '99999';
-        overlay.style.display = 'flex';
-        overlay.style.flexDirection = 'column';
-        overlay.style.justifyContent = 'center';
-        overlay.style.alignItems = 'center';
-        overlay.innerHTML = '<div style="border: 4px solid #f3f3f3; border-top: 4px solid #4e73df; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite;"></div><h2 style="font-family: sans-serif; color: #4e73df; margin-top: 15px;">Membuka Preview PDF...</h2><style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>';
-        document.body.appendChild(overlay);
-
-        var opt = {
-            margin:       [10, 10, 10, 10],
-            filename:     'Laporan_Transaksi_{{ $currentYear }}_{{ $currentMonth }}.pdf',
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, logging: false },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-        };
-
-        // Custom filename: Laporan Keuangan [Bulan] [Tahun]
-        opt.filename = 'Laporan Keuangan {{ $periode }}.pdf';
-
-        // Generate and Save PDF (Trigger Download)
         setTimeout(function() {
-            html2pdf().set(opt).from(element).save().then(function() {
-                // Success - Show message or close tab
-                overlay.innerHTML = '<h2 style="font-family: sans-serif; color: #28a745;">Download Selesai</h2><p style="font-family: sans-serif; color: #6c757d;">File Anda sedang didownload.</p>';
-                
-                // Close tab after 2 seconds
-                setTimeout(function() {
-                    window.close();
-                }, 2000);
-            }).catch(function(err) {
-                console.error('PDF Error:', err);
-                overlay.innerHTML = '<h2 style="font-family: sans-serif; color: #dc3545;">Gagal Mendownload PDF</h2><p style="font-family: sans-serif; color: #6c757d;">Terjadi kesalahan saat memproses laporan.</p>';
-            });
+            alert("PENTING:\n\nPada jendela cetak (Print) yang muncul, pastikan Anda mengubah opsi 'Tujuan' (Destination/Printer) menjadi 'Simpan sebagai PDF' (Save as PDF) lalu klik Simpan.");
+            window.print();
         }, 500);
-    });
+    }
 </script>
 @else
 <script>
     window.onload = function() {
+        document.title = 'Laporan_Keuangan_{{ str_replace(' ', '_', $periode) }}';
         window.print();
     }
 </script>

@@ -20,6 +20,7 @@ class TransaksiController extends Controller
     {
         $currentYear = $request->get('year', date('Y'));
         $currentMonth = $request->get('month', date('n')); // Default ke bulan ini
+        $currentType = $request->get('type', 'all'); // Default ke semua transaksi
 
         // Mengambil dan memformat data Pemasukan
         $pemasukans = Pemasukan::with('sumber')->get()->map(function ($item) {
@@ -71,6 +72,13 @@ class TransaksiController extends Controller
             });
         }
 
+        // Filter Jenis
+        if ($currentType != 'all') {
+            $filteredTransactions = $filteredTransactions->filter(function($item) use ($currentType) {
+                return $item['jenis'] == $currentType;
+            });
+        }
+
         // Kalkulasi untuk Kartu Statistik (Berdasarkan Filter)
         $totalPemasukanFilter = $filteredTransactions->where('jenis', 'Pemasukan')->sum('jumlah');
         $totalPengeluaranFilter = $filteredTransactions->where('jenis', 'Pengeluaran')->sum('jumlah');
@@ -95,7 +103,7 @@ class TransaksiController extends Controller
         }
 
         return view('keuangan::transaksis.index', compact(
-            'groupedTransactions', 'currentYear', 'currentMonth', 'allYears',
+            'groupedTransactions', 'currentYear', 'currentMonth', 'currentType', 'allYears',
             'totalSaldoYear', 'totalPemasukanFilter', 'totalPengeluaranFilter', 'totalTransaksiFilter'
         ));
     }
@@ -104,6 +112,7 @@ class TransaksiController extends Controller
     {
         $currentYear = $request->get('year', date('Y'));
         $currentMonth = $request->get('month', date('n')); 
+        $currentType = $request->get('type', 'all');
 
         $pemasukans = Pemasukan::with('sumber')->get()->map(function ($item) {
             $waktu = optional($item->created_at)->setTimezone('Asia/Jakarta')->format('H.i') ?? '-';
@@ -141,6 +150,12 @@ class TransaksiController extends Controller
             });
         }
 
+        if ($currentType != 'all') {
+            $filteredTransactions = $filteredTransactions->filter(function($item) use ($currentType) {
+                return $item['jenis'] == $currentType;
+            });
+        }
+
         $totalPemasukanFilter = $filteredTransactions->where('jenis', 'Pemasukan')->sum('jumlah');
         $totalPengeluaranFilter = $filteredTransactions->where('jenis', 'Pengeluaran')->sum('jumlah');
         $totalSaldoFilter = $totalPemasukanFilter - $totalPengeluaranFilter;
@@ -154,7 +169,7 @@ class TransaksiController extends Controller
         });
 
         return view('keuangan::transaksis.print', compact(
-            'groupedTransactions', 'currentYear', 'currentMonth',
+            'groupedTransactions', 'currentYear', 'currentMonth', 'currentType',
             'totalPemasukanFilter', 'totalPengeluaranFilter', 'totalSaldoFilter'
         ));
     }

@@ -19,12 +19,39 @@ class KeuanganController extends Controller
      */
     public function index(Request $request): View
     {
-        // TODO: Implement listing logic
-        $keuangans = collect();
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+        $monthName = now()->locale('id')->translatedFormat('F');
+
+        $totalPemasukan = \Modules\Keuangan\Models\Pemasukan::whereMonth('tanggal', $currentMonth)
+            ->whereYear('tanggal', $currentYear)
+            ->sum('jumlah');
+            
+        $totalPengeluaran = \Modules\Keuangan\Models\Pengeluaran::whereMonth('tanggal', $currentMonth)
+            ->whereYear('tanggal', $currentYear)
+            ->sum('jumlah');
+            
+        $saldo = $totalPemasukan - $totalPengeluaran;
+        
+        $countTransaksi = \Modules\Keuangan\Models\Pemasukan::whereMonth('tanggal', $currentMonth)
+            ->whereYear('tanggal', $currentYear)
+            ->count() + 
+            \Modules\Keuangan\Models\Pengeluaran::whereMonth('tanggal', $currentMonth)
+            ->whereYear('tanggal', $currentYear)
+            ->count();
+            
+        $totalUangSaku = \Modules\Keuangan\Models\UangSaku::whereMonth('tanggal', $currentMonth)
+            ->whereYear('tanggal', $currentYear)
+            ->sum('jumlah');
         
         return view('keuangan::index', [
-            'title' => 'Daftar Keuangan',
-            'keuangans' => $keuangans,
+            'title' => 'Dashboard Keuangan - ' . $monthName,
+            'monthName' => $monthName,
+            'totalPemasukan' => $totalPemasukan,
+            'totalPengeluaran' => $totalPengeluaran,
+            'saldo' => $saldo,
+            'countTransaksi' => $countTransaksi,
+            'totalUangSaku' => $totalUangSaku,
         ]);
     }
 

@@ -47,21 +47,7 @@
     </a>
 </li>
 
-{{-- Tagihan Santri --}}
-<li class="nav-item">
-    <a href="{{ route('keuangan.tagihansantris.index') }}" class="nav-link {{ request()->is('keuangan/tagihansantris*') ? 'active' : '' }}">
-        <i class="nav-icon fas fa-file-invoice"></i>
-        <p>Tagihan Santri</p>
-    </a>
-</li>
 
-{{-- Pembayaran Santri --}}
-<li class="nav-item">
-    <a href="{{ route('keuangan.pembayaransantris.index') }}" class="nav-link {{ request()->is('keuangan/pembayaransantris*') ? 'active' : '' }}">
-        <i class="nav-icon fas fa-credit-card"></i>
-        <p>Pembayaran Santri</p>
-    </a>
-</li>
 
 {{-- Sumber Pemasukan --}}
 <li class="nav-item">

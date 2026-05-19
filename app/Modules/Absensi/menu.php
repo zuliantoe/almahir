@@ -27,8 +27,15 @@ return [
             'label' => 'Monitoring Kehadiran',
             'icon'  => 'fas fa-desktop',
             'route' => 'absensi.manage.index',
-            'match' => 'absensi/manage*',
+            'match' => 'absensi/manage',
             'roles' => ['SUPER_ADMIN', 'STAFF'],
+        ],
+        [
+            'label' => 'Layar Lobi (QR Code)',
+            'icon'  => 'fas fa-qrcode',
+            'route' => 'absensi.manage.qr-generator',
+            'match' => 'absensi/manage/qr-generator',
+            'roles' => ['SUPER_ADMIN'],
         ],
     ],
 ];

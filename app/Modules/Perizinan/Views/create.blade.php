@@ -96,9 +96,14 @@
 
                         {{-- Durasi info (real-time) --}}
                         <div id="infoDurasi" class="alert alert-info border-0 rounded-lg shadow-sm mb-3 py-2 px-3" style="display:none;">
-                            <i class="fas fa-info-circle mr-2"></i>
-                            Durasi yang diajukan: <strong id="txtDurasi">0</strong> hari
-                            <span id="warnCuti" class="text-danger ml-2 font-weight-bold" style="display:none;"></span>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    Durasi yang diajukan: <strong id="txtDurasi">0</strong> hari
+                                </span>
+                                <span id="badgeImpact" class="badge p-2"></span>
+                            </div>
+                            <div id="warnCuti" class="text-danger mt-2 font-weight-bold small" style="display:none;"></div>
                         </div>
 
                         {{-- Alasan --}}
@@ -239,11 +244,28 @@ function hitungDurasi() {
 
             const jenis = document.querySelector('input[name="jenis_izin"]:checked');
             const warnEl = document.getElementById('warnCuti');
-            if (jenis && (jenis.value === 'cuti' || jenis.value === 'izin') && diff > sisaCuti) {
-                warnEl.textContent = `⚠ Melebihi sisa cuti/izin Anda (${sisaCuti} hari)!`;
-                warnEl.style.display = '';
-            } else {
-                warnEl.style.display = 'none';
+            const impactEl = document.getElementById('badgeImpact');
+            
+            if (jenis) {
+                if (jenis.value === 'cuti') {
+                    impactEl.className = 'badge badge-primary p-2';
+                    impactEl.innerHTML = '<i class="fas fa-umbrella-beach mr-1"></i> Potong Kuota Cuti';
+                    
+                    if (diff > sisaCuti) {
+                        warnEl.textContent = `⚠ Melebihi sisa jatah cuti Anda (${sisaCuti} hari)!`;
+                        warnEl.style.display = '';
+                    } else {
+                        warnEl.style.display = 'none';
+                    }
+                } else if (jenis.value === 'izin' || jenis.value === 'sakit') {
+                    impactEl.className = 'badge badge-warning p-2 text-dark';
+                    impactEl.innerHTML = '<i class="fas fa-coins mr-1"></i> Potong Gaji';
+                    warnEl.style.display = 'none';
+                } else {
+                    impactEl.className = 'badge badge-success p-2';
+                    impactEl.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Dibayar Penuh';
+                    warnEl.style.display = 'none';
+                }
             }
         } else {
             document.getElementById('infoDurasi').style.display = 'none';
@@ -312,16 +334,16 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
 
-        // Cek kuota cuti/izin di client side
+        // Cek kuota cuti di client side
         const sisaCuti = {{ $sisaCuti ?? 999 }};
-        if ((jenis.value === 'cuti' || jenis.value === 'izin') && sisaCuti < 999) {
+        if (jenis.value === 'cuti' && sisaCuti < 999) {
             const diff = Math.round((d2 - d1) / 86400000) + 1;
             if (diff > sisaCuti) {
                 e.preventDefault();
                 Swal.fire({
                     icon: 'error',
                     title: 'Kuota Tidak Mencukupi',
-                    html: `Sisa jatah cuti/izin Anda tahun ini adalah <strong>${sisaCuti} hari</strong>, namun Anda mengajukan <strong>${diff} hari</strong>.`,
+                    html: `Sisa jatah cuti Anda tahun ini adalah <strong>${sisaCuti} hari</strong>, namun Anda mengajukan <strong>${diff} hari</strong>.`,
                     confirmButtonColor: '#d33'
                 });
                 return false;

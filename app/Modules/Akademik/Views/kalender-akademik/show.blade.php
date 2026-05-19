@@ -11,8 +11,8 @@
                     <table class="table table-striped">
                         <tbody>
                             <tr>
-                                <th width="40%" class="text-muted small text-uppercase font-weight-bold">Tahun Ajaran</th>
-                                <td><strong>{{ $kalenderAkademik->tahunAjaran->tahunajaran }} ({{ $kalenderAkademik->tahunAjaran->semester }})</strong></td>
+                                <th width="40%" class="text-muted small text-uppercase font-weight-bold">Tahun Ajaran & Semester</th>
+                                <td><strong>{{ $kalenderAkademik->tahunAjaran->tahunajaran }} ({{ $kalenderAkademik->semester }})</strong></td>
                             </tr>
                             <tr>
                                 <th class="text-muted small text-uppercase font-weight-bold">Jenis Kegiatan</th>

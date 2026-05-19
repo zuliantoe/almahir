@@ -35,7 +35,9 @@ class PegawaiManagerController extends Controller
             $searchTerm = $request->search;
             $query->where(function($q) use ($searchTerm) {
                 $q->where('nama', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('email', 'like', '%' . $searchTerm . '%');
+                  ->orWhereHas('user', function($userQuery) use ($searchTerm) {
+                      $userQuery->where('email', 'like', '%' . $searchTerm . '%');
+                  });
             });
         }
 
@@ -69,11 +71,19 @@ class PegawaiManagerController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function create(Request $request)
     {
+        if (!$request->has('manual')) {
+            $wawancara = \Modules\PegawaiManager\Models\CalonPegawai::with('typePegawai')
+                ->where('status_seleksi', 'wawancara')
+                ->get();
+                
+            return view('pegawaimanager::create-selection', [
+                'title' => 'Pilih Sumber Pegawai Baru',
+                'wawancara' => $wawancara
+            ]);
+        }
+
         $types = Cache::remember('all_type_pegawai', 86400, function() {
             return TypePegawai::all();
         });
@@ -82,7 +92,7 @@ class PegawaiManagerController extends Controller
         });
 
         return view('pegawaimanager::create', [
-            'title' => 'Tambah Pegawai',
+            'title' => 'Tambah Pegawai Manual',
             'types' => $types,
             'roles' => $roles,
         ]);
@@ -103,6 +113,7 @@ class PegawaiManagerController extends Controller
                 'id' => (string) Str::uuid(),
                 'name' => $validated['nama'],
                 'email' => $validated['email'],
+                'phone' => $validated['no_hp'] ?? null,
                 'password' => Hash::make('password123'),
                 'account_status' => 'active',
             ]);
@@ -115,8 +126,6 @@ class PegawaiManagerController extends Controller
                 'nama' => $validated['nama'],
                 'user_id' => $user->id,
                 'type_pegawai_id' => $validated['type_pegawai_id'],
-                'email' => $validated['email'],
-                'no_hp' => $validated['no_hp'] ?? null,
                 'alamat' => $validated['alamat'] ?? null,
                 'tanggal_masuk' => $validated['tanggal_masuk'] ?? null,
             ]);
@@ -226,9 +235,7 @@ class PegawaiManagerController extends Controller
             // 1. Update Pegawai Record
             $pegawai->update([
                 'nama' => $validated['nama'],
-                'email' => $validated['email'],
                 'type_pegawai_id' => $validated['type_pegawai_id'],
-                'no_hp' => $validated['no_hp'],
                 'alamat' => $validated['alamat'],
                 'tanggal_masuk' => $validated['tanggal_masuk'],
             ]);
@@ -239,6 +246,7 @@ class PegawaiManagerController extends Controller
                 $user->update([
                     'name' => $validated['nama'],
                     'email' => $validated['email'],
+                    'phone' => $validated['no_hp'],
                 ]);
 
                 // 3. Update User Role
@@ -325,13 +333,18 @@ class PegawaiManagerController extends Controller
 
         $columns = [
             'No', 
+            'NIP',
             'Nama Lengkap', 
             'Tipe Pegawai', 
-            'Role Akses', 
+            'Email',
             'No HP', 
-            'Email', 
+            'Role Akses', 
+            'Tempat Lahir',
+            'Tanggal Lahir',
+            'Jenis Kelamin',
             'Alamat', 
-            'Tanggal Masuk'
+            'Tanggal Masuk',
+            'Status'
         ];
 
         $callback = function() use ($columns) {
@@ -344,7 +357,6 @@ class PegawaiManagerController extends Controller
 
             $no = 1;
             
-            // Menggunakan chunk yang dilimit 200 data per loop agar RAM terhindar dari Memory OOM
             Pegawai::with(['user', 'typePegawai'])
                 ->orderBy('created_at', 'desc')
                 ->chunk(200, function ($pegawais) use ($file, &$no) {
@@ -352,13 +364,18 @@ class PegawaiManagerController extends Controller
                         $role = $p->user ? collect($p->user->roles)->pluck('name')->join(', ') : '-';
                         $row = [
                             $no++,
+                            $p->nip ?? '-',
                             $p->nama,
                             $p->typePegawai->nama_type ?? '-',
+                            $p->user->email ?? '-',
+                            $p->user->phone ?? '-',
                             $role,
-                            $p->no_hp ?? '-',
-                            $p->email ?? '-',
+                            $p->tempat_lahir ?? '-',
+                            $p->tanggal_lahir ?? '-',
+                            $p->jenis_kelamin ?? '-',
                             $p->alamat ?? '-',
-                            $p->tanggal_masuk ? $p->tanggal_masuk->format('Y-m-d') : '-'
+                            $p->tanggal_masuk ? $p->tanggal_masuk->format('Y-m-d') : '-',
+                            $p->status ?? '-'
                         ];
                         fputcsv($file, $row, ';');
                     }
@@ -411,29 +428,34 @@ class PegawaiManagerController extends Controller
                     continue; // Skip baris pertama (header)
                 }
                 
-                // Minimal indeks [1] (Nama Lengkap) dan [5] (Email) ada datanya, sesuai format export
-                if (count($data) < 6 || empty($data[1]) || empty($data[5])) {
+                // Validasi minimal (Nama [2] dan Email [4] wajib ada)
+                if (count($data) < 5 || empty(trim($data[2])) || empty(trim($data[4]))) {
                     $errorCount++;
                     continue;
                 }
                 
-                $nama = trim($data[1]);
-                $email = trim($data[5]);
+                $nip = trim($data[1]) !== '-' ? trim($data[1]) : null;
+                $nama = trim($data[2]);
+                $email = trim($data[4]);
                 
-                // Cek tipe pegawai berdasarkan nama tipe, jika tidak ketemu biarkan null atau default
-                $nama_type = trim($data[2]);
+                // Cek tipe pegawai berdasarkan nama tipe
+                $nama_type = trim($data[3]);
                 $type_id = null;
                 if (!empty($nama_type) && $nama_type !== '-') {
                     $type = TypePegawai::where('nama_type', 'like', "%{$nama_type}%")->first();
                     $type_id = $type ? $type->id : null;
                 }
 
-                $role_name = trim($data[3]);
+                $role_name = trim($data[6]);
                 if (empty($role_name) || $role_name === '-') $role_name = 'PEGAWAI';
 
-                $no_hp = trim($data[4]) !== '-' ? trim($data[4]) : null;
-                $alamat = trim($data[6]) !== '-' ? trim($data[6]) : null;
-                $tanggal = trim($data[7]) !== '-' ? trim($data[7]) : null;
+                $no_hp = trim($data[5]) !== '-' ? trim($data[5]) : null;
+                $tempat_lahir = isset($data[7]) && trim($data[7]) !== '-' ? trim($data[7]) : null;
+                $tanggal_lahir = isset($data[8]) && trim($data[8]) !== '-' ? trim($data[8]) : null;
+                $jenis_kelamin = isset($data[9]) && trim($data[9]) !== '-' ? trim($data[9]) : null;
+                $alamat = isset($data[10]) && trim($data[10]) !== '-' ? trim($data[10]) : null;
+                $tanggal = isset($data[11]) && trim($data[11]) !== '-' ? trim($data[11]) : null;
+                $status = isset($data[12]) && trim($data[12]) !== '-' ? trim(strtolower($data[12])) : 'aktif';
                 
                 // Cek duplikasi email di User
                 if (User::where('email', $email)->exists()) {
@@ -446,6 +468,7 @@ class PegawaiManagerController extends Controller
                     'id' => (string) Str::uuid(),
                     'name' => $nama,
                     'email' => $email,
+                    'phone' => $no_hp,
                     'password' => Hash::make('password123'),
                     'account_status' => 'active',
                 ]);
@@ -462,11 +485,33 @@ class PegawaiManagerController extends Controller
                     'nama' => $nama,
                     'user_id' => $user->id,
                     'type_pegawai_id' => $type_id,
-                    'email' => $email,
-                    'no_hp' => $no_hp,
+                    'nip' => $nip,
+                    'tempat_lahir' => $tempat_lahir,
+                    'tanggal_lahir' => $tanggal_lahir,
+                    'jenis_kelamin' => $jenis_kelamin,
                     'alamat' => $alamat,
                     'tanggal_masuk' => $tanggal,
+                    'status' => in_array($status, ['aktif', 'nonaktif', 'pensiun']) ? $status : 'aktif',
+                    'sisa_cuti' => 12 // Default
                 ]);
+
+                // 4. Sinkronisasi Data ke Tabel Guru jika posisinya Guru
+                $isGuru = strpos(strtolower($nama_type), 'guru') !== false;
+                if ($isGuru) {
+                    \Modules\Guru\Models\Guru::create([
+                        'user_id' => $user->id,
+                        'type_pegawai_id' => $type_id,
+                        'nip' => $nip,
+                        'nama' => $nama,
+                        'tempat_lahir' => $tempat_lahir,
+                        'tanggal_lahir' => $tanggal_lahir,
+                        'jenis_kelamin' => $jenis_kelamin,
+                        'alamat' => $alamat,
+                        'tanggal_masuk' => $tanggal,
+                        'status' => in_array($status, ['aktif', 'nonaktif', 'pensiun']) ? $status : 'aktif',
+                        'sisa_cuti' => 12 // Default
+                    ]);
+                }
                 
                 $successCount++;
             }

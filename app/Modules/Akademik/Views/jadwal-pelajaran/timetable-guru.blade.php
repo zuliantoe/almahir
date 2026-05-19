@@ -26,7 +26,7 @@
                     <div>
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Tahun Ajaran Aktif</div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ $activeTahunAjaran ? $activeTahunAjaran->tahunajaran . ' - ' . $activeTahunAjaran->semester : 'Belum Ditentukan' }}
+                            {{ $activeTahunAjaran ? $activeTahunAjaran->tahunajaran : 'Belum Ditentukan' }}
                         </div>
                     </div>
                 </div>
@@ -35,7 +35,7 @@
                 <select name="tahun_ajaran_id" class="form-control" onchange="this.form.submit()">
                     @foreach($tahunAjarans as $ta)
                         <option value="{{ $ta->id }}" {{ ($activeTahunAjaran && $activeTahunAjaran->id == $ta->id) ? 'selected' : '' }}>
-                            Tahun Ajaran: {{ $ta->tahunajaran }} - {{ $ta->semester }}
+                            Tahun Ajaran: {{ $ta->tahunajaran }}
                         </option>
                     @endforeach
                 </select>

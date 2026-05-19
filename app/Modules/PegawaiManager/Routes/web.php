@@ -24,6 +24,11 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('permission:guru.edit')
         ->names('types');
 
+    // Calon Pegawai CRUD
+    Route::resource('calon-pegawai', \Modules\PegawaiManager\Controllers\CalonPegawaiController::class)
+        ->middleware('permission:guru.create')
+        ->names('calon-pegawai');
+
     // Export Laporan Pegawai
     Route::get('/export', [PegawaiManagerController::class, 'export'])
         ->middleware('permission:guru.view')

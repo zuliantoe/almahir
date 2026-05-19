@@ -22,14 +22,14 @@
             @endif
 
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label>Tahun Ajaran <span class="text-danger">*</span></label>
                         <select name="tahunajaran_id" class="form-control @error('tahunajaran_id') is-invalid @enderror" required>
                             <option value="">Pilih Tahun Ajaran</option>
                             @foreach($tahunAjarans as $ta)
                                 <option value="{{ $ta->id }}" {{ (old('tahunajaran_id', $kalenderAkademik->tahunajaran_id ?? '') == $ta->id) ? 'selected' : '' }}>
-                                    {{ $ta->tahunajaran }} ({{ $ta->semester }})
+                                    {{ $ta->tahunajaran }}
                                 </option>
                             @endforeach
                         </select>
@@ -37,7 +37,19 @@
                     </div>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Semester <span class="text-danger">*</span></label>
+                        <select name="semester" class="form-control @error('semester') is-invalid @enderror" required>
+                            <option value="">Pilih Semester</option>
+                            <option value="Ganjil" {{ old('semester', $kalenderAkademik->semester ?? '') == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                            <option value="Genap" {{ old('semester', $kalenderAkademik->semester ?? '') == 'Genap' ? 'selected' : '' }}>Genap</option>
+                        </select>
+                        @error('semester') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+
+                <div class="col-md-4">
                     <div class="form-group">
                         <label>Jenis Kegiatan <span class="text-danger">*</span></label>
                         <select name="kegiatan_id" class="form-control @error('kegiatan_id') is-invalid @enderror" required>

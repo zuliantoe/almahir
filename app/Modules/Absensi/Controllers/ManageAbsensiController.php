@@ -39,10 +39,10 @@ class ManageAbsensiController extends Controller
         $absensiQuery = Absensi::whereDate('tanggal', $date);
 
         // Filter stats jika ada pencarian nama spesifik
+        // PENTING: Perizinan menyimpan pegawai.id di kolom user_id-nya (bukan sys_users.id)
         if ($request->search) {
             $pegawaiIds = (clone $pegawaiQuery)->pluck('id');
-            $userIds = (clone $pegawaiQuery)->pluck('user_id');
-            $izinQuery->whereIn('user_id', $userIds);
+            $izinQuery->whereIn('user_id', $pegawaiIds); // FIX: gunakan pegawai.id bukan pegawai.user_id
             $absensiQuery->whereIn('pegawai_id', $pegawaiIds);
         }
 
@@ -69,26 +69,27 @@ class ManageAbsensiController extends Controller
         $paginatedPegawai = $pegawaiQuery->paginate($perPage)->withQueryString();
 
         // 3. Ambil data relasi HANYA untuk 10 data di halaman ini
+        // PENTING: Perizinan menyimpan pegawai.id di kolom user_id-nya (bukan sys_users.id)
         $idsOnPage = $paginatedPegawai->pluck('id');
-        $userIdsOnPage = $paginatedPegawai->pluck('user_id');
 
         $absensiHariIni = Absensi::whereDate('tanggal', $date)
             ->whereIn('pegawai_id', $idsOnPage)
             ->get()
             ->keyBy('pegawai_id');
 
+        // FIX: gunakan pegawai.id (bukan pegawai.user_id) karena Perizinan menyimpan pegawai.id
         $perizinanHariIni = Perizinan::where('status', 'disetujui')
             ->whereDate('tanggal_mulai', '<=', $date)
             ->whereDate('tanggal_selesai', '>=', $date)
-            ->whereIn('user_id', $userIdsOnPage)
+            ->whereIn('user_id', $idsOnPage)
             ->get()
             ->keyBy('user_id');
 
         // 4. Modifikasi map collection yang akan dilempar ke View
         $rekapItems = $paginatedPegawai->getCollection()->map(function($p) use ($absensiHariIni, $perizinanHariIni, $carbonDate) {
             $absensi = $absensiHariIni->get($p->id);
-            // Perbaikan logic sebelumnya: menggunakan user_id bukan id pegawai untuk tabel Perizinan
-            $izin = $perizinanHariIni->get($p->user_id);
+            // FIX: cari izin menggunakan pegawai.id (bukan pegawai.user_id)
+            $izin = $perizinanHariIni->get($p->id);
 
             $status = 'ALPA';
             $color = 'danger';
@@ -145,18 +146,18 @@ class ManageAbsensiController extends Controller
         }
 
         $pegawais = $pegawaiQuery->get();
-        $ids = $pegawais->pluck('id');
-        $userIds = $pegawais->pluck('user_id');
+        $ids = $pegawais->pluck('id'); // pegawai.id
 
         $absensiHariIni = Absensi::whereDate('tanggal', $date)
             ->whereIn('pegawai_id', $ids)
             ->get()
             ->keyBy('pegawai_id');
 
+        // FIX: gunakan pegawai.id karena Perizinan menyimpan pegawai.id di kolom user_id
         $perizinanHariIni = Perizinan::where('status', 'disetujui')
             ->whereDate('tanggal_mulai', '<=', $date)
             ->whereDate('tanggal_selesai', '>=', $date)
-            ->whereIn('user_id', $userIds)
+            ->whereIn('user_id', $ids)
             ->get()
             ->keyBy('user_id');
 
@@ -180,7 +181,7 @@ class ManageAbsensiController extends Controller
 
             foreach ($pegawais as $index => $p) {
                 $absensi = $absensiHariIni->get($p->id);
-                $izin = $perizinanHariIni->get($p->user_id);
+                $izin = $perizinanHariIni->get($p->id); // FIX: gunakan pegawai.id
 
                 $status = 'ALPA';
                 $jamMasuk = '-';

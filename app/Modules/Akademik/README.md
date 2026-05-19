@@ -1,134 +1,219 @@
-# Dokumentasi Modul Akademik SIAKAD ALMAHIRA
+# 📚 Dokumentasi Modul Akademik — SIAKAD Almahir
 
-Modul Akademik adalah tulang punggung dari sistem SIAKAD (Sistem Informasi Akademik) yang mengelola seluruh siklus akademik sekolah/pesantren, mulai dari pengaturan kurikulum, pembagian kelas, penjadwalan, hingga proses kenaikan kelas dan kelulusan.
-
----
-
-## 1. Struktur Modul & Fungsi Controller
-
-Modul ini dibangun dengan arsitektur MVC (Model-View-Controller). Berikut adalah daftar Controller dan fungsinya:
-
-| Controller | Fungsi Utama |
-| :--- | :--- |
-| `AkademikController` | Mengelola Dashboard Akademik. Menampilkan tampilan berbeda berdasarkan *Role* (Siswa, Guru, atau Admin) beserta statistik dan jadwal hari ini. |
-| `TahunAjaranController` | CRUD Tahun Ajaran. Menentukan tahun ajaran dan semester yang sedang aktif (hanya boleh ada 1 yang aktif). |
-| `KelasController` | CRUD Master Kelas. (Catatan: Kelas adalah template, sedangkan pelaksanaannya ada di Rombel). |
-| `MataPelajaranController` | CRUD Mata Pelajaran beserta klasifikasinya (Kategori Pelajaran). |
-| `KategoriPelajaranController`| Mengelola Kategori Mapel (Misal: Muatan Nasional, Muatan Lokal, Kepesantrenan). |
-| `MasterKurikulumController` | Mengelola data master kurikulum (Misal: K-13, Kurikulum Merdeka). |
-| `KurikulumController` | Memetakan Mata Pelajaran ke dalam Master Kurikulum berdasarkan Tingkat, Kelas, dan Semester beserta jam pelajaran dan KKM. |
-| `RombelController` | Mengelola Rombongan Belajar (Kelas Aktual). Memasukkan *Siswa* ke dalam Rombel dan menunjuk *Guru* sebagai Wali Kelas. |
-| `JadwalPelajaranController` | Membuat jadwal pelajaran per Rombel, menentukan Hari, Jam, Mata Pelajaran, dan Guru Pengampu. |
-| `BebanMengajarController` | (Terkait Jadwal) Mengelola plotting beban mengajar guru per mata pelajaran di suatu rombel. |
-| `KalenderAkademikController`| Mengelola agenda/event tahunan (hari libur, ujian, kegiatan sekolah). |
-| `JenisKegiatanController` | Mengelola kategori event kalender akademik beserta warnanya. |
-| `KenaikanKelasController` | *Workflow* untuk menaikkan/memindahkan siswa dari Rombel lama ke Rombel baru di tahun ajaran berikutnya secara kolektif. |
-| `KelulusanController` | *Workflow* untuk meluluskan siswa tingkat akhir dan mengubah status mereka menjadi alumni. |
+Modul Akademik adalah **inti (core)** dari seluruh sistem SIAKAD. Hampir semua modul lain (Penilaian, Presensi, Keuangan, dll) bergantung pada data yang dihasilkan oleh modul ini.
 
 ---
 
-## 2. Struktur Database & Model
+## 1. Sub-Modul & Controller
 
-Modul ini memiliki beberapa Model Eloquent utama yang saling berelasi:
-
-### Master Data Akademik
-*   **`TahunAjaran`**: Menyimpan periode tahun ajaran (misal: 2024/2025) dan semester (Ganjil/Genap). Memiliki field `is_active`.
-*   **`Tingkat` & `Jurusan`**: Master data untuk jenjang pendidikan.
-*   **`Kelas`**: Master kelas (Misal: 7A, 8B).
-*   **`MataPelajaran`**: Master mata pelajaran. Berelasi dengan `KategoriPelajaran`.
-
-### Kurikulum
-*   **`Kurikulum`**: Menghubungkan `MasterKurikulum`, `Tingkat`, `Kelas`, dan `MataPelajaran`. Menyimpan `total_jam`, `semester`, dan `kkm`.
-
-### Eksekusi Akademik (Rombel & Jadwal)
-*   **`Rombel`**: Rombongan Belajar. 
-    *   Berelasi `belongsTo` ke `Kelas` dan `TahunAjaran`.
-    *   Berelasi `belongsTo` ke `Guru` (sebagai wali kelas).
-    *   Berelasi *Many-to-Many* ke `Siswa` (melalui tabel pivot `rombel_siswa`).
-*   **`RombelSiswa`**: Model Pivot/Riwayat yang menyimpan status siswa (`aktif`, `lulus`, `pindah`, `naik`, `tinggal_kelas`) pada suatu Rombel.
-*   **`JadwalPelajaran`**: Penjadwalan.
-    *   Berelasi ke `Rombel`, `MataPelajaran`, dan `Guru` (Pengampu).
+| Controller | Fungsi |
+|-----------|--------|
+| `AkademikController` | Dashboard akademik (berbeda per role: Admin/Guru/Siswa) |
+| `TahunAjaranController` | CRUD Tahun Ajaran — hanya 1 yang boleh aktif |
+| `KelasController` | CRUD Master Kelas (template, bukan kelas aktual) |
+| `RombelController` | CRUD Rombongan Belajar + daftarkan siswa + history |
+| `MataPelajaranController` | CRUD Mata Pelajaran + Bulk Store + Import |
+| `KategoriPelajaranController` | CRUD Kategori Mata Pelajaran |
+| `MasterKurikulumController` | CRUD template kurikulum (K-13, Merdeka, dll) |
+| `KurikulumController` | Pemetaan mapel ke kelas/tingkat per tahun + Bulk Store |
+| `JadwalPelajaranController` | CRUD Jadwal + Bulk Store + Copy antar rombel |
+| `BebanMengajarController` | Laporan beban mengajar guru |
+| `KalenderAkademikController` | CRUD Kalender + tampilan FullCalendar + Export iCal |
+| `JenisKegiatanController` | CRUD tipe kegiatan (KBM, Libur, Ujian, dll) |
+| `KenaikanKelasController` | Workflow kenaikan kelas: Naik / Lulus / Tidak Naik |
 
 ---
 
-## 3. Keterkaitan dengan Modul Lain (Integration)
+## 2. Model & Relasi Database
 
-Modul Akademik sangat bergantung dan terhubung erat dengan modul lain. Berikut adalah daftarnya:
+### Hierarki Data
 
-### A. Kaitan dengan Modul Siswa (`Modules\Siswa`)
-*   **Relasi**: Model `Rombel` berelasi *Many-to-Many* dengan model `Siswa` melalui tabel `rombel_siswa`.
-*   **Penggunaan**: Modul akademik menarik data siswa aktif untuk dimasukkan ke dalam Rombel. Saat kenaikan kelas/kelulusan, data siswa ini dimanipulasi statusnya di tabel pivot.
-*   **Dashboard**: Saat user bersatus *SISWA* login, `AkademikController` memanggil `Auth::user()->ref` (mengembalikan objek Siswa) untuk mencari `RombelSiswa` yang aktif, lalu menampilkan Jadwal Pelajaran khusus untuk Rombel siswa tersebut.
+```
+TahunAjaran (1)
+  └── Rombel (M) ──────────────── Kelas (1)
+        └── RombelSiswa (M)       └── Tingkat (1)
+              └── Siswa (1) [Modul Siswa]
+        └── JadwalPelajaran (M)
+              ├── MataPelajaran (1)
+              └── Guru (1) [Modul Guru]
 
-### B. Kaitan dengan Modul Guru (`Modules\Guru`)
-*   **Relasi Wali Kelas**: `Rombel` `belongsTo` `Guru` (Kolom `guru_id` di tabel rombel).
-*   **Relasi Pengampu**: `JadwalPelajaran` `belongsTo` `Guru` (Kolom `guru_id`).
-*   **Dashboard**: Saat user berstatus *GURU* login, sistem mengambil id Guru (`Auth::user()->ref->id`) dan memfilter `JadwalPelajaran` untuk menampilkan jadwal mengajar guru tersebut hari ini dan minggu ini.
+TahunAjaran (1)
+  └── Kurikulum (M)
+        ├── MasterKurikulum (1)
+        ├── Tingkat (1)
+        ├── Kelas (1)
+        └── MataPelajaran (1)
+              └── KategoriPelajaran (1)
 
-### C. Kaitan dengan Modul User Manager / RBAC (`App\Models\User`)
-*   **Penggunaan**: Menggunakan Spatie Permission / Role untuk validasi akses (`$user->hasRole('GURU')` atau `SISWA`). Model User melakukan *Polymorphic Relation* (`ref_type` dan `ref_id`) ke model Guru/Siswa.
+TahunAjaran (1)
+  └── KalenderAkademik (M)
+        └── JenisKegiatan (1)
+```
 
-### D. Kaitan dengan Modul Penilaian & Presensi (Hiliran)
-*   Modul Penilaian dan Presensi (Absensi) **wajib** mengambil struktur dasar dari Modul Akademik. Contoh: Guru absensi berdasar `JadwalPelajaran`, Penilaian didasarkan pada `Kurikulum` (KKM) dan peserta didik diambil dari relasi `RombelSiswa` yang berstatus `aktif`.
+### Status Siklus Hidup Siswa di `rombel_siswa`
+
+| Status | Keterangan |
+|--------|-----------|
+| `aktif` | Siswa sedang aktif di rombel tahun ini |
+| `naik` | Siswa naik kelas (arsip historis) |
+| `lulus` | Siswa lulus/tamat (arsip historis) |
+| `tidak_naik` | Siswa tinggal kelas (arsip historis) |
 
 ---
 
-## 4. Cara Menghubungkan (Panduan untuk Developer)
+## 3. Alur Data (End-to-End)
 
-Jika Anda membuat modul baru dan perlu mengaitkannya dengan data Akademik, ikuti panduan berikut:
+```
+STEP 1 — Setup Master Data
+  Admin → Tahun Ajaran → Tingkat → Kelas → Kategori Mapel → Mata Pelajaran
+  Admin → Jenis Kegiatan → Master Kurikulum
 
-### 1. Mengambil Tahun Ajaran Aktif (Global Scope)
-Semua transaksi (Absensi, Pembayaran, Nilai) harus selalu merujuk pada Tahun Ajaran yang aktif.
+STEP 2 — Isi Kurikulum
+  Admin → Kurikulum (Master + Tingkat + Kelas + Mapel + Total Jam + KKM)
+
+STEP 3 — Buat Rombel
+  Admin → Rombel (nama, kelas, tahun ajaran, wali kelas)
+        → Daftarkan Siswa → rombel_siswa (status: aktif)
+
+STEP 4 — Buat Jadwal
+  Admin → JadwalPelajaran (hari, jam, mapel, guru) per Rombel
+  Fitur: Bulk Store, Copy jadwal antar rombel
+
+STEP 5 — Kalender Akademik
+  Admin → Input kegiatan (ujian, libur, rapat)
+        → Tampil di FullCalendar → Export ke Google Calendar (iCal)
+
+STEP 6 — KBM Berjalan
+  Guru → Modul PenilaianDanPresensi menggunakan:
+    siswa_id + guru_id + mapel_id + jadwal_pelajaran_id + tahunajaran_id
+    (semua dari Modul Akademik)
+
+STEP 7 — Akhir Tahun → Kenaikan Kelas
+  Admin → Pilih Rombel asal + Tahun Ajaran tujuan + Kelas tujuan
+        → Set status per siswa: Naik / Lulus / Tidak Naik
+  Sistem:
+    a. Update rombel_siswa lama (naik/lulus/tidak_naik)
+    b. Buat Rombel baru di tahun tujuan
+    c. Insert siswa yang naik → rombel_siswa baru (status: aktif)
+```
+
+---
+
+## 4. Keterkaitan dengan Modul Lain
+
+### A. Modul Siswa
+- `Rombel` ↔ `Siswa` → Many-to-Many via `rombel_siswa`
+- `Siswa.rombelSiswa()` → ambil semua riwayat rombel
+- `Siswa.currentRombel()` → rombel aktif siswa saat ini
+- Dashboard Siswa → redirect ke view jadwal berdasarkan rombel aktif
+
+### B. Modul Guru
+- `Rombel.walikelas()` → `Guru` sebagai wali kelas
+- `JadwalPelajaran.guru()` → `Guru` sebagai pengampu
+- `Guru.jadwalPelajaran()` → semua jadwal mengajar guru
+- Dashboard Guru → tampil timetable jadwal mengajar guru
+
+### C. Modul PenilaianDanPresensi
+- `PenilaianAkademik` pakai: `siswa_id`, `guru_id`, `mapel_id`, `tahunajaran_id`
+- `Presensi` pakai: `siswa_id`, `guru_id`, `jadwal_pelajaran_id`, `mapel_id`
+- Kedua model import langsung dari namespace Akademik
+
+### D. Modul Pendaftaran
+- Siswa baru dari PPDB → setelah terima → dimasukkan ke Rombel
+
+---
+
+## 5. Cara Pakai di Modul Lain (Panduan Developer)
+
+### Ambil Tahun Ajaran Aktif
 ```php
 use App\Modules\Akademik\Models\TahunAjaran;
 
-$tahunAktif = TahunAjaran::aktif()->first(); // Gunakan scope aktif()
-$tahunAjaranId = $tahunAktif->id;
+$tahunAktif = TahunAjaran::current(); // Shortcut static method
+$tahunAktif = TahunAjaran::aktif()->first(); // Sama hasilnya
 ```
 
-### 2. Mencari Rombel (Kelas Aktual) Siswa Saat Ini
-Jika ingin membuat fitur rapor atau absensi siswa, cari rombel siswa di tahun ajaran aktif:
+### Cari Rombel Aktif Siswa
 ```php
 use App\Modules\Akademik\Models\RombelSiswa;
 
-$rombelSiswa = RombelSiswa::with('rombel')
-    ->where('siswa_id', $siswa_id)
-    ->where('status', 'aktif') // Hanya ambil yang aktif
-    ->whereHas('rombel', function($query) use ($tahunAjaranId) {
-        $query->where('tahunajaran_id', $tahunAjaranId);
-    })->first();
-
-$rombelAktif = $rombelSiswa->rombel;
+$rombel = RombelSiswa::with('rombel')
+    ->where('siswa_id', $siswaId)
+    ->where('status', 'aktif')
+    ->whereHas('rombel', fn($q) => $q->where('tahunajaran_id', $tahunId))
+    ->first();
 ```
 
-### 3. Mengambil Jadwal Mengajar Guru
-Jika membuat modul rekap mengajar guru:
+### Ambil Jadwal Guru
 ```php
 use App\Modules\Akademik\Models\JadwalPelajaran;
 
 $jadwal = JadwalPelajaran::with(['rombel', 'mataPelajaran'])
-    ->where('guru_id', $guru_id)
+    ->where('guru_id', $guruId)
     ->where('hari', 'Senin')
     ->get();
 ```
 
-### 4. Menambahkan Event Kalender (Kalender Akademik)
-Untuk mengambil daftar hari libur di modul absensi (agar tidak bisa absen di hari libur):
+### Cek Hari Libur dari Kalender
 ```php
 use App\Modules\Akademik\Models\KalenderAkademik;
 
-$hariLibur = KalenderAkademik::whereHas('jenisKegiatan', function($q) {
-        $q->where('kategori', 'libur'); // Contoh jika ada flag khusus libur
-    })
+$isLibur = KalenderAkademik::whereHas('jenisKegiatan', fn($q) => $q->where('is_kbm', false))
     ->whereDate('tanggal_awal', '<=', $today)
     ->whereDate('tanggal_akhir', '>=', $today)
     ->exists();
-    
-if ($hariLibur) {
-   // Blokir input absensi
-}
 ```
 
 ---
 
-*Dokumentasi ini di-generate secara otomatis untuk membantu pemahaman developer terkait alur data SIAKAD Almahira.*
+## 6. Lingkup Modul Akademik
+
+### ✅ Sudah Selesai
+- CRUD Tahun Ajaran, Tingkat, Kelas, Rombel
+- Manajemen Siswa dalam Rombel (daftar, edit, hapus)
+- Riwayat / History Rombel Siswa
+- Workflow Kenaikan Kelas (Naik/Lulus/Tidak Naik)
+- CRUD Mata Pelajaran + Kategori + Bulk Store
+- Master Kurikulum & Detail Kurikulum (Bulk Store)
+- Jadwal Pelajaran (CRUD + Bulk Store + Copy)
+- Timetable Guru (grid mingguan)
+- Timetable Siswa (grid mingguan)
+- Beban Mengajar (laporan JP guru)
+- Kalender Akademik + FullCalendar + Export iCal
+- Jenis Kegiatan (flag KBM/non-KBM + warna)
+- Dashboard Akademik (statistik + upcoming events)
+- RBAC (ReadOnly untuk Guru & Siswa)
+
+### 🔲 Pengembangan Selanjutnya
+- Mutasi Siswa Antar Rombel (tanpa kenaikan kelas)
+- Cetak/Print Jadwal ke PDF
+- Notifikasi perubahan jadwal
+- Substitusi Guru sementara
+- Laporan cetak Kurikulum / Silabus
+- Import Jadwal dari Excel
+- Pembagian Rombel otomatis berdasarkan kriteria
+
+---
+
+## 7. Route yang Tersedia
+
+```
+GET  /akademik                        → Dashboard
+GET  /akademik/tahun-ajaran           → List tahun ajaran
+GET  /akademik/kelas                  → List kelas
+GET  /akademik/rombel                 → List rombel
+GET  /akademik/rombel/history         → History rombel siswa
+GET  /akademik/mata-pelajaran         → List mapel
+GET  /akademik/kurikulum              → List kurikulum
+GET  /akademik/jadwal-pelajaran       → Jadwal / Timetable
+GET  /akademik/beban-mengajar         → Laporan beban mengajar
+GET  /akademik/kalender-akademik      → Kalender (list)
+GET  /akademik/kalender-akademik?view=calendar → Kalender visual
+GET  /akademik/kalender-akademik-export/ical   → Export iCal (publik)
+GET  /akademik/kenaikan-kelas         → Form kenaikan kelas
+POST /akademik/kenaikan-kelas/process → Proses kenaikan kelas
+```
+
+---
+
+*Dokumentasi ini adalah sumber kebenaran (source of truth) untuk Modul Akademik SIAKAD Almahir.*

@@ -25,8 +25,9 @@
                     <div class="alert alert-info border-0 shadow-sm" style="border-radius: 10px;">
                         <h5><i class="icon fas fa-info"></i> Petunjuk Import:</h5>
                         <ul class="mb-0 pl-3">
-                            <li>Gunakan fitur <b>Export Data</b> di halaman sebelumnya untuk mendapatkan *template* (struktur) kolom yang benar.</li>
+                            <li>Gunakan fitur <b>Export Data</b> di halaman sebelumnya untuk mendapatkan *template* (struktur) kolom yang benar. Kolom Export sekarang memuat <b>seluruh profil standar (NIP, TTL, Alamat, dll)</b>.</li>
                             <li>Buka file tersebut di Microsoft Excel, isi data pegawai baru di baris terbawah.</li>
+                            <li>Jika kolom tidak ada datanya, Anda bisa mengosongkannya atau mengisinya dengan tanda strip <code>-</code>.</li>
                             <li>Saat menyimpan, pastikan Anda menggunakan menu <b>Save As -> CSV (Comma delimited) (*.csv)</b>.</li>
                             <li>Abaikan baris pertama (Header), sistem akan otomatis melewatinya.</li>
                             <li>Format CSV bisa menggunakan pemisah Koma <code>,</code> ataupun Titik Koma <code>;</code>.</li>

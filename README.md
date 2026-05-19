@@ -23,8 +23,9 @@ php artisan serve
 Visit: http://localhost:8000
 
 ### Default Login
-| Email | Password | Role |
-|-------|----------|------|
+
+| Email                | Password   | Role        |
+| -------------------- | ---------- | ----------- |
 | `admin@siakad.local` | `password` | Super Admin |
 
 ---
@@ -70,14 +71,14 @@ resources/views/
 
 ## 📦 Available Modules
 
-| Module | Route Prefix | Description |
-|--------|--------------|-------------|
-| Auth | `/login`, `/logout` | Authentication |
-| Siswa | `/siswa` | Student data CRUD |
-| Guru | `/guru` | Teacher data CRUD |
-| WaliMurid | `/walimurid` | Parent/Guardian CRUD |
-| UserManager | `/users` | User management (SUPER_ADMIN) |
-| RolePermission | `/rolepermission` | Role & permission management |
+| Module         | Route Prefix        | Description                   |
+| -------------- | ------------------- | ----------------------------- |
+| Auth           | `/login`, `/logout` | Authentication                |
+| Siswa          | `/siswa`            | Student data CRUD             |
+| Guru           | `/guru`             | Teacher data CRUD             |
+| WaliMurid      | `/walimurid`        | Parent/Guardian CRUD          |
+| UserManager    | `/users`            | User management (SUPER_ADMIN) |
+| RolePermission | `/rolepermission`   | Role & permission management  |
 
 ---
 
@@ -96,6 +97,7 @@ php artisan make:module Kelas -m -g     # With model and migration
 ```
 
 This creates:
+
 - `Controllers/{Module}Controller.php` - Full CRUD controller
 - `Routes/web.php` - RESTful routes with auth middleware
 - `Views/index.blade.php` - List view with table
@@ -121,16 +123,15 @@ php artisan make:module-controller Siswa ReportController --resource
 php artisan make:module-menu Kelas --header="DATA MASTER" --label="Data Kelas" --icon="fas fa-door-open" --roles="SUPER_ADMIN,GURU" --order=10
 ```
 
-| Command | Description |
-|---------|-------------|
-| `make:module {name} [-a\|--all]` | Create complete module with all files |
-| `make:module-migration {module} {name}` | Add migration to existing module |
-| `make:module-model {module} {name} [-m]` | Add model (with optional migration) |
-| `make:module-controller {module} {name} [-r]` | Add controller (`-r` for resource) |
-| `make:module-menu {module}` | Add sidebar menu (auto-displays in sidebar) |
+| Command                                       | Description                                 |
+| --------------------------------------------- | ------------------------------------------- |
+| `make:module {name} [-a\|--all]`              | Create complete module with all files       |
+| `make:module-migration {module} {name}`       | Add migration to existing module            |
+| `make:module-model {module} {name} [-m]`      | Add model (with optional migration)         |
+| `make:module-controller {module} {name} [-r]` | Add controller (`-r` for resource)          |
+| `make:module-menu {module}`                   | Add sidebar menu (auto-displays in sidebar) |
 
 ---
-
 
 ## 📦 Creating a New Module
 
@@ -203,7 +204,7 @@ use Illuminate\Database\Eloquent\Model;
 class Kelas extends Model
 {
     use HasUuids;
-    
+
     protected $table = 'kelas';
     protected $fillable = ['nama', 'tingkat', 'wali_kelas_id'];
 }
@@ -231,7 +232,7 @@ Module migrations are auto-discovered!
                 <i class="fas fa-plus mr-1"></i> Tambah Kelas
             </a>
         </x-slot>
-        
+
         {{-- Your table content here --}}
     </x-card>
 @endsection
@@ -260,11 +261,13 @@ return [
 ```
 
 > **Tips:**
+>
 > - Gunakan `header` yang sama di beberapa modul untuk mengelompokkan di satu section
 > - Tambah `children` array untuk sub-menu (treeview)
 > - Gunakan `url` instead of `route` untuk link manual
 
 **Contoh dengan sub-menu:**
+
 ```php
 [
     'label' => 'Pembayaran',
@@ -290,11 +293,13 @@ composer dump-autoload
 > ⚠️ **CRITICAL:** Team members MUST use these components. Raw HTML for basic elements is PROHIBITED.
 
 ### View Full Documentation
+
 Visit: http://localhost:8000/dev/ui-guide (only in debug mode)
 
 ### Quick Reference
 
 #### Alerts
+
 ```blade
 <x-alert type="success" message="Data berhasil disimpan!" dismissible />
 <x-alert type="danger" message="Terjadi kesalahan!" />
@@ -302,6 +307,7 @@ Visit: http://localhost:8000/dev/ui-guide (only in debug mode)
 ```
 
 #### Buttons
+
 ```blade
 <x-btn variant="primary" icon="fas fa-save" type="submit">Simpan</x-btn>
 <x-btn variant="success" icon="fas fa-plus" href="/create">Tambah</x-btn>
@@ -309,6 +315,7 @@ Visit: http://localhost:8000/dev/ui-guide (only in debug mode)
 ```
 
 #### Cards
+
 ```blade
 <x-card title="Card Title" icon="fas fa-list">
     Content here
@@ -320,6 +327,7 @@ Visit: http://localhost:8000/dev/ui-guide (only in debug mode)
 ```
 
 #### Input Fields
+
 ```blade
 <x-input label="Nama" name="nama" required />
 <x-input label="Email" name="email" type="email" help="Masukkan email valid" />
@@ -327,6 +335,7 @@ Visit: http://localhost:8000/dev/ui-guide (only in debug mode)
 ```
 
 #### Modals
+
 ```blade
 <x-modal id="myModal" title="Modal Title" size="lg">
     Content
@@ -345,17 +354,18 @@ Visit: http://localhost:8000/dev/ui-guide (only in debug mode)
 
 ### Default Roles
 
-| Role | Description |
-|------|-------------|
-| `SUPER_ADMIN` | Full system access |
-| `GURU` | Teacher - manage grades, attendance |
-| `SISWA` | Student - view own data |
-| `STAF_TU` | Admin staff - manage student/teacher data |
-| `KEUANGAN` | Finance - manage payments |
+| Role          | Description                               |
+| ------------- | ----------------------------------------- |
+| `SUPER_ADMIN` | Full system access                        |
+| `GURU`        | Teacher - manage grades, attendance       |
+| `SISWA`       | Student - view own data                   |
+| `STAF_TU`     | Admin staff - manage student/teacher data |
+| `KEUANGAN`    | Finance - manage payments                 |
 
 ### Permission Format
 
 Permissions use `module.action` format:
+
 ```
 siswa.view, siswa.create, siswa.edit, siswa.delete
 guru.view, guru.create, guru.edit, guru.delete
@@ -406,6 +416,7 @@ $count = PermissionRegistry::count();
 ## 🗃️ Database
 
 The project uses SQLite by default for development:
+
 - Database file: `database/database.sqlite`
 - Configure in `.env`: `DB_CONNECTION=sqlite`
 
@@ -452,6 +463,7 @@ php artisan make:model ModuleName -m
 ## 📞 Support
 
 Contact the Lead Developer or Senior Architect for:
+
 - Architecture questions
 - New module creation guidance
 - Component extension requests
@@ -459,4 +471,3 @@ Contact the Lead Developer or Senior Architect for:
 ---
 
 **Built with ❤️ by SIAKAD Development Team**
-

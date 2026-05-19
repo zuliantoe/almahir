@@ -20,7 +20,7 @@
                             </tr>
                             <tr>
                                 <th class="text-muted small text-uppercase">Tahun Ajaran</th>
-                                <td>{{ $kurikulum->tahunAjaran->tahunajaran }} ({{ $kurikulum->tahunAjaran->semester }})</td>
+                                <td>{{ $kurikulum->tahunAjaran->tahunajaran }}</td>
                             </tr>
                             <tr>
                                 <th class="text-muted small text-uppercase">Mata Pelajaran</th>

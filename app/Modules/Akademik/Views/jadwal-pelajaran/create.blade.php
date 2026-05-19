@@ -20,31 +20,31 @@
     </div>
     @endif
 
-    <x-card :title="(isset($jadwalPelajaran) ? 'Form Edit Data' : 'Form Input Massal Jadwal')" type="primary" outline>
+    <x-card :title="(isset($jadwalPelajaran) ? 'Form Edit Data' : 'Form Input Massal Jadwal')" type="primary" outline class="shadow-lg border-0 rounded-xl overflow-hidden">
         <form action="{{ isset($jadwalPelajaran) ? route('akademik.jadwal-pelajaran.update', $jadwalPelajaran->id) : route('akademik.jadwal-pelajaran.bulk-store') }}" 
-              method="POST" id="schedule-form">
+              method="POST" id="schedule-form" class="p-2">
             @csrf
             @if(isset($jadwalPelajaran))
                 @method('PUT')
             @endif
 
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped" id="schedule-table">
-                    <thead class="bg-light">
+            <div class="table-responsive rounded-lg border shadow-sm mb-4">
+                <table class="table table-hover align-middle mb-0" id="schedule-table">
+                    <thead class="bg-primary text-white">
                         <tr>
-                            <th width="150">Rombel <span class="text-danger">*</span></th>
-                            <th width="200">Mata Pelajaran <span class="text-danger">*</span></th>
-                            <th width="200">Guru Pengajar <span class="text-danger">*</span></th>
-                            <th width="120">Hari <span class="text-danger">*</span></th>
-                            <th width="80">Jam Ke- <span class="text-danger">*</span></th>
-                            <th width="120">Jam Mulai <span class="text-danger">*</span></th>
-                            <th width="120">Jam Selesai <span class="text-danger">*</span></th>
+                            <th class="py-3 px-4" width="180">ROMBEL <span class="text-white-50">*</span></th>
+                            <th class="py-3 px-4" width="220">MATA PELAJARAN <span class="text-white-50">*</span></th>
+                            <th class="py-3 px-4" width="220">GURU PENGAJAR <span class="text-white-50">*</span></th>
+                            <th class="py-3 px-4" width="180">HARI <span class="text-white-50">*</span></th>
+                            <th class="py-3 px-4" width="100">JAM KE- <span class="text-white-50">*</span></th>
+                            <th class="py-3 px-4" width="180">JAM MULAI <span class="text-white-50">*</span></th>
+                            <th class="py-3 px-4" width="180">JAM SELESAI <span class="text-white-50">*</span></th>
                             @if(!isset($jadwalPelajaran))
-                            <th width="50" class="text-center">Aksi</th>
+                            <th class="py-3 px-4 text-center" width="60">AKSI</th>
                             @endif
                         </tr>
                     </thead>
-                    <tbody id="schedule-rows">
+                    <tbody id="schedule-rows" class="bg-white">
                         {{-- Row template --}}
                         @if(isset($jadwalPelajaran))
                             @include('akademik::jadwal-pelajaran.partials.row', ['index' => 0, 'data' => $jadwalPelajaran])
@@ -58,29 +58,78 @@
             </div>
 
             @if(!isset($jadwalPelajaran))
-            <div class="mt-3">
-                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addRow()">
-                    <i class="fas fa-plus mr-1"></i> Tambah 1 Baris
+            <div class="mb-4 d-flex">
+                <button type="button" class="btn btn-outline-primary btn-sm px-4 rounded-pill transition-all hover-scale" onclick="addRow()">
+                    <i class="fas fa-plus mr-2"></i> Tambah 1 Baris
                 </button>
-                <button type="button" class="btn btn-outline-info btn-sm ml-2" onclick="addRow(5)">
-                    <i class="fas fa-plus-circle mr-1"></i> Tambah 5 Baris
+                <button type="button" class="btn btn-outline-info btn-sm px-4 ml-2 rounded-pill transition-all hover-scale" onclick="addRow(5)">
+                    <i class="fas fa-plus-circle mr-2"></i> Tambah 5 Baris
                 </button>
             </div>
             @endif
 
-    <hr>
-
-    <div class="d-flex justify-content-end align-items-center">
-        <div class="mr-auto text-muted small">
-            <span class="text-danger">*</span> Wajib diisi. Pastikan jam mulai dan selesai sesuai format (HH:MM).
+    <div class="bg-light p-4 rounded-lg border-top">
+        <div class="row align-items-center">
+            <div class="col-md-6 text-muted small">
+                <i class="fas fa-exclamation-triangle mr-1 text-warning"></i> 
+                Wajib diisi. Pastikan rentang waktu tidak bentrok dengan jadwal lain di rombel yang sama.
+            </div>
+            <div class="col-md-6 d-flex justify-content-end">
+                <x-btn type="reset" class="btn-light px-4 mr-3 rounded-pill border">Reset</x-btn>
+                <button type="submit" class="btn btn-primary px-5 rounded-pill shadow-sm transition-all hover-elevate">
+                    <i class="fas fa-save mr-2"></i> Simpan Semua Jadwal
+                </button>
+            </div>
         </div>
-        <x-btn type="reset" class="btn-light mr-2">Reset</x-btn>
-        <x-btn type="submit" icon="fas fa-save" class="btn-primary">
-            <i class="fas fa-save mr-1"></i> Simpan Semua Jadwal
-        </x-btn>
     </div>
 </form>
 </x-card>
+
+<style>
+    .rounded-xl { border-radius: 1rem !important; }
+    .rounded-lg { border-radius: 0.75rem !important; }
+    .rounded-left-pill { border-top-left-radius: 50rem !important; border-bottom-left-radius: 50rem !important; }
+    .rounded-right-pill { border-top-right-radius: 50rem !important; border-bottom-right-radius: 50rem !important; }
+    .bg-primary-soft { background-color: rgba(78, 115, 223, 0.1) !important; }
+    .transition-all { transition: all 0.2s ease-in-out; }
+    .hover-scale:hover { transform: scale(1.02); }
+    .hover-elevate:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; }
+    .table th { font-weight: 700; letter-spacing: 0.05rem; font-size: 0.75rem; border-bottom: 0; white-space: nowrap; }
+    .table td { border-color: #f8f9fc; vertical-align: middle; }
+    
+    /* Modern Scrollbar */
+    .table-responsive::-webkit-scrollbar { height: 8px; }
+    .table-responsive::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+    .table-responsive::-webkit-scrollbar-thumb { background: #d1d3e2; border-radius: 10px; }
+    .table-responsive::-webkit-scrollbar-thumb:hover { background: #b7b9cc; }
+
+    .form-control-premium {
+        border: 1px solid #d1d3e2;
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.5rem;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+        height: auto;
+        min-width: 100px;
+    }
+    select.form-control-premium {
+        padding-right: 1.5rem !important;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%234e73df' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.5rem center;
+        background-size: 10px 10px;
+    }
+    .form-control-premium:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.15);
+        background-color: #fff;
+    }
+    input[type="time"].form-control-premium {
+        min-width: 140px;
+    }
+    .input-group-text { border-color: #d1d3e2; }
+</style>
 
 {{-- Template untuk JavaScript --}}
 <div id="row-template-container" style="display: none;">

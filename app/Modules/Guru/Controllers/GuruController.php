@@ -22,7 +22,9 @@ class GuruController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('nama', 'like', "%{$search}%")
                   ->orWhere('nip', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                  ->orWhereHas('user', function($userQuery) use ($search) {
+                      $userQuery->where('email', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -52,14 +54,10 @@ class GuruController extends Controller
         $validated = $request->validate([
             'nip' => 'nullable|string|max:30|unique:guru,nip',
             'nama' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:guru,email',
             'tanggal_lahir' => 'nullable|date',
             'tempat_lahir' => 'nullable|string|max:100',
             'jenis_kelamin' => 'nullable|in:L,P',
             'alamat' => 'nullable|string',
-            'telepon' => 'nullable|string|max:20',
-            'jabatan' => 'nullable|string|max:100',
-            'mata_pelajaran' => 'nullable|string|max:100',
             'status' => 'required|in:aktif,nonaktif,pensiun',
         ]);
 
@@ -98,14 +96,10 @@ class GuruController extends Controller
         $validated = $request->validate([
             'nip' => 'nullable|string|max:30|unique:guru,nip,' . $id,
             'nama' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:guru,email,' . $id,
             'tanggal_lahir' => 'nullable|date',
             'tempat_lahir' => 'nullable|string|max:100',
             'jenis_kelamin' => 'nullable|in:L,P',
             'alamat' => 'nullable|string',
-            'telepon' => 'nullable|string|max:20',
-            'jabatan' => 'nullable|string|max:100',
-            'mata_pelajaran' => 'nullable|string|max:100',
             'status' => 'required|in:aktif,nonaktif,pensiun',
         ]);
 

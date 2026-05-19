@@ -68,7 +68,7 @@
                             <option value="">-- Pilih Tahun Ajaran --</option>
                             @foreach($tahun_ajaran as $ta)
                                 <option value="{{ $ta->id }}" {{ old('tahunajaran_id', $rombel->tahunajaran_id) == $ta->id ? 'selected' : '' }}>
-                                    {{ $ta->tahunajaran }} - {{ $ta->semester }}
+                                    {{ $ta->tahunajaran }}
                                 </option>
                             @endforeach
                         </select>

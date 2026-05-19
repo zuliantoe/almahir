@@ -275,6 +275,13 @@
                                 <span class="badge badge-light text-muted border" style="font-size:.75rem;">
                                     <i class="fas fa-calendar-week mr-1"></i>{{ $durasi }} {{ $durasi > 1 ? 'hari' : 'hari' }}
                                 </span>
+                                @if($item->potong_gaji)
+                                    <span class="badge badge-warning text-dark ml-1" style="font-size:.70rem;"><i class="fas fa-coins mr-1"></i>Potong Gaji</span>
+                                @elseif($item->potong_kuota)
+                                    <span class="badge badge-primary ml-1" style="font-size:.70rem;"><i class="fas fa-umbrella-beach mr-1"></i>Potong Kuota</span>
+                                @else
+                                    <span class="badge badge-success ml-1" style="font-size:.70rem;"><i class="fas fa-check-circle mr-1"></i>Dibayar Penuh</span>
+                                @endif
                             </td>
                             <td class="align-middle text-center py-3">
                                 @if($item->bukti)

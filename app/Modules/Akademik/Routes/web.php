@@ -64,6 +64,8 @@ Route::middleware(['web', 'auth', \Modules\Akademik\Middleware\ReadOnlyRoleMiddl
     Route::get('kenaikan-kelas/get-rombel', [KenaikanKelasController::class, 'getRombel'])->name('kenaikan-kelas.get-rombel');
     Route::get('kenaikan-kelas/get-siswa', [KenaikanKelasController::class, 'getSiswa'])->name('kenaikan-kelas.get-siswa');
     Route::post('kenaikan-kelas/process', [KenaikanKelasController::class, 'process'])->name('kenaikan-kelas.process');
+
+    Route::get('laporan', [\Modules\Akademik\Controllers\LaporanAkademikController::class, 'index'])->name('laporan.index');
 });
 
 // Public route for Calendar Sync (iCal) - Must be outside 'auth' so Google can fetch it

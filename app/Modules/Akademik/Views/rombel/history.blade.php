@@ -26,7 +26,7 @@
                         <option value="">Semua Tahun Ajaran</option>
                         @foreach($tahun_ajaran as $ta)
                             <option value="{{ $ta->id }}" {{ request('tahunajaran_id') == $ta->id ? 'selected' : '' }}>
-                                {{ $ta->tahunajaran }} - {{ $ta->semester }}
+                                {{ $ta->tahunajaran }}
                             </option>
                         @endforeach
                     </select>
@@ -77,7 +77,7 @@
                             </td>
                             <td>
                                 <div class="badge badge-soft-info p-2">
-                                    {{ $h->tahunAjaran->tahunajaran ?? '-' }} ({{ $h->tahunAjaran->semester ?? '-' }})
+                                    {{ $h->tahunAjaran->tahunajaran ?? '-' }}
                                 </div>
                             </td>
                             <td>

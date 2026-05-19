@@ -26,13 +26,10 @@ class PerizinanController extends Controller
         
         // Hitung cuti/izin yang masih menunggu (pending) untuk tahun ini
         $pendingDays = Perizinan::where('user_id', $pegawai->id)
-            ->whereIn('jenis_izin', ['cuti', 'izin'])
+            ->where('potong_kuota', true)
             ->where('status', 'menunggu')
             ->whereYear('tanggal_mulai', $currentYear)
-            ->get()
-            ->sum(function($izin) {
-                return Carbon::parse($izin->tanggal_mulai)->diffInDays(Carbon::parse($izin->tanggal_selesai)) + 1;
-            });
+            ->sum('total_hari');
 
         // Sisa cuti tersedia = Jatah di database - yang sedang diajukan
         return max(0, $pegawai->sisa_cuti - $pendingDays);
@@ -130,14 +127,15 @@ class PerizinanController extends Controller
             'bukti' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        if (in_array($request->jenis_izin, ['cuti', 'izin'])) {
+        $durasiHari = Carbon::parse($request->tanggal_mulai)->diffInDays(Carbon::parse($request->tanggal_selesai)) + 1;
+        $impact = Perizinan::getImpactSettings($request->jenis_izin);
+
+        if ($impact['potong_kuota']) {
             $sisaCuti = $this->getSisaCuti($pegawai);
-            $durasiCuti = Carbon::parse($request->tanggal_mulai)->diffInDays(Carbon::parse($request->tanggal_selesai)) + 1;
-            
-            if ($durasiCuti > $sisaCuti) {
+            if ($durasiHari > $sisaCuti) {
                 return redirect()->back()
                     ->withInput()
-                    ->with('error', "Pengajuan gagal. Sisa jatah cuti/izin Anda tahun ini adalah {$sisaCuti} hari, namun Anda mengajukan {$durasiCuti} hari.");
+                    ->with('error', "Pengajuan gagal. Sisa jatah cuti Anda tahun ini adalah {$sisaCuti} hari, namun Anda mengajukan {$durasiHari} hari.");
             }
         }
 
@@ -172,6 +170,9 @@ class PerizinanController extends Controller
             'alasan' => $request->alasan,
             'bukti' => $buktiPath,
             'status' => 'menunggu',
+            'potong_gaji' => $impact['potong_gaji'],
+            'potong_kuota' => $impact['potong_kuota'],
+            'total_hari' => $durasiHari,
         ]);
 
         // Notify Admins
@@ -212,11 +213,23 @@ class PerizinanController extends Controller
         ]);
 
         $perizinan = Perizinan::findOrFail($id);
+        $oldStatus = $perizinan->status;
+        $newStatus = $request->status;
+
         $perizinan->update([
-            'status' => $request->status,
+            'status' => $newStatus,
             'approved_by' => Auth::id(),
             'keterangan_admin' => $request->keterangan_admin,
         ]);
+
+        // Jika disetujui dan memotong kuota, kurangi sisa_cuti pegawai
+        // via method deductLeave() agar validasi & Audit Trail berjalan dengan benar
+        if ($oldStatus === 'menunggu' && $newStatus === 'disetujui' && $perizinan->potong_kuota) {
+            $pegawai = $perizinan->pegawai;
+            if ($pegawai) {
+                $pegawai->deductLeave($perizinan->total_hari);
+            }
+        }
 
         // Notify Pegawai
         if ($perizinan->pegawai && $perizinan->pegawai->user) {
@@ -228,3 +241,4 @@ class PerizinanController extends Controller
         return redirect()->back()->with('success', $msg);
     }
 }
+

@@ -7,70 +7,49 @@
     <div class="row mb-4">
         <div class="col-12 d-flex justify-content-between align-items-center">
             <div>
-                <h1 class="h3 mb-0 text-gray-800 font-weight-bold">Kenaikan Kelas</h1>
-                <p class="text-muted">Proses perpindahan rombel dan siswa ke jenjang/tahun ajaran berikutnya</p>
+                <h1 class="h3 mb-0 text-gray-800 font-weight-bold">Kenaikan Kelas & Kelulusan</h1>
+                <p class="text-muted">Memindahkan santri dari Tahun Ajaran <span class="badge badge-dark px-2">{{ $sourceYear->tahunajaran }}</span> ke <span class="badge badge-success px-2">{{ $destinationYear->tahunajaran }}</span></p>
             </div>
-            <x-btn :href="route('akademik.rombel.history')" icon="fas fa-history" class="btn-info shadow-sm">
+            <x-btn :href="route('akademik.rombel.history')" icon="fas fa-history" class="btn-outline-primary px-4 rounded-pill shadow-sm">
                 Lihat Riwayat
             </x-btn>
         </div>
     </div>
 
-    @if(session('error'))
-        <x-alert type="danger" :message="session('error')" dismissible />
-    @endif
+    {{-- Session alerts are handled globally via SweetAlert2 in layout --}}
 
     <form action="{{ route('akademik.kenaikan-kelas.process') }}" method="POST" id="formKenaikan">
         @csrf
         <div class="row">
-            <!-- Sidebar Konfigurasi -->
             <div class="col-lg-4">
-                <x-card title="Konfigurasi Kenaikan" icon="fas fa-cog" type="primary" outline shadow>
+                <x-card title="Konfigurasi Periode" icon="fas fa-cog" type="primary" outline class="shadow-lg border-0 rounded-xl overflow-hidden">
                     <div class="form-group mb-4">
-                        <label class="font-weight-bold">1. Pilih Tahun Ajaran Asal</label>
-                        <select name="tahunajaran_asal_id" id="tahun_asal" class="form-control select2" required>
-                            <option value="">-- Pilih Tahun --</option>
-                            @foreach($tahun_ajaran as $ta)
-                                <option value="{{ $ta->id }}">{{ $ta->tahunajaran }} - {{ $ta->semester }}</option>
-                            @endforeach
-                        </select>
-                        <small class="text-muted">Tahun ajaran tempat rombel berada saat ini.</small>
-                    </div>
+                        <label class="font-weight-bold text-dark small text-uppercase">Tahun Ajaran Tujuan (Aktif)</label>
+                        <div class="p-3 bg-primary-soft rounded-lg mb-4 d-flex align-items-center border border-primary">
+                            <i class="fas fa-calendar-check fa-2x text-primary mr-3"></i>
+                            <div>
+                                <h5 class="mb-0 font-weight-bold text-primary">{{ $destinationYear->tahunajaran }}</h5>
+                                <span class="badge badge-primary">Periode Aktif</span>
+                            </div>
+                        </div>
 
-                    <div class="form-group mb-4">
-                        <label class="font-weight-bold">2. Pilih Rombel</label>
-                        <select name="rombel_id" id="rombel_id" class="form-control select2" required disabled>
+                        <label class="font-weight-bold text-dark small text-uppercase">Rombongan Belajar (Asal)</label>
+                        <select name="rombel_id" id="rombel_id" class="form-control select2-premium" required>
                             <option value="">-- Pilih Rombel --</option>
-                        </select>
-                        <div id="rombelLoader" class="spinner-border spinner-border-sm text-primary d-none mt-2" role="status"></div>
-                    </div>
-
-                    <hr class="my-4">
-
-                    <div class="form-group mb-4">
-                        <label class="font-weight-bold">3. Pilih Tahun Ajaran Tujuan</label>
-                        <select name="tahunajaran_tujuan_id" id="tahun_tujuan" class="form-control select2" required>
-                            <option value="">-- Pilih Tahun Tujuan --</option>
-                            @foreach($tahun_ajaran as $ta)
-                                <option value="{{ $ta->id }}">{{ $ta->tahunajaran }} - {{ $ta->semester }}</option>
+                            @foreach($rombels as $rombel)
+                                <option value="{{ $rombel->id }}" data-tingkat="{{ $rombel->tingkat_id }}">
+                                    {{ $rombel->nama_rombel }} (Tingkat {{ $rombel->tingkat->nama_tingkat ?? '' }}) 
+                                    — {{ $rombel->riwayatSiswa->where('status', 'aktif')->count() }} Santri
+                                </option>
                             @endforeach
                         </select>
-                        <small class="text-primary font-weight-bold">Target kenaikan kelas.</small>
-                    </div>
-
-                    <div class="form-group mb-4">
-                        <label class="font-weight-bold">4. Pilih Kelas & Tingkat Tujuan</label>
-                        <select name="kelas_tujuan_id" id="kelas_tujuan" class="form-control select2" required>
-                            <option value="">-- Pilih Kelas --</option>
-                            @foreach($kelas as $k)
-                                <option value="{{ $k->id }}">[{{ $k->tingkat->nama_tingkat }}] {{ $k->nama_kelas }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="alert alert-warning border-0 shadow-sm mt-4">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>
-                        <small>Data rombel asal akan diarsipkan sebagai <strong>Riwayat</strong>.</small>
+                        <div class="mt-4 p-3 bg-light rounded-lg border">
+                            <h6 class="font-weight-bold small text-primary text-uppercase mb-2"><i class="fas fa-info-circle mr-1"></i> Info Alur</h6>
+                            <p class="small text-muted mb-0">
+                                Siswa yang <strong>Naik</strong> akan dipindahkan ke tahun ajaran <strong class="text-success">{{ $destinationYear->tahunajaran }}</strong>.
+                                Sistem akan mencarikan kelas padanan secara otomatis berdasarkan tingkat berikutnya.
+                            </p>
+                        </div>
                     </div>
                 </x-card>
             </div>
@@ -86,9 +65,14 @@
 
                     <div id="siswaContainer" class="d-none">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div class="custom-control custom-checkbox custom-control-lg">
-                                <input type="checkbox" class="custom-control-input" id="selectAll">
-                                <label class="custom-control-label font-weight-bold" for="selectAll">Pilih Semua Siswa</label>
+                            <div class="d-flex align-items-center">
+                                <div class="custom-control custom-checkbox custom-control-lg mr-4">
+                                    <input type="checkbox" class="custom-control-input" id="selectAll">
+                                    <label class="custom-control-label font-weight-bold" for="selectAll">Pilih Semua Siswa</label>
+                                </div>
+                                <button type="button" class="btn btn-outline-danger btn-sm d-none" id="btnLulusSemua">
+                                    <i class="fas fa-user-graduate mr-1"></i> Set Lulus Semua
+                                </button>
                             </div>
                             <span class="badge badge-pill badge-primary px-3 py-2" id="siswaCountBadge">0 Siswa</span>
                         </div>
@@ -110,7 +94,7 @@
                         </div>
 
                         <div class="mt-4 text-right">
-                            <button type="submit" class="btn btn-success btn-lg px-5 shadow-lg font-weight-bold" style="border-radius: 30px;" onclick="return confirm('Apakah Anda yakin ingin memproses kenaikan kelas untuk rombel ini?')">
+                            <button type="submit" class="btn btn-success btn-lg px-5 shadow-lg font-weight-bold" style="border-radius: 30px;">
                                 <i class="fas fa-rocket mr-2"></i> Proses Kenaikan Kelas
                             </button>
                         </div>
@@ -124,39 +108,23 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Load Rombel when Tahun Asal changes
-    $('#tahun_asal').change(function() {
-        const tahunId = $(this).val();
-        const rombelSelect = $('#rombel_id');
-        
-        if (tahunId) {
-            $('#rombelLoader').removeClass('d-none');
-            rombelSelect.prop('disabled', true).html('<option value="">-- Sedang memuat... --</option>');
-            
-            $.get('{{ route("akademik.kenaikan-kelas.get-rombel") }}', { tahunajaran_id: tahunId }, function(data) {
-                let html = '<option value="">-- Pilih Rombel --</option>';
-                data.forEach(function(r) {
-                    html += `<option value="${r.id}">${r.nama_rombel} (${r.kelas.nama_kelas})</option>`;
-                });
-                rombelSelect.html(html).prop('disabled', false);
-                $('#rombelLoader').addClass('d-none');
-            });
-        } else {
-            rombelSelect.prop('disabled', true).html('<option value="">-- Pilih Rombel --</option>');
-        }
-    });
-
     // Load Siswa when Rombel changes
     $('#rombel_id').change(function() {
         const rombelId = $(this).val();
-        const tahunId = $('#tahun_asal').val();
+        const tingkatId = $(this).find(':selected').data('tingkat');
+        const maxTingkatId = {{ $maxTingkatId ?? 0 }};
         
         if (rombelId) {
+            if (tingkatId == maxTingkatId) {
+                $('#btnLulusSemua').removeClass('d-none');
+            } else {
+                $('#btnLulusSemua').addClass('d-none');
+            }
             $('#siswaPlaceholder').addClass('d-none');
             $('#siswaContainer').removeClass('d-none');
             $('#siswaListBody').html('<tr><td colspan="4" class="text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i> Memuat data siswa...</td></tr>');
 
-            $.get('{{ route("akademik.kenaikan-kelas.get-siswa") }}', { rombel_id: rombelId, tahunajaran_id: tahunId }, function(data) {
+            $.get('{{ route("akademik.kenaikan-kelas.get-siswa") }}', { rombel_id: rombelId }, function(data) {
                 let html = '';
                 data.forEach(function(rs) {
                     html += `
@@ -196,6 +164,25 @@ $(document).ready(function() {
         }
     });
 
+    // Luluskan Semua Logic
+    $('#btnLulusSemua').click(function() {
+        Swal.fire({
+            title: 'Set Lulus Semua?',
+            text: 'Semua siswa yang dipilih akan diatur statusnya menjadi Lulus.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Set Lulus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $('input[type="radio"][value="lulus"]').prop('checked', true).closest('label').addClass('active');
+                $('input[type="radio"][value="naik"], input[type="radio"][value="tidak_naik"]').prop('checked', false).closest('label').removeClass('active');
+            }
+        });
+    });
+
     // Select All Logic
     $('#selectAll').change(function() {
         $('.siswa-check').prop('checked', $(this).prop('checked'));
@@ -206,6 +193,38 @@ $(document).ready(function() {
         updateCount();
     });
 
+    $('#formKenaikan').submit(function(e) {
+        const siswaSelected = $('.siswa-check:checked').length;
+
+        if (siswaSelected === 0) {
+            Swal.fire('Peringatan', 'Silakan pilih setidaknya satu siswa.', 'warning');
+            return false;
+        }
+
+        e.preventDefault();
+
+        Swal.fire({
+            title: 'Konfirmasi Kenaikan',
+            text: 'Apakah Anda yakin ingin memproses kenaikan kelas untuk rombel ini? Rombel akan otomatis dinaikkan tingkatnya.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, Proses Sekarang!',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+                const btn = $('#formKenaikan').find('button[type="submit"]');
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Memproses...');
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                this.submit();
+            }
+        });
+    });
+
     function updateCount() {
         const count = $('.siswa-check:checked').length;
         $('#siswaCountBadge').text(count + ' Siswa Terpilih');
@@ -214,6 +233,25 @@ $(document).ready(function() {
 </script>
 
 <style>
+    .rounded-xl { border-radius: 1rem !important; }
+    .rounded-lg { border-radius: 0.75rem !important; }
+    .transition-all { transition: all 0.2s ease-in-out; }
+    .hover-scale:hover { transform: scale(1.02); }
+    .select2-premium + .select2-container .select2-selection--single {
+        height: 45px;
+        border-radius: 10px;
+        border: 1px solid #d1d3e2;
+        padding-top: 8px;
+    }
+    .btn-xs { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+    .table-premium thead th {
+        background: #f8f9fc;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05rem;
+        color: #4e73df;
+        border-top: 0;
+    }
     .badge-soft-success { background-color: rgba(40, 167, 69, 0.1); color: #28a745; border: 1px solid rgba(40, 167, 69, 0.2); }
     .sticky-top { z-index: 10; top: 0; }
     .table th { text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; }

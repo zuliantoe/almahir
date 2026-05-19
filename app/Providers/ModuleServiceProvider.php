@@ -98,6 +98,9 @@ class ModuleServiceProvider extends ServiceProvider
 
             // Register web routes
             $webRoutesPath = $modulePath . '/Routes/web.php';
+            if (!File::exists($webRoutesPath)) {
+                $webRoutesPath = $modulePath . '/routes/web.php';
+            }
             if (File::exists($webRoutesPath)) {
                 Route::middleware('web')
                     ->prefix(strtolower($moduleName))
@@ -107,6 +110,9 @@ class ModuleServiceProvider extends ServiceProvider
 
             // Register API routes
             $apiRoutesPath = $modulePath . '/Routes/api.php';
+            if (!File::exists($apiRoutesPath)) {
+                $apiRoutesPath = $modulePath . '/routes/api.php';
+            }
             if (File::exists($apiRoutesPath)) {
                 Route::middleware('api')
                     ->prefix('api/' . strtolower($moduleName))
@@ -129,6 +135,9 @@ class ModuleServiceProvider extends ServiceProvider
             $modulePath = $module['path'];
 
             $viewsPath = $modulePath . '/Views';
+            if (!File::isDirectory($viewsPath)) {
+                $viewsPath = $modulePath . '/views';
+            }
             if (File::isDirectory($viewsPath)) {
                 $this->loadViewsFrom($viewsPath, strtolower($moduleName));
             }
@@ -147,6 +156,9 @@ class ModuleServiceProvider extends ServiceProvider
             $modulePath = $module['path'];
 
             $migrationsPath = $modulePath . '/Migrations';
+            if (!File::isDirectory($migrationsPath)) {
+                $migrationsPath = $modulePath . '/migrations';
+            }
             if (File::isDirectory($migrationsPath)) {
                 $this->loadMigrationsFrom($migrationsPath);
             }
@@ -165,6 +177,9 @@ class ModuleServiceProvider extends ServiceProvider
 
         foreach ($this->getModules() as $module) {
             $menuFile = $module['path'] . '/menu.php';
+            if (!File::exists($menuFile)) {
+                $menuFile = $module['path'] . '/Menu.php';
+            }
 
             if (File::exists($menuFile)) {
                 $menuConfig = require $menuFile;

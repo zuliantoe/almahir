@@ -84,7 +84,7 @@ class PenilaianTahfidzController extends Controller
         $rombels = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0)->orderBy('nama_rombel')->get();
         $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
 
-        return view('penilaiandanpresensi::penilaian-tahfidz.index', [
+        return view('penilaiandanpresensi::penilaiantahfidz.index', [
             'title' => 'Daftar Penilaian Tahfidz',
             'penilaianTahfidzs' => $penilaianTahfidzs,
             'activeTahunAjaran' => $activeTahunAjaran,
@@ -112,7 +112,7 @@ class PenilaianTahfidzController extends Controller
         $gurus = ModelsGuru::orderBy('nama')->get();
         $siswas = ModelsSiswa::with('kelas')->orderBy('nama')->get();
 
-        return view('penilaiandanpresensi::penilaian-tahfidz.create', [
+        return view('penilaiandanpresensi::penilaiantahfidz.create', [
             'title' => 'Tambah Penilaian Tahfidz',
             'siswas' => $siswas,
             'gurus' => $gurus,
@@ -188,7 +188,7 @@ class PenilaianTahfidzController extends Controller
     {
         $penilaianTahfidz = PenilaianTahfidz::with(['siswa', 'guru'])->findOrFail($id);
 
-        return view('penilaiandanpresensi::penilaian-tahfidz.show', [
+        return view('penilaiandanpresensi::penilaiantahfidz.show', [
             'title' => 'Detail Penilaian Tahfidz',
             'penilaianTahfidz' => $penilaianTahfidz,
         ]);
@@ -211,7 +211,7 @@ class PenilaianTahfidzController extends Controller
         
         $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
 
-        return view('penilaiandanpresensi::penilaian-tahfidz.edit', [
+        return view('penilaiandanpresensi::penilaiantahfidz.edit', [
             'title' => 'Edit Penilaian Tahfidz',
             'penilaianTahfidz' => $penilaianTahfidz,
             'siswas' => $siswas,

@@ -54,7 +54,6 @@
                                         </span>
                                         <span class="badge badge-warning">Aktif</span>
                                     </div>
-                                    {{-- Kolom tahun ajaran belum ada di DB Tahfidz, tapi kita siapkan datanya --}}
                                 </div>
                             </div>
                         </div>
@@ -70,7 +69,6 @@
                                             <option value="{{ $r->id }}" {{ old('rombel_id') == $r->id ? 'selected' : '' }}>{{ $r->nama_rombel }}</option>
                                         @endforeach
                                     </select>
-                                    {{-- Keep hidden kelas_id for legacy DB support if needed, or update controller --}}
                                     <input type="hidden" name="kelas_id" id="kelas_id">
                                 </div>
                             </div>
@@ -336,8 +334,6 @@
                         let startSurahIdx = -1;
                         let endSurahIdx = -1;
 
-                        // We need to match based on surah number since API returns surah.number
-                        // AlQuran Cloud Surah numbers are 1-indexed
                         startSurahIdx = first.surah.number - 1;
                         endSurahIdx = last.surah.number - 1;
 
@@ -467,7 +463,6 @@
                         let rowIndex = 0;
 
                         if (mode === 'global') {
-                            // Single row for the whole range
                             let surahAwal = quranData[suratAwalIdx];
                             let surahAkhir = quranData[suratAkhirIdx];
                             let label = `${surahAwal.namaLatin} (${awal}) s/d ${surahAkhir.namaLatin} (${akhir})`;
@@ -498,7 +493,6 @@
                                 </tr>
                             `);
                         } else {
-                            // Detailed rows (existing logic)
                             for(let s = suratAwalIdx; s <= suratAkhirIdx; s++) {
                                 let surah = quranData[s];
                                 let startAyat = (s === suratAwalIdx) ? awal : 1;
@@ -535,7 +529,6 @@
                             }
                         }
 
-                        // Re-initialize buttons since they are dynamically added
                         $('.btn-group-toggle').each(function() {
                             $(this).find('label').on('click', function() {
                                 $(this).addClass('active').siblings().removeClass('active');

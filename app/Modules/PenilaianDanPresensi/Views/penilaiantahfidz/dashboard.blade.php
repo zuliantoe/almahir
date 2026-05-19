@@ -142,7 +142,7 @@
                         </li>
                         @empty
                         <li class="nav-item text-center text-muted p-3">
-                            Belum ada data
+                             Belum ada data
                         </li>
                         @endforelse
                     </ul>

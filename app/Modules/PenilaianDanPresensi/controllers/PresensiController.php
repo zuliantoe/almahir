@@ -401,7 +401,7 @@ class PresensiController extends Controller
                                 'jam' => $j->jamawal,
                                 'status' => 'Alpha',
                                 'kategori' => 'Alpha',
-                                'created_at' => $targetTanggal . ' ' . $j->jamawal . ':00',
+                                'created_at' => Carbon::parse($targetTanggal . ' ' . $j->jamawal)->format('Y-m-d H:i:s'),
                                 'updated_at' => now(),
                             ];
                             // Mark as existing so we don't double-add in the same batch

@@ -13,6 +13,24 @@ use Illuminate\Http\RedirectResponse;
 class AbsensiController extends Controller
 {
     /**
+     * Menghitung jarak antara dua titik koordinat (Haversine Formula) dalam meter.
+     */
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371000;
+        $latFrom = deg2rad((float)$lat1);
+        $lonFrom = deg2rad((float)$lon1);
+        $latTo = deg2rad((float)$lat2);
+        $lonTo = deg2rad((float)$lon2);
+
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) + cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
+        return $angle * $earthRadius;
+    }
+
+    /**
      * View Personal Attendance History
      */
     public function index(): View
@@ -138,6 +156,25 @@ class AbsensiController extends Controller
             return redirect()->back()->with('error', 'Presensi belum dibuka. Silakan kembali lagi pukul 06:00 pagi.');
         }
 
+        // VALIDASI QR CODE
+        $expectedToken = md5(config('absensi.qr_secret') . $today);
+        if ($request->qr_token !== $expectedToken) {
+            return redirect()->back()->with('error', 'QR Code tidak valid atau sudah kedaluwarsa. Silakan scan ulang di lobi.');
+        }
+
+        // VALIDASI GPS LOKASI
+        if (!$request->lat || !$request->long) {
+            return redirect()->back()->with('error', 'Koordinat GPS tidak ditemukan. Pastikan izin lokasi aktif di browser Anda.');
+        }
+        $officeLat = config('absensi.office_latitude');
+        $officeLong = config('absensi.office_longitude');
+        $officeRadius = config('absensi.office_radius');
+        $distance = $this->calculateDistance($request->lat, $request->long, $officeLat, $officeLong);
+        
+        if ($distance > $officeRadius) {
+            return redirect()->back()->with('error', 'Anda berada di luar radius kantor (Jarak: ' . round($distance) . 'm). Maksimal radius adalah ' . $officeRadius . 'm.');
+        }
+
         // 2. Cek apakah sudah absen hari ini
         $existing = Absensi::where('pegawai_id', $pegawai->id)
             ->where('tanggal', $today)
@@ -193,6 +230,25 @@ class AbsensiController extends Controller
             $sisaJam = 16 - $now->hour - 1;
             $sisaMenit = 60 - $now->minute;
             return redirect()->back()->with('error', "Belum waktunya pulang! Jam pulang minimal pukul 16:00 (Sisa waktu: $sisaJam jam $sisaMenit menit lagi).");
+        }
+
+        // VALIDASI QR CODE PULANG
+        $expectedToken = md5(config('absensi.qr_secret') . $today);
+        if ($request->qr_token !== $expectedToken) {
+            return redirect()->back()->with('error', 'QR Code tidak valid. Silakan scan ulang di lobi untuk pulang.');
+        }
+
+        // VALIDASI GPS PULANG
+        if (!$request->lat || !$request->long) {
+            return redirect()->back()->with('error', 'Koordinat GPS tidak ditemukan.');
+        }
+        $officeLat = config('absensi.office_latitude');
+        $officeLong = config('absensi.office_longitude');
+        $officeRadius = config('absensi.office_radius');
+        $distance = $this->calculateDistance($request->lat, $request->long, $officeLat, $officeLong);
+        
+        if ($distance > $officeRadius) {
+            return redirect()->back()->with('error', 'Anda berada di luar radius kantor (Jarak: ' . round($distance) . 'm) untuk melakukan presensi pulang.');
         }
 
         $absensi->update([

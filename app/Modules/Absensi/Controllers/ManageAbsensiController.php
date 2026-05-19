@@ -212,4 +212,19 @@ class ManageAbsensiController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+    /**
+     * Tampilkan Halaman TV Lobi (Generator QR Code)
+     */
+    public function qrGenerator(): View
+    {
+        $today = Carbon::today()->toDateString();
+        // Token Harian (Bisa di-upgrade jadi token jam-jaman atau menitan nanti)
+        $qrToken = md5(config('absensi.qr_secret') . $today);
+
+        return view('absensi::manage.qr-generator', [
+            'title' => 'Layar Pemindai Absensi',
+            'qrToken' => $qrToken
+        ]);
+    }
 }

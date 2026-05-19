@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
             data: { role: roleName },
             success: function(data) {
                 linkableDataCache = {}; // Clear cache
-                let options = '<option value="">-- Input Manual (Bukan ' + roleName.replace('_', ' ') + ') --</option>';
+                let options = '<option value="">-- Pilih Data --</option>';
                 
                 data.forEach(item => {
                     linkableDataCache[item.id] = item;

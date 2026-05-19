@@ -261,8 +261,47 @@
             </div>
         </div>
 
-        {{-- Pending Requests --}}
+        {{-- Notifications & Pending Requests --}}
         <div class="col-md-4">
+            {{-- Notifikasi Jadwal Tes (Khusus Guru) --}}
+            @if(isset($isGuru) && isset($jadwalTes) && $jadwalTes->count() > 0)
+            <div class="card border-0 shadow-sm mb-4 animate__animated animate__fadeInRight" style="border-radius: 20px; border-left: 5px solid #f59e0b !important; background: linear-gradient(to right, #fffdf8, #ffffff);">
+                <div class="card-header bg-transparent py-3 border-0">
+                    <h5 class="mb-0 font-weight-bold text-dark"><i class="fas fa-bell mr-2 text-warning animate__animated animate__swing animate__infinite animate__slower"></i> Jadwal Menguji</h5>
+                    <p class="small text-muted mb-0 mt-1">Anda memiliki jadwal tes seleksi calon santri.</p>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" style="border-radius: 0 0 20px 0;">
+                        @foreach($jadwalTes as $jadwal)
+                        <div class="list-group-item border-bottom-0 border-top px-4 py-3 bg-transparent">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="font-weight-bold text-dark" style="font-size: 0.9rem;">{{ $jadwal->pendaftaran->nama_lengkap ?? 'Calon Santri' }}</span>
+                                <span class="badge badge-warning text-dark px-2 py-1 shadow-sm">{{ $jadwal->nama_tes }}</span>
+                            </div>
+                            <div class="d-flex flex-column gap-1 mb-2 mt-2">
+                                <div class="text-muted small">
+                                    <i class="far fa-calendar-alt text-primary mr-1" style="width: 15px;"></i> 
+                                    <span class="font-weight-bold">{{ \Carbon\Carbon::parse($jadwal->tanggal)->translatedFormat('l, d F Y') }}</span>
+                                </div>
+                                <div class="text-muted small">
+                                    <i class="far fa-clock text-danger mr-1" style="width: 15px;"></i> 
+                                    <span class="font-weight-bold">{{ \Carbon\Carbon::parse($jadwal->jam)->format('H:i') }} WIB</span>
+                                </div>
+                                <div class="text-muted small">
+                                    @if($jadwal->metode == 'offline')
+                                        <i class="fas fa-map-marker-alt text-success mr-1" style="width: 15px;"></i> Offline - {{ $jadwal->lokasi ?: 'Ruang Ujian' }}
+                                    @else
+                                        <i class="fas fa-video text-info mr-1" style="width: 15px;"></i> Online - <a href="{{ $jadwal->link }}" target="_blank" class="text-info text-decoration-underline">Join Link</a>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @endif
+
             @if(!isset($isSiswa))
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px;">
                 <div class="card-header bg-white py-3 border-0">

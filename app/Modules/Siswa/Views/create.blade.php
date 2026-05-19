@@ -79,7 +79,7 @@
                     <div class="row">
                         <div class="col-md-6">
                             <x-input 
-                                label="Email" 
+                                label="Email User" 
                                 name="email" 
                                 type="email"
                                 placeholder="siswa@email.com"

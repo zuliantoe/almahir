@@ -25,7 +25,7 @@
                             <th class="border-0">Nama Lengkap</th>
                             <th class="border-0">Kelas</th>
                             <th class="border-0">Status</th>
-                            <th class="border-0 text-center px-4">Kartu QR</th>
+                            <th class="border-0 text-center px-4">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -67,10 +67,9 @@
                                 <span class="badge badge-{{ $statusClass }} px-3 py-1" style="border-radius: 6px; text-transform: capitalize;">{{ $siswa->status ?? 'Aktif' }}</span>
                             </td>
                             <td class="align-middle text-center px-4">
-                                <button type="button" class="btn btn-outline-primary btn-sm px-3 shadow-sm" style="border-radius: 50px;" 
-                                        onclick="showQRCode('{{ $siswa->nama }}', '{{ $siswa->nis }}')">
-                                    <i class="fas fa-qrcode mr-1"></i> Lihat QR
-                                </button>
+                                <a href="{{ route('siswa.show', $siswa->id) }}" class="btn btn-outline-primary btn-sm px-3 shadow-sm" style="border-radius: 50px;">
+                                    <i class="fas fa-eye mr-1"></i> Detail
+                                </a>
                             </td>
                         </tr>
                         @empty
@@ -91,50 +90,4 @@
     </div>
 </div>
 
-<!-- Modal QR Code -->
-<div class="modal fade" id="qrModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 25px; overflow: hidden;">
-            <div class="modal-header bg-primary text-white py-4 text-center d-block position-relative">
-                <h4 class="modal-title font-weight-bold mb-0">KARTU SANTRI DIGITAL</h4>
-                <p class="mb-0 opacity-75 small">Sistem Informasi Akademik Almahir</p>
-                <button type="button" class="close text-white position-absolute" data-dismiss="modal" aria-label="Close" style="top: 20px; right: 20px;">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body text-center p-5">
-                <div class="mb-4 d-inline-block p-3 bg-white shadow-sm" style="border: 1px solid #eee; border-radius: 20px;">
-                    <img id="qrImage" src="" alt="QR Code" style="width: 200px; height: 200px;">
-                </div>
-                <h3 id="qrNama" class="font-weight-bold text-dark mb-1">-</h3>
-                <h5 id="qrNis" class="text-primary font-weight-bold mb-4">-</h5>
-                <div class="alert bg-light border-0 text-muted small py-2 px-3" style="border-radius: 12px;">
-                    <i class="fas fa-info-circle mr-1"></i> Gunakan QR Code ini untuk presensi harian santri.
-                </div>
-                <button type="button" class="btn btn-primary btn-block py-3 font-weight-bold mt-4 shadow" style="border-radius: 50px;" onclick="window.print()">
-                    <i class="fas fa-print mr-2"></i> CETAK KARTU QR
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-    .bg-primary-light { background-color: rgba(13, 110, 25, 0.05); }
-    .table th { letter-spacing: 0.5px; text-transform: uppercase; font-size: 0.75rem; color: #8898aa; }
-</style>
-
-@push('scripts')
-<script>
-    function showQRCode(nama, nis) {
-        // Menggunakan API goqr.me (Gratis & Stabil)
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${nis}&margin=10`;
-        
-        $('#qrImage').attr('src', qrUrl);
-        $('#qrNama').text(nama);
-        $('#qrNis').text('NIS: ' + nis);
-        $('#qrModal').modal('show');
-    }
-</script>
-@endpush
 @endsection

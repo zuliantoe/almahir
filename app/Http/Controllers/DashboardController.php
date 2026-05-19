@@ -22,6 +22,11 @@ class DashboardController extends Controller
             return redirect()->route('penilaiandanpresensi.index');
         }
 
+        // Langsung arahkan Wali Murid ke Portal Wali
+        if ($user && $user->hasRole('WALI_MURID')) {
+            return redirect()->route('walimurid.portal.dashboard');
+        }
+
         // 1. Menghitung Total Guru (berdasarkan role GURU)
         $totalGuru = User::withRole('GURU')->count();
 

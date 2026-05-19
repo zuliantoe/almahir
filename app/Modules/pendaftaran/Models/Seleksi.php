@@ -19,6 +19,7 @@ class Seleksi extends Model
         'tanggal',
         'jam',
         'pengampu',
+        'guru_id',
         'metode',
         'lokasi',
         'link',
@@ -28,5 +29,10 @@ class Seleksi extends Model
     public function pendaftaran()
     {
         return $this->belongsTo(Pendaftaran::class);
+    }
+
+    public function guru()
+    {
+        return $this->belongsTo(\Modules\Guru\Models\Guru::class, 'guru_id');
     }
 }

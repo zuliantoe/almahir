@@ -13,9 +13,13 @@ class SeleksiController extends Controller
 
     public function index($id)
     {
-        $pendaftaran = Pendaftaran::with('seleksis')->findOrFail($id);
+        $pendaftaran = Pendaftaran::with(['seleksis' => function($q) {
+            $q->with('guru');
+        }])->findOrFail($id);
+        
+        $gurus = \Modules\Guru\Models\Guru::aktif()->get();
 
-        return view('pendaftaran::admin.jadwal', compact('pendaftaran'));
+        return view('pendaftaran::admin.jadwal', compact('pendaftaran', 'gurus'));
     }
     public function store(Request $request, $id)
 {
@@ -26,6 +30,7 @@ class SeleksiController extends Controller
         'metode' => 'required|in:offline,online',
         'lokasi' => 'nullable|string|max:255',
         'link' => 'nullable|url',
+        'guru_id' => 'nullable|exists:guru,id',
     ]);
 
     Seleksi::create([
@@ -34,6 +39,7 @@ class SeleksiController extends Controller
         'tanggal' => $request->tanggal,
         'jam' => $request->jam,
         'pengampu' => $request->pengampu,
+        'guru_id' => $request->guru_id,
         'metode' => $request->metode,
         'lokasi' => $request->lokasi,
         'link' => $request->link,

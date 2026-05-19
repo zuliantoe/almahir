@@ -171,6 +171,14 @@ class DashboardController extends Controller
                 ->take(5)
                 ->get();
 
+            // Jadwal Tes Seleksi Calon Santri untuk Guru ini
+            $jadwalTes = \Modules\Pendaftaran\Models\Seleksi::with('pendaftaran')
+                ->where('guru_id', $guru?->id)
+                ->whereDate('tanggal', '>=', $today)
+                ->orderBy('tanggal', 'asc')
+                ->orderBy('jam', 'asc')
+                ->get();
+
             return view('penilaiandanpresensi::dashboard.index', [
                 'title' => 'Dashboard Penilaian & Presensi',
                 'activeTA' => $activeTA,
@@ -178,6 +186,7 @@ class DashboardController extends Controller
                 'pendingIzin' => $pendingIzin,
                 'penilaianAkademik' => $recentPenilaianAkademik,
                 'penilaianTahfidz' => $recentPenilaianTahfidz,
+                'jadwalTes' => $jadwalTes,
                 'isGuru' => true,
                 'guruStats' => $guruStats,
             ]);

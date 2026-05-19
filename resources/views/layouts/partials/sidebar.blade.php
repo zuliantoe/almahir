@@ -181,13 +181,15 @@
                     |--------------------------------------------------------------------------
                     --}}
 
-                    {{-- Dashboard --}}
+                    {{-- Dashboard (Hide for Wali Murid) --}}
+                    @if(Auth::check() && !Auth::user()->hasRole('WALI_MURID'))
                     <li class="nav-item">
                         <a href="{{ url('/') }}" class="nav-link {{ request()->is('/') || request()->is('akademik') || request()->is('guru/dashboard') || request()->is('siswa/dashboard') || request()->is('penilaiandanpresensi') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-tachometer-alt"></i>
                             <p>Dashboard</p>
                         </a>
                     </li>
+                    @endif
 
                     {{-- Shortcut Modul Asrama --}}
                     @if(Auth::check() && Auth::user()->hasRole(['SUPER_ADMIN']))

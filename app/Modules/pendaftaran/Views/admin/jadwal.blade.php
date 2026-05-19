@@ -49,8 +49,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Pengampu</label>
-                    <input type="text" name="pengampu" class="form-control">
+                    <label>Pengampu (Pilih Guru)</label>
+                    <select name="guru_id" class="form-control select2">
+                        <option value="">-- Pilih Guru --</option>
+                        @foreach($gurus as $guru)
+                            <option value="{{ $guru->id }}">{{ $guru->nama }}</option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div class="form-group">
@@ -94,7 +99,7 @@
                             <td>{{ $seleksi->nama_tes }}</td>
                             <td>{{ $seleksi->tanggal }}</td>
                             <td>{{ $seleksi->jam }}</td>
-                            <td>{{ $seleksi->pengampu }}</td>
+                            <td>{{ $seleksi->guru ? $seleksi->guru->nama : $seleksi->pengampu }}</td>
                             <td>{{ ucfirst($seleksi->metode) }}</td>
                             <td>{{ $seleksi->lokasi }}{{ $seleksi->link }}</td>
 
@@ -185,8 +190,15 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Pengampu</label>
-                                <input type="text" name="pengampu" class="form-control" value="{{ $seleksi->pengampu }}">
+                                <label>Pengampu (Pilih Guru)</label>
+                                <select name="guru_id" class="form-control select2">
+                                    <option value="">-- Pilih Guru --</option>
+                                    @foreach($gurus as $guru)
+                                        <option value="{{ $guru->id }}" {{ $seleksi->guru_id == $guru->id ? 'selected' : '' }}>
+                                            {{ $guru->nama }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label>Lokasi (jika offline)</label>

@@ -15,7 +15,7 @@
                     <div class="card-body py-2">
                         <div class="form-group mb-0">
                             <select id="auto_fill_pendaftaran_wali" class="form-control select2">
-                                <option value="">-- Pilih Calon Siswa (Ambil Data Orang Tua) --</option>
+                                <option value="">-- Pilih Data (Data Pendaftaran) --</option>
                                 @foreach($pendaftaranDiterima as $p)
                                     <option value="{{ $p->id }}" 
                                         data-nama_ayah="{{ $p->nama_ayah }}"

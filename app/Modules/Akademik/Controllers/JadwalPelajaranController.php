@@ -63,7 +63,7 @@ class JadwalPelajaranController extends Controller
         $rombels = Rombel::with('kelas')->get();
         $gurus   = Guru::aktif()->get();
         $mapels  = MataPelajaran::orderBy('nama')->get();
-        $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->orderBy('semester', 'desc')->get();
+        $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
 
         $summaryJP = [];
         if ($request->filled('rombel_id')) {
@@ -84,7 +84,7 @@ class JadwalPelajaranController extends Controller
 
     private function renderGuruTimetable($guru, $hariList, Request $request)
     {
-        $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->orderBy('semester', 'desc')->get();
+        $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
         $activeTahunAjaran = $request->filled('tahun_ajaran_id') 
             ? TahunAjaran::find($request->tahun_ajaran_id) 
             : TahunAjaran::aktif()->first();
@@ -107,7 +107,7 @@ class JadwalPelajaranController extends Controller
 
     private function renderSiswaTimetable($siswa, $hariList, Request $request)
     {
-        $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->orderBy('semester', 'desc')->get();
+        $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
         $activeTahunAjaran = $request->filled('tahun_ajaran_id') 
             ? TahunAjaran::find($request->tahun_ajaran_id) 
             : TahunAjaran::aktif()->first();

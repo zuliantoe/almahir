@@ -35,7 +35,7 @@
                         <option value="">Semua Tahun Ajaran</option>
                         @foreach($tahunAjarans as $ta)
                             <option value="{{ $ta->id }}" {{ request('tahunajaran_id') == $ta->id ? 'selected' : '' }}>
-                                {{ $ta->tahunajaran }} ({{ $ta->semester }})
+                                {{ $ta->tahunajaran }}
                             </option>
                         @endforeach
                     </select>
@@ -78,8 +78,8 @@
                         <td class="text-center">{{ $loop->iteration + ($kalenderAkademik->currentPage() - 1) * $kalenderAkademik->perPage() }}</td>
                         <td>
                             {{ $item->tahunAjaran->tahunajaran }}
-                            @if($item->tahunAjaran->semester)
-                                ({{ $item->tahunAjaran->semester }})
+                            @if($item->semester)
+                                ({{ $item->semester }})
                             @endif
                         </td>
                         <td><strong>{{ $item->nama_kegiatan }}</strong></td>

@@ -1,5 +1,5 @@
 {{-- Main Navbar --}}
-<nav class="main-header navbar navbar-expand navbar-white navbar-light border-bottom-0 shadow-sm" style="height: 65px;">
+<nav class="main-header navbar navbar-expand navbar-white navbar-light border-bottom-0 shadow-sm no-print" style="height: 65px;">
     {{-- Left navbar links --}}
     <ul class="navbar-nav">
         <li class="nav-item">
@@ -39,6 +39,52 @@
                 </form>
             </div>
         </li>
+
+        {{-- ══════════════════════════════════════════════════ --}}
+        {{-- HR ALERT BELL (Khusus Super Admin & Staf TU)      --}}
+        {{-- ══════════════════════════════════════════════════ --}}
+        @if(isset($hrAlerts) && $hrAlerts->count() > 0)
+        <li class="nav-item dropdown">
+            <a class="nav-link position-relative" data-toggle="dropdown" href="#" title="Peringatan HR" id="hrAlertBell">
+                <i class="fas fa-bell text-warning" style="font-size: 1.1rem; animation: bellRing 1.5s infinite;"></i>
+                <span class="badge badge-danger navbar-badge" style="top:5px;right:5px;font-size:0.6rem;min-width:18px;">
+                    {{ $hrAlerts->count() }}
+                </span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right border-0 shadow-lg mt-2" style="min-width:360px;max-height:450px;overflow-y:auto;">
+                <div class="sticky-top bg-white border-bottom px-3 py-2 d-flex justify-content-between align-items-center">
+                    <span class="font-weight-bold text-dark" style="font-size:.85rem;">
+                        <i class="fas fa-exclamation-circle text-warning mr-1"></i>
+                        {{ $hrAlerts->count() }} Peringatan HR
+                    </span>
+                    <small class="text-muted">Perlu Perhatian Anda</small>
+                </div>
+                @foreach($hrAlerts as $alert)
+                <a href="{{ route('pegawaimanager.show', $alert['pegawai_id']) }}"
+                   class="dropdown-item py-3 border-bottom"
+                   style="white-space:normal;">
+                    <div class="d-flex align-items-start">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center mr-3 flex-shrink-0"
+                             style="width:38px;height:38px;background:{{ $alert['bg'] }};">
+                            <i class="fas {{ $alert['icon'] }}" style="color:{{ $alert['color'] }};"></i>
+                        </div>
+                        <div>
+                            <span class="d-block font-weight-bold" style="font-size:.8rem;color:{{ $alert['color'] }};">
+                                {{ $alert['label'] }}
+                            </span>
+                            <span class="d-block text-dark mt-1" style="font-size:.82rem;">{!! $alert['message'] !!}</span>
+                        </div>
+                    </div>
+                </a>
+                @endforeach
+                <div class="p-2 text-center bg-light">
+                    <a href="{{ route('pegawaimanager.dashboard') }}" class="text-primary font-weight-bold small">
+                        <i class="fas fa-tachometer-alt mr-1"></i> Lihat Dashboard Kepegawaian
+                    </a>
+                </div>
+            </div>
+        </li>
+        @endif
 
         {{-- Notifications Dropdown --}}
         <li class="nav-item dropdown">
@@ -93,6 +139,7 @@
                 @endauth
             </div>
         </li>
+
 
         {{-- Fullscreen button --}}
         <li class="nav-item d-none d-sm-inline-block">

@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * @property int $id
  * @property string $tahunajaran
- * @property string $semester
+
  * @property bool $status
  * @property string|null $keterangan
  */
@@ -19,7 +19,7 @@ class TahunAjaran extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'tahun_ajaran';
-    protected $fillable = ['tahunajaran', 'semester', 'status', 'keterangan'];
+    protected $fillable = ['tahunajaran', 'status', 'keterangan'];
 
     protected static function booted()
     {

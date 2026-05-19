@@ -25,15 +25,7 @@
                                      required />
                         </div>
 
-                        <div class="col-md-3 mb-3">
-                            <div class="form-group">
-                                <label>Semester</label>
-                                <select name="semester" class="form-control select2" required>
-                                    <option value="Ganjil" {{ old('semester', $tahunAjaran->semester) == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
-                                    <option value="Genap" {{ old('semester', $tahunAjaran->semester) == 'Genap' ? 'selected' : '' }}>Genap</option>
-                                </select>
-                            </div>
-                        </div>
+
 
                         <div class="col-md-4 mb-3">
                             <div class="form-group">

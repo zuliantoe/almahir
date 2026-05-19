@@ -35,7 +35,9 @@ class KalenderAkademikController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $tahunAjarans = TahunAjaran::all();
+        $activeYear = TahunAjaran::where('status', 1)->first() ?? TahunAjaran::orderBy('id', 'desc')->first();
+        $tahunAjarans = TahunAjaran::where('id', '>=', $activeYear->id ?? 0)->orderBy('id', 'asc')->get();
+        
         return view('akademik::kalender-akademik.index', compact('kalenderAkademik', 'tahunAjarans'));
     }
 
@@ -61,8 +63,10 @@ class KalenderAkademikController extends Controller
 
         $events = KalenderAkademik::query()
             ->with(['jenisKegiatan'])
-            ->when($activeYear, function($query) use ($activeYear) {
-                return $query->where('tahunajaran_id', $activeYear->id);
+            ->when($start && $end, function($query) use ($start, $end) {
+                // Filter berdasarkan range tanggal yang dikirim oleh FullCalendar (overlap logic)
+                return $query->where('tanggal_awal', '<=', $end)
+                             ->where('tanggal_akhir', '>=', $start);
             })
             ->get();
 
@@ -77,7 +81,10 @@ class KalenderAkademikController extends Controller
 
             // Pastikan tanggal valid sebelum diformat
             $start = $event->tanggal_awal ? $event->tanggal_awal->format('Y-m-d') : null;
-            $end = $event->tanggal_akhir ? $event->tanggal_akhir->addDay()->format('Y-m-d') : $start;
+            
+            // FullCalendar all-day events are exclusive, so we must add 1 day to the end date
+            $endDateObj = ($event->tanggal_akhir ?? $event->tanggal_awal);
+            $end = $endDateObj ? $endDateObj->copy()->addDay()->format('Y-m-d') : $start;
 
             if (!$start) return null; // Skip jika tidak ada tanggal
 
@@ -105,7 +112,9 @@ class KalenderAkademikController extends Controller
 
     public function create()
     {
-        $tahunAjarans = TahunAjaran::all();
+        $activeYear = TahunAjaran::where('status', 1)->first() ?? TahunAjaran::orderBy('id', 'desc')->first();
+        $tahunAjarans = TahunAjaran::where('id', '>=', $activeYear->id ?? 0)->orderBy('id', 'asc')->get();
+        
         $jenisKegiatans = JenisKegiatan::all();
         return view('akademik::kalender-akademik.create', compact('tahunAjarans', 'jenisKegiatans'));
     }
@@ -134,7 +143,13 @@ class KalenderAkademikController extends Controller
 
     public function edit(KalenderAkademik $kalenderAkademik)
     {
-        $tahunAjarans = TahunAjaran::all();
+        $activeYear = TahunAjaran::where('status', 1)->first() ?? TahunAjaran::orderBy('id', 'desc')->first();
+        // Untuk edit, tambahkan juga tahun ajaran yang sedang diedit jika dia tahun lalu (agar tidak pecah)
+        $tahunAjarans = TahunAjaran::where('id', '>=', $activeYear->id ?? 0)
+            ->orWhere('id', $kalenderAkademik->tahunajaran_id)
+            ->orderBy('id', 'asc')
+            ->get();
+            
         $jenisKegiatans = JenisKegiatan::all();
         return view('akademik::kalender-akademik.edit', compact('kalenderAkademik', 'tahunAjarans', 'jenisKegiatans'));
     }

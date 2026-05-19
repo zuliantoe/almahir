@@ -17,7 +17,7 @@ class StorePegawaiRequest extends FormRequest
         return [
             'nama' => 'required|string|max:255',
             'type_pegawai_id' => 'required|uuid',
-            'email' => 'required|email|unique:sys_users,email|unique:pegawai,email',
+            'email' => 'required|email|unique:sys_users,email',
             'no_hp' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',
             'tanggal_masuk' => 'nullable|date',

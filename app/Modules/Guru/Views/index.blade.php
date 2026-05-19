@@ -47,8 +47,6 @@
                         <th width="50">No</th>
                         <th>NIP</th>
                         <th>Nama</th>
-                        <th>Mata Pelajaran</th>
-                        <th>Telepon</th>
                         <th>Status</th>
                         <th width="150">Aksi</th>
                     </tr>
@@ -60,12 +58,10 @@
                         <td>{{ $g->nip ?? '-' }}</td>
                         <td>
                             <strong>{{ $g->nama }}</strong>
-                            @if($g->email)
-                            <br><small class="text-muted">{{ $g->email }}</small>
+                            @if($g->user && $g->user->email)
+                            <br><small class="text-muted">{{ $g->user->email }}</small>
                             @endif
                         </td>
-                        <td>{{ $g->mata_pelajaran ?? '-' }}</td>
-                        <td>{{ $g->telepon ?? '-' }}</td>
                         <td>
                             @if($g->status == 'aktif')
                                 <span class="badge badge-success">Aktif</span>

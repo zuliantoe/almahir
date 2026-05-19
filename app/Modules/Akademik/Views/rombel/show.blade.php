@@ -34,10 +34,7 @@
                         <span class="text-muted small text-uppercase font-weight-bold"><i class="fas fa-calendar-alt mr-2"></i> Tahun Ajaran</span>
                         <span class="font-weight-bold text-dark">{{ $rombel->tahunAjaran->tahunajaran ?? '-' }}</span>
                     </div>
-                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent">
-                        <span class="text-muted small text-uppercase font-weight-bold"><i class="fas fa-clock mr-2"></i> Semester</span>
-                        <span class="badge badge-info px-2">{{ $rombel->tahunAjaran->semester ?? '-' }}</span>
-                    </div>
+
                     <div class="list-group-item d-flex flex-column px-0 bg-transparent py-3">
                         <span class="text-muted small text-uppercase font-weight-bold mb-2"><i class="fas fa-user-tie mr-2"></i> Wali Kelas</span>
                         <div class="d-flex align-items-center p-2 rounded bg-light border shadow-sm">
@@ -148,7 +145,7 @@
                                 @php $ta = $items->first()->tahunAjaran; @endphp
                                 <div class="time-label">
                                     <span class="bg-info px-3">
-                                        {{ $ta->tahunajaran ?? 'Unknown TA' }} ({{ $ta->semester ?? '-' }})
+                                        {{ $ta->tahunajaran ?? 'Unknown TA' }}
                                     </span>
                                 </div>
                                 <div>

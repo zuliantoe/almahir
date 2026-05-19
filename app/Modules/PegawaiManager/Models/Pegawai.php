@@ -9,10 +9,29 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\User;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Pegawai extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasUuids, SoftDeletes, LogsActivity;
+
+    /**
+     * Konfigurasi Audit Trail: Catat semua perubahan di field fillable
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => "Data Pegawai <b>{$this->nama}</b> ditambahkan ke sistem.",
+                'updated' => "Data Pegawai <b>{$this->nama}</b> diperbarui.",
+                'deleted' => "Data Pegawai <b>{$this->nama}</b> dihapus dari sistem.",
+                default   => "Aktivitas '{$eventName}' pada data Pegawai {$this->nama}.",
+            });
+    }
 
     protected $table = 'pegawai';
 
@@ -23,11 +42,13 @@ class Pegawai extends Model
         'nama',
         'user_id',
         'type_pegawai_id',
-        'no_hp',
-        'email',
+        'nip',
+        'tempat_lahir',
+        'tanggal_lahir',
+        'jenis_kelamin',
         'alamat',
         'tanggal_masuk',
-        'foto',
+        'status',
     ];
 
     protected $casts = [
@@ -69,13 +90,10 @@ class Pegawai extends Model
     {
         $currentYear = date('Y');
         $pendingDays = \Modules\Perizinan\Models\Perizinan::where('user_id', $this->id)
-            ->whereIn('jenis_izin', ['cuti', 'izin'])
+            ->where('potong_kuota', true)
             ->where('status', 'menunggu')
             ->whereYear('tanggal_mulai', $currentYear)
-            ->get()
-            ->sum(function($izin) {
-                return \Carbon\Carbon::parse($izin->tanggal_mulai)->diffInDays(\Carbon\Carbon::parse($izin->tanggal_selesai)) + 1;
-            });
+            ->sum('total_hari');
             
         return max(0, $this->sisa_cuti - (int)$pendingDays);
     }
@@ -91,5 +109,33 @@ class Pegawai extends Model
             ->whereDate('tanggal_mulai', '<=', $today)
             ->whereDate('tanggal_selesai', '>=', $today)
             ->first();
+    }
+
+    /**
+     * Kurangi sisa cuti pegawai dengan validasi aman.
+     * Digunakan oleh modul Perizinan saat izin cuti disetujui.
+     * Memastikan nilai tidak pernah negatif dan perubahan tercatat oleh Audit Trail.
+     *
+     * @param int $days   Jumlah hari yang akan dikurangi
+     * @return bool        True jika berhasil, false jika saldo tidak cukup
+     */
+    public function deductLeave(int $days): bool
+    {
+        if ($days <= 0) return false;
+        $this->sisa_cuti = max(0, $this->sisa_cuti - $days);
+        return $this->save();
+    }
+
+    /**
+     * Tambah sisa cuti pegawai (misal: jika izin dibatalkan/ditolak setelah dikurangi).
+     *
+     * @param int $days   Jumlah hari yang akan ditambahkan
+     * @return bool
+     */
+    public function addLeave(int $days): bool
+    {
+        if ($days <= 0) return false;
+        $this->sisa_cuti = $this->sisa_cuti + $days;
+        return $this->save();
     }
 }

@@ -187,10 +187,15 @@
                                             <div class="card-body p-0">
                                                 <div class="table-responsive"><table class="table table-sm table-hover mb-0"><thead class="bg-gray-light text-muted small uppercase"><tr><th width="75" class="pl-3 py-3 border-0">Shift</th><th class="py-3 border-0">Nama Santri</th><th width="115" class="text-center pr-3 py-3 border-0">Aksi</th></tr></thead>
                                                     <tbody>
+                                                        @php $mySiswaId = auth()->user()->hasRole('SISWA') ? auth()->user()->ref_id : null; @endphp
                                                         @foreach($items as $item)
-                                                        <tr>
+                                                        @php $isMyPiket = $item->siswa_id == $mySiswaId; @endphp
+                                                        <tr style="{{ $isMyPiket ? 'background-color: rgba(255, 193, 7, 0.1); border-left: 4px solid #ffc107;' : '' }}">
                                                             <td class="align-middle pl-3 py-2 small font-weight-bold">{{ ucfirst($item->shift) }}</td>
-                                                            <td class="align-middle py-2 font-weight-bold text-dark" style="font-size: 13px;">{{ $item->siswa->nama ?? '-' }}</td>
+                                                            <td class="align-middle py-2 font-weight-bold {{ $isMyPiket ? 'text-primary' : 'text-dark' }}" style="font-size: 13px;">
+                                                                {{ $item->siswa->nama ?? '-' }}
+                                                                @if($isMyPiket) <span class="badge badge-warning ml-1" style="font-size: 0.6rem;">Jadwal Saya</span> @endif
+                                                            </td>
                                                             <td class="text-center align-middle pr-3 py-2">
                                                                 @if(!auth()->user()->hasRole('SISWA'))
                                                                     <div class="d-flex justify-content-center" style="gap: 8px;">
@@ -225,10 +230,15 @@
                                             <div class="card-body p-0">
                                                 <div class="table-responsive"><table class="table table-sm table-hover mb-0"><thead class="bg-gray-light text-muted small uppercase"><tr><th width="75" class="pl-3 py-3 border-0">Shift</th><th class="py-3 border-0">Nama Santri</th><th width="115" class="text-center pr-3 py-3 border-0">Aksi</th></tr></thead>
                                                     <tbody>
+                                                        @php $mySiswaId = auth()->user()->hasRole('SISWA') ? auth()->user()->ref_id : null; @endphp
                                                         @foreach($items as $item)
-                                                        <tr>
+                                                        @php $isMyPiket = $item->siswa_id == $mySiswaId; @endphp
+                                                        <tr style="{{ $isMyPiket ? 'background-color: rgba(255, 193, 7, 0.1); border-left: 4px solid #ffc107;' : '' }}">
                                                             <td class="align-middle pl-3 py-2 small font-weight-bold">{{ ucfirst($item->shift) }}</td>
-                                                            <td class="align-middle py-2 font-weight-bold text-dark" style="font-size: 13px;">{{ $item->siswa->nama ?? '-' }}</td>
+                                                            <td class="align-middle py-2 font-weight-bold {{ $isMyPiket ? 'text-primary' : 'text-dark' }}" style="font-size: 13px;">
+                                                                {{ $item->siswa->nama ?? '-' }}
+                                                                @if($isMyPiket) <span class="badge badge-warning ml-1" style="font-size: 0.6rem;">Jadwal Saya</span> @endif
+                                                            </td>
                                                             <td class="text-center align-middle pr-3 py-2">
                                                                 @if(!auth()->user()->hasRole('SISWA'))
                                                                     <div class="d-flex justify-content-center" style="gap: 8px;">

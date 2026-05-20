@@ -72,6 +72,7 @@
             <x-card title="Daftar Penghuni Aktif" icon="fas fa-users" class="card-outline card-success">
                 <x-slot name="tools">
                     <div class="no-print">
+                        @if(!auth()->user()->hasRole('SISWA'))
                         <button type="button" data-toggle="modal" data-target="#modalCetakKamar" class="btn btn-sm btn-info mr-1 shadow-sm">
                             <i class="fas fa-print mr-1"></i> Cetak Laporan
                         </button>
@@ -84,6 +85,7 @@
                                 <i class="fas fa-broom mr-1"></i> Kosongkan Kamar
                             </button>
                         </form>
+                        @endif
                         <a href="{{ route('manajemenasetdanasrama.kamar.index') }}" class="btn btn-sm btn-secondary shadow-sm">
                             <i class="fas fa-arrow-left mr-1"></i> Kembali
                         </a>
@@ -158,6 +160,7 @@
                                                 title="Lihat Detail">
                                             <i class="fas fa-eye"></i>
                                         </button>
+                                        @if(!auth()->user()->hasRole('SISWA'))
                                         <a href="{{ route('manajemenasetdanasrama.penghuni.edit', $item->id) }}" class="btn btn-xs-custom btn-warning" title="Edit">
                                             <i class="fas fa-edit text-white"></i>
                                         </a>
@@ -168,6 +171,7 @@
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

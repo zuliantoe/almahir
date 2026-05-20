@@ -75,11 +75,14 @@
                             </tr>
                         </thead>
                         <tbody>
+                            @php $myKamarId = auth()->user()->hasRole('SISWA') ? auth()->user()->ref?->kamarPenghuni()->aktif()->first()?->kamar_id : null; @endphp
                             @forelse($kamar as $item)
-                            <tr>
+                            @php $isMyKamar = $item->id == $myKamarId; @endphp
+                            <tr style="{{ $isMyKamar ? 'background-color: rgba(67, 97, 238, 0.05); border-left: 4px solid #4361ee;' : '' }}">
                                 <td class="text-center text-muted">{{ $loop->iteration + ($kamar->currentPage() - 1) * $kamar->perPage() }}</td>
                                 <td>
                                     <strong>{{ $item->nama_kamar }}</strong>
+                                    @if($isMyKamar) <span class="badge badge-primary ml-1" style="font-size: 0.6rem;">Kamar Saya</span> @endif
                                     <div class="mt-1">
                                         @forelse($item->penghuniAktif->take(3) as $p)
                                             <span class="badge badge-light border text-dark mb-1" style="font-weight: 400; font-size: 0.7rem;">

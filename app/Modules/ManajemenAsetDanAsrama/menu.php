@@ -6,10 +6,15 @@ return [
     'order'  => 40,
     'items'  => [
         [
-            'label'    => 'Dashboard Aset',
+            'label'    => 'Dashboard Asrama',
             'icon'     => 'fas fa-tachometer-alt',
             'route'    => 'manajemenasetdanasrama.index',
             'match'    => 'manajemenasetdanasrama',
+        ],
+        [
+            'label'    => 'Manajemen Aset',
+            'icon'     => 'fas fa-boxes',
+            'url'      => '#',
             'children' => [
                 [
                     'label' => 'Pengajuan Aset',

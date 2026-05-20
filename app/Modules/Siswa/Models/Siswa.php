@@ -121,6 +121,11 @@ class Siswa extends Model
         return $this->hasMany(\App\Modules\ManajemenAsetDanAsrama\Models\KamarPenghuni::class, 'siswa_id');
     }
 
+    public function jadwalPiket()
+    {
+        return $this->hasMany(\App\Modules\ManajemenAsetDanAsrama\Models\JadwalPiket::class, 'siswa_id');
+    }
+
     public function rombelSiswa()
     {
         return $this->hasMany(\App\Modules\Akademik\Models\RombelSiswa::class, 'siswa_id');

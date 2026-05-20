@@ -58,11 +58,13 @@
     <div class="row">
         <div class="col-md-12">
             <x-card title="Daftar Penghuni Kamar" icon="fas fa-users">
+                @if(!auth()->user()->hasRole('SISWA'))
                 <x-slot name="tools">
                     <a href="{{ route('manajemenasetdanasrama.penghuni.create') }}" class="btn btn-sm btn-primary">
                         <i class="fas fa-plus mr-1"></i> Tambah Penghuni
                     </a>
                 </x-slot>
+                @endif
 
                 <div class="card-body border-bottom bg-light py-3 px-4">
                     <form action="{{ route('manajemenasetdanasrama.penghuni.index') }}" method="GET" class="row align-items-center">
@@ -180,6 +182,7 @@
                                                 title="Lihat Detail">
                                             <i class="fas fa-eye"></i>
                                         </button>
+                                        @if(!auth()->user()->hasRole('SISWA'))
                                         <a href="{{ route('manajemenasetdanasrama.penghuni.edit', $item->id) }}" class="btn btn-xs-custom btn-warning" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
@@ -191,6 +194,7 @@
                                                 title="Hapus">
                                             <i class="fas fa-trash"></i>
                                         </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

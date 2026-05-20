@@ -36,6 +36,7 @@ class SiswaAccessRestrictionMiddleware
                 '^penilaiandanpresensi/penilaiantahfidz',
                 '^manajemenasetdanasrama/jadwal-piket',
                 '^manajemenasetdanasrama/kamar',
+                '^manajemenasetdanasrama/penghuni',
                 '^keuangan/uangsakus',
                 '^keuangan$',
             ];

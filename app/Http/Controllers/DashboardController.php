@@ -17,10 +17,45 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Langsung masuk ke modul Penilaian & Presensi sebagai dashboard utama (hanya untuk GURU)
-        // Prioritas: jika user adalah SISWA jangan redirect.
+        // Prioritas: jika user adalah SISWA, kembalikan view dashboard khusus siswa
         if ($user && $user->hasRole('SISWA')) {
-            // lanjut ke blok SISWA di bawah
+            $siswa = $user->ref;
+            $totalP = \Modules\PenilaianDanPresensi\Models\Presensi::where('siswa_id', $siswa?->id)->count();
+            $hadirP = \Modules\PenilaianDanPresensi\Models\Presensi::where('siswa_id', $siswa?->id)->where('status', 'Hadir')->count();
+            $percent = $totalP > 0 ? round(($hadirP / $totalP) * 100) : 0;
+
+            // Tahfidz Terbaru
+            $hafalanTerbaru = class_exists(\Modules\PenilaianDanPresensi\Models\PenilaianTahfidz::class) 
+                ? \Modules\PenilaianDanPresensi\Models\PenilaianTahfidz::where('siswa_id', $siswa?->id)->latest('tanggal')->first() 
+                : null;
+
+            // Tagihan
+            $tagihanBelumLunas = 0;
+            if (class_exists(\Modules\Keuangan\Models\TagihanSiswa::class)) {
+                $tagihans = \Modules\Keuangan\Models\TagihanSiswa::where('target_id', $siswa?->id)
+                            ->where('target_type', get_class($siswa))
+                            ->where('status', '!=', 'Lunas')
+                            ->get();
+                $tagihanBelumLunas = $tagihans->sum('sisa_tagihan');
+            }
+
+            // Uang Saku Terakhir
+            $uangSakuTerakhir = class_exists(\Modules\Keuangan\Models\UangSaku::class)
+                ? \Modules\Keuangan\Models\UangSaku::where('siswa_id', $siswa?->id)->latest('tanggal')->first()
+                : null;
+
+            return view('siswa::dashboard', [
+                'title' => 'Dashboard Santri',
+                'breadcrumb' => 'Dashboard',
+                'stats' => ['kehadiran' => $percent],
+                'siswa' => $siswa,
+                'currentRombel' => $siswa?->currentRombel()->with('kelas')->first(),
+                'kamarInfo' => $siswa?->kamarPenghuni()->aktif()->first()?->kamar,
+                'jadwalPiketHariIni' => $siswa?->jadwalPiket()->whereDate('tanggal', today())->get(),
+                'hafalanTerbaru' => $hafalanTerbaru,
+                'tagihanBelumLunas' => $tagihanBelumLunas,
+                'uangSakuTerakhir' => $uangSakuTerakhir,
+            ]);
         }
 
         // Jika bukan SISWA dan role-nya GURU, redirect ke penilaiandanpresensi.

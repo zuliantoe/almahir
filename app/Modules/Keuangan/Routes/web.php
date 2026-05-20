@@ -36,4 +36,20 @@ Route::middleware(['auth'])->group(function () {
     // Laporan Transaksi
     Route::get('transaksis/print', [TransaksiController::class, 'print'])->name('transaksis.print');
     Route::get('transaksis', [TransaksiController::class, 'index'])->name('transaksis.index');
+
+    // Pencatatan Otomatis
+    Route::resource('pencatatanotomatis', \Modules\Keuangan\Controllers\PencatatanOtomatisController::class);
 });
+
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\App;
+
+// Mendaftarkan scheduler untuk menjalankan pencatatan otomatis
+if (App::runningInConsole()) {
+    app()->booted(function () {
+        $schedule = app(Schedule::class);
+        $schedule->call(function () {
+            app(\Modules\Keuangan\Controllers\PencatatanOtomatisController::class)->processRecurring();
+        })->everyMinute();
+    });
+}

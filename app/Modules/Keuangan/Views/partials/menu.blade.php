@@ -47,6 +47,14 @@
     </a>
 </li>
 
+{{-- Pencatatan Otomatis --}}
+<li class="nav-item">
+    <a href="{{ route('keuangan.pencatatanotomatis.index') }}" class="nav-link {{ request()->is('keuangan/pencatatanotomatis*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-robot"></i>
+        <p>Pencatatan Otomatis</p>
+    </a>
+</li>
+
 
 
 {{-- Sumber Pemasukan --}}

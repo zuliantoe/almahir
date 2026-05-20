@@ -14,7 +14,8 @@ class Pemasukan extends Model
         'jumlah',
         'tanggal',
         'waktu', 
-        'deskripsi'
+        'deskripsi',
+        'is_otomatis'
     ];
 
     protected $casts = [

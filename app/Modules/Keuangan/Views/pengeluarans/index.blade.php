@@ -409,6 +409,11 @@
                                                     <small class="text-muted" style="font-size: 0.75rem;">
                                                         {{ optional($income->updated_at)->setTimezone('Asia/Jakarta')->format('H.i') }} WIB, {{ optional($income->updated_at)->locale('id')->translatedFormat('d F Y') }}
                                                     </small>
+                                                    @if($income->is_otomatis)
+                                                    <div class="mt-1 text-info" style="font-size: 0.7rem;">
+                                                        <i class="fas fa-robot"></i> Ini adalah Pencatatan Otomatis
+                                                    </div>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>

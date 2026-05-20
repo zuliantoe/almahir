@@ -62,6 +62,11 @@ class MasterKurikulumController extends Controller
 
     public function destroy(MasterKurikulum $masterKurikulum): RedirectResponse
     {
+        if ($masterKurikulum->detailKurikulum()->exists()) {
+            return redirect()->route('akademik.master-kurikulum.index')
+                ->with('error', 'Master Kurikulum tidak dapat dihapus karena masih digunakan.');
+        }
+
         $masterKurikulum->delete();
 
         return redirect()->route('akademik.master-kurikulum.index')

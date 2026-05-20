@@ -76,7 +76,8 @@ class KelasController extends Controller
     {
         if (
             $kelas->jadwalPelajaran()->exists() ||
-            $kelas->kurikulum()->exists()
+            $kelas->kurikulum()->exists() ||
+            $kelas->rombel()->exists()
         ) {
             return redirect()
                 ->route('akademik.kelas.index')

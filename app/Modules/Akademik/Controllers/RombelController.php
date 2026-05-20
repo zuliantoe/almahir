@@ -232,6 +232,11 @@ class RombelController extends Controller
 
     public function destroy(Rombel $rombel)
     {
+        if ($rombel->riwayatSiswa()->exists() || $rombel->jadwalPelajaran()->exists()) {
+            return redirect()->route('akademik.rombel.index')
+                ->with('error', 'Rombel tidak dapat dihapus karena sudah memiliki siswa atau jadwal.');
+        }
+
         $rombel->delete();
         return redirect()->route('akademik.rombel.index')->with('success', 'Rombel berhasil dihapus');
     }

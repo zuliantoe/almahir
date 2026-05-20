@@ -1,0 +1,55 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+      - master # Akan berjalan jika push ke main atau master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2' # Sesuaikan dengan versi PHP di VPS Anda
+
+      - name: Execute Deployment via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            # 1. Masuk ke folder project (Ubah path di bawah ini sesuai lokasi project di VPS!)
+            # Contoh jika pakai cPanel: cd /home/almahir/public_html
+            # Contoh jika pakai CyberPanel: cd /home/siakad.almahirsoft.com/public_html
+            cd /home/almahir/siakad.almahirsoft.com
+            
+            # 2. Ambil perubahan terbaru dari GitHub
+            git pull origin main
+            
+            # 3. Install/Update dependensi PHP (Composer)
+            composer install --no-interaction --prefer-dist --optimize-autoloader
+            
+            # 4. Jalankan migrasi database
+            php artisan migrate --force
+            
+            # 5. Build asset frontend (Vite/Mix) - Hapus baris ini jika tidak perlu
+            npm install
+            npm run build
+            
+            # 6. Bersihkan dan cache ulang konfigurasi Laravel
+            php artisan optimize:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            
+            # 7. Restart queue worker (jika Anda menggunakan background jobs)
+            # php artisan queue:restart

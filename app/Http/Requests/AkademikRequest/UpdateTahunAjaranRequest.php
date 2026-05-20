@@ -27,8 +27,8 @@ class UpdateTahunAjaranRequest extends FormRequest
     public function messages()
     {
         return [
-            'tahun_ajaran.required' => 'Tahun ajaran harus diisi',
-            'tahun_ajaran.unique' => 'Tahun ajaran sudah ada'
+            'tahunajaran.required' => 'Tahun ajaran harus diisi',
+            'tahunajaran.unique' => 'Tahun ajaran sudah ada'
         ];
     }
 }

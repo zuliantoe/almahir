@@ -62,14 +62,11 @@ class GuruDataSeeder extends Seeder
                 ['nip' => $data['nip']],
                 [
                     'nama' => $data['nama'],
-                    'email' => $email,
                     'tanggal_lahir' => $faker->date('Y-m-d', '1995-01-01'),
                     'tempat_lahir' => $faker->city,
                     'jenis_kelamin' => $data['jk'],
                     'alamat' => $faker->address,
-                    'telepon' => $faker->phoneNumber,
                     'status' => 'aktif',
-                    'jabatan' => 'Guru Pengajar',
                 ]
             );
 

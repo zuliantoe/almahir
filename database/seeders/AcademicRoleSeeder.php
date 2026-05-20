@@ -20,12 +20,10 @@ class AcademicRoleSeeder extends Seeder
             ['nip' => '198001012010011001'],
             [
                 'nama' => 'Guru Demo Akademik',
-                'email' => 'guru@siakad.com',
                 'tanggal_lahir' => '1980-01-01',
                 'tempat_lahir' => 'Jakarta',
                 'jenis_kelamin' => 'L',
                 'alamat' => 'Jl. Pendidikan No. 1',
-                'telepon' => '081234567890',
                 'status' => 'aktif',
             ]
         );

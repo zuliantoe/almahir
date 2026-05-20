@@ -431,6 +431,43 @@
                                     <p>Modul Kehadiran</p>
                                 </a>
                             </li>
+                            <li class="nav-item has-treeview {{ request()->is('siswa*') || request()->is('guru*') || request()->is('walimurid*') || request()->is('users*') ? 'menu-open' : '' }}">
+                                <a href="#" class="nav-link {{ request()->is('siswa*') || request()->is('guru*') || request()->is('walimurid*') || request()->is('users*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-users text-primary"></i>
+                                    <p>
+                                        Modul User
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <li class="nav-item">
+                                        <a href="{{ route('siswa.index') }}" class="nav-link {{ request()->is('siswa*') && !request()->is('siswa/asrama*') ? 'active' : '' }}">
+                                            <i class="far fa-circle nav-icon"></i>
+                                            <p>Data Siswa</p>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('guru.index') }}" class="nav-link {{ request()->is('guru*') ? 'active' : '' }}">
+                                            <i class="far fa-circle nav-icon"></i>
+                                            <p>Data Guru</p>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('walimurid.index') }}" class="nav-link {{ request()->is('walimurid*') ? 'active' : '' }}">
+                                            <i class="far fa-circle nav-icon"></i>
+                                            <p>Data Wali Murid</p>
+                                        </a>
+                                    </li>
+                                    @if(Auth::user()->hasRole('SUPER_ADMIN'))
+                                    <li class="nav-item">
+                                        <a href="{{ route('users.index') }}" class="nav-link {{ request()->is('users*') ? 'active' : '' }}">
+                                            <i class="far fa-circle nav-icon"></i>
+                                            <p>Semua Akun</p>
+                                        </a>
+                                    </li>
+                                    @endif
+                                </ul>
+                            </li>
                         @endif
 
                         @if(Auth::user()->hasRole(['SUPER_ADMIN', 'GURU']))
@@ -453,15 +490,7 @@
 
 
 
-                        {{-- Shortcut Penilaian & Presensi di menu utama admin --}}
-                        @if(Auth::user()->hasRole(['SUPER_ADMIN']))
-                            <li class="nav-item">
-                                <a href="{{ route('penilaiandanpresensi.penilaianakademik.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-clipboard-check text-success"></i>
-                                    <p>Penilaian & Presensi</p>
-                                </a>
-                            </li>
-                        @endif
+
 
                         {{-- Asrama di menu utama admin --}}
                         @if(Auth::user()->hasRole(['SUPER_ADMIN', 'STAF_TU']))
@@ -475,18 +504,6 @@
 
                         @if(Auth::user()->hasRole('SUPER_ADMIN'))
                             <li class="nav-header">PENGATURAN</li>
-                            <li class="nav-item">
-                                <a href="{{ route('walimurid.index') }}" class="nav-link {{ request()->is('walimurid*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-user-friends text-warning"></i>
-                                    <p>Data Wali Murid</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('users.index') }}" class="nav-link {{ request()->is('users*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-users-cog text-secondary"></i>
-                                    <p>Manajemen User</p>
-                                </a>
-                            </li>
                             <li class="nav-item">
                                 <a href="{{ route('rolepermission.index') }}" class="nav-link {{ request()->is('rolepermission*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-user-shield text-secondary"></i>

@@ -120,34 +120,36 @@
                             <p class="text-muted">Ikuti kegiatan sekolah yang berlangsung hari ini.</p>
                         </div>
                     @else
-                        <table class="table table-striped table-valign-middle">
-                            <thead>
-                                <tr>
-                                    <th class="text-center" width="80">SESI</th>
-                                    <th>MATA PELAJARAN</th>
-                                    <th>PENGAJAR</th>
-                                    <th class="text-center">WAKTU</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($jadwalHariIni as $j)
-                                <tr>
-                                    <td class="text-center font-weight-bold text-info">{{ $j->jamke }}</td>
-                                    <td>
-                                        <div class="font-weight-bold">{{ $j->mataPelajaran->nama ?? '-' }}</div>
-                                    </td>
-                                    <td>
-                                        <small class="font-weight-bold text-muted text-uppercase">Ust. {{ explode(' ', $j->guru->nama)[0] }}</small>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge badge-light border">
-                                            {{ substr($j->jamawal, 0, 5) }} - {{ substr($j->jamakhir, 0, 5) }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-valign-middle">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center" width="80">SESI</th>
+                                        <th>MATA PELAJARAN</th>
+                                        <th>PENGAJAR</th>
+                                        <th class="text-center">WAKTU</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($jadwalHariIni as $j)
+                                    <tr>
+                                        <td class="text-center font-weight-bold text-info">{{ $j->jamke }}</td>
+                                        <td>
+                                            <div class="font-weight-bold">{{ $j->mataPelajaran->nama ?? '-' }}</div>
+                                        </td>
+                                        <td>
+                                            <small class="font-weight-bold text-muted text-uppercase">Ust. {{ explode(' ', $j->guru->nama)[0] }}</small>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge badge-light border">
+                                                {{ substr($j->jamawal, 0, 5) }} - {{ substr($j->jamakhir, 0, 5) }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     @endif
                 </div>
             </div>

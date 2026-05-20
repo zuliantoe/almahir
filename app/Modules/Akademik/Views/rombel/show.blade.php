@@ -156,37 +156,39 @@
                                             <span class="float-right text-muted small">{{ $items->count() }} Siswa Terdaftar</span>
                                         </h3>
                                         <div class="timeline-body p-0">
-                                            <table class="table table-sm table-valign-middle mb-0">
-                                                <thead class="bg-light">
-                                                    <tr>
-                                                        <th class="pl-3">Siswa</th>
-                                                        <th class="text-center">Status Akhir Periode</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach($items->take(5) as $item)
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-valign-middle mb-0">
+                                                    <thead class="bg-light">
                                                         <tr>
-                                                            <td class="pl-3">{{ $item->siswa->nama }}</td>
-                                                            <td class="text-center">
-                                                                @if($item->status == 'aktif')
-                                                                    <span class="badge badge-success">Aktif</span>
-                                                                @elseif($item->status == 'naik')
-                                                                    <span class="badge badge-warning">Naik Kelas</span>
-                                                                @elseif($item->status == 'lulus')
-                                                                    <span class="badge badge-primary">Lulus</span>
-                                                                @else
-                                                                    <span class="badge badge-secondary">{{ $item->status }}</span>
-                                                                @endif
-                                                            </td>
+                                                            <th class="pl-3">Siswa</th>
+                                                            <th class="text-center">Status Akhir Periode</th>
                                                         </tr>
-                                                    @endforeach
-                                                    @if($items->count() > 5)
-                                                        <tr>
-                                                            <td colspan="2" class="text-center small text-muted">... dan {{ $items->count() - 5 }} siswa lainnya</td>
-                                                        </tr>
-                                                    @endif
-                                                </tbody>
-                                            </table>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($items->take(5) as $item)
+                                                            <tr>
+                                                                <td class="pl-3">{{ $item->siswa->nama }}</td>
+                                                                <td class="text-center">
+                                                                    @if($item->status == 'aktif')
+                                                                        <span class="badge badge-success">Aktif</span>
+                                                                    @elseif($item->status == 'naik')
+                                                                        <span class="badge badge-warning">Naik Kelas</span>
+                                                                    @elseif($item->status == 'lulus')
+                                                                        <span class="badge badge-primary">Lulus</span>
+                                                                    @else
+                                                                        <span class="badge badge-secondary">{{ $item->status }}</span>
+                                                                    @endif
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                        @if($items->count() > 5)
+                                                            <tr>
+                                                                <td colspan="2" class="text-center small text-muted">... dan {{ $items->count() - 5 }} siswa lainnya</td>
+                                                            </tr>
+                                                        @endif
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

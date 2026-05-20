@@ -107,7 +107,7 @@
     <div class="row mb-4">
         {{-- 1. Kaldik --}}
         <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-3">
-            <a href="{{ route('guru.kalender-akademik') }}" class="card border-0 shadow-sm h-100 text-center shortcut-card py-3">
+            <a href="{{ route('akademik.kalender-akademik.index') }}" class="card border-0 shadow-sm h-100 text-center shortcut-card py-3">
                 <div class="card-body p-2 d-flex flex-column align-items-center justify-content-center">
                     <div class="icon-wrapper mb-2 text-success" style="background: rgba(16, 185, 129, 0.1); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
                         <i class="fas fa-calendar-alt"></i>
@@ -124,6 +124,28 @@
                         <i class="fas fa-calendar-day"></i>
                     </div>
                     <span class="font-weight-bold text-dark" style="font-size: 0.82rem;">Jadwal Mengajar</span>
+                </div>
+            </a>
+        </div>
+        {{-- Penilaian Akademik --}}
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-3">
+            <a href="{{ route('penilaiandanpresensi.penilaianakademik.index') }}" class="card border-0 shadow-sm h-100 text-center shortcut-card py-3">
+                <div class="card-body p-2 d-flex flex-column align-items-center justify-content-center">
+                    <div class="icon-wrapper mb-2 text-purple" style="background: rgba(168, 85, 247, 0.1); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <span class="font-weight-bold text-dark" style="font-size: 0.82rem;">Nilai Akademik</span>
+                </div>
+            </a>
+        </div>
+        {{-- Penilaian Tahfidz --}}
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-3">
+            <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.index') }}" class="card border-0 shadow-sm h-100 text-center shortcut-card py-3">
+                <div class="card-body p-2 d-flex flex-column align-items-center justify-content-center">
+                    <div class="icon-wrapper mb-2 text-pink" style="background: rgba(236, 72, 153, 0.1); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                        <i class="fas fa-quran"></i>
+                    </div>
+                    <span class="font-weight-bold text-dark" style="font-size: 0.82rem;">Nilai Tahfidz</span>
                 </div>
             </a>
         </div>
@@ -256,7 +278,7 @@
                         <i class="fas fa-calendar-alt mr-2"></i>
                         <h6 class="font-weight-bold mb-0">Kalender Akademik</h6>
                     </div>
-                    <a href="{{ route('guru.kalender-akademik') }}" class="btn btn-sm btn-light text-success font-weight-bold rounded-pill px-3" style="font-size: 0.7rem;">
+                    <a href="{{ route('akademik.kalender-akademik.index') }}" class="btn btn-sm btn-light text-success font-weight-bold rounded-pill px-3" style="font-size: 0.7rem;">
                         <i class="fas fa-external-link-alt"></i>
                     </a>
                 </div>

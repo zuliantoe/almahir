@@ -30,12 +30,12 @@ class SpecificAcademicSeeder extends Seeder
         // 1. Tahun Ajaran (2025/2026 Genap & 2026/2027)
         $ta2526 = TahunAjaran::updateOrCreate(
             ['tahunajaran' => '2025/2026'],
-            ['semester' => 'Genap', 'status' => true]
+            ['status' => true]
         );
 
         $ta2627 = TahunAjaran::updateOrCreate(
             ['tahunajaran' => '2026/2027'],
-            ['semester' => 'Ganjil', 'status' => false]
+            ['status' => false]
         );
 
         // 2. Master Kurikulum (5 items)
@@ -129,7 +129,6 @@ class SpecificAcademicSeeder extends Seeder
         $guru = Guru::first() ?: Guru::create([
             'nama' => 'Guru Testing',
             'nip' => 'TEST001',
-            'email' => 'guru.test@siakad.local',
             'status' => 'aktif'
         ]);
 

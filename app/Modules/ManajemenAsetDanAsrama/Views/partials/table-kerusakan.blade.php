@@ -23,7 +23,16 @@
                     <small class="text-muted">{{ $item->aset->kode_aset ?? '' }}</small>
                 </td>
                 @endif
-                <td>{{ Str::limit($item->deskripsi_kerusakan, 80) }}</td>
+                <td>
+                    @if($fullText ?? false)
+                        <div>{{ $item->deskripsi_kerusakan }}</div>
+                        @if($item->catatan)
+                            <div class="mt-1 small text-muted"><i class="fas fa-comment-alt mr-1"></i> <strong>Catatan:</strong> {{ $item->catatan }}</div>
+                        @endif
+                    @else
+                        {{ Str::limit($item->deskripsi_kerusakan, 80) }}
+                    @endif
+                </td>
                 <td>
                     @php
                         $tingkatClass = match($item->tingkat_kerusakan) {
@@ -55,6 +64,11 @@
                 <td class="text-center">{{ $item->created_at ? $item->created_at->format('d/m/Y') : '-' }}</td>
                 <td class="text-center">
                     <div class="d-flex justify-content-center" style="gap: 4px;">
+                        @if($item->aset_id)
+                        <a href="{{ route('manajemenasetdanasrama.aset.show', $item->aset_id) }}" class="btn btn-action-xs btn-info" title="Detail Aset">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        @endif
                         @if($item->status_penanganan == 'belum_ditangani')
                         <form action="{{ route('manajemenasetdanasrama.kerusakan.proses-pemeliharaan', $item->id) }}" method="POST" class="d-inline">
                             @csrf

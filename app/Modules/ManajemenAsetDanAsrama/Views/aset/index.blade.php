@@ -98,6 +98,23 @@
     <div class="row">
         <div class="col-md-12">
             <x-card title="Daftar Master Aset" icon="fas fa-boxes">
+                <x-slot name="tools">
+                    <form action="{{ route('manajemenasetdanasrama.aset.index') }}" method="GET" class="form-inline m-0">
+                        <div class="input-group input-group-sm" style="width: 250px;">
+                            <input type="text" name="search" class="form-control float-right" placeholder="Cari kode atau nama (mis: kmp 8)" value="{{ request('search') }}">
+                            <div class="input-group-append">
+                                <button type="submit" class="btn btn-default">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                                @if(request('search'))
+                                <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="btn btn-default text-danger" title="Clear Search">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                                @endif
+                            </div>
+                        </div>
+                    </form>
+                </x-slot>
                 @include('manajemenasetdanasrama::partials.table-aset', [
                     'items' => $aset,
                     'showExtendedActions' => true,

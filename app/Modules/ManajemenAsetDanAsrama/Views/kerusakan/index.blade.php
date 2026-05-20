@@ -27,7 +27,7 @@
         <div class="col-lg-3 col-6">
             <div class="small-box bg-secondary shadow-sm">
                 <div class="inner">
-                    <h3>{{ number_format($stats['total'] ?? 0) }}</h3>
+                    <h3 style="font-size: 1.8rem;">{{ number_format($stats['total'] ?? 0) }}</h3>
                     <p>Total Laporan Masuk</p>
                 </div>
                 <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
@@ -36,7 +36,7 @@
         <div class="col-lg-3 col-6">
             <div class="small-box bg-info shadow-sm">
                 <div class="inner">
-                    <h3>{{ number_format($stats['ringan'] ?? 0) }}</h3>
+                    <h3 style="font-size: 1.8rem;">{{ number_format($stats['ringan'] ?? 0) }}</h3>
                     <p>Rusak Ringan</p>
                 </div>
                 <div class="icon"><i class="fas fa-info-circle"></i></div>
@@ -45,7 +45,7 @@
         <div class="col-lg-3 col-6">
             <div class="small-box bg-warning shadow-sm">
                 <div class="inner">
-                    <h3>{{ number_format($stats['sedang'] ?? 0) }}</h3>
+                    <h3 style="font-size: 1.8rem;">{{ number_format($stats['sedang'] ?? 0) }}</h3>
                     <p>Rusak Sedang</p>
                 </div>
                 <div class="icon"><i class="fas fa-exclamation-circle"></i></div>
@@ -54,7 +54,7 @@
         <div class="col-lg-3 col-6">
             <div class="small-box bg-danger shadow-sm">
                 <div class="inner">
-                    <h3>{{ number_format($stats['berat'] ?? 0) }}</h3>
+                    <h3 style="font-size: 1.8rem;">{{ number_format($stats['berat'] ?? 0) }}</h3>
                     <p>Rusak Berat</p>
                 </div>
                 <div class="icon"><i class="fas fa-radiation"></i></div>

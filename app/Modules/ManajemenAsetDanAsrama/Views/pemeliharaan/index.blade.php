@@ -27,7 +27,7 @@
         <div class="col-lg-3 col-6">
             <div class="small-box bg-warning shadow-sm">
                 <div class="inner">
-                    <h3>{{ number_format($stats['total_proses'] ?? 0) }}</h3>
+                    <h3 style="font-size: 1.8rem;">{{ number_format($stats['total_proses'] ?? 0) }}</h3>
                     <p>Dalam Perbaikan</p>
                 </div>
                 <div class="icon"><i class="fas fa-tools"></i></div>
@@ -36,7 +36,7 @@
         <div class="col-lg-3 col-6">
             <div class="small-box bg-success shadow-sm">
                 <div class="inner">
-                    <h3>{{ number_format($stats['total_selesai'] ?? 0) }}</h3>
+                    <h3 style="font-size: 1.8rem;">{{ number_format($stats['total_selesai'] ?? 0) }}</h3>
                     <p>Selesai Diperbaiki</p>
                 </div>
                 <div class="icon"><i class="fas fa-check-double"></i></div>
@@ -45,7 +45,7 @@
         <div class="col-lg-3 col-6">
             <div class="small-box bg-info shadow-sm">
                 <div class="inner">
-                    <h3 style="font-size: 1.6rem;">Rp {{ number_format($stats['biaya_proses'] ?? 0, 0, ',', '.') }}</h3>
+                    <h3 style="font-size: 1.8rem;">Rp {{ number_format($stats['biaya_proses'] ?? 0, 0, ',', '.') }}</h3>
                     <p>Estimasi Biaya Aktif</p>
                 </div>
                 <div class="icon"><i class="fas fa-file-invoice-dollar"></i></div>
@@ -54,7 +54,7 @@
         <div class="col-lg-3 col-6">
             <div class="small-box bg-secondary shadow-sm">
                 <div class="inner">
-                    <h3 style="font-size: 1.6rem;">Rp {{ number_format($stats['biaya_selesai'] ?? 0, 0, ',', '.') }}</h3>
+                    <h3 style="font-size: 1.8rem;">Rp {{ number_format($stats['biaya_selesai'] ?? 0, 0, ',', '.') }}</h3>
                     <p>Total Biaya Historis</p>
                 </div>
                 <div class="icon"><i class="fas fa-history"></i></div>
@@ -92,69 +92,78 @@
                 </x-slot>
 
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover table-striped">
-                        <thead>
+                    <table class="table table-hover align-middle table-striped mb-0" style="width: 100%; min-width: 1000px;">
+                        <thead class="bg-light text-muted small text-uppercase" style="letter-spacing: 0.5px;">
                             <tr>
-                                <th>No</th>
-                                <th>Nama Aset</th>
-                                <th>Tanggal Mulai</th>
-                                <th>Deskripsi Pemeliharaan</th>
-                                <th>Biaya</th>
-                                <th>Catatan</th>
-                                <th>Status</th>
-                                <th width="220">Aksi</th>
+                                <th style="width: 4%;" class="text-center py-3 border-top-0">No</th>
+                                <th style="width: 20%;" class="py-3 border-top-0">Aset</th>
+                                <th style="width: 12%;" class="py-3 border-top-0 text-center">Tgl Mulai</th>
+                                <th style="width: 25%;" class="py-3 border-top-0">Deskripsi & Catatan</th>
+                                <th style="width: 12%;" class="py-3 border-top-0 text-right">Biaya</th>
+                                <th style="width: 12%;" class="py-3 border-top-0 text-center">Status</th>
+                                <th style="width: 15%;" class="py-3 border-top-0 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($pemeliharaan as $item)
                             <tr>
-                                <td>{{ $loop->iteration + ($pemeliharaan->currentPage() - 1) * $pemeliharaan->perPage() }}</td>
+                                <td class="text-center">{{ $loop->iteration + ($pemeliharaan->currentPage() - 1) * $pemeliharaan->perPage() }}</td>
                                 <td>
                                     <strong>{{ $item->aset->nama_aset ?? '-' }}</strong>
-                                    <br><small class="text-muted">{{ $item->aset->kode_aset ?? '' }}</small>
+                                    <br><small class="text-muted"><code>{{ $item->aset->kode_aset ?? '' }}</code></small>
                                 </td>
-                                <td>{{ $item->tanggal_pemeliharaan ? $item->tanggal_pemeliharaan->format('d/m/Y') : ($item->tanggal_mulai_pemeliharaan ? $item->tanggal_mulai_pemeliharaan->format('d/m/Y') : '-') }}</td>
-                                <td>{{ Str::limit($item->deskripsi_pemeliharaan, 50) }}</td>
-                                <td>Rp {{ number_format($item->biaya ?? $item->biaya_pemeliharaan, 0, ',', '.') }}</td>
-                                <td>{{ Str::limit($item->catatan ?? '-', 30) }}</td>
-                                <td>
-                                    <span class="badge badge-warning">
-                                        <i class="fas fa-cog fa-spin mr-1"></i> Sedang Proses
+                                <td class="text-center small" style="white-space: nowrap;">
+                                    <span class="badge badge-light border">
+                                        <i class="far fa-calendar-alt mr-1"></i> {{ $item->tanggal_pemeliharaan ? $item->tanggal_pemeliharaan->format('d/m/Y') : ($item->tanggal_mulai_pemeliharaan ? $item->tanggal_mulai_pemeliharaan->format('d/m/Y') : '-') }}
                                     </span>
                                 </td>
                                 <td>
-                                    {{-- Tombol Selesai --}}
-                                    <button type="button" class="btn btn-xs btn-success"
-                                            data-toggle="modal"
-                                            data-target="#modalSelesai"
-                                            data-id="{{ $item->id }}"
-                                            data-nama="{{ $item->aset->nama_aset ?? '' }}"
-                                            data-deskripsi="{{ $item->deskripsi_pemeliharaan }}"
-                                            data-biaya="{{ number_format($item->biaya ?? $item->biaya_pemeliharaan, 0, ',', '.') }}"
-                                            title="Selesai Diperbaiki">
-                                        <i class="fas fa-check"></i> Selesai
-                                    </button>
-
-                                    {{-- Tombol Edit --}}
-                                    <a href="{{ route('manajemenasetdanasrama.pemeliharaan.edit', $item->id) }}" class="btn btn-xs btn-warning" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-
-                                    {{-- Tombol Hapus --}}
-                                    <button type="button" class="btn btn-xs btn-danger"
-                                            data-toggle="modal"
-                                            data-target="#modalHapus"
-                                            data-id="{{ $item->id }}"
-                                            data-nama="{{ $item->aset->nama_aset ?? '' }}"
-                                            title="Hapus">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    {{ Str::limit($item->deskripsi_pemeliharaan, 50) }}
+                                    @if($item->catatan)
+                                        <br><small class="text-muted"><i class="fas fa-comment-alt mr-1"></i> {{ Str::limit($item->catatan, 30) }}</small>
+                                    @endif
+                                </td>
+                                <td class="text-right font-weight-bold text-success" style="white-space: nowrap;">Rp {{ number_format($item->biaya ?? $item->biaya_pemeliharaan, 0, ',', '.') }}</td>
+                                <td class="text-center">
+                                    <span class="badge badge-warning">
+                                        <i class="fas fa-cog fa-spin mr-1"></i> Proses
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center" style="gap: 4px;">
+                                        @if($item->aset_id)
+                                        <a href="{{ route('manajemenasetdanasrama.aset.show', $item->aset_id) }}" class="btn btn-action-xs btn-info" title="Detail Aset">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        @endif
+                                        <button type="button" class="btn btn-action-xs btn-success"
+                                                data-toggle="modal"
+                                                data-target="#modalSelesai"
+                                                data-id="{{ $item->id }}"
+                                                data-nama="{{ $item->aset->nama_aset ?? '' }}"
+                                                data-deskripsi="{{ $item->deskripsi_pemeliharaan }}"
+                                                data-biaya="{{ number_format($item->biaya ?? $item->biaya_pemeliharaan, 0, ',', '.') }}"
+                                                title="Selesai Diperbaiki">
+                                            <i class="fas fa-check-double"></i>
+                                        </button>
+                                        <a href="{{ route('manajemenasetdanasrama.pemeliharaan.edit', $item->id) }}" class="btn btn-action-xs btn-warning" title="Edit">
+                                            <i class="fas fa-edit text-white"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-action-xs btn-danger"
+                                                data-toggle="modal"
+                                                data-target="#modalHapus"
+                                                data-id="{{ $item->id }}"
+                                                data-nama="{{ $item->aset->nama_aset ?? '' }}"
+                                                title="Hapus">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="8" class="text-center text-muted">
-                                    <i class="fas fa-inbox"></i> Tidak ada pemeliharaan yang sedang berjalan
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-2x mb-2 d-block"></i> Tidak ada pemeliharaan yang sedang berjalan
                                 </td>
                             </tr>
                             @endforelse

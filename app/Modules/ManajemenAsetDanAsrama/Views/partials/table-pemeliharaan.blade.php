@@ -24,7 +24,24 @@
                     <small class="text-muted">{{ $item->aset->kode_aset ?? '' }}</small>
                 </td>
                 @endif
-                <td>{{ Str::limit($item->deskripsi_pekerjaan ?? $item->catatan ?? '-', 80) }}</td>
+                <td>
+                    @if($fullText ?? false)
+                        @if($item->deskripsi_pemeliharaan)
+                            <div class="mb-1">{{ $item->deskripsi_pemeliharaan }}</div>
+                        @endif
+                        @if($item->catatan)
+                            <div class="small text-muted"><i class="fas fa-comment-alt mr-1"></i> <strong>Catatan:</strong> {{ $item->catatan }}</div>
+                        @endif
+                        @if($item->catatan_selesai)
+                            <div class="small text-success mt-1"><i class="fas fa-check-circle mr-1"></i> <strong>Penyelesaian:</strong> {{ $item->catatan_selesai }}</div>
+                        @endif
+                        @if(!$item->deskripsi_pemeliharaan && !$item->catatan && !$item->catatan_selesai)
+                            -
+                        @endif
+                    @else
+                        {{ Str::limit($item->deskripsi_pemeliharaan ?? $item->catatan ?? '-', 80) }}
+                    @endif
+                </td>
                 <td>
                     @php
                         $jenisClass = match($item->jenis_pemeliharaan ?? '') {
@@ -52,8 +69,8 @@
                     @endphp
                     <span class="badge {{ $statusClass }}">{{ $statusLabel }}</span>
                 </td>
-                <td class="text-center">{{ $item->tanggal_mulai ? \Carbon\Carbon::parse($item->tanggal_mulai)->format('d/m/Y') : '-' }}</td>
-                <td class="text-center">{{ $item->tanggal_selesai ? \Carbon\Carbon::parse($item->tanggal_selesai)->format('d/m/Y') : '-' }}</td>
+                <td class="text-center">{{ $item->tanggal_mulai_pemeliharaan ? \Carbon\Carbon::parse($item->tanggal_mulai_pemeliharaan)->format('d/m/Y') : '-' }}</td>
+                <td class="text-center">{{ $item->tanggal_selesai_pemeliharaan ? \Carbon\Carbon::parse($item->tanggal_selesai_pemeliharaan)->format('d/m/Y') : '-' }}</td>
                 <td class="text-center">
                     <div class="d-flex justify-content-center" style="gap: 4px;">
                         @if(($item->status ?? '') == 'proses')

@@ -16,10 +16,30 @@ class AsetController extends BaseController
 
     public function index(Request $request): View
     {
-        $aset = Aset::with('pengadaan:id,nomor_po,pengajuan_id', 'pengadaan.pengajuan:id,nomor_pengajuan')
-                    ->whereNull('deleted_at')
-                    ->latest()
-                    ->paginate(15);
+        $search = $request->input('search');
+
+        $query = Aset::with('pengadaan:id,nomor_po,pengajuan_id', 'pengadaan.pengajuan:id,nomor_pengajuan')
+                    ->whereNull('deleted_at');
+
+        if (!empty($search)) {
+            $terms = array_filter(explode(' ', $search));
+            $query->where(function($q) use ($terms) {
+                // Cari di kode_aset
+                $q->where(function($qCode) use ($terms) {
+                    foreach ($terms as $term) {
+                        $qCode->where('kode_aset', 'LIKE', '%' . $term . '%');
+                    }
+                })
+                // Atau cari di nama_aset
+                ->orWhere(function($qName) use ($terms) {
+                    foreach ($terms as $term) {
+                        $qName->where('nama_aset', 'LIKE', '%' . $term . '%');
+                    }
+                });
+            });
+        }
+
+        $aset = $query->latest()->paginate(15)->appends(['search' => $search]);
         
         $stats = [
             'total'           => Aset::whereNull('deleted_at')->count(),

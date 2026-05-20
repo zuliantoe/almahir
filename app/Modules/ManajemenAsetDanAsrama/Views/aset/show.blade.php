@@ -64,7 +64,10 @@
             <x-slot name="footer">
                 <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap: 10px;">
                     <div>
-                        <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="btn btn-sm btn-secondary shadow-sm">
+                        @php
+                            $backUrl = url()->previous() !== url()->current() ? url()->previous() : route('manajemenasetdanasrama.aset.index');
+                        @endphp
+                        <a href="{{ $backUrl }}" class="btn btn-sm btn-secondary shadow-sm">
                             <i class="fas fa-arrow-left mr-1"></i> Kembali
                         </a>
                     </div>
@@ -127,6 +130,35 @@
                         @endif
                     </td>
                 </tr>
+                @if($aset->pengadaan->catatan_pengadaan)
+                <tr>
+                    <th>Catatan Pengadaan</th>
+                    <td><small>{{ $aset->pengadaan->catatan_pengadaan }}</small></td>
+                </tr>
+                @endif
+                @if($aset->pengadaan->pengajuan)
+                <tr>
+                    <td colspan="2" class="bg-light font-weight-bold">Informasi Pengajuan Awal</td>
+                </tr>
+                @if($aset->pengadaan->pengajuan->deskripsi_pengajuan)
+                <tr>
+                    <th>Deskripsi Pengajuan</th>
+                    <td><small>{{ $aset->pengadaan->pengajuan->deskripsi_pengajuan }}</small></td>
+                </tr>
+                @endif
+                @if($aset->pengadaan->pengajuan->catatan_tolak)
+                <tr>
+                    <th>Catatan Penolakan</th>
+                    <td><small class="text-danger">{{ $aset->pengadaan->pengajuan->catatan_tolak }}</small></td>
+                </tr>
+                @endif
+                @if($aset->pengadaan->pengajuan->alasan_pengajuan_ulang)
+                <tr>
+                    <th>Alasan Ajukan Ulang</th>
+                    <td><small class="text-warning">{{ $aset->pengadaan->pengajuan->alasan_pengajuan_ulang }}</small></td>
+                </tr>
+                @endif
+                @endif
             </table>
             @else
             <div class="text-center py-4">
@@ -146,7 +178,8 @@
                 'items' => $aset->kerusakan,
                 'showAset' => false,
                 'actionWidth' => '80',
-                'hideDelete' => true
+                'hideDelete' => true,
+                'fullText' => true
             ])
         </x-card>
     </div>
@@ -157,7 +190,8 @@
                 'items' => $aset->pemeliharaan,
                 'showAset' => false,
                 'actionWidth' => '80',
-                'hideDelete' => true
+                'hideDelete' => true,
+                'fullText' => true
             ])
         </x-card>
     </div>

@@ -2,6 +2,13 @@
 
 @section('title', $title)
 
+@php
+    $isSiswa = auth()->user()->hasRole('SISWA');
+    $isGuru = auth()->user()->hasRole('GURU');
+    $canManagePiket = !$isSiswa && !$isGuru;
+    $canCheckOffPiket = !$isSiswa;
+@endphp
+
 @section('content-header')
 <div class="row mb-2">
     <div class="col-sm-6"><h1 class="m-0 font-weight-bold text-dark">{{ $title }}</h1></div>
@@ -33,11 +40,11 @@
             <x-card title="Manajemen Jadwal Piket" icon="fas fa-calendar-check" outline>
                 <x-slot name="tools">
                     <div class="d-flex flex-wrap" style="gap: 8px;">
-                        @if(!auth()->user()->hasRole('SISWA'))
+                        @if($canManagePiket)
                             <button type="button" class="btn btn-sm btn-info shadow-sm px-3" style="border-radius: 8px;" data-toggle="modal" data-target="#modalAutoGenerate"><i class="fas fa-robot mr-1"></i> Auto-Generate</button>
                         @endif
                         <button type="button" class="btn btn-sm btn-secondary shadow-sm px-3" style="border-radius: 8px;" onclick="triggerPrintAll()"><i class="fas fa-print mr-1"></i> Cetak</button>
-                        @if(!auth()->user()->hasRole('SISWA'))
+                        @if($canManagePiket)
                             <button type="button" class="btn btn-sm btn-danger shadow-sm px-3" style="border-radius: 8px;" onclick="if(confirm('Hapus seluruh riwayat jadwal piket? Data kamar dan santri tetap aman.')) document.getElementById('form-reset-piket').submit();"><i class="fas fa-eraser mr-1"></i> Kosongkan Jadwal</button>
                             <form id="form-reset-piket" action="{{ route('manajemenasetdanasrama.jadwal-piket.reset') }}" method="POST" style="display: none;">@csrf</form>
                             <button type="button" class="btn btn-sm btn-primary shadow-sm px-3" style="border-radius: 8px;" data-toggle="modal" data-target="#modalManualAdd"><i class="fas fa-plus mr-1"></i> Tambah</button>
@@ -155,7 +162,7 @@
                                     @endif
                                 </h5>
                                 <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
-                                    @if(!auth()->user()->hasRole('SISWA'))
+                                    @if($canManagePiket)
                                         <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-4 shadow-sm" onclick="triggerDeleteDay('{{ $activeDate }}', '{{ \Carbon\Carbon::parse($activeDate)->translatedFormat('l, d F Y') }}')">
                                             <i class="fas fa-trash-alt mr-2"></i> Hapus Jadwal Hari Ini
                                         </button>
@@ -197,20 +204,23 @@
                                                                 @if($isMyPiket) <span class="badge badge-warning ml-1" style="font-size: 0.6rem;">Jadwal Saya</span> @endif
                                                             </td>
                                                             <td class="text-center align-middle pr-3 py-2">
-                                                                @if(!auth()->user()->hasRole('SISWA'))
-                                                                    <div class="d-flex justify-content-center" style="gap: 8px;">
-                                                                        @if($item->status == 'belum')
-                                                                        <form action="{{ route('manajemenasetdanasrama.jadwal-piket.selesai', $item->id) }}" method="POST" class="m-0">
-                                                                            @csrf
-                                                                            <button type="submit" class="btn-action btn-soft-success" title="Tandai Selesai"><i class="fas fa-check"></i></button>
-                                                                        </form>
-                                                                        @endif
-                                                                        <a href="{{ route('manajemenasetdanasrama.jadwal-piket.edit', $item->id) }}" class="btn-action btn-soft-warning" title="Edit Jadwal"><i class="fas fa-pencil-alt"></i></a>
-                                                                        <button type="button" class="btn-action btn-soft-danger" data-toggle="modal" data-target="#modalHapus" data-id="{{ $item->id }}" data-nama="{{ $item->siswa->nama ?? '' }}" title="Hapus"><i class="fas fa-trash"></i></button>
-                                                                    </div>
-                                                                @else
-                                                                    <span class="badge badge-pill {{ $item->status == 'selesai' ? 'badge-success' : 'badge-warning' }} px-3 py-1">{{ ucfirst($item->status) }}</span>
-                                                                @endif
+                                                                <div class="d-flex justify-content-center" style="gap: 8px;">
+                                                                    @if($item->status == 'belum' && $canCheckOffPiket)
+                                                                    <form action="{{ route('manajemenasetdanasrama.jadwal-piket.selesai', $item->id) }}" method="POST" class="m-0">
+                                                                        @csrf
+                                                                        <button type="submit" class="btn-action btn-soft-success" title="Tandai Selesai"><i class="fas fa-check"></i></button>
+                                                                    </form>
+                                                                    @endif
+
+                                                                    @if($canManagePiket)
+                                                                    <a href="{{ route('manajemenasetdanasrama.jadwal-piket.edit', $item->id) }}" class="btn-action btn-soft-warning" title="Edit Jadwal"><i class="fas fa-pencil-alt"></i></a>
+                                                                    <button type="button" class="btn-action btn-soft-danger" data-toggle="modal" data-target="#modalHapus" data-id="{{ $item->id }}" data-nama="{{ $item->siswa->nama ?? '' }}" title="Hapus"><i class="fas fa-trash"></i></button>
+                                                                    @endif
+
+                                                                    @if($isSiswa || ($isGuru && ($item->status == 'sudah' || $item->status == 'selesai')))
+                                                                    <span class="badge badge-pill {{ $item->status == 'sudah' || $item->status == 'selesai' ? 'badge-success' : 'badge-warning' }} px-3 py-1">{{ $item->status == 'sudah' || $item->status == 'selesai' ? 'Selesai' : 'Belum' }}</span>
+                                                                    @endif
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                         @endforeach
@@ -240,20 +250,23 @@
                                                                 @if($isMyPiket) <span class="badge badge-warning ml-1" style="font-size: 0.6rem;">Jadwal Saya</span> @endif
                                                             </td>
                                                             <td class="text-center align-middle pr-3 py-2">
-                                                                @if(!auth()->user()->hasRole('SISWA'))
-                                                                    <div class="d-flex justify-content-center" style="gap: 8px;">
-                                                                        @if($item->status == 'belum')
-                                                                        <form action="{{ route('manajemenasetdanasrama.jadwal-piket.selesai', $item->id) }}" method="POST" class="m-0">
-                                                                            @csrf
-                                                                            <button type="submit" class="btn-action btn-soft-success" title="Tandai Selesai"><i class="fas fa-check"></i></button>
-                                                                        </form>
-                                                                        @endif
-                                                                        <a href="{{ route('manajemenasetdanasrama.jadwal-piket.edit', $item->id) }}" class="btn-action btn-soft-warning" title="Edit Jadwal"><i class="fas fa-pencil-alt"></i></a>
-                                                                        <button type="button" class="btn-action btn-soft-danger" data-toggle="modal" data-target="#modalHapus" data-id="{{ $item->id }}" data-nama="{{ $item->siswa->nama ?? '' }}" title="Hapus"><i class="fas fa-trash"></i></button>
-                                                                    </div>
-                                                                @else
-                                                                    <span class="badge badge-pill {{ $item->status == 'selesai' ? 'badge-success' : 'badge-warning' }} px-3 py-1">{{ ucfirst($item->status) }}</span>
-                                                                @endif
+                                                                <div class="d-flex justify-content-center" style="gap: 8px;">
+                                                                    @if($item->status == 'belum' && $canCheckOffPiket)
+                                                                    <form action="{{ route('manajemenasetdanasrama.jadwal-piket.selesai', $item->id) }}" method="POST" class="m-0">
+                                                                        @csrf
+                                                                        <button type="submit" class="btn-action btn-soft-success" title="Tandai Selesai"><i class="fas fa-check"></i></button>
+                                                                    </form>
+                                                                    @endif
+
+                                                                    @if($canManagePiket)
+                                                                    <a href="{{ route('manajemenasetdanasrama.jadwal-piket.edit', $item->id) }}" class="btn-action btn-soft-warning" title="Edit Jadwal"><i class="fas fa-pencil-alt"></i></a>
+                                                                    <button type="button" class="btn-action btn-soft-danger" data-toggle="modal" data-target="#modalHapus" data-id="{{ $item->id }}" data-nama="{{ $item->siswa->nama ?? '' }}" title="Hapus"><i class="fas fa-trash"></i></button>
+                                                                    @endif
+
+                                                                    @if($isSiswa || ($isGuru && ($item->status == 'sudah' || $item->status == 'selesai')))
+                                                                    <span class="badge badge-pill {{ $item->status == 'sudah' || $item->status == 'selesai' ? 'badge-success' : 'badge-warning' }} px-3 py-1">{{ $item->status == 'sudah' || $item->status == 'selesai' ? 'Selesai' : 'Belum' }}</span>
+                                                                    @endif
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                         @endforeach

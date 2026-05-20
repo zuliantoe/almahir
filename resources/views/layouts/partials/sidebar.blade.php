@@ -14,7 +14,7 @@
         }
     }
 
-    // Active module detection for Siswa and Admin
+    // Active module detection for Siswa, Guru, and Admin
     $activeModule = null;
     if ($isSiswa) {
         if (request()->is('akademik*')) {
@@ -25,6 +25,10 @@
             $activeModule = 'asrama';
         } elseif (request()->is('keuangan*')) {
             $activeModule = 'keuangan';
+        }
+    } elseif ($isGuru) {
+        if (request()->is('manajemenasetdanasrama*')) {
+            $activeModule = 'asrama';
         }
     } elseif ($isStaffOrAdmin) {
         if (request()->is('akademik*')) {
@@ -87,15 +91,18 @@
                 
                 @if($isGuru)
                     {{-- ========================================== --}}
-                    {{-- PORTAL GURU DIRECT VIEW                    --}}
+                    {{-- PORTAL GURU                                --}}
                     {{-- ========================================== --}}
-                    <li class="nav-item">
-                        <a href="{{ url('/') }}" class="nav-link {{ request()->is('/') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-tachometer-alt"></i>
-                            <p>Dashboard Utama</p>
-                        </a>
-                    </li>
+                    @if($activeModule === 'asrama')
+                        {{-- 1. TOMBOL KEMBALI KE MENU UTAMA --}}
+                        <li class="nav-item">
+                            <a href="{{ url('/') }}" class="nav-link bg-danger text-white mb-3" style="border-radius: 12px; box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);">
+                                <i class="nav-icon fas fa-arrow-left"></i>
+                                <p class="font-weight-bold">Menu Utama</p>
+                            </a>
+                        </li>
 
+<<<<<<< HEAD
                     <li class="nav-header">MENU GURU</li>
                     
                     {{-- 1. Kaldik --}}
@@ -105,15 +112,83 @@
                             <p>Kaldik</p>
                         </a>
                     </li>
+=======
+                        {{-- 2. DYNAMIC MODULE SUBMENUS --}}
+                        @isset($moduleMenus)
+                            @foreach($moduleMenus as $section)
+                                @if($section['header'] === 'MANAJEMEN ASET & ASRAMA')
+                                    <li class="nav-header">{{ $section['header'] }}</li>
+>>>>>>> 4d41c3e (fix and add menu at guru)
 
-                    {{-- 2. Jadwal Mengajar --}}
-                    <li class="nav-item">
-                        <a href="{{ route('akademik.jadwal-pelajaran.index') }}" class="nav-link {{ request()->is('akademik/jadwal-pelajaran*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-calendar-day text-info"></i>
-                            <p>Jadwal Mengajar</p>
-                        </a>
-                    </li>
+                                    @foreach($section['items'] as $item)
+                                        @if(!empty($item['children']))
+                                            @php
+                                                $isTreeOpen = false;
+                                                foreach ($item['children'] as $child) {
+                                                    if (!empty($child['match']) && request()->is($child['match'])) {
+                                                        $isTreeOpen = true;
+                                                        break;
+                                                    }
+                                                }
+                                            @endphp
+                                            <li class="nav-item has-treeview {{ $isTreeOpen ? 'menu-open' : '' }}">
+                                                <a href="javascript:void(0);" class="nav-link {{ $isTreeOpen ? 'active' : '' }}">
+                                                    <i class="nav-icon {{ $item['icon'] ?? 'far fa-circle' }}"></i>
+                                                    <p>
+                                                        {{ $item['label'] }}
+                                                        <i class="fas fa-angle-left right"></i>
+                                                    </p>
+                                                </a>
+                                                <ul class="nav nav-treeview">
+                                                    @foreach($item['children'] as $child)
+                                                        @php
+                                                            $childUrl = 'javascript:void(0);';
+                                                            if (!empty($child['route'])) {
+                                                                try { $childUrl = route($child['route']); } catch (\Exception $e) { $childUrl = 'javascript:void(0);'; }
+                                                            } elseif (!empty($child['url'])) {
+                                                                $childUrl = $child['url'];
+                                                            }
+                                                            $childActive = !empty($child['match']) && request()->is($child['match']);
+                                                        @endphp
+                                                        <li class="nav-item">
+                                                            <a href="{{ $childUrl }}" class="nav-link {{ $childActive ? 'active' : '' }}">
+                                                                <i class="nav-icon {{ $child['icon'] ?? 'far fa-circle' }}"></i>
+                                                                <p>{{ $child['label'] }}</p>
+                                                            </a>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </li>
+                                        @else
+                                            @php
+                                                $itemUrl = 'javascript:void(0);';
+                                                if (!empty($item['route'])) {
+                                                    try { $itemUrl = route($item['route']); } catch (\Exception $e) { $itemUrl = 'javascript:void(0);'; }
+                                                } elseif (!empty($item['url'])) {
+                                                    $itemUrl = $item['url'];
+                                                }
+                                                $itemActive = !empty($item['match']) && request()->is($item['match']);
+                                            @endphp
+                                            <li class="nav-item">
+                                                <a href="{{ $itemUrl }}" class="nav-link {{ $itemActive ? 'active' : '' }}">
+                                                    <i class="nav-icon {{ $item['icon'] ?? 'far fa-circle' }}"></i>
+                                                    <p>{{ $item['label'] }}</p>
+                                                </a>
+                                            </li>
+                                        @endif
+                                    @endforeach
+                                @endif
+                            @endforeach
+                        @endisset
+                    @else
+                        <li class="nav-item">
+                            <a href="{{ url('/') }}" class="nav-link {{ request()->is('/') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>Dashboard Utama</p>
+                            </a>
+                        </li>
 
+<<<<<<< HEAD
                     {{-- Penilaian Akademik & Tahfidz --}}
                     <li class="nav-item">
                         <a href="{{ route('penilaiandanpresensi.penilaianakademik.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik') ? 'active' : '' }}">
@@ -135,31 +210,43 @@
                             <p>Absensi Siswa</p>
                         </a>
                     </li>
+=======
+                        <li class="nav-header">MENU GURU</li>
+                        
+                        {{-- 1. Kaldik --}}
+                        <li class="nav-item">
+                            <a href="{{ route('guru.kalender-akademik') }}" class="nav-link {{ request()->is('guru/kalender-akademik*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-calendar-alt text-success"></i>
+                                <p>Kaldik</p>
+                            </a>
+                        </li>
+>>>>>>> 4d41c3e (fix and add menu at guru)
 
-                    {{-- 4. Cetak Raport --}}
-                    <li class="nav-item">
-                        <a href="{{ route('penilaiandanpresensi.penilaianakademik.raport.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik/raport*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-file-invoice text-warning"></i>
-                            <p>Cetak Raport</p>
-                        </a>
-                    </li>
+                        {{-- 2. Jadwal Mengajar --}}
+                        <li class="nav-item">
+                            <a href="{{ route('akademik.jadwal-pelajaran.index') }}" class="nav-link {{ request()->is('akademik/jadwal-pelajaran*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-calendar-day text-info"></i>
+                                <p>Jadwal Mengajar</p>
+                            </a>
+                        </li>
 
-                    {{-- 5. Konfirmasi Izin Sakit --}}
-                    <li class="nav-item">
-                        <a href="{{ route('penilaiandanpresensi.izinsakit.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/izinsakit*') && !request()->is('penilaiandanpresensi/izinsakit/siswa*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-envelope-open-text text-danger"></i>
-                            <p>Konfirmasi Izin Sakit</p>
-                        </a>
-                    </li>
+                        {{-- 3. Absensi Siswa --}}
+                        <li class="nav-item">
+                            <a href="{{ route('penilaiandanpresensi.presensi.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/presensi*') && !request()->is('penilaiandanpresensi/presensi/siswa*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-user-check text-primary"></i>
+                                <p>Absensi Siswa</p>
+                            </a>
+                        </li>
 
-                    {{-- 6. Pengajuan Izin --}}
-                    <li class="nav-item">
-                        <a href="{{ route('perizinan.index') }}" class="nav-link {{ request()->is('perizinan*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-paper-plane text-teal"></i>
-                            <p>Pengajuan Izin</p>
-                        </a>
-                    </li>
+                        {{-- 4. Cetak Raport --}}
+                        <li class="nav-item">
+                            <a href="{{ route('penilaiandanpresensi.penilaianakademik.raport.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik/raport*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-file-invoice text-warning"></i>
+                                <p>Cetak Raport</p>
+                            </a>
+                        </li>
 
+<<<<<<< HEAD
                     {{-- 7. Absensi Pegawai --}}
                     <li class="nav-item">
                         <a href="{{ route('absensi.index') }}" class="nav-link {{ request()->is('absensi*') ? 'active' : '' }}">
@@ -167,6 +254,40 @@
                             <p>Absensi Pegawai</p>
                         </a>
                     </li>
+=======
+                        {{-- 5. Konfirmasi Izin Sakit --}}
+                        <li class="nav-item">
+                            <a href="{{ route('penilaiandanpresensi.izinsakit.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/izinsakit*') && !request()->is('penilaiandanpresensi/izinsakit/siswa*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-envelope-open-text text-danger"></i>
+                                <p>Konfirmasi Izin Sakit</p>
+                            </a>
+                        </li>
+
+                        {{-- 6. Pengajuan Izin --}}
+                        <li class="nav-item">
+                            <a href="{{ route('perizinan.index') }}" class="nav-link {{ request()->is('perizinan*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-paper-plane text-teal"></i>
+                                <p>Pengajuan Izin</p>
+                            </a>
+                        </li>
+
+                        {{-- 7. Absensi Pegawai --}}
+                        <li class="nav-item">
+                            <a href="{{ route('absensi.index') }}" class="nav-link {{ request()->is('absensi*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-fingerprint text-purple"></i>
+                                <p>Absensi Pegawai</p>
+                            </a>
+                        </li>
+
+                        {{-- 8. Aset & Asrama --}}
+                        <li class="nav-item">
+                            <a href="{{ route('manajemenasetdanasrama.index') }}" class="nav-link {{ request()->is('manajemenasetdanasrama*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-building text-orange"></i>
+                                <p>Aset & Asrama</p>
+                            </a>
+                        </li>
+                    @endif
+>>>>>>> 4d41c3e (fix and add menu at guru)
 
                 @elseif($isWali)
                     {{-- ========================================== --}}

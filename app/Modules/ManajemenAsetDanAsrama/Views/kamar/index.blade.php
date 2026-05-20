@@ -2,6 +2,12 @@
 
 @section('title', $title)
 
+@php
+    $isSiswa = auth()->user()->hasRole('SISWA');
+    $isGuru = auth()->user()->hasRole('GURU');
+    $canManageKamar = !$isSiswa && !$isGuru;
+@endphp
+
 @section('content-header')
 <div class="row mb-2">
     <div class="col-sm-6">
@@ -54,7 +60,7 @@
     <div class="row">
         <div class="col-md-12">
             <x-card title="Daftar Kamar Asrama" icon="fas fa-door-open">
-                @if(!auth()->user()->hasRole('SISWA'))
+                @if($canManageKamar)
                 <x-slot name="tools">
                     <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#modalTambahKamar">
                         <i class="fas fa-plus mr-1"></i> Tambah Kamar
@@ -107,7 +113,7 @@
                                 <td>{!! $item->status_kapasitas_badge !!}</td>
                                 <td><small class="text-muted">{{ Str::limit($item->deskripsi ?? '-', 60) }}</small></td>
                                 <td class="text-center">
-                                    @if(!auth()->user()->hasRole('SISWA'))
+                                    @if($canManageKamar)
                                         @if($item->sisa > 0)
                                         <a href="{{ route('manajemenasetdanasrama.penghuni.assign-multiple', $item->id) }}" 
                                            class="btn btn-xs-custom btn-success" title="Tambah Penghuni">
@@ -118,7 +124,7 @@
                                     <a href="{{ route('manajemenasetdanasrama.kamar.show', $item->id) }}" class="btn btn-xs-custom btn-info" title="Detail">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    @if(!auth()->user()->hasRole('SISWA'))
+                                    @if($canManageKamar)
                                         <button type="button" class="btn btn-xs-custom btn-warning"
                                                 data-toggle="modal"
                                                 data-target="#modalEditKamar"

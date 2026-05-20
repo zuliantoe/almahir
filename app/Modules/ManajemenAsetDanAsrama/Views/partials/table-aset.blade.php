@@ -35,6 +35,8 @@
                         <a href="{{ route('manajemenasetdanasrama.aset.print-label') }}?id={{ $item->id }}" target="_blank" class="btn btn-action-xs btn-primary" title="Cetak Label">
                             <i class="fas fa-print"></i>
                         </a>
+                        @php $isGuru = auth()->user()->hasRole('GURU'); @endphp
+                        @if(!$isGuru)
                         <button type="button" class="btn btn-action-xs btn-danger"
                                 data-toggle="modal"
                                 data-target="#modalHapus"
@@ -44,15 +46,18 @@
                                 title="Hapus">
                             <i class="fas fa-trash"></i>
                         </button>
+                        @endif
                     </div>
                     @if($showExtendedActions ?? false)
                     <div class="d-flex justify-content-center mt-2" style="gap: 4px;">
                         <a href="{{ route('manajemenasetdanasrama.kerusakan.create') }}?aset_id={{ $item->id }}" class="btn btn-action-xs btn-outline-danger" title="Lapor Kerusakan">
                             <i class="fas fa-exclamation-triangle"></i>
                         </a>
+                        @if(!$isGuru)
                         <a href="{{ route('manajemenasetdanasrama.pemeliharaan.create') }}?aset_id={{ $item->id }}" class="btn btn-action-xs btn-outline-primary" title="Catat Pemeliharaan">
                             <i class="fas fa-wrench"></i>
                         </a>
+                        @endif
                     </div>
                     @endif
                 </td>

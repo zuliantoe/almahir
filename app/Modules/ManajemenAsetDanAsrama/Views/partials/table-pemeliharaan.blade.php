@@ -1,3 +1,6 @@
+@php
+    $isGuru = auth()->check() && auth()->user()->hasRole('GURU');
+@endphp
 <div class="table-responsive">
     <table class="table table-hover table-sm">
         <thead>
@@ -72,6 +75,7 @@
                 <td class="text-center">{{ $item->tanggal_mulai_pemeliharaan ? \Carbon\Carbon::parse($item->tanggal_mulai_pemeliharaan)->format('d/m/Y') : '-' }}</td>
                 <td class="text-center">{{ $item->tanggal_selesai_pemeliharaan ? \Carbon\Carbon::parse($item->tanggal_selesai_pemeliharaan)->format('d/m/Y') : '-' }}</td>
                 <td class="text-center">
+                    @if(!$isGuru)
                     <div class="d-flex justify-content-center" style="gap: 4px;">
                         @if(($item->status ?? '') == 'proses')
                         <button type="button" class="btn btn-action-xs btn-success"
@@ -98,6 +102,9 @@
                         </button>
                         @endif
                     </div>
+                    @else
+                    -
+                    @endif
                 </td>
             </tr>
             @empty

@@ -68,9 +68,12 @@
             <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="btn btn-outline-secondary shadow-sm">
                 <i class="fas fa-arrow-left"></i> Kembali ke Master Aset
             </a>
+            @php $isGuru = auth()->check() && auth()->user()->hasRole('GURU'); @endphp
+            @if(!$isGuru)
             <a href="{{ route('manajemenasetdanasrama.pemeliharaan.index') }}" class="btn btn-outline-primary shadow-sm">
                 Lanjut ke Pemeliharaan <i class="fas fa-arrow-right"></i>
             </a>
+            @endif
         </div>
     </div>
 

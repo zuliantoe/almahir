@@ -2,7 +2,7 @@
 
 return [
     'header' => 'MANAJEMEN ASET & ASRAMA',
-    'roles'  => ['SUPER_ADMIN', 'STAF_TU'],
+    'roles'  => ['SUPER_ADMIN', 'STAF_TU', 'GURU'],
     'order'  => 40,
     'items'  => [
         [
@@ -27,12 +27,14 @@ return [
                     'icon'  => 'fas fa-check-double',
                     'route' => 'manajemenasetdanasrama.persetujuan.index',
                     'match' => 'manajemenasetdanasrama/persetujuan*',
+                    'roles' => ['SUPER_ADMIN', 'STAF_TU'],
                 ],
                 [
                     'label' => 'Pengadaan',
                     'icon'  => 'fas fa-truck',
                     'route' => 'manajemenasetdanasrama.pengadaan.index',
                     'match' => 'manajemenasetdanasrama/pengadaan*',
+                    'roles' => ['SUPER_ADMIN', 'STAF_TU'],
                 ],
                 [
                     'label' => 'Master Aset',
@@ -51,6 +53,7 @@ return [
                     'icon'  => 'fas fa-wrench',
                     'route' => 'manajemenasetdanasrama.pemeliharaan.index',
                     'match' => 'manajemenasetdanasrama/pemeliharaan*',
+                    'roles' => ['SUPER_ADMIN', 'STAF_TU'],
                 ],
             ],
         ],
@@ -84,6 +87,7 @@ return [
             'icon'  => 'fas fa-trash-restore',
             'route' => 'manajemenasetdanasrama.trash.index',
             'match' => 'manajemenasetdanasrama/trash*',
+            'roles' => ['SUPER_ADMIN', 'STAF_TU'],
         ],
     ],
 ];

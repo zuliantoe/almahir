@@ -42,7 +42,7 @@ class DashboardController extends BaseController
                         ->get();
         
         $asetByStatus = [
-            'baik'              => Aset::where('status_kondisi', 'baik')->count(),
+            'baik'              => Aset::whereIn('status_kondisi', ['baik', 'sudah_diperbaiki'])->count(),
             'rusak'             => Aset::where('status_kondisi', 'rusak')->count(),
             'dalam_perbaikan'   => Aset::where('status_kondisi', 'dalam_perbaikan')->count(),
             'sudah_diperbaiki'  => Aset::where('status_kondisi', 'sudah_diperbaiki')->count(),

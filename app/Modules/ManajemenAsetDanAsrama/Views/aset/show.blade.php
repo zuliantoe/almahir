@@ -18,14 +18,6 @@
 @endsection
 
 @section('content')
-<style>
-    .btn-action-xs {
-        padding: 0.1rem 0.5rem !important;
-        font-size: 0.75rem !important;
-        line-height: 1.5 !important;
-        border-radius: 4px !important;
-    }
-</style>
 
 <div class="row">
     {{-- Info Utama Aset --}}
@@ -66,6 +58,7 @@
                     <div>
                         @php
                             $backUrl = url()->previous() !== url()->current() ? url()->previous() : route('manajemenasetdanasrama.aset.index');
+                            $isGuru = auth()->user()->hasRole('GURU');
                         @endphp
                         <a href="{{ $backUrl }}" class="btn btn-sm btn-secondary shadow-sm">
                             <i class="fas fa-arrow-left mr-1"></i> Kembali
@@ -75,18 +68,22 @@
                         <a href="{{ route('manajemenasetdanasrama.kerusakan.create') }}?aset_id={{ $aset->id }}" class="btn btn-sm btn-outline-danger shadow-sm">
                             <i class="fas fa-exclamation-triangle mr-1"></i> Lapor Rusak
                         </a>
+                        @if(!$isGuru)
                         <a href="{{ route('manajemenasetdanasrama.pemeliharaan.create') }}?aset_id={{ $aset->id }}" class="btn btn-sm btn-outline-info shadow-sm">
                             <i class="fas fa-wrench mr-1"></i> Pemeliharaan
                         </a>
+                        @endif
                         <a href="{{ route('manajemenasetdanasrama.aset.print-label') }}?id={{ $aset->id }}" target="_blank" class="btn btn-sm btn-primary shadow-sm">
                             <i class="fas fa-print mr-1"></i> Cetak Label
                         </a>
                         <a href="{{ route('manajemenasetdanasrama.aset.edit', $aset->id) }}" class="btn btn-sm btn-warning text-white shadow-sm">
                             <i class="fas fa-edit mr-1"></i> Edit
                         </a>
+                        @if(!$isGuru)
                         <button type="button" class="btn btn-sm btn-danger shadow-sm" data-toggle="modal" data-target="#modalHapus" data-id="{{ $aset->id }}" data-nama="{{ $aset->nama_aset }}" data-url="{{ route('manajemenasetdanasrama.aset.destroy', $aset->id) }}">
                             <i class="fas fa-trash mr-1"></i> Hapus
                         </button>
+                        @endif
                     </div>
                 </div>
             </x-slot>

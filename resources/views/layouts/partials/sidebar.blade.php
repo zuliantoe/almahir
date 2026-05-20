@@ -93,7 +93,6 @@
                     {{-- ========================================== --}}
                     <li class="nav-header">PENILAIAN & PRESENSI</li>
                     <li class="nav-item">
-<<<<<<< HEAD
                         <a href="{{ url('/') }}" class="nav-link bg-danger mb-3">
                             <i class="nav-icon fas fa-arrow-left"></i>
                             <p>Menu Utama</p>
@@ -258,13 +257,6 @@
                         </a>
                     </li>
 
-=======
-                        <a href="{{ route('penilaiandanpresensi.penilaianakademik.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-graduation-cap text-success"></i>
-                            <p>Penilaian Akademik</p>
-                        </a>
-                    </li>
->>>>>>> ec0b0ab (add so many feat:middleware and footer)
                     <li class="nav-item">
                         <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaiantahfidz*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-quran text-primary"></i>
@@ -277,7 +269,6 @@
                             <p>Cetak Raport</p>
                         </a>
                     </li>
-<<<<<<< HEAD
                     @endif
 
                     {{-- DYNAMIC MODULE MENUS --}}
@@ -388,8 +379,6 @@
                     </a>
                 </li>
 
-=======
->>>>>>> ec0b0ab (add so many feat:middleware and footer)
                     <li class="nav-item">
                         <a href="{{ route('penilaiandanpresensi.presensi.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/presensi') ? 'active' : (request()->is('penilaiandanpresensi/presensi/*') && !request()->is('penilaiandanpresensi/presensi/siswa*') ? 'active' : '') }}">
                             <i class="nav-icon fas fa-user-check text-warning"></i>
@@ -766,8 +755,9 @@
                         @endif
                     @endif
                 @endif
+            @endif
 
-                {{-- PROFILE & LOGOUT SECTION FOR ALL ROLES --}}
+            {{-- PROFILE & LOGOUT SECTION FOR ALL ROLES --}}
                 @if(Auth::check())
                     <li class="nav-header">AKUN</li>
                     <li class="nav-item">

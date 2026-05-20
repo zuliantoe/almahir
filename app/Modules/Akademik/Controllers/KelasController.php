@@ -9,7 +9,7 @@ use App\Http\Requests\AkademikRequest\StoreKelasRequest;
 use App\Http\Requests\AkademikRequest\UpdateKelasRequest;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use App\Modules\Akademik\Models\kelas as ModelsKelas;
+use App\Modules\Akademik\Models\Kelas as ModelsKelas;
 use App\Modules\Akademik\Models\Tingkat;
 use Modules\Guru\Models\Guru;
 

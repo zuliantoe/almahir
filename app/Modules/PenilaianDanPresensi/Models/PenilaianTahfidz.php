@@ -2,7 +2,7 @@
 
 namespace Modules\PenilaianDanPresensi\Models;
 
-use App\Modules\Akademik\Models\kelas as AkademikKelas;
+use App\Modules\Akademik\Models\Kelas as AkademikKelas;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Guru\Models\Guru;

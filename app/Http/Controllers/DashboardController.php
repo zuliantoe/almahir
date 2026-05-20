@@ -17,51 +17,151 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Prioritas: jika user adalah SISWA, kembalikan view dashboard khusus siswa
-        if ($user && $user->hasRole('SISWA')) {
-            $siswa = $user->ref;
-            $totalP = \Modules\PenilaianDanPresensi\Models\Presensi::where('siswa_id', $siswa?->id)->count();
-            $hadirP = \Modules\PenilaianDanPresensi\Models\Presensi::where('siswa_id', $siswa?->id)->where('status', 'Hadir')->count();
-            $percent = $totalP > 0 ? round(($hadirP / $totalP) * 100) : 0;
-
-            // Tahfidz Terbaru
-            $hafalanTerbaru = class_exists(\Modules\PenilaianDanPresensi\Models\PenilaianTahfidz::class) 
-                ? \Modules\PenilaianDanPresensi\Models\PenilaianTahfidz::where('siswa_id', $siswa?->id)->latest('tanggal')->first() 
-                : null;
-
-            // Tagihan
-            $tagihanBelumLunas = 0;
-            if (class_exists(\Modules\Keuangan\Models\TagihanSiswa::class)) {
-                $tagihans = \Modules\Keuangan\Models\TagihanSiswa::where('target_id', $siswa?->id)
-                            ->where('target_type', get_class($siswa))
-                            ->where('status', '!=', 'Lunas')
-                            ->get();
-                $tagihanBelumLunas = $tagihans->sum('sisa_tagihan');
-            }
-
-            // Uang Saku Terakhir
-            $uangSakuTerakhir = class_exists(\Modules\Keuangan\Models\UangSaku::class)
-                ? \Modules\Keuangan\Models\UangSaku::where('siswa_id', $siswa?->id)->latest('tanggal')->first()
-                : null;
-
-            return view('siswa::dashboard', [
-                'title' => 'Dashboard Santri',
-                'breadcrumb' => 'Dashboard',
-                'stats' => ['kehadiran' => $percent],
-                'siswa' => $siswa,
-                'currentRombel' => $siswa?->currentRombel()->with('kelas')->first(),
-                'kamarInfo' => $siswa?->kamarPenghuni()->aktif()->first()?->kamar,
-                'jadwalPiketHariIni' => $siswa?->jadwalPiket()->whereDate('tanggal', today())->get(),
-                'hafalanTerbaru' => $hafalanTerbaru,
-                'tagihanBelumLunas' => $tagihanBelumLunas,
-                'uangSakuTerakhir' => $uangSakuTerakhir,
-            ]);
-        }
-
-        // Jika bukan SISWA dan role-nya GURU, redirect ke penilaiandanpresensi.
-        if ($user && !$user->hasRole('SISWA') && $user->hasRole('GURU')) {
+        // Langsung masuk ke modul Penilaian & Presensi sebagai dashboard utama (hanya untuk GURU)
+        if ($user && $user->hasRole('GURU')) {
             return redirect()->route('penilaiandanpresensi.index');
         }
+
+        // Jika user adalah siswa
+        if ($user && $user->hasRole('SISWA')) {
+            $siswa = null;
+            if ($user->ref_type === \Modules\Siswa\Models\Siswa::class && $user->ref_id) {
+                $siswa = \Modules\Siswa\Models\Siswa::with('kelas')->find($user->ref_id);
+            }
+
+            $hariIni = now()->locale('id')->dayName; // e.g. "Senin"
+            $hariIniEn = now()->format('l'); // e.g. "Monday"
+
+            // ─── MODUL AKADEMIK ───────────────────────────────────────────
+            $jadwalHariIni = collect();
+            $eventTerdekat = collect();
+            $tahunAjaranAktif = '2025/2026';
+            if (class_exists(\App\Modules\Akademik\Models\TahunAjaran::class)) {
+                $ta = \App\Modules\Akademik\Models\TahunAjaran::current();
+                if ($ta) {
+                    $tahunAjaranAktif = $ta->tahunajaran . ' (' . ($ta->keterangan ?? 'Aktif') . ')';
+                }
+            }
+            if ($siswa && $siswa->kelas_id && class_exists(\App\Modules\Akademik\Models\JadwalPelajaran::class)) {
+                // Get rombel by kelas (rombel where siswa is enrolled)
+                $rombel = null;
+                if (class_exists(\App\Modules\Akademik\Models\Rombel::class)) {
+                    // Try to find rombel via rombel_siswa pivot
+                    $rombel = \App\Modules\Akademik\Models\Rombel::whereHas('siswa', function($q) use ($siswa) {
+                        $q->where('siswa_id', $siswa->id);
+                    })->first();
+                    // Fallback: find by kelas_id
+                    if (!$rombel) {
+                        $rombel = \App\Modules\Akademik\Models\Rombel::where('kelas_id', $siswa->kelas_id)->first();
+                    }
+                }
+                if ($rombel) {
+                    $jadwalHariIni = \App\Modules\Akademik\Models\JadwalPelajaran::with(['mataPelajaran', 'guru'])
+                        ->where('rombel_id', $rombel->id)
+                        ->where('hari', $hariIniEn)
+                        ->orderBy('jamke')
+                        ->get();
+                }
+            }
+            if (class_exists(\App\Modules\Akademik\Models\KalenderAkademik::class)) {
+                $eventTerdekat = \App\Modules\Akademik\Models\KalenderAkademik::where('tanggal_awal', '>=', now()->toDateString())
+                    ->orderBy('tanggal_awal')
+                    ->limit(3)
+                    ->get();
+            }
+
+            // ─── MODUL KEHADIRAN & NILAI ─────────────────────────────────
+            $presensiHadir = 0; $presensiSakit = 0; $presensiIzin = 0; $presensiAlpa = 0;
+            $rataNilai = 0; $totalNilai = 0;
+            $lastTahfidz = null;
+            $izinPending = 0;
+            if ($siswa && class_exists(\Modules\PenilaianDanPresensi\Models\Presensi::class)) {
+                $presensiHadir = \Modules\PenilaianDanPresensi\Models\Presensi::where('siswa_id', $siswa->id)->where('status', 'Hadir')->count();
+                $presensiSakit = \Modules\PenilaianDanPresensi\Models\Presensi::where('siswa_id', $siswa->id)->where('status', 'Sakit')->count();
+                $presensiIzin  = \Modules\PenilaianDanPresensi\Models\Presensi::where('siswa_id', $siswa->id)->where('status', 'Izin')->count();
+                $presensiAlpa  = \Modules\PenilaianDanPresensi\Models\Presensi::where('siswa_id', $siswa->id)->where('status', 'Alpa')->count();
+            }
+            if ($siswa && class_exists(\Modules\PenilaianDanPresensi\Models\PenilaianAkademik::class)) {
+                $rataNilai  = round(\Modules\PenilaianDanPresensi\Models\PenilaianAkademik::where('siswa_id', $siswa->id)->avg('nilai') ?? 0, 1);
+                $totalNilai = \Modules\PenilaianDanPresensi\Models\PenilaianAkademik::where('siswa_id', $siswa->id)->count();
+            }
+            if ($siswa && class_exists(\Modules\PenilaianDanPresensi\Models\PenilaianTahfidz::class)) {
+                $lastTahfidz = \Modules\PenilaianDanPresensi\Models\PenilaianTahfidz::where('siswa_id', $siswa->id)->latest('tanggal')->first();
+            }
+            if ($siswa && class_exists(\Modules\PenilaianDanPresensi\Models\IzinSakit::class)) {
+                $izinPending = \Modules\PenilaianDanPresensi\Models\IzinSakit::where('siswa_id', $siswa->id)->where('status', 'Pending')->count();
+            }
+
+            // ─── MODUL KEUANGAN ───────────────────────────────────────────
+            $totalUangSaku = 0;
+            $uangSakuTerbaru = collect();
+            if ($siswa && class_exists(\Modules\Keuangan\Models\UangSaku::class)) {
+                $totalUangSaku  = \Modules\Keuangan\Models\UangSaku::where('siswa_id', $siswa->id)->where('status', 'Sudah Diterima Santri')->sum('jumlah');
+                $uangSakuTerbaru = \Modules\Keuangan\Models\UangSaku::where('siswa_id', $siswa->id)->latest('tanggal')->limit(3)->get();
+            }
+
+            // ─── MODUL ASRAMA ─────────────────────────────────────────────
+            $kamarInfo = null;
+            $piketMendatang = collect();
+            if ($siswa) {
+                if (class_exists(\App\Modules\ManajemenAsetDanAsrama\Models\KamarPenghuni::class)) {
+                    $penghuni = \App\Modules\ManajemenAsetDanAsrama\Models\KamarPenghuni::with('kamar')->where('siswa_id', $siswa->id)->first();
+                    if ($penghuni && $penghuni->kamar) {
+                        $kamarInfo = $penghuni->kamar;
+                    }
+                }
+                if (class_exists(\App\Modules\ManajemenAsetDanAsrama\Models\JadwalPiket::class)) {
+                    $piketMendatang = \App\Modules\ManajemenAsetDanAsrama\Models\JadwalPiket::where('siswa_id', $siswa->id)
+                        ->where('tanggal', '>=', now()->toDateString())
+                        ->orderBy('tanggal')
+                        ->limit(3)
+                        ->get();
+                }
+            }
+
+            // ─── TEMAN SEKELAS ─────────────────────────────────────────────
+            $temanSekelas = collect();
+            $rombelInfo = null;
+            if ($siswa && class_exists(\App\Modules\Akademik\Models\Rombel::class)) {
+                $rombelInfo = \App\Modules\Akademik\Models\Rombel::with(['walikelas', 'kelas'])
+                    ->whereHas('siswa', function($q) use ($siswa) {
+                        $q->where('siswa_id', $siswa->id);
+                    })->first();
+                if (!$rombelInfo && $siswa->kelas_id) {
+                    $rombelInfo = \App\Modules\Akademik\Models\Rombel::with(['walikelas', 'kelas'])
+                        ->where('kelas_id', $siswa->kelas_id)->first();
+                }
+                if ($rombelInfo) {
+                    $temanSekelas = $rombelInfo->aktifSiswa()
+                        ->where('id', '!=', $siswa->id)
+                        ->limit(12)
+                        ->get();
+                }
+            }
+
+            // ─── KURIKULUM KELAS ──────────────────────────────────────────
+            $kurikulumKelas = collect();
+            if ($siswa && $siswa->kelas_id && class_exists(\App\Modules\Akademik\Models\Kurikulum::class)) {
+                $kurikulumKelas = \App\Modules\Akademik\Models\Kurikulum::with(['mataPelajaran'])
+                    ->where('kelas_id', $siswa->kelas_id)
+                    ->orderBy('totaljam', 'desc')
+                    ->get();
+            }
+
+            return view('dashboard_siswa', compact(
+                'siswa', 'tahunAjaranAktif',
+                // Akademik
+                'jadwalHariIni', 'eventTerdekat', 'rombelInfo', 'temanSekelas', 'kurikulumKelas',
+                // Kehadiran & Nilai
+                'presensiHadir', 'presensiSakit', 'presensiIzin', 'presensiAlpa',
+                'rataNilai', 'totalNilai', 'lastTahfidz', 'izinPending',
+                // Keuangan
+                'totalUangSaku', 'uangSakuTerbaru',
+                // Asrama
+                'kamarInfo', 'piketMendatang'
+            ));
+        }
+
 
         // 1. Menghitung Total Guru (berdasarkan role GURU)
         $totalGuru = User::withRole('GURU')->count();

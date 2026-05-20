@@ -249,16 +249,27 @@ class JadwalPelajaranController extends Controller
         ]);
 
         $sourceJadwal = JadwalPelajaran::where('rombel_id', $request->from_rombel_id)->get();
+        $targetRombel = \App\Modules\Akademik\Models\Rombel::find($request->to_rombel_id);
+        $targetTahunAjaranId = $targetRombel ? $targetRombel->tahunajaran_id : null;
         
         $copied = 0;
         foreach ($sourceJadwal as $item) {
             // Check if target already has this schedule
-            $exists = JadwalPelajaran::where('rombel_id', $request->to_rombel_id)
+            $existsRombel = JadwalPelajaran::where('rombel_id', $request->to_rombel_id)
                 ->where('hari', $item->hari)
                 ->where('jamke', $item->jamke)
                 ->exists();
 
-            if (!$exists) {
+            // Check if guru already teaches in another class in the same tahun_ajaran
+            $existsGuru = JadwalPelajaran::where('guru_id', $item->guru_id)
+                ->where('hari', $item->hari)
+                ->where('jamke', $item->jamke)
+                ->whereHas('rombel', function($q) use ($targetTahunAjaranId) {
+                    $q->where('tahunajaran_id', $targetTahunAjaranId);
+                })
+                ->exists();
+
+            if (!$existsRombel && !$existsGuru) {
                 $newItem = $item->replicate();
                 $newItem->rombel_id = $request->to_rombel_id;
                 $newItem->save();
@@ -289,12 +300,20 @@ class JadwalPelajaranController extends Controller
         try {
             $created = 0;
             foreach ($request->schedules as $index => $data) {
+                $rombel = \App\Modules\Akademik\Models\Rombel::find($data['rombel_id']);
+                $tahunAjaranId = $rombel ? $rombel->tahunajaran_id : null;
+
                 // Reuse existing conflict logic if possible, or simple check here
                 $conflict = JadwalPelajaran::where('hari', $data['hari'])
                     ->where('jamke', $data['jamke'])
-                    ->where(function($q) use ($data) {
-                        $q->where('guru_id', $data['guru_id'])
-                          ->orWhere('rombel_id', $data['rombel_id']);
+                    ->where(function($q) use ($data, $tahunAjaranId) {
+                        $q->where('rombel_id', $data['rombel_id'])
+                          ->orWhere(function($sq) use ($data, $tahunAjaranId) {
+                              $sq->where('guru_id', $data['guru_id'])
+                                 ->whereHas('rombel', function($rq) use ($tahunAjaranId) {
+                                     $rq->where('tahunajaran_id', $tahunAjaranId);
+                                 });
+                          });
                     })->first();
 
                 if ($conflict) {

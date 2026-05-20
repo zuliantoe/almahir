@@ -62,6 +62,18 @@ class StoreRombelRequest extends FormRequest
                         }
                     }
                 }
+
+                // 3. Validasi Kelas (1 Kelas hanya untuk 1 Rombel per Tahun Ajaran)
+                $kelasId = $this->input('kelas_id');
+                if ($kelasId) {
+                    $kelasDipakai = \App\Modules\Akademik\Models\Rombel::where('tahunajaran_id', $tahunAjaranId)
+                        ->where('kelas_id', $kelasId)
+                        ->exists();
+
+                    if ($kelasDipakai) {
+                        $validator->errors()->add('kelas_id', 'Kelas ini sudah digunakan oleh Rombel lain pada tahun ajaran yang sama.');
+                    }
+                }
             }
         });
     }

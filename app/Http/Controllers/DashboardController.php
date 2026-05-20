@@ -133,7 +133,7 @@ class DashboardController extends Controller
                 }
                 if ($rombelInfo) {
                     $temanSekelas = $rombelInfo->aktifSiswa()
-                        ->where('id', '!=', $siswa->id)
+                        ->where('siswa.id', '!=', $siswa->id)
                         ->limit(12)
                         ->get();
                 }

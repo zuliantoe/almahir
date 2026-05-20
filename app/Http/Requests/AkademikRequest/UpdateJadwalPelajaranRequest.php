@@ -47,19 +47,25 @@ class UpdateJadwalPelajaranRequest extends FormRequest
             $rombelId = $this->input('rombel_id');
             $currentId = $this->route('jadwalPelajaran') ? $this->route('jadwalPelajaran')->id : null;
 
-            if ($hari && $jamke) {
+            if ($hari && $jamke && $rombelId) {
+                $rombel = \App\Modules\Akademik\Models\Rombel::find($rombelId);
+                $tahunAjaranId = $rombel ? $rombel->tahunajaran_id : null;
+
                 // Cek bentrok Guru
-                if ($guruId) {
+                if ($guruId && $tahunAjaranId) {
                     $guruConflict = \App\Modules\Akademik\Models\JadwalPelajaran::where('guru_id', $guruId)
                         ->where('hari', $hari)
                         ->where('jamke', $jamke)
+                        ->whereHas('rombel', function($q) use ($tahunAjaranId) {
+                            $q->where('tahunajaran_id', $tahunAjaranId);
+                        })
                         ->when($currentId, function ($query, $currentId) {
                             return $query->where('id', '!=', $currentId);
                         })
                         ->first();
 
                     if ($guruConflict) {
-                        $validator->errors()->add('guru_id', "Guru ini sudah mengajar di kelas lain pada hari {$hari} jam ke-{$jamke}.");
+                        $validator->errors()->add('guru_id', "Guru ini sudah mengajar di kelas lain pada hari {$hari} jam ke-{$jamke} di tahun ajaran yang sama.");
                     }
                 }
 

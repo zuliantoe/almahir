@@ -38,9 +38,16 @@ class WaliMuridController extends Controller
     public function create()
     {
         $siswas = \Modules\Siswa\Models\Siswa::orderBy('nama')->get();
+
+        // Untuk fitur auto-fill, kita tetap ambil semua pendaftaran diterima.
+        // Tetapi option akan disaring di view (siswa yang sudah punya wali dibuat tidak ditampilkan).
         $pendaftaranDiterima = \Modules\Pendaftaran\Models\Pendaftaran::where('status', 'diterima')
                                                                         ->with('siswa')
                                                                         ->get();
+
+
+
+
 
         return view('walimurid::create', [
             'title' => 'Tambah Wali Murid',

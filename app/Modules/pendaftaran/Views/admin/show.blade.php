@@ -39,8 +39,55 @@
         transform: translateY(0);
         opacity: 1;
     }
+
+    /* Print only area */
+    @media print {
+        body {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* Aman untuk semua browser: sembunyikan paksa semua, lalu tampilkan area print */
+        body * {
+            display: none !important;
+        }
+
+        #print-jadwal,
+        #print-jadwal * {
+            display: block !important;
+        }
+
+        /* table harus tetap table saat print */
+        #print-jadwal table,
+        #print-jadwal thead,
+        #print-jadwal tbody,
+        #print-jadwal tr,
+        #print-jadwal th,
+        #print-jadwal td {
+            display: table !important;
+        }
+
+        #print-jadwal {
+            position: static;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+
+        table {
+            page-break-inside: auto;
+        }
+        tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+        .text-muted {
+            color: #6c757d !important;
+        }
+    }
 </style>
 @endpush
+
 
     <div class="card">
         <div class="card-header">
@@ -324,7 +371,13 @@
             {{-- JADWAL TES --}}
             <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
                 <h5 class="m-0"><strong>Jadwal Tes</strong></h5>
-                <div>
+                <div class="d-flex align-items-center">
+                    @if ($pendaftaran->seleksis->count() > 0)
+                        <button type="button" class="btn btn-sm btn-outline-primary mr-2" onclick="window.print()">
+                            <i class="fas fa-print mr-1"></i> Print Jadwal
+                        </button>
+                    @endif
+
                     <button type="button" class="btn btn-sm btn-info mr-2" data-toggle="modal" data-target="#modalPilihTemplate">
                         <i class="fas fa-list-ol"></i> Pilih Template
                     </button>
@@ -375,43 +428,59 @@
                 </div>
             </div>
 
-            @if ($pendaftaran->seleksis->count() > 0)
-
+            {{-- AREA PRINT --}}
+            <div id="print-jadwal">
+                <h5 class="mb-3"><strong>Jadwal Tes</strong></h5>
                 <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Nama Tes</th>
-                            <th>Tanggal</th>
-                            <th>Jam</th>
-                            <th>Pengampu</th>
-                            <th>Metode</th>
-                            <th>Lokasi / Link</th>
-                            <th>Nilai</th>
-                        </tr>
-                    </thead>
                     <tbody>
-                        @foreach ($pendaftaran->seleksis as $jadwal)
-                            <tr>
-                                <td>{{ $jadwal->nama_tes }}</td>
-                                <td>{{ $jadwal->tanggal }}</td>
-                                <td>{{ $jadwal->jam }}</td>
-                                <td>{{ $jadwal->pengampu }}</td>
-                                <td>{{ $jadwal->metode }}</td>
-                                <td>
-                                    {{ $jadwal->lokasi ?? '-' }}
-                                    @if ($jadwal->link)
-                                        <br>
-                                        <a href="{{ $jadwal->link }}" target="_blank">Link</a>
-                                    @endif
-                                </td>
-                                <td>{{ $jadwal->nilai ?? '-' }}</td>
-                            </tr>
-                        @endforeach
+                        <tr>
+                            <th width="30%">Nama Siswa</th>
+                            <td>{{ $pendaftaran->nama_lengkap }}</td>
+                        </tr>
+                        <tr>
+                            <th>NISN</th>
+                            <td>{{ $pendaftaran->nisn }}</td>
+                        </tr>
                     </tbody>
                 </table>
-            @else
-                <p class="text-muted">Belum ada jadwal tes</p>
-            @endif
+
+                @if ($pendaftaran->seleksis->count() > 0)
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Nama Tes</th>
+                                <th>Tanggal</th>
+                                <th>Jam</th>
+                                <th>Pengampu</th>
+                                <th>Metode</th>
+                                <th>Lokasi / Link</th>
+                                <th>Nilai</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($pendaftaran->seleksis as $jadwal)
+                                <tr>
+                                    <td>{{ $jadwal->nama_tes }}</td>
+                                    <td>{{ $jadwal->tanggal }}</td>
+                                    <td>{{ $jadwal->jam }}</td>
+                                    <td>{{ $jadwal->pengampu }}</td>
+                                    <td>{{ $jadwal->metode }}</td>
+                                    <td>
+                                        {{ $jadwal->lokasi ?? '-' }}
+                                        @if ($jadwal->link)
+                                            <br>
+                                            <span>{{ $jadwal->link }}</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $jadwal->nilai ?? '-' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @else
+                    <p class="text-muted">Belum ada jadwal tes</p>
+                @endif
+            </div>
         </div>
 
 

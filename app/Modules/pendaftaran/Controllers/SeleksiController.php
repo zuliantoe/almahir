@@ -97,13 +97,25 @@ class SeleksiController extends Controller
 
         $template = \Modules\Pendaftaran\Models\TemplateSeleksi::with('items')->findOrFail($request->template_id);
         
+        $guruIdByPengampu = null;
         foreach ($template->items as $item) {
+            $guruIdByPengampu = null;
+
+            // Template masih menyimpan pengampu sebagai string (nama guru).
+            // Mapping dilakukan saat apply template: cari guru_id berdasarkan nama.
+            if (!empty($item->pengampu)) {
+                $guruIdByPengampu = \Modules\Guru\Models\Guru::query()
+                    ->where('nama', $item->pengampu)
+                    ->value('id');
+            }
+
             \Modules\Pendaftaran\Models\Seleksi::create([
                 'pendaftaran_id' => $id,
                 'nama_tes' => $item->nama_tes,
                 'tanggal' => $request->tanggal,
                 'jam' => $request->jam,
                 'pengampu' => $item->pengampu,
+                'guru_id' => $guruIdByPengampu,
                 'metode' => $item->metode,
                 'lokasi' => $item->lokasi,
                 'link' => $item->link,

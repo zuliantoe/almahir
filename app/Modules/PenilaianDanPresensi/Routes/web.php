@@ -20,6 +20,7 @@ use Modules\PenilaianDanPresensi\Controllers\IzinSakitController;
 Route::middleware(['auth'])->group(function () {
     // Dashboard Routes
     Route::get('/', [DashboardController::class, 'index'])->name('index');
+    Route::get('/jadwal-menguji', [DashboardController::class, 'jadwalMenguji'])->name('jadwal_menguji.index');
 
     // Penilaian Akademik Routes
     Route::prefix('penilaianakademik')->name('penilaianakademik.')->group(function () {

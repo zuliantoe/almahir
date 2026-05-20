@@ -17,6 +17,10 @@
                             <select id="auto_fill_pendaftaran_wali" class="form-control select2">
                                 <option value="">-- Pilih Data (Data Pendaftaran) --</option>
                                 @foreach($pendaftaranDiterima as $p)
+                                    @php
+                                        $siswaId = $p->siswa->id ?? null;
+                                        $siswaSudahPunyaWali = $p->siswa ? $p->siswa->wali()->exists() : false;
+                                    @endphp
                                     <option value="{{ $p->id }}" 
                                         data-nama_ayah="{{ $p->nama_ayah }}"
                                         data-pekerjaan_ayah="{{ $p->pekerjaan_ayah }}"
@@ -27,11 +31,16 @@
                                         data-no_hp_ibu="{{ $p->no_hp_ibu }}"
                                         data-alamat_ibu="{{ $p->alamat_ibu }}"
                                         data-email="{{ $p->email }}"
-                                        data-siswa_id="{{ $p->siswa->id ?? '' }}"
+                                        data-siswa_id="{{ $siswaId }}"
+                                        {{ $siswaSudahPunyaWali ? 'disabled' : '' }}
                                     >
                                         {{ $p->nama_lengkap }} (NISN: {{ $p->nisn }})
+                                        @if($siswaSudahPunyaWali)
+                                            - data sudah tersedia
+                                        @endif
                                     </option>
                                 @endforeach
+
                             </select>
                             <small class="text-muted mt-1 d-block">Pilih siswa untuk mengisi data wali secara otomatis (Default: Ayah).</small>
                         </div>

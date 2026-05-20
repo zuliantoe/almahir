@@ -333,40 +333,49 @@
                             @endisset
                         @endif
 
-                        {{-- 3. PENILAIAN & PRESENSI MODULE VIEW --}}
-                        @if($activeModule === 'penilaiandanpresensi' && Auth::user()->hasRole(['SUPER_ADMIN', 'GURU']))
-                            <li class="nav-header">PENILAIAN & PRESENSI</li>
-                            <li class="nav-item">
-                                <a href="{{ route('penilaiandanpresensi.penilaianakademik.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-graduation-cap text-success"></i>
-                                    <p>Penilaian Akademik</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaiantahfidz*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-quran text-primary"></i>
-                                    <p>Penilaian Tahfidz</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('penilaiandanpresensi.penilaianakademik.raport.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik/raport*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-print text-info"></i>
-                                    <p>Cetak Raport</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('penilaiandanpresensi.presensi.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/presensi') ? 'active' : (request()->is('penilaiandanpresensi/presensi/*') && !request()->is('penilaiandanpresensi/presensi/siswa*') ? 'active' : '') }}">
-                                    <i class="nav-icon fas fa-user-check text-warning"></i>
-                                    <p>Presensi (Daftar)</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('penilaiandanpresensi.izinsakit.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/izinsakit') ? 'active' : (request()->is('penilaiandanpresensi/izinsakit/*') && !request()->is('penilaiandanpresensi/izinsakit/siswa*') ? 'active' : '') }}">
-                                    <i class="nav-icon fas fa-user-clock text-danger"></i>
-                                    <p>Konfirmasi Izin Sakit</p>
-                                </a>
-                            </li>
-                        @endif
+                {{-- 
+                |--------------------------------------------------------------------------
+                | PENILAIAN & PRESENSI (SUPER_ADMIN, GURU)
+                |--------------------------------------------------------------------------
+                --}}
+                @if(Auth::check() && (Auth::user()->hasRole(['SUPER_ADMIN', 'GURU'])))
+                <li class="nav-header">PENILAIAN & PRESENSI</li>
+                
+                <li class="nav-item">
+                    <a href="{{ route('penilaiandanpresensi.penilaianakademik.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-graduation-cap"></i>
+                        <p>Penilaian Akademik</p>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaiantahfidz*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-quran"></i>
+                        <p>Penilaian Tahfidz</p>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ route('penilaiandanpresensi.penilaianakademik.raport.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik/raport*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-print"></i>
+                        <p>Cetak Raport</p>
+                    </a>
+                </li>
+
+                    <li class="nav-item">
+                        <a href="{{ route('penilaiandanpresensi.presensi.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/presensi') ? 'active' : (request()->is('penilaiandanpresensi/presensi/*') && !request()->is('penilaiandanpresensi/presensi/siswa*') ? 'active' : '') }}">
+                            <i class="nav-icon fas fa-user-check"></i>
+                            <p>Presensi (Daftar)</p>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{{ route('penilaiandanpresensi.izinsakit.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/izinsakit') ? 'active' : (request()->is('penilaiandanpresensi/izinsakit/*') && !request()->is('penilaiandanpresensi/izinsakit/siswa*') ? 'active' : '') }}">
+                            <i class="nav-icon fas fa-user-clock"></i>
+                            <p>Konfirmasi Izin Sakit</p>
+                        </a>
+                    </li>
+                    @endif
 
                         {{-- 4. KEUANGAN MODULE VIEW --}}
                         @if($activeModule === 'keuangan' && Auth::user()->hasRole(['SUPER_ADMIN', 'KEUANGAN']))

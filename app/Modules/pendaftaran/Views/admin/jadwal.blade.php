@@ -13,13 +13,23 @@
 @section('content')
 
     <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">
-                {{ $pendaftaran->nama_lengkap }}
-            </h3>
-        </div>
+            <div class="card-header">
+            
+            
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="card-title mb-0">
+                        {{ $pendaftaran->nama_lengkap }}
+                    </h3>
+                    @if($pendaftaran->seleksis->count() > 0)
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.print()">
+                            <i class="fas fa-print mr-1"></i> Print Jadwal
+                        </button>
+                    @endif
+                </div>
+            </div>
 
-        <div class="card-body">
+            <div class="card-body">
+
 
             {{-- FORM TAMBAH JADWAL --}}
             <form method="POST" action="{{ route('pendaftaran.admin.jadwal.store', $pendaftaran->id) }}">

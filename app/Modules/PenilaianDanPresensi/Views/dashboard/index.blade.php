@@ -272,7 +272,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush" style="border-radius: 0 0 20px 0;">
-                        @foreach($jadwalTes as $jadwal)
+                        @php $jadwal = $jadwalTes->first(); @endphp
                         <div class="list-group-item border-bottom-0 border-top px-4 py-3 bg-transparent">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <span class="font-weight-bold text-dark" style="font-size: 0.9rem;">{{ $jadwal->pendaftaran->nama_lengkap ?? 'Calon Santri' }}</span>
@@ -296,9 +296,15 @@
                                 </div>
                             </div>
                         </div>
-                        @endforeach
                     </div>
                 </div>
+                @if($jadwalTes->count() > 1)
+                <div class="card-footer bg-transparent border-top-0 text-center pb-3 pt-0">
+                    <a href="{{ route('penilaiandanpresensi.jadwal_menguji.index') }}" class="btn btn-sm btn-light text-primary font-weight-bold shadow-sm" style="border-radius: 50px; padding: 6px 20px;">
+                        <i class="fas fa-list mr-1"></i> Lihat Lainnya ({{ $jadwalTes->count() - 1 }})
+                    </a>
+                </div>
+                @endif
             </div>
             @endif
 

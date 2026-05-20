@@ -220,4 +220,30 @@ class DashboardController extends Controller
             'isAdmin' => true,
         ]);
     }
+
+    /**
+     * Tampilkan seluruh daftar jadwal menguji tes seleksi untuk Guru
+     */
+    public function jadwalMenguji(): View
+    {
+        $user = auth()->user();
+        if (!$user->hasRole('GURU')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $guru = $user->ref;
+        $today = today();
+
+        $jadwalTes = \Modules\Pendaftaran\Models\Seleksi::with('pendaftaran')
+            ->where('guru_id', $guru?->id)
+            ->whereDate('tanggal', '>=', $today)
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('jam', 'asc')
+            ->get();
+
+        return view('penilaiandanpresensi::jadwal_menguji.index', [
+            'title' => 'Jadwal Menguji Seleksi Santri',
+            'jadwalTes' => $jadwalTes,
+        ]);
+    }
 }

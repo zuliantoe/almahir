@@ -87,7 +87,7 @@ class PenilaianAkademikController extends Controller
         $penilaianAkademiks = $query->latest()->paginate(10);
         $allMapels = MataPelajaran::with('kategori')->orderBy('nama')->get();
         $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
-        $rombels = Rombel::where('tahunajaran_id', $request->tahunajaran_id ?? (TahunAjaran::where('status', 'aktif')->first()->id ?? 0))
+        $rombels = Rombel::where('tahunajaran_id', $request->tahunajaran_id ?? (TahunAjaran::whereIn('status', [1, 'aktif'])->first()->id ?? 0))
             ->orderBy('nama_rombel')->get();
 
         return view('penilaiandanpresensi::penilaianakademik.index', [
@@ -112,7 +112,7 @@ class PenilaianAkademikController extends Controller
         $isGuru = $user->ref_type === ModelsGuru::class;
         $loggedGuruId = $isGuru ? $user->ref_id : null;
 
-        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first();
+        $activeTahunAjaran = TahunAjaran::whereIn('status', [1, 'aktif'])->first();
         if (!$activeTahunAjaran) {
             $activeTahunAjaran = TahunAjaran::orderBy('tahunajaran', 'desc')->first();
         }
@@ -242,7 +242,7 @@ class PenilaianAkademikController extends Controller
                 return $m;
             })->unique('nama')->values();
         
-        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+        $activeTahunAjaran = TahunAjaran::whereIn('status', [1, 'aktif'])->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
 
         // Get mapels for this guru specifically if needed
         if ($isGuru) {
@@ -391,7 +391,7 @@ class PenilaianAkademikController extends Controller
      */
     public function raportIndex(Request $request): View
     {
-        $activeTA = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+        $activeTA = TahunAjaran::whereIn('status', [1, 'aktif'])->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
         
         $user = auth()->user();
         $isAdmin = $user->hasRole('SUPER_ADMIN');
@@ -455,7 +455,7 @@ class PenilaianAkademikController extends Controller
             'catatan_tahfidz' => 'nullable|string',
         ]);
 
-        $activeTA = TahunAjaran::where('status', 'aktif')->first();
+        $activeTA = TahunAjaran::whereIn('status', [1, 'aktif'])->first();
         if (!$activeTA) {
             return response()->json(['success' => false, 'message' => 'Tahun ajaran aktif tidak ditemukan.'], 400);
         }
@@ -482,7 +482,7 @@ class PenilaianAkademikController extends Controller
     public function raportShow(string $id): View
     {
         $siswa = ModelsSiswa::with(['kelas'])->findOrFail($id);
-        $activeTA = TahunAjaran::where('status', 'aktif')->first();
+        $activeTA = TahunAjaran::whereIn('status', [1, 'aktif'])->first();
         
         // Determine the student's Rombel for the active academic year
         $activeRombel = \App\Modules\Akademik\Models\RombelSiswa::where('siswa_id', $siswa->id)
@@ -763,7 +763,7 @@ class PenilaianAkademikController extends Controller
         $taId = $request->tahunajaran_id;
         
         if (!$taId) {
-            $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first();
+            $activeTahunAjaran = TahunAjaran::whereIn('status', [1, 'aktif'])->first();
             if (!$activeTahunAjaran) {
                 $activeTahunAjaran = TahunAjaran::orderBy('tahunajaran', 'desc')->first();
             }

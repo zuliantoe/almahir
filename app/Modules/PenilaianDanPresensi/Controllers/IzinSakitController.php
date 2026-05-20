@@ -46,7 +46,7 @@ class IzinSakitController extends Controller
                   ->whereDate('tgl_selesai', '>=', $filterTanggal);
         }
         
-        $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
         $izinSakits = $query->orderBy('created_at', 'desc')->paginate(10);
 
         return view('penilaiandanpresensi::izinsakit.siswa_index', [
@@ -67,7 +67,7 @@ class IzinSakitController extends Controller
         }
         $siswa = ModelsSiswa::find($user->ref_id);
 
-        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
 
         // Find student's active rombel
         $activeRombel = RombelSiswa::where('siswa_id', $siswa->id)
@@ -117,7 +117,7 @@ class IzinSakitController extends Controller
             'bukti_foto' => 'nullable|image|max:2048',
         ]);
 
-        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
         
         $activeRombel = RombelSiswa::where('siswa_id', $siswa->id)
             ->where('status', 'aktif')
@@ -147,7 +147,7 @@ class IzinSakitController extends Controller
                 $validated['bukti_foto'] = $imagePath;
             }
         }
-        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
         $validated['tahunajaran_id'] = $activeTA->id ?? null;
         $validated['semester'] = $activeTA->semester ?? null;
         $validated['author_id'] = auth()->id();
@@ -212,7 +212,7 @@ class IzinSakitController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
         $rombels = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0)->orderBy('nama_rombel')->get();
 
         return view('penilaiandanpresensi::izinsakit.index', [
@@ -232,7 +232,7 @@ class IzinSakitController extends Controller
             return redirect()->route('penilaiandanpresensi.izinsakit.siswa.create');
         }
 
-        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
         $rombels = Rombel::where('tahunajaran_id', $activeTA->id ?? 0)->orderBy('nama_rombel')->get();
         $siswas = ModelsSiswa::orderBy('nama')->get();
 
@@ -270,7 +270,7 @@ class IzinSakitController extends Controller
             $validated['mapel_id'] = null;
         }
 
-        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
         $validated['tahunajaran_id'] = $activeTA->id ?? null;
         $validated['semester'] = $activeTA->semester ?? null;
         $validated['author_id'] = auth()->id();
@@ -305,7 +305,7 @@ class IzinSakitController extends Controller
         }
 
         $izinSakit = IzinSakit::findOrFail($id);
-        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
         $rombels = Rombel::where('tahunajaran_id', $activeTA->id ?? 0)->orderBy('nama_rombel')->get();
         $siswas = ModelsSiswa::orderBy('nama')->get();
 
@@ -469,7 +469,7 @@ class IzinSakitController extends Controller
         }
 
         $siswa = ModelsSiswa::find($user->ref_id);
-        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
 
         $jadwalsQuery = JadwalPelajaran::with('mataPelajaran')
             ->where('rombel_id', $siswa->kelas_id);

@@ -16,7 +16,7 @@ class FixScheduleSeeder extends Seeder
     public function run(): void
     {
         // 1. Find active TA
-        $activeTA = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('id', 'desc')->first();
+        $activeTA = TahunAjaran::whereIn('status', [1, 'aktif'])->first() ?: TahunAjaran::orderBy('id', 'desc')->first();
         if (!$activeTA) return;
 
         // 2. Get Rombels for active TA

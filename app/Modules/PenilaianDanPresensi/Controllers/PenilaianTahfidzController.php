@@ -26,7 +26,7 @@ class PenilaianTahfidzController extends Controller
      */
     public function index(Request $request): View
     {
-        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+        $activeTahunAjaran = TahunAjaran::whereIn('status', [1, 'aktif'])->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
         $query = PenilaianTahfidz::with(['siswa.kelas', 'rombel', 'guru']);
         
         // Filter for students: they only see their own scores
@@ -103,7 +103,7 @@ class PenilaianTahfidzController extends Controller
         $isGuru = $user->ref_type === ModelsGuru::class;
         $loggedGuruId = $isGuru ? $user->ref_id : null;
 
-        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+        $activeTahunAjaran = TahunAjaran::whereIn('status', [1, 'aktif'])->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
         
         $rombels = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0)
             ->orderBy('nama_rombel')
@@ -156,7 +156,7 @@ class PenilaianTahfidzController extends Controller
         $nilais = $request->input('nilai');
         $status_capaians = $request->input('status_capaian');
 
-        $activeTA = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+        $activeTA = TahunAjaran::whereIn('status', [1, 'aktif'])->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
 
         foreach ($ayatAwals as $index => $ayatAwal) {
             PenilaianTahfidz::create([
@@ -209,7 +209,7 @@ class PenilaianTahfidzController extends Controller
         $gurus = ModelsGuru::orderBy('nama')->get();
         $siswas = ModelsSiswa::with('kelas')->orderBy('nama')->get();
         
-        $activeTahunAjaran = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+        $activeTahunAjaran = TahunAjaran::whereIn('status', [1, 'aktif'])->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
 
         return view('penilaiandanpresensi::penilaiantahfidz.edit', [
             'title' => 'Edit Penilaian Tahfidz',
@@ -242,7 +242,7 @@ class PenilaianTahfidzController extends Controller
             'status_capaian' => 'required|in:Lolos,Tidak Lolos',
         ]);
 
-        $activeTA = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+        $activeTA = TahunAjaran::whereIn('status', [1, 'aktif'])->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
         $penilaianTahfidz = PenilaianTahfidz::findOrFail($id);
         
         $updateData = $validated;

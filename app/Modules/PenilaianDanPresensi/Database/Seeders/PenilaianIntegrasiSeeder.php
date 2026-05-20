@@ -39,7 +39,7 @@ class PenilaianIntegrasiSeeder extends Seeder
         $this->command->info('Integrating Penilaian and Presensi with existing Academic data...');
 
         // 1. Get Base Data
-        $tahun = TahunAjaran::where('status', 'aktif')->first() ?: TahunAjaran::latest()->first();
+        $tahun = TahunAjaran::whereIn('status', [1, 'aktif'])->first() ?: TahunAjaran::latest()->first();
         if (!$tahun) {
             $this->command->error('Tahun Ajaran not found! Run Academic seeders first.');
             return;

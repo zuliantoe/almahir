@@ -22,7 +22,7 @@ class DashboardController extends Controller
     public function index(): View
     {
         $user = auth()->user();
-        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
         $today = today();
 
         // Data for SISWA

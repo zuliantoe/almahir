@@ -40,7 +40,7 @@ class PresensiController extends Controller
             abort(404, 'Data Siswa tidak ditemukan.');
         }
 
-        $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
         $tahunAjaranId = $activeTahunAjaran ? $activeTahunAjaran->id : null;
 
         // --- CLEANUP PREMATURE ALPHA FOR THIS STUDENT ---
@@ -203,7 +203,7 @@ class PresensiController extends Controller
             return back()->with('error', $msg);
         }
 
-        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
 
         $existing = Presensi::where('siswa_id', $siswa->id)
             ->where('jadwal_pelajaran_id', $jadwalId)
@@ -314,7 +314,7 @@ class PresensiController extends Controller
 
         // --- AUTOMATED ALPHA GENERATION (REAL-TIME) ---
         $targetTanggal = $request->tanggal ?? date('Y-m-d');
-        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
         
         if ($activeTA) {
             $dayOfWeek = date('N', strtotime($targetTanggal));
@@ -494,7 +494,7 @@ class PresensiController extends Controller
             $statsQuery->whereDate('created_at', $request->tanggal);
         }
 
-        $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first() ?: \App\Modules\Akademik\Models\TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+        $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first() ?: \App\Modules\Akademik\Models\TahunAjaran::orderBy('tahunajaran', 'desc')->first();
         
         $presensis = $query->latest()->paginate(15);
 
@@ -630,7 +630,7 @@ class PresensiController extends Controller
                 ], 400);
             }
 
-            $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+            $activeTA = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
 
             // Determine status: check if late (10 mins grace)
             $status = 'Hadir';
@@ -725,7 +725,7 @@ class PresensiController extends Controller
             return response()->json(['success' => false, 'message' => 'Sesi pelajaran sudah berakhir.'], 400);
         }
 
-        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::where('status', 'aktif')->first();
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
 
         // Determine status: check if late (10 mins grace)
         $status = 'Hadir';

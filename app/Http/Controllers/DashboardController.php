@@ -36,33 +36,47 @@ class DashboardController extends Controller
             $jadwalHariIni = collect();
             $eventTerdekat = collect();
             $tahunAjaranAktif = '2025/2026';
+            $ta = null;
             if (class_exists(\App\Modules\Akademik\Models\TahunAjaran::class)) {
                 $ta = \App\Modules\Akademik\Models\TahunAjaran::current();
                 if ($ta) {
                     $tahunAjaranAktif = $ta->tahunajaran . ' (' . ($ta->keterangan ?? 'Aktif') . ')';
                 }
             }
-            if ($siswa && $siswa->kelas_id && class_exists(\App\Modules\Akademik\Models\JadwalPelajaran::class)) {
-                // Get rombel by kelas (rombel where siswa is enrolled)
-                $rombel = null;
-                if (class_exists(\App\Modules\Akademik\Models\Rombel::class)) {
-                    // Try to find rombel via rombel_siswa pivot
-                    $rombel = \App\Modules\Akademik\Models\Rombel::whereHas('siswa', function($q) use ($siswa) {
-                        $q->where('siswa_id', $siswa->id);
-                    })->first();
-                    // Fallback: find by kelas_id
-                    if (!$rombel) {
-                        $rombel = \App\Modules\Akademik\Models\Rombel::where('kelas_id', $siswa->kelas_id)->first();
+
+            // Ambil Rombel Aktif Siswa
+            $rombelInfo = null;
+            if ($siswa && class_exists(\App\Modules\Akademik\Models\Rombel::class)) {
+                $rombelQuery = \App\Modules\Akademik\Models\Rombel::with(['walikelas', 'kelas'])
+                    ->whereHas('siswa', function($q) use ($siswa, $ta) {
+                        $q->where('siswa.id', $siswa->id);
+                        if ($ta) {
+                            $q->where('rombel_siswa.tahunajaran_id', $ta->id);
+                        }
+                    });
+                
+                $rombelInfo = $rombelQuery->first();
+                
+                // Fallback: Jika di pivot belum diset, cari via kelas_id siswa di tahun ajaran aktif
+                if (!$rombelInfo && $siswa->kelas_id) {
+                    $rombelQueryFallback = \App\Modules\Akademik\Models\Rombel::with(['walikelas', 'kelas'])
+                        ->where('kelas_id', $siswa->kelas_id);
+                    if ($ta) {
+                        $rombelQueryFallback->where('tahunajaran_id', $ta->id);
                     }
-                }
-                if ($rombel) {
-                    $jadwalHariIni = \App\Modules\Akademik\Models\JadwalPelajaran::with(['mataPelajaran', 'guru'])
-                        ->where('rombel_id', $rombel->id)
-                        ->where('hari', $hariIniEn)
-                        ->orderBy('jamke')
-                        ->get();
+                    $rombelInfo = $rombelQueryFallback->first();
                 }
             }
+
+            // Fetch Jadwal Hari Ini
+            if ($rombelInfo && class_exists(\App\Modules\Akademik\Models\JadwalPelajaran::class)) {
+                $jadwalHariIni = \App\Modules\Akademik\Models\JadwalPelajaran::with(['mataPelajaran', 'guru'])
+                    ->where('rombel_id', $rombelInfo->id)
+                    ->where('hari', $hariIniEn)
+                    ->orderBy('jamke')
+                    ->get();
+            }
+
             if (class_exists(\App\Modules\Akademik\Models\KalenderAkademik::class)) {
                 $eventTerdekat = \App\Modules\Akademik\Models\KalenderAkademik::where('tanggal_awal', '>=', now()->toDateString())
                     ->orderBy('tanggal_awal')
@@ -121,31 +135,25 @@ class DashboardController extends Controller
 
             // ─── TEMAN SEKELAS ─────────────────────────────────────────────
             $temanSekelas = collect();
-            $rombelInfo = null;
-            if ($siswa && class_exists(\App\Modules\Akademik\Models\Rombel::class)) {
-                $rombelInfo = \App\Modules\Akademik\Models\Rombel::with(['walikelas', 'kelas'])
-                    ->whereHas('siswa', function($q) use ($siswa) {
-                        $q->where('siswa_id', $siswa->id);
-                    })->first();
-                if (!$rombelInfo && $siswa->kelas_id) {
-                    $rombelInfo = \App\Modules\Akademik\Models\Rombel::with(['walikelas', 'kelas'])
-                        ->where('kelas_id', $siswa->kelas_id)->first();
-                }
-                if ($rombelInfo) {
-                    $temanSekelas = $rombelInfo->aktifSiswa()
-                        ->where('siswa.id', '!=', $siswa->id)
-                        ->limit(12)
-                        ->get();
-                }
+            if ($rombelInfo) {
+                $temanSekelas = $rombelInfo->aktifSiswa()
+                    ->where('siswa.id', '!=', $siswa->id)
+                    ->limit(12)
+                    ->get();
             }
 
             // ─── KURIKULUM KELAS ──────────────────────────────────────────
             $kurikulumKelas = collect();
-            if ($siswa && $siswa->kelas_id && class_exists(\App\Modules\Akademik\Models\Kurikulum::class)) {
-                $kurikulumKelas = \App\Modules\Akademik\Models\Kurikulum::with(['mataPelajaran'])
-                    ->where('kelas_id', $siswa->kelas_id)
-                    ->orderBy('totaljam', 'desc')
-                    ->get();
+            $kelasIdUntukKurikulum = $rombelInfo ? $rombelInfo->kelas_id : ($siswa ? $siswa->kelas_id : null);
+            if ($kelasIdUntukKurikulum && class_exists(\App\Modules\Akademik\Models\Kurikulum::class)) {
+                $kurikulumQuery = \App\Modules\Akademik\Models\Kurikulum::with(['mataPelajaran'])
+                    ->where('kelas_id', $kelasIdUntukKurikulum);
+                
+                if (isset($ta) && $ta) {
+                    $kurikulumQuery->where('tahunajaran_id', $ta->id);
+                }
+                
+                $kurikulumKelas = $kurikulumQuery->orderBy('totaljam', 'desc')->get();
             }
 
             return view('dashboard_siswa', compact(

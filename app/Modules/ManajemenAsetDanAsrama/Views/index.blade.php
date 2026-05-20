@@ -18,7 +18,7 @@
             <div class="small-box bg-info shadow-sm">
                 <div class="inner">
                     <h3>{{ number_format($totalAset ?? 0) }}</h3>
-                    <p>Total Aset</p>
+                    <p>Total Master Aset</p>
                 </div>
                 <div class="icon"><i class="fas fa-boxes"></i></div>
                 <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="small-box-footer">Detail <i class="fas fa-arrow-circle-right"></i></a>
@@ -27,31 +27,31 @@
         <div class="col-lg-3 col-6">
             <div class="small-box bg-success shadow-sm">
                 <div class="inner">
-                    <h3>{{ number_format($totalPengajuan ?? 0) }}</h3>
-                    <p>Pengajuan</p>
+                    <h3>{{ number_format($asetByStatus['baik'] ?? 0) }}</h3>
+                    <p>Kondisi Baik</p>
                 </div>
-                <div class="icon"><i class="fas fa-file-invoice"></i></div>
-                <a href="{{ route('manajemenasetdanasrama.pengajuan.index') }}" class="small-box-footer">Detail <i class="fas fa-arrow-circle-right"></i></a>
+                <div class="icon"><i class="fas fa-check-circle"></i></div>
+                <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="small-box-footer">Detail <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
         <div class="col-lg-3 col-6">
             <div class="small-box bg-danger shadow-sm">
                 <div class="inner">
-                    <h3>{{ number_format($totalKerusakan ?? 0) }}</h3>
-                    <p>Aset Rusak</p>
+                    <h3>{{ number_format($asetByStatus['rusak'] ?? 0) }}</h3>
+                    <p>Kondisi Rusak</p>
                 </div>
-                <div class="icon"><i class="fas fa-tools"></i></div>
-                <a href="{{ route('manajemenasetdanasrama.kerusakan.index') }}" class="small-box-footer">Detail <i class="fas fa-arrow-circle-right"></i></a>
+                <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <a href="{{ route('manajemenasetdanasrama.kerusakan.index') }}" class="small-box-footer">Lihat Laporan <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
         <div class="col-lg-3 col-6">
-            <div class="small-box bg-secondary shadow-sm">
+            <div class="small-box bg-warning shadow-sm">
                 <div class="inner">
-                    <h3>{{ number_format($totalPemeliharaan ?? 0) }}</h3>
-                    <p>Perbaikan</p>
+                    <h3>{{ number_format($asetByStatus['dalam_perbaikan'] ?? 0) }}</h3>
+                    <p>Dalam Perbaikan</p>
                 </div>
                 <div class="icon"><i class="fas fa-wrench"></i></div>
-                <a href="{{ route('manajemenasetdanasrama.pemeliharaan.index') }}" class="small-box-footer">Detail <i class="fas fa-arrow-circle-right"></i></a>
+                <a href="{{ route('manajemenasetdanasrama.pemeliharaan.index') }}" class="small-box-footer">Lihat Progress <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
     </div>

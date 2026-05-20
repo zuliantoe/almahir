@@ -64,7 +64,7 @@
                     <li class="nav-item">
                         <a href="{{ url('/') }}" class="nav-link bg-danger mb-3">
                             <i class="nav-icon fas fa-arrow-left"></i>
-                            <p>Kembali ke Menu Utama</p>
+                            <p>Menu Utama</p>
                         </a>
                     </li>
 

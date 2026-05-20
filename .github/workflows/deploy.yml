@@ -17,7 +17,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2' # Sesuaikan dengan versi PHP di VPS Anda
+          php-version: '8.3.31' # Sesuaikan dengan versi PHP di VPS Anda
 
       - name: Execute Deployment via SSH
         uses: appleboy/ssh-action@v1.0.0
@@ -30,7 +30,7 @@ jobs:
             # 1. Masuk ke folder project (Ubah path di bawah ini sesuai lokasi project di VPS!)
             # Contoh jika pakai cPanel: cd /home/almahir/public_html
             # Contoh jika pakai CyberPanel: cd /home/siakad.almahirsoft.com/public_html
-            cd /home/almahir/siakad.almahirsoft.com
+            cd /var/www/siakad.almahirsoft.com/almahir
             
             # 2. Ambil perubahan terbaru dari GitHub
             git pull origin main

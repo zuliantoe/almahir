@@ -9,9 +9,7 @@
 
     $homeUrl = url('/');
     if (Auth::check()) {
-        if ($isGuru) {
-            $homeUrl = route('penilaiandanpresensi.index');
-        } elseif ($isWali) {
+        if ($isWali) {
             $homeUrl = route('walimurid.portal.dashboard');
         }
     }
@@ -91,11 +89,68 @@
                     {{-- ========================================== --}}
                     {{-- PORTAL GURU DIRECT VIEW                    --}}
                     {{-- ========================================== --}}
-                    <li class="nav-header">PENILAIAN & PRESENSI</li>
                     <li class="nav-item">
-                        <a href="{{ url('/') }}" class="nav-link bg-danger mb-3">
-                            <i class="nav-icon fas fa-arrow-left"></i>
-                            <p>Menu Utama</p>
+                        <a href="{{ url('/') }}" class="nav-link {{ request()->is('/') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-tachometer-alt"></i>
+                            <p>Dashboard Utama</p>
+                        </a>
+                    </li>
+
+                    <li class="nav-header">MENU GURU</li>
+                    
+                    {{-- 1. Kaldik --}}
+                    <li class="nav-item">
+                        <a href="{{ route('guru.kalender-akademik') }}" class="nav-link {{ request()->is('guru/kalender-akademik*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-calendar-alt text-success"></i>
+                            <p>Kaldik</p>
+                        </a>
+                    </li>
+
+                    {{-- 2. Jadwal Mengajar --}}
+                    <li class="nav-item">
+                        <a href="{{ route('akademik.jadwal-pelajaran.index') }}" class="nav-link {{ request()->is('akademik/jadwal-pelajaran*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-calendar-day text-info"></i>
+                            <p>Jadwal Mengajar</p>
+                        </a>
+                    </li>
+
+                    {{-- 3. Absensi Siswa --}}
+                    <li class="nav-item">
+                        <a href="{{ route('penilaiandanpresensi.presensi.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/presensi*') && !request()->is('penilaiandanpresensi/presensi/siswa*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-user-check text-primary"></i>
+                            <p>Absensi Siswa</p>
+                        </a>
+                    </li>
+
+                    {{-- 4. Cetak Raport --}}
+                    <li class="nav-item">
+                        <a href="{{ route('penilaiandanpresensi.penilaianakademik.raport.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik/raport*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-file-invoice text-warning"></i>
+                            <p>Cetak Raport</p>
+                        </a>
+                    </li>
+
+                    {{-- 5. Konfirmasi Izin Sakit --}}
+                    <li class="nav-item">
+                        <a href="{{ route('penilaiandanpresensi.izinsakit.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/izinsakit*') && !request()->is('penilaiandanpresensi/izinsakit/siswa*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-envelope-open-text text-danger"></i>
+                            <p>Konfirmasi Izin Sakit</p>
+                        </a>
+                    </li>
+
+                    {{-- 6. Pengajuan Izin --}}
+                    <li class="nav-item">
+                        <a href="{{ route('perizinan.index') }}" class="nav-link {{ request()->is('perizinan*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-paper-plane text-teal"></i>
+                            <p>Pengajuan Izin</p>
+                        </a>
+                    </li>
+
+                    {{-- 7. Absensi Pegawai --}}
+                    <li class="nav-item">
+                        <a href="{{ route('absensi.index') }}" class="nav-link {{ request()->is('absensi*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-fingerprint text-purple"></i>
+                            <p>Absensi Pegawai</p>
                         </a>
                     </li>
 

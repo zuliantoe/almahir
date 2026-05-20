@@ -4,7 +4,13 @@
 <div class="container-fluid">
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Manajemen Uang Saku Santri</h1>
+        <h1 class="h3 mb-0 text-gray-800">
+            @if(auth()->user()->hasRole('SISWA'))
+                Catatan Uang Saku Saya
+            @else
+                Manajemen Uang Saku Santri
+            @endif
+        </h1>
         <div class="text-muted">
             {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('l, j F Y') }}
         </div>
@@ -237,12 +243,14 @@
                             </div>
                         </div>
                         <div class="col-md-6 text-end">
-                            <div class="add-transaction-buttons">
-                                <a href="{{ route('keuangan.uangsakus.create') }}" class="btn btn-primary btn-add">
-                                    <i class="fas fa-plus mr-2 me-2"></i>
-                                    <span class="btn-text">&nbsp;Tambah Uang Saku</span>
-                                </a>
-                            </div>
+                            @if(!auth()->user()->hasRole('SISWA'))
+                                <div class="add-transaction-buttons">
+                                    <a href="{{ route('keuangan.uangsakus.create') }}" class="btn btn-primary btn-add">
+                                        <i class="fas fa-plus mr-2 me-2"></i>
+                                        <span class="btn-text">&nbsp;Tambah Uang Saku</span>
+                                    </a>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -313,22 +321,30 @@
                                                     <p class="card-description">{{ $item->deskripsi ?? 'Tanpa keterangan' }}</p>
                                                 </div>
                                                 <div class="mt-2">
-                                                    <div class="btn-group btn-group-sm w-100" role="group" style="border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                                                        <form action="{{ route('keuangan.uangsakus.updateStatus', $item->id) }}" method="POST" class="flex-fill m-0">
-                                                            @csrf @method('PATCH')
-                                                            <input type="hidden" name="status" value="Belum Diterima Santri">
-                                                            <button type="submit" class="btn {{ $item->status == 'Belum Diterima Santri' ? 'btn-primary' : 'btn-light' }} w-100 rounded-0 py-2 border-end" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
-                                                                <i class="fas {{ $item->status == 'Belum Diterima Santri' ? 'fa-check-circle' : 'fa-circle' }} me-1"></i> Belum Diterima
-                                                            </button>
-                                                        </form>
-                                                        <form action="{{ route('keuangan.uangsakus.updateStatus', $item->id) }}" method="POST" class="flex-fill m-0">
-                                                            @csrf @method('PATCH')
-                                                            <input type="hidden" name="status" value="Sudah Diterima Santri">
-                                                            <button type="submit" class="btn {{ $item->status == 'Sudah Diterima Santri' ? 'btn-primary' : 'btn-light' }} w-100 rounded-0 py-2" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
-                                                                <i class="fas {{ $item->status == 'Sudah Diterima Santri' ? 'fa-check-circle' : 'fa-circle' }} me-1"></i> Sudah Diterima
-                                                            </button>
-                                                        </form>
-                                                    </div>
+                                                    @if(!auth()->user()->hasRole('SISWA'))
+                                                        <div class="btn-group btn-group-sm w-100" role="group" style="border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                                            <form action="{{ route('keuangan.uangsakus.updateStatus', $item->id) }}" method="POST" class="flex-fill m-0">
+                                                                @csrf @method('PATCH')
+                                                                <input type="hidden" name="status" value="Belum Diterima Santri">
+                                                                <button type="submit" class="btn {{ $item->status == 'Belum Diterima Santri' ? 'btn-primary' : 'btn-light' }} w-100 rounded-0 py-2 border-end" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                                    <i class="fas {{ $item->status == 'Belum Diterima Santri' ? 'fa-check-circle' : 'fa-circle' }} me-1"></i> Belum Diterima
+                                                                </button>
+                                                            </form>
+                                                            <form action="{{ route('keuangan.uangsakus.updateStatus', $item->id) }}" method="POST" class="flex-fill m-0">
+                                                                @csrf @method('PATCH')
+                                                                <input type="hidden" name="status" value="Sudah Diterima Santri">
+                                                                <button type="submit" class="btn {{ $item->status == 'Sudah Diterima Santri' ? 'btn-primary' : 'btn-light' }} w-100 rounded-0 py-2" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                                    <i class="fas {{ $item->status == 'Sudah Diterima Santri' ? 'fa-check-circle' : 'fa-circle' }} me-1"></i> Sudah Diterima
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    @else
+                                                        <div class="text-center">
+                                                            <span class="badge badge-pill {{ $item->status == 'Sudah Diterima Santri' ? 'badge-success' : 'badge-warning' }} w-100 py-2" style="font-size: 0.75rem;">
+                                                                {{ $item->status }}
+                                                            </span>
+                                                        </div>
+                                                    @endif
                                                 </div>
                                             </div>
 
@@ -337,15 +353,17 @@
                                                     <a href="{{ route('keuangan.uangsakus.show', $item->id) }}" class="btn-action bg-primary" title="Detail">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <a href="{{ route('keuangan.uangsakus.edit', $item->id) }}" class="btn-action btn-edit" title="Edit">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
-                                                    <form action="{{ route('keuangan.uangsakus.destroy', $item->id) }}" method="POST" class="d-inline delete-form">
-                                                        @csrf @method('DELETE')
-                                                        <button type="button" class="btn-action btn-delete delete-btn" data-source="{{ $item->siswa->nama }}">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </form>
+                                                    @if(!auth()->user()->hasRole('SISWA'))
+                                                        <a href="{{ route('keuangan.uangsakus.edit', $item->id) }}" class="btn-action btn-edit" title="Edit">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <form action="{{ route('keuangan.uangsakus.destroy', $item->id) }}" method="POST" class="d-inline delete-form">
+                                                            @csrf @method('DELETE')
+                                                            <button type="button" class="btn-action btn-delete delete-btn" data-source="{{ $item->siswa->nama }}">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    @endif
                                                 </div>
                                                 <div class="card-time text-start">
                                                     <i class="fas fa-clock text-muted me-1" style="font-size: 0.8rem;"></i>

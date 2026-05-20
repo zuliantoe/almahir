@@ -23,7 +23,9 @@ class SiswaDashboardController extends Controller
         return view('siswa::dashboard', [
             'title' => 'Dashboard Santri',
             'breadcrumb' => 'Dashboard',
-            'stats' => $stats
+            'stats' => $stats,
+            'siswa' => $siswa,
+            'currentRombel' => $siswa?->currentRombel()->with('kelas')->first(),
         ]);
     }
 }

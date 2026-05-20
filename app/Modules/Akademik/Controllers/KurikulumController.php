@@ -135,7 +135,7 @@ class KurikulumController extends Controller
                 Kurikulum::updateOrCreate(
                     array_merge($commonData, ['mapel_id' => $detail['mapel_id']]),
                     [
-                        'total_jam_minggu' => $detail['total_jam_minggu'],
+                        'totaljam' => $detail['total_jam_minggu'] ?? $detail['totaljam'] ?? 0,
                         'kkm' => $detail['kkm'],
                     ]
                 );

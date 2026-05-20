@@ -193,7 +193,14 @@
 
         .brand-text {
             font-weight: 700 !important;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
+            font-size: 0.95rem !important;
+            display: inline-block;
+            vertical-align: middle;
+            max-width: 170px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .content-header h1 {

@@ -10,7 +10,21 @@
                 <div class="card-body p-5">
                     <div class="row align-items-center">
                         <div class="col-md-8">
-                            <h1 class="display-4 font-weight-bold mb-3">أهلاً وسهلاً!</h1>
+                            <h1 class="display-4 font-weight-bold mb-3">أهلاً وسهلاً، {{ $siswa->nama }}!</h1>
+                            <div class="d-flex flex-wrap mb-3" style="gap: 10px;">
+                                @if($currentRombel)
+                                    <div class="badge badge-light px-3 py-2 shadow-sm" style="border-radius: 30px; font-size: 0.9rem; color: #4361ee;">
+                                        <i class="fas fa-layer-group mr-2"></i> Kelas: <strong>{{ $currentRombel->kelas->nama_kelas ?? '-' }}</strong>
+                                    </div>
+                                    <div class="badge badge-light px-3 py-2 shadow-sm" style="border-radius: 30px; font-size: 0.9rem; color: #4361ee;">
+                                        <i class="fas fa-users mr-2"></i> Rombel: <strong>{{ $currentRombel->nama_rombel }}</strong>
+                                    </div>
+                                @else
+                                    <div class="badge badge-warning px-3 py-2 shadow-sm" style="border-radius: 30px; font-size: 0.9rem; color: #856404;">
+                                        <i class="fas fa-exclamation-triangle mr-2"></i> Belum terdaftar di Rombel
+                                    </div>
+                                @endif
+                            </div>
                             <p class="lead mb-4 opacity-75">Semangat menuntut ilmu hari ini. Teruslah belajar dan berproses menjadi pribadi yang bermanfaat.</p>
                             <div class="d-flex flex-wrap">
                                 <a href="{{ route('penilaiandanpresensi.presensi.siswa.index') }}" class="btn btn-white btn-lg px-4 mr-3 mb-2 shadow-sm text-primary font-weight-bold" style="border-radius: 50px; background: white;">

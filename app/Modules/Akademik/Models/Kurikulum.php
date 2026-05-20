@@ -17,10 +17,12 @@ class Kurikulum extends Model
         'tahunajaran_id',
         'kelas_id',
         'mapel_id',
-        'total_jam',
-        'semester',
+        'totaljam',
         'kkm',
-        'deskripsi'
+    ];
+
+    protected $attributes = [
+        'totaljam' => 0,
     ];
 
     public function masterKurikulum(): BelongsTo
@@ -40,7 +42,7 @@ class Kurikulum extends Model
 
     public function kelas():BelongsTo
     {
-        return $this->belongsTo(kelas::class,'kelas_id');
+        return $this->belongsTo(Kelas::class,'kelas_id');
     }
 
     public function mataPelajaran():BelongsTo

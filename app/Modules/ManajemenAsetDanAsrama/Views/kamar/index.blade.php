@@ -54,11 +54,13 @@
     <div class="row">
         <div class="col-md-12">
             <x-card title="Daftar Kamar Asrama" icon="fas fa-door-open">
+                @if(!auth()->user()->hasRole('SISWA'))
                 <x-slot name="tools">
                     <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#modalTambahKamar">
                         <i class="fas fa-plus mr-1"></i> Tambah Kamar
                     </button>
                 </x-slot>
+                @endif
 
                 <div class="table-responsive">
                     <table class="table table-hover table-compact mb-0">
@@ -102,33 +104,37 @@
                                 <td>{!! $item->status_kapasitas_badge !!}</td>
                                 <td><small class="text-muted">{{ Str::limit($item->deskripsi ?? '-', 60) }}</small></td>
                                 <td class="text-center">
-                                    @if($item->sisa > 0)
-                                    <a href="{{ route('manajemenasetdanasrama.penghuni.assign-multiple', $item->id) }}" 
-                                       class="btn btn-xs-custom btn-success" title="Tambah Penghuni">
-                                        <i class="fas fa-user-plus"></i>
-                                    </a>
+                                    @if(!auth()->user()->hasRole('SISWA'))
+                                        @if($item->sisa > 0)
+                                        <a href="{{ route('manajemenasetdanasrama.penghuni.assign-multiple', $item->id) }}" 
+                                           class="btn btn-xs-custom btn-success" title="Tambah Penghuni">
+                                            <i class="fas fa-user-plus"></i>
+                                        </a>
+                                        @endif
                                     @endif
                                     <a href="{{ route('manajemenasetdanasrama.kamar.show', $item->id) }}" class="btn btn-xs-custom btn-info" title="Detail">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <button type="button" class="btn btn-xs-custom btn-warning"
-                                            data-toggle="modal"
-                                            data-target="#modalEditKamar"
-                                            data-id="{{ $item->id }}"
-                                            data-nama="{{ $item->nama_kamar }}"
-                                            data-kapasitas="{{ $item->kapasitas }}"
-                                            data-deskripsi="{{ $item->deskripsi }}"
-                                            title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-xs-custom btn-danger"
-                                            data-toggle="modal"
-                                            data-target="#modalHapusKamar"
-                                            data-id="{{ $item->id }}"
-                                            data-nama="{{ $item->nama_kamar }}"
-                                            title="Hapus">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    @if(!auth()->user()->hasRole('SISWA'))
+                                        <button type="button" class="btn btn-xs-custom btn-warning"
+                                                data-toggle="modal"
+                                                data-target="#modalEditKamar"
+                                                data-id="{{ $item->id }}"
+                                                data-nama="{{ $item->nama_kamar }}"
+                                                data-kapasitas="{{ $item->kapasitas }}"
+                                                data-deskripsi="{{ $item->deskripsi }}"
+                                                title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-xs-custom btn-danger"
+                                                data-toggle="modal"
+                                                data-target="#modalHapusKamar"
+                                                data-id="{{ $item->id }}"
+                                                data-nama="{{ $item->nama_kamar }}"
+                                                title="Hapus">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    @endif
                                 </td>
                             </tr>
                             @empty

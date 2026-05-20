@@ -23,7 +23,7 @@ use App\Modules\ManajemenAsetDanAsrama\Controllers\TrashController;
 |
 */
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\RestrictGuruFromAsrama::class])->group(function () {
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('index');
     

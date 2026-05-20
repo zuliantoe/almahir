@@ -39,6 +39,8 @@ class SiswaAccessRestrictionMiddleware
                 '^manajemenasetdanasrama/penghuni',
                 '^keuangan/uangsakus',
                 '^keuangan$',
+                '^siswa/asrama',
+                '^siswa/dashboard',
             ];
 
             $isAllowedPath = false;

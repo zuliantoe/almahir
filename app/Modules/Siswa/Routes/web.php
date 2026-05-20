@@ -16,9 +16,18 @@ use Modules\Siswa\Controllers\SiswaController;
 */
 
 use Modules\Siswa\Controllers\SiswaDashboardController;
+use Modules\Siswa\Controllers\SiswaAsramaController;
 
 Route::middleware(['auth', 'role:SISWA'])->group(function () {
     Route::get('/dashboard', [SiswaDashboardController::class, 'index'])->name('dashboard');
+    
+    // Halaman Asrama Khusus Siswa
+    Route::prefix('asrama')->name('asrama.')->group(function () {
+        Route::get('/kamar', [SiswaAsramaController::class, 'kamarIndex'])->name('kamar.index');
+        Route::get('/kamar/{id}', [SiswaAsramaController::class, 'kamarShow'])->name('kamar.show');
+        Route::get('/penghuni', [SiswaAsramaController::class, 'penghuniIndex'])->name('penghuni.index');
+        Route::get('/jadwal-piket', [SiswaAsramaController::class, 'jadwalPiket'])->name('jadwal-piket.index');
+    });
 });
 
 // Resource routes for CRUD operations

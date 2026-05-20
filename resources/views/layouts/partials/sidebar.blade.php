@@ -23,7 +23,7 @@
             $activeModule = 'akademik';
         } elseif (request()->is('penilaiandanpresensi*')) {
             $activeModule = 'penilaiandanpresensi';
-        } elseif (request()->is('manajemenasetdanasrama*')) {
+        } elseif (request()->is('siswa/asrama*')) {
             $activeModule = 'asrama';
         } elseif (request()->is('keuangan*')) {
             $activeModule = 'keuangan';
@@ -96,112 +96,6 @@
                         <a href="{{ url('/') }}" class="nav-link bg-danger mb-3">
                             <i class="nav-icon fas fa-arrow-left"></i>
                             <p>Menu Utama</p>
-                        </a>
-                    </li>
-
-                    <li class="nav-header text-uppercase">Aset & Asrama</li>
-                    
-                    <li class="nav-item">
-                        <a href="{{ route('manajemenasetdanasrama.index') }}" class="nav-link {{ request()->routeIs('manajemenasetdanasrama.index') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-tachometer-alt"></i>
-                            <p>Dashboard Asrama</p>
-                        </a>
-                    </li>
-
-                    <li class="nav-item has-treeview {{ request()->is('manajemenasetdanasrama/kamar*') || request()->is('manajemenasetdanasrama/penghuni*') || request()->is('manajemenasetdanasrama/jadwal-piket*') ? 'menu-open' : '' }}">
-                        <a href="#" class="nav-link {{ request()->is('manajemenasetdanasrama/kamar*') || request()->is('manajemenasetdanasrama/penghuni*') || request()->is('manajemenasetdanasrama/jadwal-piket*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-building"></i>
-                            <p>
-                                Pengelolaan Asrama
-                                <i class="fas fa-angle-left right"></i>
-                            </p>
-                        </a>
-                        <ul class="nav nav-treeview">
-                            <li class="nav-item">
-                                <a href="{{ route('manajemenasetdanasrama.kamar.index') }}" class="nav-link {{ request()->is('manajemenasetdanasrama/kamar*') ? 'active' : '' }}">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>Data Kamar</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('manajemenasetdanasrama.penghuni.index') }}" class="nav-link {{ request()->is('manajemenasetdanasrama/penghuni*') ? 'active' : '' }}">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>Data Penghuni</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('manajemenasetdanasrama.jadwal-piket.index') }}" class="nav-link {{ request()->is('manajemenasetdanasrama/jadwal-piket*') ? 'active' : '' }}">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>Jadwal Piket</p>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    <li class="nav-item has-treeview {{ request()->is('manajemenasetdanasrama/aset*') || request()->is('manajemenasetdanasrama/pengajuan*') || request()->is('manajemenasetdanasrama/persetujuan*') || request()->is('manajemenasetdanasrama/pengadaan*') ? 'menu-open' : '' }}">
-                        <a href="#" class="nav-link {{ request()->is('manajemenasetdanasrama/aset*') || request()->is('manajemenasetdanasrama/pengajuan*') || request()->is('manajemenasetdanasrama/persetujuan*') || request()->is('manajemenasetdanasrama/pengadaan*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-boxes"></i>
-                            <p>
-                                Manajemen Aset
-                                <i class="fas fa-angle-left right"></i>
-                            </p>
-                        </a>
-                        <ul class="nav nav-treeview">
-                            <li class="nav-item">
-                                <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="nav-link {{ request()->is('manajemenasetdanasrama/aset*') ? 'active' : '' }}">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>Daftar Aset</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('manajemenasetdanasrama.pengajuan.index') }}" class="nav-link {{ request()->is('manajemenasetdanasrama/pengajuan*') ? 'active' : '' }}">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>Pengajuan Baru</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('manajemenasetdanasrama.persetujuan.index') }}" class="nav-link {{ request()->is('manajemenasetdanasrama/persetujuan*') ? 'active' : '' }}">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>Persetujuan</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('manajemenasetdanasrama.pengadaan.index') }}" class="nav-link {{ request()->is('manajemenasetdanasrama/pengadaan*') ? 'active' : '' }}">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>Log Pengadaan</p>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    <li class="nav-item has-treeview {{ request()->is('manajemenasetdanasrama/kerusakan*') || request()->is('manajemenasetdanasrama/pemeliharaan*') ? 'menu-open' : '' }}">
-                        <a href="#" class="nav-link {{ request()->is('manajemenasetdanasrama/kerusakan*') || request()->is('manajemenasetdanasrama/pemeliharaan*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-tools"></i>
-                            <p>
-                                Perawatan Aset
-                                <i class="fas fa-angle-left right"></i>
-                            </p>
-                        </a>
-                        <ul class="nav nav-treeview">
-                            <li class="nav-item">
-                                <a href="{{ route('manajemenasetdanasrama.kerusakan.index') }}" class="nav-link {{ request()->is('manajemenasetdanasrama/kerusakan*') ? 'active' : '' }}">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>Laporan Kerusakan</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('manajemenasetdanasrama.pemeliharaan.index') }}" class="nav-link {{ request()->is('manajemenasetdanasrama/pemeliharaan*') ? 'active' : '' }}">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>Pemeliharaan</p>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    <li class="nav-item">
-                        <a href="{{ route('manajemenasetdanasrama.trash.index') }}" class="nav-link {{ request()->is('manajemenasetdanasrama/trash*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-trash-restore"></i>
-                            <p>Sampah / Trash</p>
                         </a>
                     </li>
 
@@ -278,19 +172,19 @@
                         @if($activeModule === 'asrama')
                             <li class="nav-header">ASRAMA & PIKET</li>
                             <li class="nav-item">
-                                <a href="{{ route('manajemenasetdanasrama.jadwal-piket.index') }}" class="nav-link {{ request()->is('manajemenasetdanasrama/jadwal-piket*') ? 'active' : '' }}">
+                                <a href="{{ route('siswa.asrama.jadwal-piket.index') }}" class="nav-link {{ request()->is('siswa/asrama/jadwal-piket*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-clipboard-list text-orange"></i>
                                     <p>Jadwal Piket</p>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{{ route('manajemenasetdanasrama.kamar.index') }}" class="nav-link {{ request()->is('manajemenasetdanasrama/kamar*') ? 'active' : '' }}">
+                                <a href="{{ route('siswa.asrama.kamar.index') }}" class="nav-link {{ request()->is('siswa/asrama/kamar*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-hotel text-info"></i>
                                     <p>Lihat Kamar</p>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{{ route('manajemenasetdanasrama.penghuni.index') }}" class="nav-link {{ request()->is('manajemenasetdanasrama/penghuni*') ? 'active' : '' }}">
+                                <a href="{{ route('siswa.asrama.penghuni.index') }}" class="nav-link {{ request()->is('siswa/asrama/penghuni*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-users text-success"></i>
                                     <p>Data Penghuni</p>
                                 </a>
@@ -336,9 +230,9 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('manajemenasetdanasrama.kamar.index') }}" class="nav-link">
+                            <a href="{{ route('siswa.asrama.kamar.index') }}" class="nav-link">
                                 <i class="nav-icon fas fa-building text-orange"></i>
-                                <p>Modul Aset & Asrama</p>
+                                <p>Aset & Asrama</p>
                             </a>
                         </li>
                     @endif
@@ -548,14 +442,7 @@
                             </li>
                         @endif
 
-                        @if(Auth::user()->hasRole(['SUPER_ADMIN', 'STAF_TU']))
-                            <li class="nav-item">
-                                <a href="{{ route('manajemenasetdanasrama.index') }}" class="nav-link {{ request()->is('manajemenasetdanasrama*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-building text-orange"></i>
-                                    <p>Modul Aset & Asrama</p>
-                                </a>
-                            </li>
-                        @endif
+
 
                         {{-- Shortcut Penilaian & Presensi di menu utama admin --}}
                         @if(Auth::user()->hasRole(['SUPER_ADMIN']))
@@ -568,7 +455,7 @@
                         @endif
 
                         {{-- Asrama di menu utama admin --}}
-                        @if(Auth::user()->hasRole(['SUPER_ADMIN']))
+                        @if(Auth::user()->hasRole(['SUPER_ADMIN', 'STAF_TU']))
                             <li class="nav-item">
                                 <a href="{{ route('manajemenasetdanasrama.index') }}" class="nav-link {{ request()->is('manajemenasetdanasrama*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-building text-orange"></i>

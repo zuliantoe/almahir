@@ -31,7 +31,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="guru_id" class="font-weight-bold text-dark">Guru Pengampu <span class="text-danger">*</span></label>
-                                    <select name="guru_id" id="guru_id" class="form-control" required {{ $isGuru ? 'readonly' : '' }}>
+                                    <select name="guru_id" id="guru_id" class="form-control" required {{ $isGuru ? 'disabled' : '' }}>
                                         <option value="">-- Pilih Guru --</option>
                                         @foreach($gurus as $guru)
                                             <option value="{{ $guru->id }}" {{ $penilaianTahfidz->guru_id == $guru->id ? 'selected' : '' }}>

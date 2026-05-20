@@ -35,11 +35,18 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-9">
                                 <div class="form-group mb-3">
                                     <label class="small font-weight-bold text-muted text-uppercase">Nama Aset <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('nama_aset') is-invalid @enderror" name="nama_aset" value="{{ old('nama_aset') }}" placeholder="Contoh: AC Panasonic 1PK" required>
                                     @error('nama_aset') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label class="small font-weight-bold text-muted text-uppercase">Jumlah <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control @error('jumlah_aset') is-invalid @enderror" name="jumlah_aset" value="{{ old('jumlah_aset', 1) }}" min="1" max="500" required>
+                                    @error('jumlah_aset') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                             </div>
                         </div>

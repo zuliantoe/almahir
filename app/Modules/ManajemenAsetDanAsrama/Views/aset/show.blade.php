@@ -62,18 +62,29 @@
                 </tr>
             </table>
             <x-slot name="footer">
-                <div class="d-flex flex-wrap justify-content-between align-items-center" style="gap: 10px;">
-                    <div class="btn-group shadow-sm">
-                        <a href="{{ route('manajemenasetdanasrama.aset.edit', $aset->id) }}" class="btn btn-action-xs btn-warning text-white">
-                            <i class="fas fa-edit mr-1"></i> Edit
-                        </a>
-                        <a href="{{ route('manajemenasetdanasrama.aset.print-label') }}?id={{ $aset->id }}" target="_blank" class="btn btn-action-xs btn-primary">
-                            <i class="fas fa-print mr-1"></i> Cetak Label
+                <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap: 10px;">
+                    <div>
+                        <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="btn btn-sm btn-secondary shadow-sm">
+                            <i class="fas fa-arrow-left mr-1"></i> Kembali
                         </a>
                     </div>
-                    <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="btn btn-action-xs btn-secondary shadow-sm">
-                        <i class="fas fa-arrow-left mr-1"></i> Kembali ke Master
-                    </a>
+                    <div class="d-flex flex-wrap" style="gap: 5px;">
+                        <a href="{{ route('manajemenasetdanasrama.kerusakan.create') }}?aset_id={{ $aset->id }}" class="btn btn-sm btn-outline-danger shadow-sm">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> Lapor Rusak
+                        </a>
+                        <a href="{{ route('manajemenasetdanasrama.pemeliharaan.create') }}?aset_id={{ $aset->id }}" class="btn btn-sm btn-outline-info shadow-sm">
+                            <i class="fas fa-wrench mr-1"></i> Pemeliharaan
+                        </a>
+                        <a href="{{ route('manajemenasetdanasrama.aset.print-label') }}?id={{ $aset->id }}" target="_blank" class="btn btn-sm btn-primary shadow-sm">
+                            <i class="fas fa-print mr-1"></i> Cetak Label
+                        </a>
+                        <a href="{{ route('manajemenasetdanasrama.aset.edit', $aset->id) }}" class="btn btn-sm btn-warning text-white shadow-sm">
+                            <i class="fas fa-edit mr-1"></i> Edit
+                        </a>
+                        <button type="button" class="btn btn-sm btn-danger shadow-sm" data-toggle="modal" data-target="#modalHapus" data-id="{{ $aset->id }}" data-nama="{{ $aset->nama_aset }}" data-url="{{ route('manajemenasetdanasrama.aset.destroy', $aset->id) }}">
+                            <i class="fas fa-trash mr-1"></i> Hapus
+                        </button>
+                    </div>
                 </div>
             </x-slot>
         </x-card>
@@ -185,6 +196,8 @@
         </div>
     </div>
 </div>
+
+
 @endsection
 
 @push('scripts')

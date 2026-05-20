@@ -84,16 +84,27 @@ class AsetController extends BaseController
             'tanggal_pengadaan' => 'required|date',
             'kondisi'         => 'nullable|string',
             'deskripsi_aset'  => 'nullable|string',
+            'jumlah_aset'     => 'required|integer|min:1|max:500',
         ]);
 
-        // Generate kode otomatis pake inisial barang
-        $validated['kode_aset'] = $this->generateAssetCode($request->nama_aset, Aset::class, 'kode_aset');
+        $jumlah = $validated['jumlah_aset'];
+        unset($validated['jumlah_aset']);
+
         $validated['status_kondisi'] = 'baik'; 
 
-        Aset::create($validated);
+        for ($i = 0; $i < $jumlah; $i++) {
+            $data = $validated;
+            $data['kode_aset'] = $this->generateAssetCode($request->nama_aset, Aset::class, 'kode_aset');
+            Aset::create($data);
+        }
+
+        if ($jumlah > 1) {
+            return redirect()->route('manajemenasetdanasrama.aset.index')
+                ->with('success', "Berhasil menambahkan {$jumlah} aset baru secara langsung.");
+        }
 
         return redirect()->route('manajemenasetdanasrama.aset.index')
-            ->with('success', 'Aset berhasil ditambahkan dengan kode otomatis: ' . $validated['kode_aset']);
+            ->with('success', 'Aset berhasil ditambahkan dengan kode otomatis: ' . $data['kode_aset']);
     }
 
     /**

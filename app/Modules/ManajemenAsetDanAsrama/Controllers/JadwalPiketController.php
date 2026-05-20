@@ -83,6 +83,10 @@ class JadwalPiketController extends BaseController
             });
         }
 
+        if ($request->filled('lokasi_piket')) {
+            $jadwalQuery->where('lokasi_piket', $request->lokasi_piket);
+        }
+
         $jadwalData = $jadwalQuery->orderBy('shift', 'asc')
             ->orderBy('lokasi_piket', 'asc')
             ->get();

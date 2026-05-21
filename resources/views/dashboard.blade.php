@@ -3,30 +3,44 @@
 @section('title', 'Beranda Utama')
 
 @section('content')
+@php
+    $hariIni = \Carbon\Carbon::now()->locale('id')->translatedFormat('l');
+    $tanggalIni = \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y');
+@endphp
 <div class="container-fluid">
     {{-- 🌟 Personalized Welcome Card (SIAKAD Standard) --}}
     <div class="row">
         <div class="col-12 mb-4">
-            <div class="card shadow-sm border-0" style="border-radius: 12px; border-left: 5px solid #4361ee; background: #fff;">
+            <div class="card border-0 shadow-sm animate__animated animate__fadeIn" style="border-radius: 16px; background: linear-gradient(135deg, #1e3a8a 0%, #3f37c9 60%, #4361ee 100%); color: #fff; overflow: hidden; position: relative;">
+                <div style="position: absolute; top: -30px; right: -30px; width: 200px; height: 200px; background: rgba(255,255,255,0.04); border-radius: 50%;"></div>
+                <div style="position: absolute; bottom: -50px; right: 80px; width: 150px; height: 150px; background: rgba(255,255,255,0.03); border-radius: 50%;"></div>
                 <div class="card-body p-4">
                     <div class="row align-items-center">
                         <div class="col-auto d-none d-md-block">
-                            <img src="{{ Auth::user()->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=4361ee&color=fff' }}" 
-                                 class="img-circle elevation-1 border" 
-                                 style="width: 75px; height: 75px; object-fit: cover; background: #f4f6f9; padding: 3px;">
+                            <div style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.3); overflow: hidden; background: rgba(255,255,255,0.1);">
+                                <img src="{{ Auth::user()->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=fff&color=4361ee&size=80' }}"
+                                     style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
                         </div>
                         <div class="col">
-                            <h4 class="font-weight-bold text-dark mb-1">
-                                Selamat Datang, {{ Auth::user()->name }}!
-                            </h4>
-                            <p class="text-muted mb-0">
-                                Saat ini Anda login sebagai <span class="badge badge-light border px-2 py-1 text-primary">{{ Auth::user()->primary_role ?? 'User' }}</span>.
-                                <span class="d-none d-lg-inline ml-1 border-left pl-2">Selamat bekerja di sistem <strong>SIAKAD ALMAHIR</strong>.</span>
-                            </p>
+                            <p class="mb-1 small" style="color: rgba(255,255,255,0.7); letter-spacing: 1px; text-transform: uppercase; font-size: 0.72rem;">Ahlan Wa Sahlan</p>
+                            <h3 class="font-weight-bold mb-1" style="color: #fff;">{{ Auth::user()->name }}</h3>
+                            <div class="d-flex flex-wrap align-items-center" style="gap: 8px;">
+                                <span class="badge" style="background: rgba(255, 255, 255, 0.18); color: #fff; border: 1px solid rgba(255, 255, 255, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.72rem;">
+                                    <i class="fas fa-user-shield mr-1"></i> {{ Auth::user()->primary_role ?? 'User' }}
+                                </span>
+                                <span class="badge d-none d-lg-inline-block" style="background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.85); padding: 4px 10px; border-radius: 20px; font-size: 0.72rem;">
+                                    <i class="fas fa-laptop-code mr-1"></i> SIAKAD ALMAHIR
+                                </span>
+                                <span class="badge" style="background: rgba(40,167,69,0.25); color: #34d399; border: 1px solid rgba(40,167,69,0.4); padding: 4px 10px; border-radius: 20px; font-size: 0.72rem;">
+                                    <i class="fas fa-check-circle mr-1"></i> Online
+                                </span>
+                            </div>
                         </div>
-                        <div class="col-auto text-right text-muted d-none d-sm-block">
-                            <div class="small font-weight-bold">{{ \Carbon\Carbon::now()->locale('id')->translatedFormat('l, d F Y') }}</div>
-                            <div class="small" id="dashboard-clock">00:00:00 WIB</div>
+                        <div class="col-auto text-right d-none d-sm-block">
+                            <div class="small mb-1" style="color: rgba(255,255,255,0.5); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px;">Tahun Ajaran {{ $tahunAjaranAktif }}</div>
+                            <div class="font-weight-bold" style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">{{ $hariIni }}, {{ $tanggalIni }}</div>
+                            <div id="dashboard-clock" class="mt-1" style="color: #4cc9f0; font-size: 1.3rem; font-weight: 700; letter-spacing: 2px; font-family: 'Courier New', monospace;">00:00:00 WIB</div>
                         </div>
                     </div>
                 </div>

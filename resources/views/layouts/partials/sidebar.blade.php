@@ -451,7 +451,7 @@
                 | PENILAIAN & PRESENSI (SUPER_ADMIN, GURU)
                 |--------------------------------------------------------------------------
                 --}}
-                @if(Auth::check() && (Auth::user()->hasRole(['SUPER_ADMIN', 'GURU'])))
+                @if($activeModule === 'penilaiandanpresensi' && Auth::check() && (Auth::user()->hasRole(['SUPER_ADMIN', 'GURU'])))
                 <li class="nav-header">PENILAIAN & PRESENSI</li>
                 
                 <li class="nav-item">

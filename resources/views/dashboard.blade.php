@@ -107,6 +107,114 @@
         </div>
     </div>
     
+    {{-- 📊 Detailed Module Summaries & Fast Insights --}}
+    <div class="row mt-4">
+        {{-- Akademik & Kepegawaian Summaries --}}
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 16px;">
+                <div class="card-header border-0 bg-transparent pt-4 px-4">
+                    <h5 class="font-weight-bold text-dark mb-0"><i class="fas fa-chart-line mr-2 text-info"></i> Ringkasan Cepat Modul Utama</h5>
+                </div>
+                <div class="card-body px-4 pb-4 pt-2">
+                    <div class="row">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <div class="p-3 rounded bg-light border-0" style="border-radius: 12px !important;">
+                                <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-graduation-cap text-info mr-2"></i> Sistem Akademik</h6>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted text-sm">Total Kelas Terdaftar</span>
+                                    <span class="font-weight-bold text-dark text-sm">{{ $totalKelas }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted text-sm">Rombongan Belajar (Rombel)</span>
+                                    <span class="font-weight-bold text-dark text-sm">{{ $totalRombel }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted text-sm">Mata Pelajaran (Mapel)</span>
+                                    <span class="font-weight-bold text-dark text-sm">{{ $totalMapel }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 rounded bg-light border-0" style="border-radius: 12px !important;">
+                                <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-building text-orange mr-2" style="color: #fd7e14;"></i> Manajemen Aset & Asrama</h6>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted text-sm">Kamar Asrama Terdaftar</span>
+                                    <span class="font-weight-bold text-dark text-sm">{{ $totalKamar }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted text-sm">Inventaris Aset Sekolah</span>
+                                    <span class="font-weight-bold text-dark text-sm">{{ $totalAset }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted text-sm">Laporan Kerusakan Aktif</span>
+                                    <span class="font-weight-bold text-danger text-sm">
+                                        {{ $totalKerusakan }} 
+                                        @if($totalKerusakan > 0)
+                                            <i class="fas fa-exclamation-triangle ml-1 animate__animated animate__flash animate__infinite"></i>
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="p-3 rounded bg-light border-0 d-flex align-items-center justify-content-between" style="border-radius: 12px !important;">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user-plus text-success mr-3 fa-lg"></i>
+                                    <div>
+                                        <span class="font-weight-bold text-dark text-sm d-block">Pendaftaran Pegawai Baru</span>
+                                        <small class="text-muted text-xs">Total data lamaran masuk di modul kepegawaian</small>
+                                    </div>
+                                </div>
+                                <span class="badge badge-success font-weight-bold px-3 py-2" style="font-size: 0.85rem;">{{ $totalCalonPegawai }} Calon Pegawai</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- 📘 Quick Guides / Action Cards --}}
+        <div class="col-lg-4 mb-4">
+            <x-card title="Panduan Sistem Almahir" icon="fas fa-book-open" type="secondary" :outline="true" class="h-100 border-0 shadow-sm">
+                <div class="text-center py-2">
+                    <h5 class="text-primary font-weight-bold mb-3 small-text" style="letter-spacing: 1px;">SELAMAT DATANG DI SIAKAD ALMAHIR</h5>
+                    <p class="text-muted text-sm" style="line-height: 1.6;">
+                        Gunakan menu di samping atau pintasan modul di atas untuk mulai mengelola data akademik sekolah Anda.
+                        Pastikan data utama (Guru & Siswa) sudah tervalidasi sebelum menginput nilai atau absensi.
+                    </p>
+                </div>
+                <hr class="my-3">
+                <div class="list-group list-group-flush">
+                    <a href="{{ route('pegawaimanager.create') }}" class="list-group-item list-group-item-action border-0 py-2 mb-2 bg-light-soft hover-translate shadow-xs" style="border-radius: 10px;">
+                        <div class="d-flex align-items-center">
+                            <div class="mr-3 bg-primary text-white p-2 rounded-circle shadow-sm" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-user-plus" style="font-size: 0.85rem;"></i>
+                            </div>
+                            <div>
+                                <span class="d-block font-weight-bold text-dark text-xs" style="font-size: 0.8rem;">Tambah Pegawai</span>
+                                <small class="text-muted text-xs">Guru atau Staf baru</small>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="{{ route('pegawaimanager.index') }}" class="list-group-item list-group-item-action border-0 py-2 mb-2 bg-light-soft hover-translate shadow-xs" style="border-radius: 10px;">
+                        <div class="d-flex align-items-center">
+                            <div class="mr-3 bg-success text-white p-2 rounded-circle shadow-sm" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-users-cog" style="font-size: 0.85rem;"></i>
+                            </div>
+                            <div>
+                                <span class="d-block font-weight-bold text-dark text-xs" style="font-size: 0.8rem;">Manajemen SDM</span>
+                                <small class="text-muted text-xs">Kelola data seluruh pegawai</small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </x-card>
+        </div>
+    </div>
+
     {{-- 🧩 Unified Module Grid --}}
     <div class="row mt-4 mb-2">
         <div class="col-12">
@@ -271,114 +379,6 @@
             </div>
         </div>
         @endif
-    </div>
-
-    {{-- 📊 Detailed Module Summaries & Fast Insights --}}
-    <div class="row mt-4">
-        {{-- Akademik & Kepegawaian Summaries --}}
-        <div class="col-lg-8 mb-4">
-            <div class="card border-0 shadow-sm h-100" style="border-radius: 16px;">
-                <div class="card-header border-0 bg-transparent pt-4 px-4">
-                    <h5 class="font-weight-bold text-dark mb-0"><i class="fas fa-chart-line mr-2 text-info"></i> Ringkasan Cepat Modul Utama</h5>
-                </div>
-                <div class="card-body px-4 pb-4 pt-2">
-                    <div class="row">
-                        <div class="col-md-6 mb-3 mb-md-0">
-                            <div class="p-3 rounded bg-light border-0" style="border-radius: 12px !important;">
-                                <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-graduation-cap text-info mr-2"></i> Sistem Akademik</h6>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span class="text-muted text-sm">Total Kelas Terdaftar</span>
-                                    <span class="font-weight-bold text-dark text-sm">{{ $totalKelas }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span class="text-muted text-sm">Rombongan Belajar (Rombel)</span>
-                                    <span class="font-weight-bold text-dark text-sm">{{ $totalRombel }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between">
-                                    <span class="text-muted text-sm">Mata Pelajaran (Mapel)</span>
-                                    <span class="font-weight-bold text-dark text-sm">{{ $totalMapel }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="p-3 rounded bg-light border-0" style="border-radius: 12px !important;">
-                                <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-building text-orange mr-2" style="color: #fd7e14;"></i> Manajemen Aset & Asrama</h6>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span class="text-muted text-sm">Kamar Asrama Terdaftar</span>
-                                    <span class="font-weight-bold text-dark text-sm">{{ $totalKamar }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span class="text-muted text-sm">Inventaris Aset Sekolah</span>
-                                    <span class="font-weight-bold text-dark text-sm">{{ $totalAset }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between">
-                                    <span class="text-muted text-sm">Laporan Kerusakan Aktif</span>
-                                    <span class="font-weight-bold text-danger text-sm">
-                                        {{ $totalKerusakan }} 
-                                        @if($totalKerusakan > 0)
-                                            <i class="fas fa-exclamation-triangle ml-1 animate__animated animate__flash animate__infinite"></i>
-                                        @endif
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-12">
-                            <div class="p-3 rounded bg-light border-0 d-flex align-items-center justify-content-between" style="border-radius: 12px !important;">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-user-plus text-success mr-3 fa-lg"></i>
-                                    <div>
-                                        <span class="font-weight-bold text-dark text-sm d-block">Pendaftaran Pegawai Baru</span>
-                                        <small class="text-muted text-xs">Total data lamaran masuk di modul kepegawaian</small>
-                                    </div>
-                                </div>
-                                <span class="badge badge-success font-weight-bold px-3 py-2" style="font-size: 0.85rem;">{{ $totalCalonPegawai }} Calon Pegawai</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- 📘 Quick Guides / Action Cards --}}
-        <div class="col-lg-4 mb-4">
-            <x-card title="Panduan Sistem Almahir" icon="fas fa-book-open" type="secondary" :outline="true" class="h-100 border-0 shadow-sm">
-                <div class="text-center py-2">
-                    <h5 class="text-primary font-weight-bold mb-3 small-text" style="letter-spacing: 1px;">SELAMAT DATANG DI SIAKAD ALMAHIR</h5>
-                    <p class="text-muted text-sm" style="line-height: 1.6;">
-                        Gunakan menu di samping atau pintasan modul di atas untuk mulai mengelola data akademik sekolah Anda.
-                        Pastikan data utama (Guru & Siswa) sudah tervalidasi sebelum menginput nilai atau absensi.
-                    </p>
-                </div>
-                <hr class="my-3">
-                <div class="list-group list-group-flush">
-                    <a href="{{ route('pegawaimanager.create') }}" class="list-group-item list-group-item-action border-0 py-2 mb-2 bg-light-soft hover-translate shadow-xs" style="border-radius: 10px;">
-                        <div class="d-flex align-items-center">
-                            <div class="mr-3 bg-primary text-white p-2 rounded-circle shadow-sm" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-user-plus" style="font-size: 0.85rem;"></i>
-                            </div>
-                            <div>
-                                <span class="d-block font-weight-bold text-dark text-xs" style="font-size: 0.8rem;">Tambah Pegawai</span>
-                                <small class="text-muted text-xs">Guru atau Staf baru</small>
-                            </div>
-                        </div>
-                    </a>
-
-                    <a href="{{ route('pegawaimanager.index') }}" class="list-group-item list-group-item-action border-0 py-2 mb-2 bg-light-soft hover-translate shadow-xs" style="border-radius: 10px;">
-                        <div class="d-flex align-items-center">
-                            <div class="mr-3 bg-success text-white p-2 rounded-circle shadow-sm" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-users-cog" style="font-size: 0.85rem;"></i>
-                            </div>
-                            <div>
-                                <span class="d-block font-weight-bold text-dark text-xs" style="font-size: 0.8rem;">Manajemen SDM</span>
-                                <small class="text-muted text-xs">Kelola data seluruh pegawai</small>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </x-card>
-        </div>
     </div>
 </div>
 

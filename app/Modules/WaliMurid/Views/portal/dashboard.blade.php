@@ -56,7 +56,7 @@
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted small">Tahun Masuk</span>
-                                <span class="text-dark small font-weight-bold">{{ $siswa->tahun_ajaran->tahunajaran ?? '-' }}</span>
+                                <span class="text-dark small font-weight-bold">{{ $siswa->tahun_masuk?? '-' }}</span>
                             </div>
                         </div>
 

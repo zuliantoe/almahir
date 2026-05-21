@@ -14,6 +14,7 @@ use App\Modules\Akademik\Models\Kelas;
 use App\Modules\Akademik\Models\Rombel;
 use App\Modules\Akademik\Models\MataPelajaran;
 use App\Modules\Akademik\Models\JadwalPelajaran;
+use App\Modules\Akademik\Models\TahunAjaran;
 use Carbon\Carbon;
 
 /**
@@ -79,8 +80,11 @@ class PresensiController extends Controller
         $jadwals = $jadwalsQuery->orderBy('jamawal')->get();
 
         $presensiHariIni = Presensi::where('siswa_id', $siswa->id)
-            ->whereDate('created_at', Carbon::today())
-            ->get()
+            ->whereDate('created_at', Carbon::today());
+        if ($tahunAjaranId) {
+            $presensiHariIni->where('tahunajaran_id', $tahunAjaranId);
+        }
+        $presensiHariIni = $presensiHariIni->get()
             ->keyBy('jadwal_pelajaran_id');
 
         // --- Monthly Stats Calculation ---
@@ -121,11 +125,14 @@ class PresensiController extends Controller
                 $tempDate->addDay();
             }
 
-            $presentCount = Presensi::where('siswa_id', $siswa->id)
+                $presentCount = Presensi::where('siswa_id', $siswa->id)
                 ->where('mapel_id', $mapel->id)
                 ->whereIn('status', ['Hadir', 'Telat'])
-                ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
-                ->count();
+                ->whereBetween('created_at', [$startOfMonth, $endOfMonth]);
+            if ($tahunAjaranId) {
+                $presentCount->where('tahunajaran_id', $tahunAjaranId);
+            }
+            $presentCount = $presentCount->count();
             
             $attendanceStats[] = [
                 'nama_mapel' => $mapel->nama,
@@ -138,6 +145,9 @@ class PresensiController extends Controller
         // --- History with Filters ---
         $historyQuery = Presensi::with(['mataPelajaran', 'guru'])
             ->where('siswa_id', $siswa->id);
+        if ($tahunAjaranId) {
+            $historyQuery->where('tahunajaran_id', $tahunAjaranId);
+        }
 
         if ($request->filled('status')) {
             $historyQuery->where('status', $request->status);
@@ -495,6 +505,13 @@ class PresensiController extends Controller
         }
 
         $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first() ?: \App\Modules\Akademik\Models\TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+        if ($request->filled('tahunajaran_id')) {
+            $query->where('tahunajaran_id', $request->tahunajaran_id);
+            $statsQuery->where('tahunajaran_id', $request->tahunajaran_id);
+        } elseif ($activeTahunAjaran) {
+            $query->where('tahunajaran_id', $activeTahunAjaran->id);
+            $statsQuery->where('tahunajaran_id', $activeTahunAjaran->id);
+        }
         
         $presensis = $query->latest()->paginate(15);
 
@@ -535,10 +552,16 @@ class PresensiController extends Controller
     {
         $kelas = Kelas::orderBy('nama_kelas')->get();
         $mapels = MataPelajaran::orderBy('nama')->get();
+        $activeTahunAjaran = TahunAjaran::whereIn('status', [1, 'aktif'])->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
         
         $hariIni = date('N'); // 1 = Senin, 7 = Minggu
         $jadwals = JadwalPelajaran::with('mataPelajaran')
             ->where('hari', $hariIni)
+            ->when($activeTahunAjaran, function($q) use ($activeTahunAjaran) {
+                $q->whereHas('rombel', function($rq) use ($activeTahunAjaran) {
+                    $rq->where('tahunajaran_id', $activeTahunAjaran->id);
+                });
+            })
             ->orderBy('jamawal')
             ->get();
             
@@ -766,6 +789,8 @@ class PresensiController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $activeTA = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first() ?: \App\Modules\Akademik\Models\TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+
         if ($request->has('bulk_penilaian')) {
             $validated = $request->validate([
                 'guru_id' => 'required|exists:guru,id',
@@ -790,6 +815,8 @@ class PresensiController extends Controller
                         'jam' => $validated['jam'],
                         'status' => $item['status'],
                         'kategori' => $validated['kategori'],
+                        'tahunajaran_id' => $activeTA->id ?? null,
+                        'semester' => $activeTA->semester ?? null,
                     ]
                 );
             }
@@ -809,7 +836,10 @@ class PresensiController extends Controller
             'scan_id' => 'nullable|string',
         ]);
 
-        Presensi::create($validated);
+        Presensi::create(array_merge($validated, [
+            'tahunajaran_id' => $activeTA->id ?? null,
+            'semester' => $activeTA->semester ?? null,
+        ]));
 
         return redirect()->route('penilaiandanpresensi.presensi.index')
             ->with('success', 'Data berhasil ditambahkan.');

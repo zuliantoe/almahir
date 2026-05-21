@@ -47,6 +47,11 @@ class IzinSakitController extends Controller
         }
         
         $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
+        if ($request->filled('tahunajaran_id')) {
+            $query->where('tahunajaran_id', $request->tahunajaran_id);
+        } elseif ($activeTahunAjaran) {
+            $query->where('tahunajaran_id', $activeTahunAjaran->id);
+        }
         $izinSakits = $query->orderBy('created_at', 'desc')->paginate(10);
 
         return view('penilaiandanpresensi::izinsakit.siswa_index', [
@@ -207,12 +212,17 @@ class IzinSakitController extends Controller
                   ->whereDate('tgl_selesai', '>=', $filterTanggal);
         }
 
+        $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
+        if ($request->filled('tahunajaran_id')) {
+            $query->where('tahunajaran_id', $request->tahunajaran_id);
+        } elseif ($activeTahunAjaran) {
+            $query->where('tahunajaran_id', $activeTahunAjaran->id);
+        }
+
         // Order by status (Pending first) and then date
         $izinSakits = $query->orderByRaw("CASE WHEN status = 'Pending' THEN 1 ELSE 2 END")
             ->orderBy('created_at', 'desc')
             ->paginate(15);
-
-        $activeTahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
         $rombels = Rombel::where('tahunajaran_id', $activeTahunAjaran->id ?? 0)->orderBy('nama_rombel')->get();
 
         return view('penilaiandanpresensi::izinsakit.index', [
@@ -407,6 +417,9 @@ class IzinSakitController extends Controller
 
         if ($request->status === 'Disetujui') {
             // Sinkronisasi ke tabel Presensi
+            $activeTA = \App\Modules\Akademik\Models\TahunAjaran::whereIn('status', [1, 'aktif'])->first();
+            $tahunajaranId = $izinSakit->tahunajaran_id ?? $activeTA->id ?? null;
+            $semester = $izinSakit->semester ?? $activeTA->semester ?? null;
             $tglMulai = \Carbon\Carbon::parse($izinSakit->tgl_mulai);
             $tglSelesai = \Carbon\Carbon::parse($izinSakit->tgl_selesai);
 
@@ -435,6 +448,8 @@ class IzinSakitController extends Controller
                             'guru_id' => $jadwal->guru_id ?? auth()->id(),
                             'mapel_id' => $jadwal->mapel_id,
                             'jadwal_pelajaran_id' => $jadwal->id,
+                            'tahunajaran_id' => $tahunajaranId,
+                            'semester' => $semester,
                             'jam' => $date->format('Y-m-d') . ' ' . $jadwal->jamawal,
                             'status' => $izinSakit->jenis, // 'Izin' or 'Sakit'
                             'kategori' => 'Sekolah',
@@ -442,9 +457,11 @@ class IzinSakitController extends Controller
                             'updated_at' => now(),
                         ]);
                     } else {
-                        // If exists, just update the status
+                        // If exists, just update the status and preserve TA fields
                         $existingPresensi->update([
                             'status' => $izinSakit->jenis,
+                            'tahunajaran_id' => $tahunajaranId,
+                            'semester' => $semester,
                         ]);
                     }
                 }

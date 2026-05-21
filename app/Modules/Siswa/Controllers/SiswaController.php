@@ -12,10 +12,10 @@ use App\Modules\Akademik\Models\TahunAjaran;
 
 /**
  * SiswaController
- * 
+ *
  * Handles all student-related operations within the Siswa module.
  * This is a sample controller demonstrating the modular architecture.
- * 
+ *
  * @author SIAKAD Development Team
  */
 class SiswaController extends Controller
@@ -40,8 +40,8 @@ class SiswaController extends Controller
     {
         $tahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::orderBy('id', 'desc')->get();
         $pendaftaranDiterima = \Modules\Pendaftaran\Models\Pendaftaran::where('status', 'diterima')
-                                                                        ->whereDoesntHave('siswa')
-                                                                        ->get();
+            ->whereDoesntHave('siswa')
+            ->get();
 
         return view('siswa::create', [
             'title' => 'Tambah Siswa Baru',
@@ -65,10 +65,11 @@ class SiswaController extends Controller
             'jenis_kelamin' => 'required|in:L,P',
             'telepon' => 'required|string|max:20',
             'alamat' => 'required|string',
-            'tahun_masuk' => 'required|integer',
+            'tahun_masuk' => 'required|string',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
-
+        $tahun_masuk = explode('/',$validated['tahun_masuk']);
+        $validated['tahun_masuk'] = $tahun_masuk[0];
         $validated['status'] = 'aktif'; // default status for new student
 
         if ($request->hasFile('foto')) {
@@ -97,7 +98,7 @@ class SiswaController extends Controller
 
         // Hari disimpan sebagai string di DB ('Senin','Selasa',dst)
         $hariList  = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-        $todayName = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'][\Carbon\Carbon::now()->dayOfWeekIso - 1] ?? '';
+        $todayName = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][\Carbon\Carbon::now()->dayOfWeekIso - 1] ?? '';
 
         $rombelSiswa = RombelSiswa::with(['rombel.kelas'])
             ->where('siswa_id', $siswa->id)
@@ -143,7 +144,7 @@ class SiswaController extends Controller
     {
         $siswa = Siswa::findOrFail($id);
         $tahunAjaran = \App\Modules\Akademik\Models\TahunAjaran::orderBy('id', 'desc')->get();
-        
+
         return view('siswa::edit', [
             'title' => 'Edit Siswa',
             'breadcrumb' => 'Siswa / Edit',
@@ -181,7 +182,7 @@ class SiswaController extends Controller
         }
 
         $siswa->update($validated);
-        
+
         return redirect()->route('siswa.index')
             ->with('success', 'Data siswa berhasil diperbarui.');
     }
@@ -193,7 +194,7 @@ class SiswaController extends Controller
     {
         $siswa = Siswa::findOrFail($id);
         $siswa->delete();
-        
+
         return redirect()->route('siswa.index')
             ->with('success', 'Siswa berhasil dihapus.');
     }

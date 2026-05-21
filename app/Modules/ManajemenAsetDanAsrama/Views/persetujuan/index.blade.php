@@ -24,7 +24,7 @@
 <div class="container-fluid">
     {{-- Quick Information --}}
     <div class="row">
-        <div class="col-lg-3 col-6">
+        <div class="col-lg-4 col-6">
             <div class="small-box bg-warning shadow-sm">
                 <div class="inner">
                     <h3>{{ number_format($stats['total_pending'] ?? 0) }}</h3>
@@ -33,16 +33,7 @@
                 <div class="icon"><i class="fas fa-user-check"></i></div>
             </div>
         </div>
-        <div class="col-lg-3 col-6">
-            <div class="small-box bg-info shadow-sm">
-                <div class="inner">
-                    <h3 style="font-size: 1.6rem;">Rp {{ number_format($stats['estimasi_biaya'] ?? 0, 0, ',', '.') }}</h3>
-                    <p>Estimasi Anggaran</p>
-                </div>
-                <div class="icon"><i class="fas fa-coins"></i></div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-6">
+        <div class="col-lg-4 col-6">
             <div class="small-box bg-success shadow-sm">
                 <div class="inner">
                     <h3>{{ number_format($stats['total_approved'] ?? 0) }}</h3>
@@ -51,8 +42,8 @@
                 <div class="icon"><i class="fas fa-check-double"></i></div>
             </div>
         </div>
-        <div class="col-lg-3 col-6">
-            <div class="small-box bg-secondary shadow-sm">
+        <div class="col-lg-4 col-6">
+            <div class="small-box bg-danger shadow-sm">
                 <div class="inner">
                     <h3>{{ number_format($stats['total_rejected'] ?? 0) }}</h3>
                     <p>Ditolak / Revisi</p>

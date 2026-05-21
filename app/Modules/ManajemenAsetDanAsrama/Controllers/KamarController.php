@@ -113,6 +113,12 @@ class KamarController extends BaseController
             'deskripsi'  => 'nullable|string',
         ]);
 
+        if ($validated['kapasitas'] < $kamar->terisi) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', "Gagal memperbarui! Kapasitas kamar tidak boleh kurang dari jumlah penghuni aktif saat ini ({$kamar->terisi} orang). Silakan kurangi penghuni kamar terlebih dahulu atau atur kapasitas minimal {$kamar->terisi}.");
+        }
+
         $kamar->update($validated);
 
         return redirect()->route('manajemenasetdanasrama.kamar.index')

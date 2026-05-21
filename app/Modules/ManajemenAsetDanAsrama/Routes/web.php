@@ -109,12 +109,15 @@ Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
     // Jadwal Piket
     Route::prefix('jadwal-piket')->name('jadwal-piket.')->group(function () {
         Route::get('/', [JadwalPiketController::class, 'index'])->name('index');
+        Route::get('evaluasi', [JadwalPiketController::class, 'evaluasi'])->name('evaluasi');
         Route::get('create', [JadwalPiketController::class, 'create'])->name('create');
         Route::post('/', [JadwalPiketController::class, 'store'])->name('store');
         Route::get('{id}/edit', [JadwalPiketController::class, 'edit'])->name('edit');
         Route::put('{id}', [JadwalPiketController::class, 'update'])->name('update');
         Route::delete('{id}', [JadwalPiketController::class, 'destroy'])->name('destroy');
         Route::post('{id}/selesai', [JadwalPiketController::class, 'selesai'])->name('selesai');
+        Route::post('{id}/batal-selesai', [JadwalPiketController::class, 'batalSelesai'])->name('batal-selesai');
+        Route::post('selesai-tempat', [JadwalPiketController::class, 'selesaiTempat'])->name('selesai-tempat');
         Route::post('auto-generate', [JadwalPiketController::class, 'autoGenerate'])->name('auto-generate');
         Route::post('bulk-store', [JadwalPiketController::class, 'bulkStore'])->name('bulk-store');
         Route::delete('destroy-day/{date}', [JadwalPiketController::class, 'destroyDay'])->name('destroy-day');

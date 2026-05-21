@@ -27,7 +27,6 @@ class PengajuanController extends BaseController
                         ->paginate(15);
         
         $stats = [
-            'total'     => PengajuanAset::count(),
             'diajukan'  => PengajuanAset::where('status', 'diajukan')->count(),
             'disetujui' => PengajuanAset::where('status', 'disetujui')->count(),
             'ditolak'   => PengajuanAset::where('status', 'ditolak')->count(),

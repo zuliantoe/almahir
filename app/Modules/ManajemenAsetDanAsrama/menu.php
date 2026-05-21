@@ -80,6 +80,12 @@ return [
                     'route' => 'manajemenasetdanasrama.jadwal-piket.index',
                     'match' => 'manajemenasetdanasrama/jadwal-piket*',
                 ],
+                [
+                    'label' => 'Evaluasi Piket',
+                    'icon'  => 'fas fa-chart-line',
+                    'route' => 'manajemenasetdanasrama.jadwal-piket.evaluasi',
+                    'match' => 'manajemenasetdanasrama/jadwal-piket/evaluasi*',
+                ],
             ],
         ],
         [

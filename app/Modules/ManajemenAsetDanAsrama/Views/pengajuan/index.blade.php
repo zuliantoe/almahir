@@ -24,16 +24,7 @@
 <div class="container-fluid">
     {{-- Quick Information --}}
     <div class="row">
-        <div class="col-lg-3 col-6">
-            <div class="small-box bg-info shadow-sm">
-                <div class="inner">
-                    <h3>{{ number_format($stats['total'] ?? 0) }}</h3>
-                    <p>Total Pengajuan</p>
-                </div>
-                <div class="icon"><i class="fas fa-file-invoice"></i></div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-6">
+        <div class="col-lg-4 col-6">
             <div class="small-box bg-warning shadow-sm">
                 <div class="inner">
                     <h3>{{ number_format($stats['diajukan'] ?? 0) }}</h3>
@@ -42,7 +33,7 @@
                 <div class="icon"><i class="fas fa-clock"></i></div>
             </div>
         </div>
-        <div class="col-lg-3 col-6">
+        <div class="col-lg-4 col-6">
             <div class="small-box bg-success shadow-sm">
                 <div class="inner">
                     <h3>{{ number_format($stats['disetujui'] ?? 0) }}</h3>
@@ -51,7 +42,7 @@
                 <div class="icon"><i class="fas fa-check-circle"></i></div>
             </div>
         </div>
-        <div class="col-lg-3 col-6">
+        <div class="col-lg-4 col-6">
             <div class="small-box bg-danger shadow-sm">
                 <div class="inner">
                     <h3>{{ number_format($stats['ditolak'] ?? 0) }}</h3>

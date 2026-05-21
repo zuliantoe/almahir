@@ -131,6 +131,7 @@
                                                 data-id="{{ $item->id }}"
                                                 data-nama="{{ $item->nama_kamar }}"
                                                 data-kapasitas="{{ $item->kapasitas }}"
+                                                data-terisi="{{ $item->terisi }}"
                                                 data-deskripsi="{{ $item->deskripsi }}"
                                                 title="Edit">
                                             <i class="fas fa-edit"></i>
@@ -308,12 +309,44 @@
         $('#modalEditKamar').on('show.bs.modal', function (event) {
             var button = $(event.relatedTarget);
             var modal = $(this);
+            var terisi = button.data('terisi') || 0;
+            
             modal.find('#edit_nama_kamar').val(button.data('nama'));
             modal.find('#edit_kapasitas').val(button.data('kapasitas'));
             modal.find('#edit_deskripsi').val(button.data('deskripsi'));
+            
+            // Set min attribute and helper text
+            var inputKapasitas = modal.find('#edit_kapasitas');
+            inputKapasitas.attr('min', terisi);
+            
+            var helpText = modal.find('#edit_kapasitas_help');
+            if (helpText.length === 0) {
+                inputKapasitas.closest('.form-group').append('<small id="edit_kapasitas_help" class="form-text text-muted mt-1"></small>');
+                helpText = modal.find('#edit_kapasitas_help');
+            }
+            
+            if (terisi > 0) {
+                helpText.html('<i class="fas fa-info-circle text-warning mr-1"></i> Saat ini terisi <strong>' + terisi + '</strong> orang. Kapasitas minimal harus <strong>' + terisi + '</strong>.');
+            } else {
+                helpText.html('Kapasitas minimal 1 orang.');
+            }
+            
             var url = '{{ route("manajemenasetdanasrama.kamar.update", ":id") }}';
             url = url.replace(':id', button.data('id'));
             modal.find('#formEditKamar').attr('action', url);
+        });
+
+        // Form submit client-side validation
+        $('#formEditKamar').on('submit', function (e) {
+            var inputKapasitas = $('#edit_kapasitas');
+            var minKapasitas = parseInt(inputKapasitas.attr('min')) || 1;
+            var valKapasitas = parseInt(inputKapasitas.val()) || 0;
+            
+            if (valKapasitas < minKapasitas) {
+                e.preventDefault();
+                alert('Gagal menyimpan! Kapasitas kamar tidak boleh kurang dari jumlah penghuni aktif saat ini (' + minKapasitas + ' orang).');
+                return false;
+            }
         });
 
         // Hapus modal

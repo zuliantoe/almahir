@@ -25,10 +25,33 @@
 <div class="container-fluid">
     {{-- STATS SECTION --}}
     <div class="row">
-        <div class="col-lg-3 col-6"><div class="small-box bg-info shadow-sm"><div class="inner"><h3>{{ number_format($stats['total'] ?? 0) }}</h3><p>Total Jadwal</p></div><div class="icon"><i class="fas fa-calendar-alt"></i></div></div></div>
-        <div class="col-lg-3 col-6"><div class="small-box bg-primary shadow-sm"><div class="inner"><h3>{{ number_format($stats['hari_ini'] ?? 0) }}</h3><p>Jadwal Hari Ini</p></div><div class="icon"><i class="fas fa-calendar-day"></i></div></div></div>
-        <div class="col-lg-3 col-6"><div class="small-box bg-success shadow-sm"><div class="inner"><h3>{{ number_format($stats['selesai'] ?? 0) }}</h3><p>Tugas Selesai</p></div><div class="icon"><i class="fas fa-check-circle"></i></div></div></div>
-        <div class="col-lg-3 col-6"><div class="small-box bg-warning shadow-sm"><div class="inner"><h3>{{ number_format($stats['belum'] ?? 0) }}</h3><p>Menunggu</p></div><div class="icon"><i class="fas fa-hourglass-half"></i></div></div></div>
+        <div class="col-lg-4 col-6">
+            <div class="small-box bg-info shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($stats['hari_ini'] ?? 0) }}</h3>
+                    <p>Total Jadwal Hari Ini</p>
+                </div>
+                <div class="icon"><i class="fas fa-calendar-day"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-6">
+            <div class="small-box bg-success shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($stats['selesai_hari_ini'] ?? 0) }}</h3>
+                    <p>Selesai Hari Ini</p>
+                </div>
+                <div class="icon"><i class="fas fa-check-circle"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-6">
+            <div class="small-box bg-warning shadow-sm">
+                <div class="inner">
+                    <h3>{{ number_format($stats['belum_hari_ini'] ?? 0) }}</h3>
+                    <p>Belum Selesai Hari Ini</p>
+                </div>
+                <div class="icon"><i class="fas fa-hourglass-half"></i></div>
+            </div>
+        </div>
     </div>
 
     @if(session('success')) <x-alert type="success" :message="session('success')" dismissible /> @endif
@@ -44,6 +67,7 @@
                             <button type="button" class="btn btn-sm btn-info shadow-sm px-3" style="border-radius: 8px;" data-toggle="modal" data-target="#modalAutoGenerate"><i class="fas fa-robot mr-1"></i> Auto-Generate</button>
                         @endif
                         <button type="button" class="btn btn-sm btn-secondary shadow-sm px-3" style="border-radius: 8px;" onclick="triggerPrintAll()"><i class="fas fa-print mr-1"></i> Cetak</button>
+                        <a href="{{ route('manajemenasetdanasrama.jadwal-piket.evaluasi') }}" class="btn btn-sm btn-success shadow-sm px-3" style="border-radius: 8px;"><i class="fas fa-chart-line mr-1"></i> Evaluasi Piket</a>
                         @if($canManagePiket)
                             <button type="button" class="btn btn-sm btn-danger shadow-sm px-3" style="border-radius: 8px;" onclick="if(confirm('Hapus seluruh riwayat jadwal piket? Data kamar dan santri tetap aman.')) document.getElementById('form-reset-piket').submit();"><i class="fas fa-eraser mr-1"></i> Kosongkan Jadwal</button>
                             <form id="form-reset-piket" action="{{ route('manajemenasetdanasrama.jadwal-piket.reset') }}" method="POST" style="display: none;">@csrf</form>
@@ -187,9 +211,23 @@
                                 <div class="col-lg-6 mb-3 mb-lg-0">
                                     @foreach($leftColumn as $location => $items)
                                         <div class="card shadow-sm border-0 mb-4 animate__animated animate__fadeInUp" style="border-radius: 15px; overflow: hidden;">
-                                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                                                <h6 class="mb-0 font-weight-bold text-primary"><i class="fas fa-map-marker-alt mr-2 text-info"></i> {{ $location ?: 'Umum' }}</h6>
-                                                <span class="badge badge-pill bg-light-info text-info px-2 py-1" style="font-size: 10px;">{{ $items->count() }} Santri</span>
+                                            <div class="card-header bg-white py-3 border-bottom">
+                                                <div class="d-flex justify-content-between align-items-center w-100">
+                                                    <h6 class="mb-0 font-weight-bold text-primary"><i class="fas fa-map-marker-alt mr-2 text-info"></i> {{ $location ?: 'Umum' }}</h6>
+                                                    <div class="d-flex align-items-center" style="gap: 8px;">
+                                                        <span class="badge badge-pill bg-light-info text-info px-2 py-1" style="font-size: 10px;">{{ $items->count() }} Santri</span>
+                                                        @if($canCheckOffPiket && $items->where('status', 'belum')->count() > 0)
+                                                            <form action="{{ route('manajemenasetdanasrama.jadwal-piket.selesai-tempat') }}" method="POST" class="m-0" onsubmit="return confirm('Apakah Anda yakin ingin menandai semua santri di lokasi ini sudah piket?')">
+                                                                @csrf
+                                                                <input type="hidden" name="tanggal" value="{{ $activeDate }}">
+                                                                <input type="hidden" name="lokasi_piket" value="{{ $location }}">
+                                                                <button type="submit" class="btn-soft-success-header" title="Konfirmasi Selesai Semua">
+                                                                    <i class="fas fa-check-double mr-1"></i> Selesai Semua
+                                                                </button>
+                                                            </form>
+                                                        @endif
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div class="card-body p-0">
                                                 <div class="table-responsive"><table class="table table-sm table-hover mb-0"><thead class="bg-gray-light text-muted small uppercase"><tr><th width="75" class="pl-3 py-3 border-0">Shift</th><th class="py-3 border-0">Nama Santri</th><th width="115" class="text-center pr-3 py-3 border-0">Aksi</th></tr></thead>
@@ -233,9 +271,23 @@
                                 <div class="col-lg-6">
                                     @foreach($rightColumn as $location => $items)
                                         <div class="card shadow-sm border-0 mb-4 animate__animated animate__fadeInUp" style="border-radius: 15px; overflow: hidden;">
-                                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                                                <h6 class="mb-0 font-weight-bold text-primary"><i class="fas fa-map-marker-alt mr-2 text-info"></i> {{ $location ?: 'Umum' }}</h6>
-                                                <span class="badge badge-pill bg-light-info text-info px-2 py-1" style="font-size: 10px;">{{ $items->count() }} Santri</span>
+                                            <div class="card-header bg-white py-3 border-bottom">
+                                                <div class="d-flex justify-content-between align-items-center w-100">
+                                                    <h6 class="mb-0 font-weight-bold text-primary"><i class="fas fa-map-marker-alt mr-2 text-info"></i> {{ $location ?: 'Umum' }}</h6>
+                                                    <div class="d-flex align-items-center" style="gap: 8px;">
+                                                        <span class="badge badge-pill bg-light-info text-info px-2 py-1" style="font-size: 10px;">{{ $items->count() }} Santri</span>
+                                                        @if($canCheckOffPiket && $items->where('status', 'belum')->count() > 0)
+                                                            <form action="{{ route('manajemenasetdanasrama.jadwal-piket.selesai-tempat') }}" method="POST" class="m-0" onsubmit="return confirm('Apakah Anda yakin ingin menandai semua santri di lokasi ini sudah piket?')">
+                                                                @csrf
+                                                                <input type="hidden" name="tanggal" value="{{ $activeDate }}">
+                                                                <input type="hidden" name="lokasi_piket" value="{{ $location }}">
+                                                                <button type="submit" class="btn-soft-success-header" title="Konfirmasi Selesai Semua">
+                                                                    <i class="fas fa-check-double mr-1"></i> Selesai Semua
+                                                                </button>
+                                                            </form>
+                                                        @endif
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div class="card-body p-0">
                                                 <div class="table-responsive"><table class="table table-sm table-hover mb-0"><thead class="bg-gray-light text-muted small uppercase"><tr><th width="75" class="pl-3 py-3 border-0">Shift</th><th class="py-3 border-0">Nama Santri</th><th width="115" class="text-center pr-3 py-3 border-0">Aksi</th></tr></thead>
@@ -383,6 +435,8 @@
     .btn-soft-success { background: #dcfce7; color: #16a34a; } .btn-soft-success:hover { background: #16a34a; color: white; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(22, 163, 74, 0.3); }
     .btn-soft-warning { background: #fef9c3; color: #ca8a04; } .btn-soft-warning:hover { background: #ca8a04; color: white; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(202, 138, 4, 0.3); }
     .btn-soft-danger { background: #fee2e2; color: #dc2626; } .btn-soft-danger:hover { background: #dc2626; color: white; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3); }
+    .btn-soft-success-header { background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; font-weight: 700; font-size: 11px; padding: 5px 12px; border-radius: 20px; transition: all 0.2s ease-in-out; box-shadow: 0 1px 2px rgba(0,0,0,0.05); cursor: pointer; display: inline-flex; align-items: center; }
+    .btn-soft-success-header:hover { background: #16a34a; color: #ffffff; border-color: #16a34a; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2); }
     .manual-loc-row { background: #f8fafc; border-left: 4px solid #4361ee; padding: 15px; border-radius: 12px; margin-bottom: 12px; }
     .assignment-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; margin-bottom: 15px; }
 </style>

@@ -92,10 +92,9 @@ class JadwalPiketController extends BaseController
             ->get();
 
         $stats = [
-            'total' => JadwalPiket::count(),
             'hari_ini' => JadwalPiket::whereDate('tanggal', now())->count(),
-            'selesai' => JadwalPiket::where('status', 'sudah')->count(),
-            'belum' => JadwalPiket::where('status', 'belum')->count(),
+            'selesai_hari_ini' => JadwalPiket::whereDate('tanggal', now())->where('status', 'sudah')->count(),
+            'belum_hari_ini' => JadwalPiket::whereDate('tanggal', now())->where('status', 'belum')->count(),
         ];
 
         $allSiswa = Siswa::orderBy('nama', 'asc')->get();
@@ -257,6 +256,41 @@ class JadwalPiketController extends BaseController
         return redirect()->back()->with('success', 'Status piket diupdate menjadi selesai.');
     }
 
+    public function batalSelesai(string $id): RedirectResponse
+    {
+        $jadwal = JadwalPiket::findOrFail($id);
+        $jadwal->status = 'belum';
+        $jadwal->save();
+        return redirect()->route('manajemenasetdanasrama.jadwal-piket.index', [
+            'tanggal_mulai' => \Carbon\Carbon::parse($jadwal->tanggal)->format('Y-m-d')
+        ])->with('success', 'Status piket berhasil dibatalkan menjadi belum.');
+    }
+
+    /**
+     * Konfirmasi selesai seluruh santri pada satu lokasi piket di tanggal tertentu.
+     */
+    public function selesaiTempat(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'tanggal' => 'required|date',
+            'lokasi_piket' => 'nullable|string',
+        ]);
+
+        $query = JadwalPiket::whereDate('tanggal', $request->tanggal);
+        if ($request->filled('lokasi_piket')) {
+            $query->where('lokasi_piket', $request->lokasi_piket);
+        } else {
+            $query->where(function($q) {
+                $q->whereNull('lokasi_piket')->orWhere('lokasi_piket', '');
+            });
+        }
+
+        $count = $query->update(['status' => 'sudah']);
+
+        $lokasiName = $request->lokasi_piket ?: 'Umum';
+        return redirect()->back()->with('success', "Berhasil mengonfirmasi semua ({$count}) santri di lokasi {$lokasiName} pada tanggal " . \Carbon\Carbon::parse($request->tanggal)->translatedFormat('d F Y') . " selesai piket.");
+    }
+
     public function autoGenerate(Request $request)
     {
         $request->validate(['tanggal_mulai' => 'required|date', 'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai', 'shift' => 'required|in:pagi,sore,malam', 'lokasi' => 'required|array', 'jumlah_santri' => 'required|array']);
@@ -300,5 +334,142 @@ class JadwalPiketController extends BaseController
     {
         JadwalPiket::truncate();
         return redirect()->route('manajemenasetdanasrama.jadwal-piket.index')->with('success', 'Semua jadwal piket berhasil di-reset.');
+    }
+
+    /**
+     * Tampilan evaluasi dan rekapitulasi piket bulanan/kerajinan santri.
+     */
+    public function evaluasi(Request $request): View
+    {
+        $activeTab = $request->input('tab', 'harian');
+
+        // --- TAB 1: EVALUASI HARIAN (PAGINATION TANGGAL) ---
+        // Ambil list tanggal unik yang punya jadwal (sampai hari ini)
+        $dateQuery = JadwalPiket::select('tanggal')->distinct()->where('tanggal', '<=', now()->format('Y-m-d'));
+        
+        $allDates = $dateQuery->orderBy('tanggal', 'desc')->pluck('tanggal')->toArray();
+        $today = now()->format('Y-m-d');
+        $allDatesFormatted = array_map(function ($d) {
+            return \Carbon\Carbon::parse($d)->format('Y-m-d');
+        }, $allDates);
+
+        $todayIndex = array_search($today, $allDatesFormatted);
+
+        $perPage = 1;
+        $currentPage = $request->input('page_date');
+
+        // Default ke halaman hari ini jika ada
+        if (!$currentPage && $todayIndex !== false) {
+            $currentPage = $todayIndex + 1;
+        } else {
+            $currentPage = $currentPage ?: 1;
+        }
+
+        $currentDateSlice = array_slice($allDates, ($currentPage - 1) * $perPage, $perPage);
+        $paginatedDates = new LengthAwarePaginator(
+            $currentDateSlice,
+            count($allDates),
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'pageName' => 'page_date',
+                'query' => array_merge($request->query(), ['tab' => 'harian'])
+            ]
+        );
+
+        $activeDate = count($currentDateSlice) > 0 ? $currentDateSlice[0] : null;
+
+        $harianJadwal = [];
+        $statsHarian = [
+            'total' => 0,
+            'selesai' => 0,
+            'belum' => 0,
+            'rate' => 100
+        ];
+
+        if ($activeDate) {
+            $harianJadwal = JadwalPiket::with(['siswa', 'kamar'])
+                ->where('tanggal', $activeDate)
+                ->orderBy('shift', 'asc')
+                ->orderBy('lokasi_piket', 'asc')
+                ->get();
+
+            $totalActive = $harianJadwal->count();
+            $completedActive = $harianJadwal->where('status', 'sudah')->count();
+            
+            $statsHarian = [
+                'total' => $totalActive,
+                'selesai' => $completedActive,
+                'belum' => $totalActive - $completedActive,
+                'rate' => $totalActive > 0 ? round(($completedActive / $totalActive) * 100, 1) : 100
+            ];
+        }
+
+        // --- TAB 2: REKAP KERAJINAN PER SANTRI ---
+        $tanggalMulai = $request->input('tanggal_mulai', now()->startOfMonth()->format('Y-m-d'));
+        $tanggalSelesai = $request->input('tanggal_selesai', now()->format('Y-m-d'));
+
+        $siswaQuery = Siswa::aktif()->orderBy('nama', 'asc');
+        if ($request->filled('q')) {
+            $siswaQuery->where('nama', 'like', '%' . $request->q . '%');
+        }
+
+        $siswaQuery->withCount([
+            'jadwalPiket as total_piket' => function ($q) use ($tanggalMulai, $tanggalSelesai) {
+                $q->whereBetween('tanggal', [$tanggalMulai, $tanggalSelesai]);
+            },
+            'jadwalPiket as total_selesai' => function ($q) use ($tanggalMulai, $tanggalSelesai) {
+                $q->whereBetween('tanggal', [$tanggalMulai, $tanggalSelesai])->where('status', 'sudah');
+            },
+            'jadwalPiket as total_belum' => function ($q) use ($tanggalMulai, $tanggalSelesai) {
+                $q->whereBetween('tanggal', [$tanggalMulai, $tanggalSelesai])->where('status', 'belum');
+            }
+        ]);
+
+        $kerajinan = $request->input('kerajinan');
+        if ($kerajinan === 'high') {
+            $siswaQuery->havingRaw('total_piket > 0 AND (total_selesai / total_piket) >= 0.8');
+        } elseif ($kerajinan === 'medium') {
+            $siswaQuery->havingRaw('total_piket > 0 AND (total_selesai / total_piket) >= 0.5 AND (total_selesai / total_piket) < 0.8');
+        } elseif ($kerajinan === 'low') {
+            $siswaQuery->havingRaw('total_piket > 0 AND (total_selesai / total_piket) < 0.5');
+        } elseif ($kerajinan === 'none') {
+            $siswaQuery->havingRaw('total_piket = 0');
+        }
+
+        $complianceData = $siswaQuery->paginate(15, ['*'], 'page_compliance')->appends($request->query());
+
+        // Hitung Ringkasan Metrik Global (Tab 2)
+        $totalPastDuties = JadwalPiket::whereBetween('tanggal', [$tanggalMulai, $tanggalSelesai])
+            ->where('tanggal', '<=', now()->format('Y-m-d'))
+            ->count();
+
+        $totalPastCompleted = JadwalPiket::whereBetween('tanggal', [$tanggalMulai, $tanggalSelesai])
+            ->where('tanggal', '<=', now()->format('Y-m-d'))
+            ->where('status', 'sudah')
+            ->count();
+
+        $globalComplianceRate = $totalPastDuties > 0 ? round(($totalPastCompleted / $totalPastDuties) * 100, 1) : 100;
+
+        $statsRekap = [
+            'total' => $totalPastDuties,
+            'selesai' => $totalPastCompleted,
+            'belum' => $totalPastDuties - $totalPastCompleted,
+            'rate' => $globalComplianceRate
+        ];
+
+        return view('manajemenasetdanasrama::jadwal-piket.evaluasi', [
+            'title' => 'Evaluasi & Rekap Kerajinan Piket',
+            'activeTab' => $activeTab,
+            'paginator' => $paginatedDates,
+            'activeDate' => $activeDate,
+            'harianJadwal' => $harianJadwal,
+            'complianceData' => $complianceData,
+            'tanggalMulai' => $tanggalMulai,
+            'tanggalSelesai' => $tanggalSelesai,
+            'statsHarian' => $statsHarian,
+            'statsRekap' => $statsRekap,
+        ]);
     }
 }

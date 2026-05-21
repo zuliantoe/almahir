@@ -165,6 +165,21 @@
                                 </a>
                                 @endcan
                                 
+                                @if(auth()->user()->hasRole(['SUPER_ADMIN', 'STAF_TU']))
+                                @php $itemStatus = $item->user->account_status ?? 'inactive'; @endphp
+                                <form action="{{ route('pegawaimanager.toggle-status', $item->id) }}"
+                                      method="POST"
+                                      class="d-inline">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit"
+                                            class="btn {{ $itemStatus === 'active' ? 'btn-outline-warning' : 'btn-outline-success' }} btn-sm mx-1 shadow-sm px-2 btn-animate rounded-circle"
+                                            style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;"
+                                            title="{{ $itemStatus === 'active' ? 'Nonaktifkan Akun' : 'Aktifkan Akun' }}">
+                                        <i class="fas {{ $itemStatus === 'active' ? 'fa-user-slash' : 'fa-user-check' }}"></i>
+                                    </button>
+                                </form>
+                                @endif
 
                                 @if(auth()->user()->hasRole(['SUPER_ADMIN', 'STAF_TU']))
                                 <form action="{{ route('pegawaimanager.destroy', $item->id) }}"

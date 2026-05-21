@@ -148,6 +148,11 @@ class AbsensiController extends Controller
     {
         $user = Auth::user();
         $pegawai = $user->pegawai;
+
+        if (!$pegawai) {
+            return redirect()->back()->with('error', 'Akun Anda belum terhubung dengan data Pegawai.');
+        }
+
         $today = Carbon::today()->toDateString();
         $now = Carbon::now();
 
@@ -210,6 +215,11 @@ class AbsensiController extends Controller
     {
         $user = Auth::user();
         $pegawai = $user->pegawai;
+
+        if (!$pegawai) {
+            return redirect()->back()->with('error', 'Akun Anda belum terhubung dengan data Pegawai.');
+        }
+
         $today = Carbon::today()->toDateString();
         $now = Carbon::now();
 

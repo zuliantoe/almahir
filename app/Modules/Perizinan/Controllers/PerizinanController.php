@@ -99,8 +99,23 @@ class PerizinanController extends Controller
      */
     public function create(): View
     {
+        if (Auth::user()->hasRole(['SUPER_ADMIN', 'STAF_TU'])) {
+            return view('perizinan::error', [
+                'title' => 'Akses Terbatas',
+                'message' => 'Administrator tidak diperbolehkan mengajukan izin/cuti pribadi.'
+            ]);
+        }
+
         $pegawai = Auth::user()->pegawai;
-        $sisaCuti = $pegawai ? $this->getSisaCuti($pegawai) : 0;
+        
+        if (!$pegawai) {
+            return view('perizinan::error', [
+                'title' => 'Akses Terbatas',
+                'message' => 'Akun Anda tidak terhubung dengan data Pegawai. Silakan gunakan akun Pegawai Anda untuk mengajukan izin atau cuti.'
+            ]);
+        }
+
+        $sisaCuti = $this->getSisaCuti($pegawai);
 
         return view('perizinan::create', [
             'title' => 'Ajukan Perizinan',
@@ -113,6 +128,10 @@ class PerizinanController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        if (Auth::user()->hasRole(['SUPER_ADMIN', 'STAF_TU'])) {
+            return redirect()->back()->with('error', 'Administrator tidak diperbolehkan mengajukan izin/cuti.');
+        }
+
         $pegawai = Auth::user()->pegawai;
 
         if (!$pegawai) {

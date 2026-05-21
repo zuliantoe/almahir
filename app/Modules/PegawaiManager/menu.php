@@ -6,7 +6,7 @@
  */
 return [
     'header' => 'KEPEGAWAIAN',
-    'roles'  => ['SUPER_ADMIN', 'STAFF'],
+    'roles'  => ['SUPER_ADMIN', 'STAFF', 'PEGAWAI'],
     'order'  => 15,
     'items'  => [
         [

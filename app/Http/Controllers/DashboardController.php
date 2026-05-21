@@ -170,6 +170,80 @@ class DashboardController extends Controller
             ));
         }
 
+        // Jika user adalah pegawai (mendukung role PEGAWAI atau STAFF)
+        if ($user && ($user->hasRole('PEGAWAI') || $user->hasRole('STAFF'))) {
+            $pegawai = $user->pegawai;
+            if (!$pegawai) {
+                return view('perizinan::error', [
+                    'title' => 'Akun Pegawai Tidak Terhubung',
+                    'message' => 'Akun Anda memiliki role Pegawai (PEGAWAI/STAFF) tetapi belum terhubung dengan data profil Pegawai. Silakan hubungi Admin.'
+                ]);
+            }
+
+            $hariIni = \Carbon\Carbon::now()->translatedFormat('l');
+            $tanggalIni = \Carbon\Carbon::now()->translatedFormat('d F Y');
+            $today = \Carbon\Carbon::today()->toDateString();
+
+            // ─── ABSENSI HARI INI ─────────────────────────────────────────
+            $todayAbsen = null;
+            if (class_exists(\Modules\Absensi\Models\Absensi::class)) {
+                $todayAbsen = \Modules\Absensi\Models\Absensi::where('pegawai_id', $pegawai->id)
+                    ->where('tanggal', $today)
+                    ->first();
+            }
+
+            // ─── STATISTIK ABSENSI BULAN INI ──────────────────────────────
+            $bulanIni = \Carbon\Carbon::now()->month;
+            $tahunIni = \Carbon\Carbon::now()->year;
+            
+            $hadirCount = 0;
+            $terlambatCount = 0;
+            $izinCount = 0;
+            $sisaCuti = $pegawai->getAvailableQuota();
+
+            if (class_exists(\Modules\Absensi\Models\Absensi::class)) {
+                $hadirCount = \Modules\Absensi\Models\Absensi::where('pegawai_id', $pegawai->id)
+                    ->whereMonth('tanggal', $bulanIni)
+                    ->whereYear('tanggal', $tahunIni)
+                    ->whereIn('status', ['TEPAT WAKTU', 'TERLAMBAT'])
+                    ->count();
+
+                $terlambatCount = \Modules\Absensi\Models\Absensi::where('pegawai_id', $pegawai->id)
+                    ->whereMonth('tanggal', $bulanIni)
+                    ->whereYear('tanggal', $tahunIni)
+                    ->where('status', 'TERLAMBAT')
+                    ->count();
+            }
+
+            if (class_exists(\Modules\Perizinan\Models\Perizinan::class)) {
+                $izinCount = \Modules\Perizinan\Models\Perizinan::where('user_id', $pegawai->id)
+                    ->whereMonth('tanggal_mulai', $bulanIni)
+                    ->whereYear('tanggal_mulai', $tahunIni)
+                    ->where('status', 'disetujui')
+                    ->count();
+            }
+
+            // ─── RIWAYAT PERIZINAN TERBARU ─────────────────────────────────
+            $riwayatIzin = collect();
+            if (class_exists(\Modules\Perizinan\Models\Perizinan::class)) {
+                $riwayatIzin = \Modules\Perizinan\Models\Perizinan::where('user_id', $pegawai->id)
+                    ->latest()
+                    ->limit(4)
+                    ->get();
+            }
+
+            $tahunAjaranAktif = '2025/2026';
+            if (class_exists(\App\Modules\Akademik\Models\TahunAjaran::class)) {
+                $ta = \App\Modules\Akademik\Models\TahunAjaran::current();
+                if ($ta) {
+                    $tahunAjaranAktif = $ta->tahunajaran . ' (' . ($ta->keterangan ?? 'Aktif') . ')';
+                }
+            }
+
+            return view('dashboard_pegawai', compact(
+                'pegawai', 'todayAbsen', 'hadirCount', 'terlambatCount', 'izinCount', 'sisaCuti', 'riwayatIzin', 'tahunAjaranAktif', 'hariIni', 'tanggalIni'
+            ));
+        }
 
         // 1. Menghitung Total Guru (berdasarkan role GURU)
         $totalGuru = User::withRole('GURU')->count();

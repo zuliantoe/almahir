@@ -49,11 +49,25 @@ class Pegawai extends Model
         'alamat',
         'tanggal_masuk',
         'status',
+        'sisa_cuti',
+    ];
+
+    protected $attributes = [
+        'sisa_cuti' => 12,
+        'status' => 'aktif',
     ];
 
     protected $casts = [
         'tanggal_masuk' => 'date',
     ];
+
+    /**
+     * Accessor untuk jatah cuti agar selalu default ke 12 jika kosong (null) di database
+     */
+    public function getSisaCutiAttribute($value)
+    {
+        return $value !== null ? (int)$value : 12;
+    }
 
     /*
     |--------------------------------------------------------------------------

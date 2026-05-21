@@ -109,12 +109,13 @@ class PegawaiManagerController extends Controller
             DB::beginTransaction();
 
             // 1. Create User Account
+            $password = Str::random(10);
             $user = User::create([
                 'id' => (string) Str::uuid(),
                 'name' => $validated['nama'],
                 'email' => $validated['email'],
                 'phone' => $validated['no_hp'] ?? null,
-                'password' => Hash::make('password123'),
+                'password' => Hash::make($password),
                 'account_status' => 'active',
             ]);
 
@@ -133,7 +134,7 @@ class PegawaiManagerController extends Controller
             DB::commit();
 
             return redirect()->route('pegawaimanager.index')
-                ->with('success', 'Pegawai dan akun user berhasil ditambahkan. Password login default: password123');
+                ->with('success', 'Pegawai dan akun user berhasil ditambahkan. PASSWORD LOGIN DEFAULT: ' . $password . ' (Silakan catat password ini sebelum dibagikan)');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -463,13 +464,19 @@ class PegawaiManagerController extends Controller
                     continue;
                 }
 
+                // Cek duplikasi NIP di Pegawai jika NIP diisi
+                if (!empty($nip) && Pegawai::where('nip', $nip)->exists()) {
+                    $errorCount++;
+                    continue;
+                }
+
                 // 1. Create User
                 $user = User::create([
                     'id' => (string) Str::uuid(),
                     'name' => $nama,
                     'email' => $email,
                     'phone' => $no_hp,
-                    'password' => Hash::make('password123'),
+                    'password' => Hash::make('Almahir@2026!'),
                     'account_status' => 'active',
                 ]);
 

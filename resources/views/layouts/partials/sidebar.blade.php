@@ -49,9 +49,9 @@
 <aside class="main-sidebar {{ $sidebarClass }} elevation-4 no-print">
     {{-- Brand Logo --}}
     <a href="{{ $homeUrl }}" class="brand-link">
-        <img src="https://adminlte.io/themes/v3/dist/img/AdminLTELogo.png" 
-             alt="SIAKAD Logo" 
-             class="brand-image img-circle elevation-3" 
+        <img src="https://adminlte.io/themes/v3/dist/img/AdminLTELogo.png"
+             alt="SIAKAD Logo"
+             class="brand-image img-circle elevation-3"
              style="opacity: .8">
         <span class="brand-text font-weight-light"><strong>SIAKAD</strong> ALMAHIR</span>
     </a>
@@ -61,8 +61,8 @@
         {{-- Sidebar user panel --}}
         <div class="user-panel mt-3 pb-3 mb-3 d-flex">
             <div class="image">
-                <img src="{{ Auth::check() && Auth::user()->avatar_url ? Auth::user()->avatar_url : 'https://ui-avatars.com/api/?name=G&color=fff&background=6c757d' }}" 
-                     class="img-circle elevation-2" 
+                <img src="{{ Auth::check() && Auth::user()->avatar_url ? Auth::user()->avatar_url : 'https://ui-avatars.com/api/?name=G&color=fff&background=6c757d' }}"
+                     class="img-circle elevation-2"
                      alt="User Image">
             </div>
             <div class="info">
@@ -86,7 +86,7 @@
         {{-- Sidebar Menu --}}
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column pb-5" data-widget="treeview" role="menu" data-accordion="false">
-                
+
                 @if($isGuru)
                     {{-- ========================================== --}}
                     {{-- PORTAL GURU DIRECT VIEW                    --}}
@@ -241,7 +241,7 @@
                     {{-- ========================================== --}}
                     {{-- PORTAL ADMIN & STAFF (WITH MODULE SWITCHER) --}}
                     {{-- ========================================== --}}
-                    
+
                     @if($activeModule)
                         {{-- 1. TOMBOL KEMBALI KE MENU UTAMA --}}
                         <li class="nav-item">
@@ -416,6 +416,16 @@
                                     <p>Modul Kepegawaian</p>
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="{{ route('absensi.index') }}" class="nav-link {{ request()->is('absensi*') || request()->is('perizinan*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-fingerprint text-warning"></i>
+                                    <p>Modul Kehadiran</p>
+                                </a>
+                            </li>
+                        @endif
+                         @if(Auth::user()->hasRole(['PEGAWAI']))
+
+
                             <li class="nav-item">
                                 <a href="{{ route('absensi.index') }}" class="nav-link {{ request()->is('absensi*') || request()->is('perizinan*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-fingerprint text-warning"></i>

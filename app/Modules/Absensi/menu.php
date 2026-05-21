@@ -6,7 +6,7 @@
  */
 return [
     'header' => 'KEHADIRAN',
-    'roles'  => ['SUPER_ADMIN', 'STAFF'],
+    'roles'  => ['SUPER_ADMIN', 'STAFF', 'PEGAWAI'],
     'order'  => 20,
     'items'  => [
         [
@@ -14,14 +14,14 @@ return [
             'icon'  => 'fas fa-fingerprint',
             'route' => 'absensi.create',
             'match' => 'absensi/scan',
-            'roles' => ['SUPER_ADMIN', 'STAFF'],
+            'roles' => ['SUPER_ADMIN', 'STAFF', 'PEGAWAI'],
         ],
         [
             'label' => 'Riwayat Absensi',
             'icon'  => 'fas fa-history',
             'route' => 'absensi.index',
             'match' => 'absensi',
-            'roles' => ['SUPER_ADMIN', 'STAFF'],
+            'roles' => ['SUPER_ADMIN', 'STAFF', 'PEGAWAI'],
         ],
         [
             'label' => 'Monitoring Kehadiran',

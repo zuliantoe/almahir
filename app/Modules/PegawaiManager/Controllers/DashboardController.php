@@ -33,7 +33,7 @@ class DashboardController extends Controller
         $hadirHariIni = Absensi::whereDate('tanggal', $today)
             ->whereIn('status', ['TEPAT WAKTU', 'TERLAMBAT'])->count();
 
-        $izinHariIni = \Modules\Perizinan\Models\Perizinan::where('status', 'disetujui')
+        $izinHariIni = \Modules\Perizinan\Models\Perizinan::whereIn('status', ['menunggu', 'disetujui'])
             ->whereDate('tanggal_mulai', '<=', $today)
             ->whereDate('tanggal_selesai', '>=', $today)->count();
 

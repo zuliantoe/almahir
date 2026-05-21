@@ -167,7 +167,7 @@ class SiswaController extends Controller
             'jenis_kelamin' => 'nullable|in:L,P',
             'telepon' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',
-            'tahun_masuk' => 'nullable|integer',
+            'tahun_masuk' => 'nullable|string',
             'status' => 'nullable|in:aktif,lulus,keluar,cuti',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);

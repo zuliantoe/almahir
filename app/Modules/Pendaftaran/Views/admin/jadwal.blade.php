@@ -20,11 +20,7 @@
                     <h3 class="card-title mb-0">
                         {{ $pendaftaran->nama_lengkap }}
                     </h3>
-                    @if($pendaftaran->seleksis->count() > 0)
-                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.print()">
-                            <i class="fas fa-print mr-1"></i> Print Jadwal
-                        </button>
-                    @endif
+
                 </div>
             </div>
 

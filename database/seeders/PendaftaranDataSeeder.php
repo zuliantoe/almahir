@@ -32,7 +32,7 @@ class PendaftaranDataSeeder extends Seeder
         }
 
         $statuses = [
-            'ditunda' => 10,  // Ditunda
+            'pending' => 10,  // Ditunda
             'diproses' => 10,
             'diterima' => 10
         ];

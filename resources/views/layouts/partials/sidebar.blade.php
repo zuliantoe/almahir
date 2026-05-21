@@ -102,23 +102,11 @@
                             </a>
                         </li>
 
-<<<<<<< HEAD
-                    <li class="nav-header">MENU GURU</li>
-                    
-                    {{-- 1. Kaldik --}}
-                    <li class="nav-item">
-                        <a href="{{ route('akademik.kalender-akademik.index') }}" class="nav-link {{ request()->is('akademik/kalender-akademik*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-calendar-alt text-success"></i>
-                            <p>Kaldik</p>
-                        </a>
-                    </li>
-=======
                         {{-- 2. DYNAMIC MODULE SUBMENUS --}}
                         @isset($moduleMenus)
                             @foreach($moduleMenus as $section)
                                 @if($section['header'] === 'MANAJEMEN ASET & ASRAMA')
                                     <li class="nav-header">{{ $section['header'] }}</li>
->>>>>>> 4d41c3e (fix and add menu at guru)
 
                                     @foreach($section['items'] as $item)
                                         @if(!empty($item['children']))
@@ -188,29 +176,6 @@
                             </a>
                         </li>
 
-<<<<<<< HEAD
-                    {{-- Penilaian Akademik & Tahfidz --}}
-                    <li class="nav-item">
-                        <a href="{{ route('penilaiandanpresensi.penilaianakademik.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-graduation-cap text-purple"></i>
-                            <p>Penilaian Akademik</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaiantahfidz*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-quran text-pink"></i>
-                            <p>Penilaian Tahfidz</p>
-                        </a>
-                    </li>
-
-                    {{-- 3. Absensi Siswa --}}
-                    <li class="nav-item">
-                        <a href="{{ route('penilaiandanpresensi.presensi.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/presensi*') && !request()->is('penilaiandanpresensi/presensi/siswa*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-user-check text-primary"></i>
-                            <p>Absensi Siswa</p>
-                        </a>
-                    </li>
-=======
                         <li class="nav-header">MENU GURU</li>
                         
                         {{-- 1. Kaldik --}}
@@ -220,7 +185,6 @@
                                 <p>Kaldik</p>
                             </a>
                         </li>
->>>>>>> 4d41c3e (fix and add menu at guru)
 
                         {{-- 2. Jadwal Mengajar --}}
                         <li class="nav-item">
@@ -238,7 +202,23 @@
                             </a>
                         </li>
 
-                        {{-- 4. Cetak Raport --}}
+                        {{-- 4. Penilaian Akademik --}}
+                        <li class="nav-item">
+                            <a href="{{ route('penilaiandanpresensi.penilaianakademik.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik') && !request()->is('penilaiandanpresensi/penilaianakademik/raport*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-graduation-cap text-purple"></i>
+                                <p>Penilaian Akademik</p>
+                            </a>
+                        </li>
+
+                        {{-- 5. Penilaian Tahfidz --}}
+                        <li class="nav-item">
+                            <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaiantahfidz*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-quran text-pink"></i>
+                                <p>Penilaian Tahfidz</p>
+                            </a>
+                        </li>
+
+                        {{-- 6. Cetak Raport --}}
                         <li class="nav-item">
                             <a href="{{ route('penilaiandanpresensi.penilaianakademik.raport.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik/raport*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-file-invoice text-warning"></i>
@@ -246,16 +226,7 @@
                             </a>
                         </li>
 
-<<<<<<< HEAD
-                    {{-- 7. Absensi Pegawai --}}
-                    <li class="nav-item">
-                        <a href="{{ route('absensi.index') }}" class="nav-link {{ request()->is('absensi*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-fingerprint text-info"></i>
-                            <p>Absensi Pegawai</p>
-                        </a>
-                    </li>
-=======
-                        {{-- 5. Konfirmasi Izin Sakit --}}
+                        {{-- 7. Konfirmasi Izin Sakit --}}
                         <li class="nav-item">
                             <a href="{{ route('penilaiandanpresensi.izinsakit.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/izinsakit*') && !request()->is('penilaiandanpresensi/izinsakit/siswa*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-envelope-open-text text-danger"></i>
@@ -263,7 +234,7 @@
                             </a>
                         </li>
 
-                        {{-- 6. Pengajuan Izin --}}
+                        {{-- 8. Pengajuan Izin --}}
                         <li class="nav-item">
                             <a href="{{ route('perizinan.index') }}" class="nav-link {{ request()->is('perizinan*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-paper-plane text-teal"></i>
@@ -271,7 +242,7 @@
                             </a>
                         </li>
 
-                        {{-- 7. Absensi Pegawai --}}
+                        {{-- 9. Absensi Pegawai --}}
                         <li class="nav-item">
                             <a href="{{ route('absensi.index') }}" class="nav-link {{ request()->is('absensi*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-fingerprint text-purple"></i>
@@ -279,7 +250,7 @@
                             </a>
                         </li>
 
-                        {{-- 8. Aset & Asrama --}}
+                        {{-- 10. Aset & Asrama --}}
                         <li class="nav-item">
                             <a href="{{ route('manajemenasetdanasrama.index') }}" class="nav-link {{ request()->is('manajemenasetdanasrama*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-building text-orange"></i>
@@ -287,7 +258,6 @@
                             </a>
                         </li>
                     @endif
->>>>>>> 4d41c3e (fix and add menu at guru)
 
                 @elseif($isWali)
                     {{-- ========================================== --}}

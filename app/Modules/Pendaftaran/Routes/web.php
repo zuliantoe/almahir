@@ -38,6 +38,9 @@ Route::prefix('admin')->group(function () {
     Route::get('/pendaftaran/{id}', [PendaftaranController::class, 'show'])
         ->name('admin.pendaftaran.show');
 
+    Route::get('/pendaftaran/{id}/download-jadwal', [PendaftaranController::class, 'downloadJadwal'])
+        ->name('admin.pendaftaran.downloadJadwal');
+
     Route::get(
         '/pendaftaran/{id}/jadwal',
         [SeleksiController::class, 'index']

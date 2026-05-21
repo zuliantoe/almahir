@@ -1,3 +1,11 @@
+@php
+    $logoPath = public_path('logo.png');
+    $logoBase64 = '';
+    if (file_exists($logoPath)) {
+        $logoData = file_get_contents($logoPath);
+        $logoBase64 = 'data:image/png;base64,' . base64_encode($logoData);
+    }
+@endphp
 @extends('layouts.app')
 
 @section('title', 'Detail Pendaftaran')
@@ -47,31 +55,22 @@
             print-color-adjust: exact;
         }
 
-        /* Aman untuk semua browser: sembunyikan paksa semua, lalu tampilkan area print */
         body * {
-            display: none !important;
+            visibility: hidden;
         }
 
         #print-jadwal,
         #print-jadwal * {
-            display: block !important;
-        }
-
-        /* table harus tetap table saat print */
-        #print-jadwal table,
-        #print-jadwal thead,
-        #print-jadwal tbody,
-        #print-jadwal tr,
-        #print-jadwal th,
-        #print-jadwal td {
-            display: table !important;
+            visibility: visible;
         }
 
         #print-jadwal {
-            position: static;
+            position: absolute;
             left: 0;
             top: 0;
             width: 100%;
+            margin: 0;
+            padding: 20px; /* Sedikit padding agar tidak mepet ujung kertas */
         }
 
         table {
@@ -198,7 +197,9 @@
                         </tr>
                         <tr>
                             <th>No HP</th>
-                            <td>{{ $pendaftaran->no_hp_ayah }}</td>
+                            <td>
+                                {{ $pendaftaran->no_hp_ayah ?? '-' }}
+                            </td>
                         </tr>
                         <tr>
                             <th>Alamat</th>
@@ -219,7 +220,9 @@
                         </tr>
                         <tr>
                             <th>No HP</th>
-                            <td>{{ $pendaftaran->no_hp_ibu ?? '-' }}</td>
+                            <td>
+                                {{ $pendaftaran->no_hp_ibu ?? '-' }}
+                            </td>
                         </tr>
                         <tr>
                             <th>Alamat</th>
@@ -372,11 +375,13 @@
             <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
                 <h5 class="m-0"><strong>Jadwal Tes</strong></h5>
                 <div class="d-flex align-items-center">
+                    {{-- Fitur Download Jadwal disembunyikan
                     @if ($pendaftaran->seleksis->count() > 0)
-                        <button type="button" class="btn btn-sm btn-outline-primary mr-2" onclick="window.print()">
-                            <i class="fas fa-print mr-1"></i> Print Jadwal
+                        <button type="button" id="btn-download-jadwal" class="btn btn-sm btn-outline-primary mr-2" onclick="downloadJadwal()">
+                            <i class="fas fa-download mr-1"></i> Download Jadwal
                         </button>
                     @endif
+                    --}}
 
                     <button type="button" class="btn btn-sm btn-info mr-2" data-toggle="modal" data-target="#modalPilihTemplate">
                         <i class="fas fa-list-ol"></i> Pilih Template
@@ -430,16 +435,39 @@
 
             {{-- AREA PRINT --}}
             <div id="print-jadwal">
-                <h5 class="mb-3"><strong>Jadwal Tes</strong></h5>
-                <table class="table table-bordered">
+                
+                {{-- KOP SURAT (Hanya tampil saat di-print) --}}
+                <div class="d-none d-print-block">
+                    <div class="print-header mb-2">
+                        <table style="width: 100%; border: none !important; margin-bottom: 0;">
+                            <tr>
+                                <td style="width: 15%; text-align: left; vertical-align: middle; border: none !important; padding: 0 !important;">
+                                    <img src="{{ asset('logo.png') }}" alt="Logo" style="width: 95px; height: auto;">
+                                </td>
+                                <td style="width: 85%; text-align: center; vertical-align: middle; border: none !important; padding: 0 !important; padding-right: 95px;">
+                                    <h4 style="margin: 0; font-family: 'Arial', sans-serif; font-weight: 700; font-size: 1.15rem; text-transform: uppercase; letter-spacing: 0.5px;">YAYASAN ALMAHIR ATTARBAWIYYAH SURAKARTA</h4>
+                                    <h1 style="margin: 2px 0; font-family: 'Arial', sans-serif; font-weight: 900; font-size: 1.85rem; color: #2C5E9E; line-height: 1.1;">PONDOK PESANTREN QUR’AN DAN IT AL MAHIR</h1>
+                                    <p style="margin: 0; font-family: 'Arial', sans-serif; font-weight: 700; font-size: 0.95rem; text-transform: uppercase;">NSP : 510033130037</p>
+                                    <p style="margin: 2px 0 0 0; font-family: 'Times New Roman', serif; font-size: 0.88rem; line-height: 1.3;">
+                                        Alamat : Jl. Adi Sumarmo RT 001/RW 007 Gawanan, Colomadu, Karanganyar, Jawa Tengah 57175 <br>
+                                        No Telp : (0271) 7686636
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div style="border-bottom: 4px double #000; padding-bottom: 5px; margin-bottom: 12px;"></div>
+                    <div style="border-bottom: 2px solid #000; margin-top: -10px; margin-bottom: 24px;"></div>
+                </div>
+
+                <div class="text-center mb-4 d-none d-print-block">
+                    <h4 style="font-weight: bold; text-decoration: underline;">JADWAL TES SELEKSI</h4>
+                </div>
+                <table class="table table-bordered mb-4 d-none d-print-block">
                     <tbody>
                         <tr>
                             <th width="30%">Nama Siswa</th>
                             <td>{{ $pendaftaran->nama_lengkap }}</td>
-                        </tr>
-                        <tr>
-                            <th>NISN</th>
-                            <td>{{ $pendaftaran->nisn }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -454,7 +482,6 @@
                                 <th>Pengampu</th>
                                 <th>Metode</th>
                                 <th>Lokasi / Link</th>
-                                <th>Nilai</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -463,16 +490,21 @@
                                     <td>{{ $jadwal->nama_tes }}</td>
                                     <td>{{ $jadwal->tanggal }}</td>
                                     <td>{{ $jadwal->jam }}</td>
-                                    <td>{{ $jadwal->pengampu }}</td>
+                                    <td>{{ $jadwal->guru ? $jadwal->guru->nama : $jadwal->pengampu }}</td>
                                     <td>{{ $jadwal->metode }}</td>
                                     <td>
-                                        {{ $jadwal->lokasi ?? '-' }}
-                                        @if ($jadwal->link)
-                                            <br>
-                                            <span>{{ $jadwal->link }}</span>
+                                        @if(strtolower($jadwal->metode) == 'offline')
+                                            {{ $jadwal->lokasi ?? '-' }}
+                                        @elseif(strtolower($jadwal->metode) == 'online')
+                                            {{ $jadwal->link ?? '-' }}
+                                        @else
+                                            {{ $jadwal->lokasi ?? '-' }}
+                                            @if ($jadwal->link)
+                                                <br>
+                                                <span>{{ $jadwal->link }}</span>
+                                            @endif
                                         @endif
                                     </td>
-                                    <td>{{ $jadwal->nilai ?? '-' }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -491,5 +523,188 @@
         </div>
 
     </div>
+
+@push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    function downloadJadwal() {
+        const btn = document.getElementById('btn-download-jadwal');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Proses...';
+        btn.disabled = true;
+
+        // Ambil logo base64 dari PHP
+        const logoBase64 = "{{ $logoBase64 }}";
+
+        // Susun HTML mandiri dengan CSS inline khusus untuk cetak PDF
+        const htmlContent = `
+            <html>
+            <head>
+                <style>
+                    body {
+                        font-family: 'Arial', sans-serif;
+                        padding: 20px;
+                        background-color: #ffffff;
+                        color: #333333;
+                    }
+                    .print-header {
+                        margin-bottom: 5px;
+                    }
+                    .double-line {
+                        border-bottom: 4px double #000000;
+                        padding-bottom: 5px;
+                        margin-bottom: 8px;
+                    }
+                    .single-line {
+                        border-bottom: 1.5px solid #000000;
+                        margin-top: -6px;
+                        margin-bottom: 20px;
+                    }
+                    .text-center {
+                        text-align: center;
+                    }
+                    .mb-4 {
+                        margin-bottom: 1.5rem;
+                    }
+                    .kop-table {
+                        width: 100%;
+                        border: none !important;
+                        margin-bottom: 0;
+                    }
+                    .kop-table td {
+                        border: none !important;
+                        padding: 0 !important;
+                    }
+                    .table-pdf {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-bottom: 20px;
+                    }
+                    .table-pdf th, .table-pdf td {
+                        border: 1px solid #666666;
+                        padding: 8px 10px;
+                        text-align: left;
+                        vertical-align: middle;
+                        font-size: 13px;
+                    }
+                    .table-pdf th {
+                        background-color: #f2f2f2;
+                        font-weight: bold;
+                        width: 25%;
+                    }
+                    .table-jadwal {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+                    .table-jadwal th, .table-jadwal td {
+                        border: 1px solid #666666;
+                        padding: 8px 10px;
+                        text-align: left;
+                        vertical-align: middle;
+                        font-size: 12px;
+                    }
+                    .table-jadwal th {
+                        background-color: #f2f2f2;
+                        font-weight: bold;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="print-header">
+                    <table class="kop-table">
+                        <tr>
+                            <td style="width: 15%; text-align: left; vertical-align: middle;">
+                                <img src="${logoBase64}" alt="Logo" style="width: 90px; height: auto;">
+                            </td>
+                            <td style="width: 85%; text-align: center; vertical-align: middle; padding-right: 90px;">
+                                <h4 style="margin: 0; font-family: 'Arial', sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">YAYASAN ALMAHIR ATTARBAWIYYAH SURAKARTA</h4>
+                                <h1 style="margin: 2px 0; font-family: 'Arial', sans-serif; font-weight: 900; font-size: 20px; color: #2C5E9E; line-height: 1.1;">PONDOK PESANTREN QUR’AN DAN IT AL MAHIR</h1>
+                                <p style="margin: 0; font-family: 'Arial', sans-serif; font-weight: 700; font-size: 11px; text-transform: uppercase;">NSP : 510033130037</p>
+                                <p style="margin: 2px 0 0 0; font-family: 'Times New Roman', serif; font-size: 10.5px; line-height: 1.3;">
+                                    Alamat : Jl. Adi Sumarmo RT 001/RW 007 Gawanan, Colomadu, Karanganyar, Jawa Tengah 57175 <br>
+                                    No Telp : (0271) 7686636
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="double-line"></div>
+                <div class="single-line"></div>
+
+                <div class="text-center mb-4">
+                    <h4 style="font-weight: bold; text-decoration: underline; font-size: 16px;">JADWAL TES SELEKSI</h4>
+                </div>
+
+                <table class="table-pdf mb-4">
+                    <tbody>
+                        <tr>
+                            <th>Nama Siswa</th>
+                            <td>{{ $pendaftaran->nama_lengkap }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <table class="table-jadwal">
+                    <thead>
+                        <tr>
+                            <th>Nama Tes</th>
+                            <th>Tanggal</th>
+                            <th>Jam</th>
+                            <th>Pengampu</th>
+                            <th>Metode</th>
+                            <th>Lokasi / Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($pendaftaran->seleksis as $jadwal)
+                            <tr>
+                                <td>{{ $jadwal->nama_tes }}</td>
+                                <td>{{ $jadwal->tanggal }}</td>
+                                <td>{{ $jadwal->jam }}</td>
+                                <td>{{ $jadwal->guru ? $jadwal->guru->nama : $jadwal->pengampu }}</td>
+                                <td>{{ ucfirst($jadwal->metode) }}</td>
+                                <td>
+                                    @if(strtolower($jadwal->metode) == 'offline')
+                                        {{ $jadwal->lokasi ?? '-' }}
+                                    @elseif(strtolower($jadwal->metode) == 'online')
+                                        {{ $jadwal->link ?? '-' }}
+                                    @else
+                                        {{ $jadwal->lokasi ?? '-' }}
+                                        @if ($jadwal->link)
+                                            <br>
+                                            <span>{{ $jadwal->link }}</span>
+                                        @endif
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </body>
+            </html>
+        `;
+
+        // Konfigurasi PDF
+        var opt = {
+            margin:       10,
+            filename:     'Jadwal_Tes_{{ str_replace(" ", "_", $pendaftaran->nama_lengkap) }}.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Render langsung dari HTML string
+        html2pdf().set(opt).from(htmlContent).save().then(() => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }).catch(err => {
+            console.error(err);
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            alert('Gagal mengunduh jadwal tes.');
+        });
+    }
+</script>
+@endpush
 
 @endsection

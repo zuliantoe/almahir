@@ -151,9 +151,9 @@ class PemeliharaanController extends BaseController
         $pemeliharaan->catatan_selesai = $validated['catatan_selesai'];
         $pemeliharaan->save();
 
-        // Update status aset kembali menjadi "baik"
+        // Update status aset kembali menjadi "sudah_diperbaiki"
         Aset::where('id', $pemeliharaan->aset_id)->update([
-            'status_kondisi' => 'baik',
+            'status_kondisi' => 'sudah_diperbaiki',
         ]);
 
         // Apabila ada data Kerusakan untuk aset ini yang belum selesai, otomatis sinkronkan ke selesai
@@ -165,7 +165,7 @@ class PemeliharaanController extends BaseController
             ]);
 
         return redirect()->route('manajemenasetdanasrama.aset.index')
-            ->with('success', 'Pemeliharaan selesai. Status aset "' . $pemeliharaan->aset->nama_aset . '" telah dikembalikan ke kondisi "Baik".');
+            ->with('success', 'Pemeliharaan selesai. Status aset "' . $pemeliharaan->aset->nama_aset . '" diubah menjadi "Sudah Diperbaiki".');
     }
 
     /**

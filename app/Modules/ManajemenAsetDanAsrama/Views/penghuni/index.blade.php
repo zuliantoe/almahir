@@ -2,6 +2,12 @@
 
 @section('title', $title)
 
+@php
+    $isSiswa = auth()->user()->hasRole('SISWA');
+    $isGuru = auth()->user()->hasRole('GURU');
+    $canManagePenghuni = !$isSiswa && !$isGuru;
+@endphp
+
 @section('content-header')
 <div class="row mb-2">
     <div class="col-sm-6">
@@ -58,7 +64,7 @@
     <div class="row">
         <div class="col-md-12">
             <x-card title="Daftar Penghuni Kamar" icon="fas fa-users">
-                @if(!auth()->user()->hasRole('SISWA'))
+                @if($canManagePenghuni)
                 <x-slot name="tools">
                     <a href="{{ route('manajemenasetdanasrama.penghuni.create') }}" class="btn btn-sm btn-primary">
                         <i class="fas fa-plus mr-1"></i> Tambah Penghuni
@@ -182,7 +188,7 @@
                                                 title="Lihat Detail">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        @if(!auth()->user()->hasRole('SISWA'))
+                                        @if($canManagePenghuni)
                                         <a href="{{ route('manajemenasetdanasrama.penghuni.edit', $item->id) }}" class="btn btn-xs-custom btn-warning" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>

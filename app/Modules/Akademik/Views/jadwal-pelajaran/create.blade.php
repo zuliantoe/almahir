@@ -4,24 +4,37 @@
 
 @section('content')
 <div class="container-fluid">
+    {{-- Session Messages --}}
+    @if(session('success'))
+        <x-alert type="success" :message="session('success')" dismissible />
+    @endif
+    @if(session('error'))
+        <x-alert type="danger" :message="session('error')" dismissible />
+    @endif
+
     <div class="row mb-3">
-        <div class="col-12 d-flex justify-content-between align-items-center">
-            <h1 class="h3 mb-0 text-gray-800">{{ isset($jadwalPelajaran) ? 'Edit' : 'Tambah Massal' }} Jadwal Pelajaran</h1>
-            <x-btn :href="route('akademik.jadwal-pelajaran.index')" class="btn-secondary" icon="fas fa-arrow-left">
-                Kembali
-            </x-btn>
+        <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+            <h1 class="h3 mb-2 mb-md-0 text-gray-800">{{ isset($jadwalPelajaran) ? 'Edit' : 'Tambah Massal' }} Jadwal Pelajaran</h1>
+            <div class="d-flex" style="gap: 8px;">
+                <x-btn :href="route('akademik.jadwal-pelajaran.index')" class="btn-outline-secondary" icon="fas fa-list">
+                    Lihat Semua
+                </x-btn>
+                <x-btn :href="route('akademik.jadwal-pelajaran.index')" class="btn-secondary" icon="fas fa-arrow-left">
+                    Kembali
+                </x-btn>
+            </div>
         </div>
     </div>
 
     @if(!isset($jadwalPelajaran))
     <div class="alert alert-info shadow-sm mb-4">
         <i class="fas fa-info-circle mr-2"></i>
-        <strong>Tips UX:</strong> Gunakan tombol <strong>+ Tambah Baris</strong> untuk menginput banyak jadwal sekaligus (misal 8 jam pelajaran) sebelum menekan tombol Simpan.
+        <strong>Tips:</strong> Gunakan tombol <strong>+ Tambah Baris</strong> untuk menginput banyak jadwal sekaligus. Pada layar kecil, scroll tabel ke kanan.
     </div>
     @endif
 
     <x-card :title="(isset($jadwalPelajaran) ? 'Form Edit Data' : 'Form Input Massal Jadwal')" type="primary" outline class="shadow-lg border-0 rounded-xl overflow-hidden">
-        <form action="{{ isset($jadwalPelajaran) ? route('akademik.jadwal-pelajaran.update', $jadwalPelajaran->id) : route('akademik.jadwal-pelajaran.bulk-store') }}" 
+        <form action="{{ isset($jadwalPelajaran) ? route('akademik.jadwal-pelajaran.update', $jadwalPelajaran->id) : route('akademik.jadwal-pelajaran.bulk-store') }}"
               method="POST" id="schedule-form" class="p-2">
             @csrf
             @if(isset($jadwalPelajaran))
@@ -45,9 +58,10 @@
                         </tr>
                     </thead>
                     <tbody id="schedule-rows" class="bg-white">
-                        {{-- Row template --}}
                         @if(isset($jadwalPelajaran))
                             @include('akademik::jadwal-pelajaran.partials.row', ['index' => 0, 'data' => $jadwalPelajaran])
+                        @elseif(isset($duplicateData))
+                            @include('akademik::jadwal-pelajaran.partials.row', ['index' => 0, 'data' => $duplicateData])
                         @else
                             @for($i=0; $i < 1; $i++)
                                 @include('akademik::jadwal-pelajaran.partials.row', ['index' => $i])
@@ -71,11 +85,14 @@
     <div class="bg-light p-4 rounded-lg border-top">
         <div class="row align-items-center">
             <div class="col-md-6 text-muted small">
-                <i class="fas fa-exclamation-triangle mr-1 text-warning"></i> 
+                <i class="fas fa-exclamation-triangle mr-1 text-warning"></i>
                 Wajib diisi. Pastikan rentang waktu tidak bentrok dengan jadwal lain di rombel yang sama.
             </div>
-            <div class="col-md-6 d-flex justify-content-end">
-                <x-btn type="reset" class="btn-light px-4 mr-3 rounded-pill border">Reset</x-btn>
+            <div class="col-md-6 d-flex justify-content-end" style="gap: 8px;">
+                <a href="{{ route('akademik.jadwal-pelajaran.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="fas fa-list mr-1"></i> Lihat Semua
+                </a>
+                <button type="reset" class="btn btn-light px-4 rounded-pill border">Reset</button>
                 <button type="submit" class="btn btn-primary px-5 rounded-pill shadow-sm transition-all hover-elevate">
                     <i class="fas fa-save mr-2"></i> Simpan Semua Jadwal
                 </button>
@@ -96,7 +113,7 @@
     .hover-elevate:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; }
     .table th { font-weight: 700; letter-spacing: 0.05rem; font-size: 0.75rem; border-bottom: 0; white-space: nowrap; }
     .table td { border-color: #f8f9fc; vertical-align: middle; }
-    
+
     /* Modern Scrollbar */
     .table-responsive::-webkit-scrollbar { height: 8px; }
     .table-responsive::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
@@ -141,24 +158,79 @@
 </div>
 
 <script>
-    // Pastikan script ini jalan setelah DOM siap
+    const JAMKE_MAP = {
+        1: { start: '07:00', end: '07:45' },
+        2: { start: '07:45', end: '08:30' },
+        3: { start: '08:30', end: '09:15' },
+        4: { start: '09:15', end: '10:00' },
+        5: { start: '10:00', end: '10:45' },
+        6: { start: '10:45', end: '11:30' },
+        7: { start: '11:30', end: '12:15' },
+        8: { start: '12:15', end: '13:00' },
+        9: { start: '13:00', end: '13:45' },
+        10:{ start: '13:45', end: '14:30' },
+        11:{ start: '14:30', end: '15:15' },
+        12:{ start: '15:15', end: '16:00' },
+    };
+
+    function applyJamKeToRow(tr) {
+        const jamkeInput = tr.querySelector('input[type="number"][name$="[jamke]"], input[type="number"][name$="jamke"], input[type="number"][name*="[jamke]"]');
+        if (!jamkeInput) return;
+
+        const jamke = parseInt(jamkeInput.value || jamkeInput.getAttribute('value'), 10);
+        if (!JAMKE_MAP[jamke]) return;
+
+        const jamawalInput = tr.querySelector('input[type="time"][name*="[jamawal]"], input[type="time"][name$="jamawal"]');
+        const jamakhirInput = tr.querySelector('input[type="time"][name*="[jamakhir]"], input[type="time"][name$="jamakhir"]');
+        if (jamawalInput) jamawalInput.value = JAMKE_MAP[jamke].start;
+        if (jamakhirInput) jamakhirInput.value = JAMKE_MAP[jamke].end;
+    }
+
+    function bindJamKeHandler(root) {
+        const rows = root.querySelectorAll('#schedule-rows tr');
+        rows.forEach(tr => {
+            const jamkeInput = tr.querySelector('input[type="number"][name*="jamke"]');
+            if (!jamkeInput) return;
+            jamkeInput.addEventListener('change', function() {
+                applyJamKeToRow(tr);
+            });
+            jamkeInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') applyJamKeToRow(tr);
+            });
+
+            // initial fill if already has jamke
+            applyJamKeToRow(tr);
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        window.rowIndex = 1;
+        // Initialize from count of existing rows
+        window.rowIndex = {{ isset($duplicateData) ? 1 : 1 }};
 
         window.addRow = function(count = 1) {
             const templateHtml = document.getElementById('row-template-body').innerHTML;
             const tbody = document.getElementById('schedule-rows');
-            
+
             for (let i = 0; i < count; i++) {
                 let html = templateHtml.replace(/REPLACE_INDEX/g, window.rowIndex);
-                
-                // Gunakan cara yang lebih aman untuk menyisipkan HTML ke tabel
+
                 const tempTr = document.createElement('tbody');
                 tempTr.innerHTML = html;
                 const newRow = tempTr.querySelector('tr');
-                
+
                 tbody.appendChild(newRow);
+
+                // Initialize Select2 on the new row's dynamic elements
+                $(newRow).find('.select2-dynamic').removeClass('select2-dynamic').addClass('select2').select2({
+                    theme: 'bootstrap4',
+                    width: '100%',
+                    allowClear: true
+                });
+
                 window.rowIndex++;
+
+                // bind handler for the newly added row
+                bindJamKeHandler(tbody);
             }
         };
 
@@ -170,6 +242,29 @@
                 alert('Minimal harus ada 1 baris jadwal.');
             }
         };
+
+        bindJamKeHandler(document);
+
+        // Custom Reset Handler: clear dynamic rows and rebuild 1 fresh row
+        $('#schedule-form').on('reset', function(e) {
+            // Let the native form reset run first
+            setTimeout(function() {
+                const tbody = document.getElementById('schedule-rows');
+                tbody.innerHTML = '';
+                window.rowIndex = 0;
+
+                // If it's a duplication, we can reset to a fresh blank row
+                @if(isset($duplicateData))
+                    // Re-render empty row
+                    window.addRow(1);
+                @else
+                    window.addRow(1);
+                @endif
+
+                // Reset select2 value displays
+                $('.select2').val(null).trigger('change');
+            }, 50);
+        });
     });
 </script>
 

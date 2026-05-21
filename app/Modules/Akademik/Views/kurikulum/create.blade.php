@@ -116,11 +116,16 @@
 
             <hr>
 
-            <div class="d-flex justify-content-end">
-                <x-btn type="reset" class="btn-light mr-2">Reset</x-btn>
-                <x-btn type="submit" icon="fas fa-save" class="btn-primary">
-                    <i class="fas fa-save mr-1"></i> Simpan Kurikulum Massal
-                </x-btn>
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{{ route('akademik.kurikulum.index') }}" class="btn btn-light border text-muted">
+                    <i class="fas fa-list mr-1"></i> Lihat Semua
+                </a>
+                <div style="gap: 8px;" class="d-flex">
+                    <x-btn type="reset" class="btn-light mr-2">Reset</x-btn>
+                    <button type="submit" class="btn btn-primary px-5">
+                        <i class="fas fa-save mr-1"></i> Simpan Kurikulum
+                    </button>
+                </div>
             </div>
         </x-card>
     </form>
@@ -149,6 +154,14 @@
                 tempTr.innerHTML = html;
                 const newRow = tempTr.querySelector('tr');
                 tbody.appendChild(newRow);
+
+                // Initialize Select2 on the new row's dynamic elements
+                $(newRow).find('.select2-dynamic').removeClass('select2-dynamic').addClass('select2').select2({
+                    theme: 'bootstrap4',
+                    width: '100%',
+                    allowClear: true
+                });
+
                 window.rowIndex++;
             }
         };
@@ -161,6 +174,26 @@
                 alert('Minimal harus ada 1 baris mata pelajaran.');
             }
         };
+
+        // Custom Reset Handler: clear dynamic rows and rebuild 3 fresh rows (the default for new)
+        $('#kurikulum-form').on('reset', function(e) {
+            // Let the native form reset run first
+            setTimeout(function() {
+                const tbody = document.getElementById('kurikulum-rows');
+                tbody.innerHTML = '';
+                window.rowIndex = 0;
+                
+                // For new creation, reset to 3 blank rows
+                @if(isset($kurikulum))
+                    window.addRow(1);
+                @else
+                    window.addRow(3);
+                @endif
+                
+                // Reset select2 value displays
+                $('.select2').val(null).trigger('change');
+            }, 50);
+        });
     });
 </script>
 @endsection

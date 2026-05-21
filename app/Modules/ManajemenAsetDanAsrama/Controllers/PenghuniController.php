@@ -333,10 +333,17 @@ class PenghuniController extends BaseController
             ->orderBy('nama')
             ->get();
 
+        // Ambil penghuni aktif saat ini
+        $penghuniAktif = KamarPenghuni::where('kamar_id', $kamarId)
+            ->aktif()
+            ->with('siswa')
+            ->get();
+
         return view('manajemenasetdanasrama::penghuni.assign_multiple', [
             'title' => 'Input Penghuni: ' . $kamar->nama_kamar,
             'kamar' => $kamar,
             'siswa' => $siswa,
+            'penghuniAktif' => $penghuniAktif,
         ]);
     }
 
@@ -362,6 +369,16 @@ class PenghuniController extends BaseController
             $jabatan = $request->jabatan[$index] ?? 'Anggota';
             $keteranganManual = $request->keterangan[$index] ?? null;
             $keteranganFinal = $keteranganManual ? "{$jabatan} - {$keteranganManual}" : $jabatan;
+
+            // Jika siswa ini sudah terdaftar aktif di kamar ini, abaikan pembuatannya
+            $existsActive = KamarPenghuni::where('kamar_id', $kamarId)
+                ->where('siswa_id', $siswaId)
+                ->aktif()
+                ->exists();
+
+            if ($existsActive) {
+                continue;
+            }
 
             // ABSOLUTE RULE: Jika input masal ada yang jadi Ketua, turunkan yang lama
             if ($jabatan == 'Ketua Kamar') {
@@ -392,6 +409,6 @@ class PenghuniController extends BaseController
         }
 
         return redirect()->route('manajemenasetdanasrama.kamar.show', $kamarId)
-            ->with('success', "Berhasil menambahkan {$count} penghuni ke kamar {$kamar->nama_kamar}.");
+            ->with('success', "Berhasil menambahkan {$count} penghuni baru ke kamar {$kamar->nama_kamar}.");
     }
 }

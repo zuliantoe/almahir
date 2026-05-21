@@ -37,8 +37,7 @@ class PengadaanController extends BaseController
         $stats = [
             'menunggu' => $menungguProses->count(),
             'dipesan'  => PengadaanAset::where('status', 'dipesan')->count(),
-            'datang'   => PengadaanAset::where('status', 'datang')->count(),
-            'total_biaya' => PengadaanAset::sum('biaya_riil'),
+            'datang'   => PengadaanAset::where('status', 'datang')->whereDate('tanggal_datang', today())->count(),
         ];
 
         return view('manajemenasetdanasrama::pengadaan.index', [

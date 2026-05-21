@@ -49,34 +49,53 @@
 
                     <div id="penghuni-container">
                         @for($i = 0; $i < $kamar->kapasitas; $i++)
-                        <div class="card mb-3 border-left-primary shadow-sm resident-row">
+                        @php
+                            $currentPenghuni = $penghuniAktif[$i] ?? null;
+                            $hasOccupant = $currentPenghuni !== null;
+                        @endphp
+                        <div class="card mb-3 {{ $hasOccupant ? 'border-left-success bg-light' : 'border-left-primary' }} shadow-sm resident-row">
                             <div class="card-body py-3">
                                 <div class="row align-items-center">
                                     <div class="col-auto text-center pr-0">
-                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                                        <div class="{{ $hasOccupant ? 'bg-success' : 'bg-primary' }} text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
                                             {{ $i + 1 }}
                                         </div>
                                     </div>
                                     <div class="col-md-5">
                                         <label class="small font-weight-bold">Pilih Santri</label>
-                                        <select name="siswa_id[]" class="form-control select2 student-select" data-placeholder="-- Cari Nama Santri --">
-                                            <option value=""></option>
-                                            @foreach($siswa as $s)
-                                                <option value="{{ $s->id }}">{{ $s->nama }} ({{ $s->nis }})</option>
-                                            @endforeach
-                                        </select>
+                                        @if($hasOccupant)
+                                            <input type="text" class="form-control bg-white" value="{{ $currentPenghuni->siswa->nama ?? 'Tidak Diketahui' }} ({{ $currentPenghuni->siswa->nis ?? '-' }})" readonly>
+                                            <input type="hidden" name="siswa_id[]" value="{{ $currentPenghuni->siswa_id }}">
+                                        @else
+                                            <select name="siswa_id[]" class="form-control select2 student-select" data-placeholder="-- Cari Nama Santri --">
+                                                <option value=""></option>
+                                                @foreach($siswa as $s)
+                                                    <option value="{{ $s->id }}">{{ $s->nama }} ({{ $s->nis }})</option>
+                                                @endforeach
+                                            </select>
+                                        @endif
                                     </div>
                                     <div class="col-md-3">
                                         <label class="small font-weight-bold">Jabatan</label>
-                                        <select name="jabatan[]" class="form-control">
-                                            <option value="Anggota" {{ $i > 1 ? 'selected' : '' }}>Anggota</option>
-                                            <option value="Ketua Kamar" {{ $i == 0 ? 'selected' : '' }}>Ketua Kamar</option>
-                                            <option value="Wakil Ketua Kamar" {{ $i == 1 ? 'selected' : '' }}>Wakil Ketua Kamar</option>
-                                        </select>
+                                        @if($hasOccupant)
+                                            <input type="text" class="form-control bg-white" value="{{ $currentPenghuni->jabatan }}" readonly>
+                                            <input type="hidden" name="jabatan[]" value="{{ $currentPenghuni->jabatan }}">
+                                        @else
+                                            <select name="jabatan[]" class="form-control">
+                                                <option value="Anggota" {{ $i > 1 ? 'selected' : '' }}>Anggota</option>
+                                                <option value="Ketua Kamar" {{ $i == 0 ? 'selected' : '' }}>Ketua Kamar</option>
+                                                <option value="Wakil Ketua Kamar" {{ $i == 1 ? 'selected' : '' }}>Wakil Ketua Kamar</option>
+                                            </select>
+                                        @endif
                                     </div>
                                     <div class="col-md-3">
                                         <label class="small font-weight-bold">Keterangan (Opsional)</label>
-                                        <input type="text" name="keterangan[]" class="form-control" placeholder="Catatan...">
+                                        @if($hasOccupant)
+                                            <input type="text" class="form-control bg-white" value="{{ $currentPenghuni->keterangan }}" readonly>
+                                            <input type="hidden" name="keterangan[]" value="{{ $currentPenghuni->keterangan }}">
+                                        @else
+                                            <input type="text" name="keterangan[]" class="form-control" placeholder="Catatan...">
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -86,8 +105,8 @@
 
                     <x-slot name="footer">
                         <div class="d-flex justify-content-between">
-                            <a href="{{ route('manajemenasetdanasrama.kamar.index') }}" class="btn btn-secondary">
-                                <i class="fas fa-times mr-1"></i> Batal / Lewati
+                            <a href="{{ route('manajemenasetdanasrama.kamar.show', $kamar->id) }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left mr-1"></i> Kembali ke Kamar
                             </a>
                             <button type="submit" class="btn btn-primary px-5">
                                 <i class="fas fa-save mr-1"></i> Simpan Semua Penghuni
@@ -102,6 +121,7 @@
 
 <style>
     .border-left-primary { border-left: 4px solid #007bff !important; }
+    .border-left-success { border-left: 4px solid #28a745 !important; }
     .select2-container--bootstrap4 .select2-selection--single { height: 38px !important; }
 </style>
 @endsection

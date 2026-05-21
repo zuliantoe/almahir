@@ -56,7 +56,6 @@
                     <p class="small opacity-75 mb-4">Gunakan QR ini untuk presensi</p>
                     
                     <div class="d-inline-block p-3 bg-white shadow-sm mb-4" style="border-radius: 20px;">
-                        <!-- QR Code dari API Gratis goqr.me -->
                         <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ $siswa->nis }}&margin=10" alt="QR Code {{ $siswa->nis }}" style="width: 100%; max-width: 200px;">
                     </div>
                     
@@ -65,6 +64,25 @@
                     </button>
                 </div>
             </div>
+
+            {{-- Ringkasan Jadwal --}}
+            @if($rombelSiswa)
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+                <div class="card-body p-4 text-center">
+                    <i class="fas fa-layer-group fa-2x text-info mb-3"></i>
+                    <h6 class="font-weight-bold mb-1">Rombel / Kelas</h6>
+                    <h5 class="text-info font-weight-bold mb-0">{{ optional($rombelSiswa->rombel)->nama_rombel ?? '-' }}</h5>
+                    <small class="text-muted">{{ optional($rombelSiswa->rombel->kelas ?? null)->nama_kelas ?? '' }}</small>
+                    <hr>
+                    <div class="d-flex justify-content-center">
+                        <div class="text-center px-3">
+                            <div class="h4 font-weight-bold text-primary mb-0">{{ $rawJadwal->count() }}</div>
+                            <small class="text-muted">Sesi / minggu</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
         </div>
 
         <!-- Kolom Data Kanan -->
@@ -90,13 +108,9 @@
                         <div class="col-md-6 mb-4">
                             <label class="text-muted small font-weight-bold text-uppercase mb-1">Jenis Kelamin</label>
                             <div class="text-dark">
-                                @if($siswa->jenis_kelamin == 'L')
-                                     Laki-laki
-                                @elseif($siswa->jenis_kelamin == 'P')
-                                   Perempuan
-                                @else
-                                    -
-                                @endif
+                                @if($siswa->jenis_kelamin == 'L') Laki-laki
+                                @elseif($siswa->jenis_kelamin == 'P') Perempuan
+                                @else - @endif
                             </div>
                         </div>
                         <div class="col-md-6 mb-4">
@@ -124,6 +138,122 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Jadwal Pelajaran --}}
+            <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 font-weight-bold text-dark">
+                        <i class="fas fa-calendar-alt text-info mr-2"></i> Jadwal Pelajaran
+                    </h5>
+                    @if($rombelSiswa)
+                        <span class="badge badge-info px-3">{{ optional($rombelSiswa->rombel)->nama_rombel ?? '-' }} &mdash; {{ $activeTahunAjaran?->tahunajaran ?? '-' }}</span>
+                    @endif
+                </div>
+                <div class="card-body">
+                    @if(!$rombelSiswa)
+                        <div class="text-center py-4">
+                            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                            <h6 class="text-muted">Siswa belum terdaftar di rombel manapun</h6>
+                            <p class="text-muted small">Daftarkan siswa ke rombel terlebih dahulu melalui menu Rombel.</p>
+                        </div>
+                    @elseif($rawJadwal->isEmpty())
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                            <h6 class="text-muted">Jadwal pelajaran belum tersedia</h6>
+                            <p class="text-muted small">Jadwal belum diatur untuk kelas {{ optional($rombelSiswa->rombel)->nama_rombel ?? '' }}.</p>
+                        </div>
+                    @else
+                        {{-- Timetable Mingguan --}}
+                        <div class="table-responsive mb-4">
+                            <table class="table table-bordered table-hover" id="timetable-siswa-show">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th class="text-center" style="width: 90px;">Jam ke-</th>
+                                        @foreach($hariList as $hari)
+                                            @php $isToday = ($hari === $todayName); @endphp
+                                            <th class="text-center {{ $isToday ? 'bg-info text-white' : '' }}">
+                                                {{ $hari }}
+                                                @if($isToday)<br><small>(Hari Ini)</small>@endif
+                                            </th>
+                                        @endforeach
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($usedJamKes as $jamke)
+                                        @php $sampleJam = $rawJadwal->where('jamke', $jamke)->first(); @endphp
+                                        <tr>
+                                            <td class="text-center align-middle bg-light">
+                                                <strong>{{ $jamke }}</strong>
+                                                @if($sampleJam)
+                                                    <br><small class="text-muted">{{ substr($sampleJam->jamawal, 0, 5) }}-{{ substr($sampleJam->jamakhir, 0, 5) }}</small>
+                                                @endif
+                                            </td>
+                                            @foreach($hariList as $hari)
+                                                @php $j = $timetable[$hari][$jamke] ?? null; @endphp
+                                                <td class="align-middle p-1" style="min-width: 120px;">
+                                                    @if($j)
+                                                        <div class="p-2 border-left border-info bg-white rounded shadow-sm">
+                                                            <div class="font-weight-bold text-info" style="font-size: .8rem;">
+                                                                {{ optional($j->mataPelajaran)->nama ?? '-' }}
+                                                            </div>
+                                                            <div class="text-muted" style="font-size: .72rem;">
+                                                                <i class="fas fa-user-tie mr-1"></i>{{ optional($j->guru)->nama ?? '-' }}
+                                                            </div>
+                                                        </div>
+                                                    @else
+                                                        <div class="text-center text-muted"><i class="fas fa-minus small"></i></div>
+                                                    @endif
+                                                </td>
+                                            @endforeach
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {{-- Ringkasan Per Hari --}}
+                        <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-list-ul text-info mr-2"></i> Ringkasan Per Hari</h6>
+                        <div class="row">
+                            @foreach($hariList as $hari)
+                                @php
+                                    $jadwalHari = $rawJadwal->where('hari', $hari);
+                                    $isToday    = ($hari === $todayName);
+                                @endphp
+                                @if($jadwalHari->isNotEmpty())
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-0 shadow-sm h-100 {{ $isToday ? 'border-left border-info' : '' }}" style="border-radius: 14px;">
+                                        <div class="card-header bg-white border-0 py-2 d-flex justify-content-between align-items-center">
+                                            <span class="font-weight-bold {{ $isToday ? 'text-info' : 'text-dark' }}">{{ $hariNames[$hari] ?? $hari }}</span>
+                                            @if($isToday)
+                                                <span class="badge badge-info">Hari Ini</span>
+                                            @else
+                                                <span class="badge badge-light">{{ $jadwalHari->count() }} sesi</span>
+                                            @endif
+                                        </div>
+                                        <div class="card-body p-0">
+                                            <ul class="list-group list-group-flush">
+                                                @foreach($jadwalHari->sortBy('jamke') as $j)
+                                                    <li class="list-group-item px-3 py-2 d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <span class="badge badge-info badge-pill mr-2">{{ $j->jamke }}</span>
+                                                            <span class="small font-weight-bold">{{ optional($j->mataPelajaran)->nama ?? '-' }}</span>
+                                                        </div>
+                                                        <span class="badge badge-light border text-truncate" style="max-width: 100px;" title="{{ optional($j->guru)->nama ?? '-' }}">
+                                                            {{ optional($j->guru)->nama ?? '-' }}
+                                                        </span>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
@@ -131,5 +261,9 @@
 <style>
     .bg-primary-light { background-color: rgba(13, 110, 25, 0.05); }
     .opacity-75 { opacity: 0.75; }
+    #timetable-siswa-show th, #timetable-siswa-show td { font-size: 0.82rem; }
+    @media (max-width: 768px) {
+        #timetable-siswa-show th, #timetable-siswa-show td { font-size: 0.72rem; padding: 0.3rem; }
+    }
 </style>
 @endsection

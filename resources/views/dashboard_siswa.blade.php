@@ -128,7 +128,7 @@
                                             <span class="badge badge-primary rounded-circle" style="width: 28px; height: 28px; line-height: 19px; font-size: 0.8rem;">{{ $j->jamke }}</span>
                                         </td>
                                         <td class="py-2 align-middle text-nowrap text-muted small">{{ \Carbon\Carbon::parse($j->jamawal)->format('H:i') }} – {{ \Carbon\Carbon::parse($j->jamakhir)->format('H:i') }}</td>
-                                        <td class="py-2 align-middle font-weight-bold text-dark">{{ $j->mataPelajaran->nama_mapel ?? '-' }}</td>
+                                        <td class="py-2 align-middle font-weight-bold text-dark">{{ $j->mataPelajaran->nama ?? '-' }}</td>
                                         <td class="py-2 align-middle text-muted small">{{ $j->guru->nama ?? '-' }}</td>
                                     </tr>
                                     @endforeach
@@ -266,7 +266,7 @@
                                 <tbody>
                                     @foreach($kurikulumKelas as $k)
                                     <tr>
-                                        <td class="px-3 py-2 align-middle font-weight-bold text-dark">{{ $k->mataPelajaran->nama_mapel ?? '-' }}</td>
+                                        <td class="px-3 py-2 align-middle font-weight-bold text-dark">{{ $k->mataPelajaran->nama ?? '-' }}</td>
                                         <td class="py-2 align-middle text-center">
                                             <span class="badge badge-light border" style="color: #6f42c1;">{{ $k->totaljam ?? '-' }}</span>
                                         </td>

@@ -21,7 +21,7 @@
     <form action="{{ route('siswa.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <input type="hidden" name="pendaftaran_id" id="hidden_pendaftaran_id" value="">
-        
+
         @if(isset($pendaftaranDiterima) && $pendaftaranDiterima->count() > 0)
         <div class="row mb-3">
             <div class="col-md-12">
@@ -34,7 +34,7 @@
                             <select id="auto_fill_pendaftaran" class="form-control select2">
                                 <option value="">-- Pilih Calon Siswa (Status: Diterima) --</option>
                                 @foreach($pendaftaranDiterima as $p)
-                                    <option value="{{ $p->id }}" 
+                                    <option value="{{ $p->id }}"
                                         data-nama="{{ $p->nama_lengkap }}"
                                         data-nis="{{ $p->nisn }}"
                                         data-tempat_lahir="{{ $p->tempat_lahir }}"
@@ -61,16 +61,16 @@
                 <x-card title="Informasi Pribadi" type="primary">
                     <div class="row">
                         <div class="col-md-6">
-                            <x-input 
-                                label="NIS (Nomor Induk Siswa)" 
-                                name="nis" 
+                            <x-input
+                                label="NIS (Nomor Induk Siswa)"
+                                name="nis"
                                 placeholder="Masukkan NIS"
                                 required />
                         </div>
                         <div class="col-md-6">
-                            <x-input 
-                                label="Nama Lengkap" 
-                                name="nama" 
+                            <x-input
+                                label="Nama Lengkap"
+                                name="nama"
                                 placeholder="Masukkan nama lengkap"
                                 required />
                         </div>
@@ -78,17 +78,17 @@
 
                     <div class="row">
                         <div class="col-md-6">
-                            <x-input 
-                                label="Email User" 
-                                name="email" 
+                            <x-input
+                                label="Email User"
+                                name="email"
                                 type="email"
                                 placeholder="siswa@email.com"
                                 required />
                         </div>
                         <div class="col-md-6">
-                            <x-input 
-                                label="Tanggal Lahir" 
-                                name="tanggal_lahir" 
+                            <x-input
+                                label="Tanggal Lahir"
+                                name="tanggal_lahir"
                                 type="date"
                                 required />
                         </div>
@@ -96,9 +96,9 @@
 
                     <div class="row">
                         <div class="col-md-6">
-                            <x-input 
-                                label="Tempat Lahir" 
-                                name="tempat_lahir" 
+                            <x-input
+                                label="Tempat Lahir"
+                                name="tempat_lahir"
                                 placeholder="Kota kelahiran"
                                 required />
                         </div>
@@ -117,15 +117,15 @@
                         </div>
                     </div>
 
-                    <x-input 
-                        label="No. Telepon" 
-                        name="telepon" 
+                    <x-input
+                        label="No. Telepon"
+                        name="telepon"
                         placeholder="08xxxxxxxxxx"
                         required />
 
                     <div class="form-group">
                         <label>Alamat Lengkap <span class="text-danger">*</span></label>
-                        <textarea name="alamat" class="form-control @error('alamat') is-invalid @enderror" 
+                        <textarea name="alamat" class="form-control @error('alamat') is-invalid @enderror"
                                   rows="3" placeholder="Masukkan alamat lengkap" required>{{ old('alamat') }}</textarea>
                         @error('alamat')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -145,7 +145,7 @@
                             <option value="">-- Pilih Tahun Ajaran --</option>
                             @if(isset($tahunAjaran))
                                 @foreach($tahunAjaran as $ta)
-                                    <option value="{{ $ta->id }}" {{ old('tahun_masuk') == $ta->id ? 'selected' : '' }}>
+                                    <option value="{{ $ta->tahunajaran }}" {{ old('tahun_masuk') == $ta->id ? 'selected' : '' }}>
                                         {{ $ta->tahunajaran }}
                                     </option>
                                 @endforeach
@@ -197,12 +197,12 @@
     function previewImage(input) {
         if (input.files && input.files[0]) {
             var reader = new FileReader();
-            
+
             reader.onload = function(e) {
                 document.getElementById('foto-preview').src = e.target.result;
                 document.getElementById('preview-container').classList.remove('d-none');
             }
-            
+
             reader.readAsDataURL(input.files[0]);
         }
     }
@@ -219,14 +219,14 @@
                 $('input[name="tanggal_lahir"]').val(selected.data('tanggal_lahir') || '');
                 $('input[name="telepon"]').val(selected.data('telepon') || '');
                 $('textarea[name="alamat"]').val(selected.data('alamat') || '');
-                
+
                 // Update select
                 var jkSelect = $('select[name="jenis_kelamin"]');
                 jkSelect.val(selected.data('jenis_kelamin') || '').trigger('change');
 
                 // Add or update hidden input for pendaftaran_id
                 $('#hidden_pendaftaran_id').val(selected.val());
-                
+
                 // Visual feedback
                 Swal.fire({
                     icon: 'success',

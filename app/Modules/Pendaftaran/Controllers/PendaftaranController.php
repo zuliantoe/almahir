@@ -59,8 +59,8 @@ class PendaftaranController extends Controller
     public function store(Request $request)
     {
         $currentYear = date('Y');
-        $minYear = $currentYear - 18; // minimal umur 3 tahun
-        $maxYear = $currentYear - 3;  // maksimal umur 18 tahun
+        $minYear = $currentYear - 17; // maksimal umur 17 tahun
+        $maxYear = $currentYear - 13; // minimal umur 13 tahun
 
         $validated = $request->validate([
 
@@ -103,6 +103,13 @@ class PendaftaranController extends Controller
 
             'email' => 'required|email|unique:pendaftarans,email',
 
+        ], [
+            'tanggal_lahir.after_or_equal' => 'Usia calon siswa maksimal harus 17 tahun.',
+            'tanggal_lahir.before_or_equal' => 'Usia calon siswa minimal harus 13 tahun.',
+            'tanggal_lahir.required' => 'Tanggal lahir wajib diisi.',
+            'tanggal_lahir.date' => 'Format tanggal lahir tidak valid.',
+            'email.unique' => 'Email ini sudah terdaftar di sistem.',
+            'nisn.unique' => 'NISN ini sudah terdaftar di sistem.',
         ]);
 
         $validated['tanggal_daftar'] = now();
@@ -122,6 +129,12 @@ class PendaftaranController extends Controller
         $pendaftaran = Pendaftaran::findOrFail($id);
 
         if (in_array($request->status, ['diterima', 'ditolak'])) {
+            $totalTests = \Modules\Pendaftaran\Models\Seleksi::where('pendaftaran_id', $id)->count();
+
+            if ($totalTests === 0) {
+                return back()->with('error', 'Belum ada jadwal tes untuk pendaftaran ini. Silahkan buat jadwal tes terlebih dahulu.');
+            }
+
             $hasUnscoredTests = \Modules\Pendaftaran\Models\Seleksi::where('pendaftaran_id', $id)
                                 ->whereNull('nilai')
                                 ->exists();

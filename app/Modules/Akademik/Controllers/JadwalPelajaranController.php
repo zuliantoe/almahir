@@ -27,7 +27,8 @@ class JadwalPelajaranController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $hariList = [1, 2, 3, 4, 5, 6]; // 1=Senin, 6=Sabtu
+        // Hari disimpan sebagai string di DB ('Senin','Selasa',dst)
+        $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
         if ($user && $user->hasRole('GURU')) {
             if ($request->get('tampil') === 'all' || $request->hasAny(['rombel_id', 'hari', 'guru_id', 'mapel_id', 'tahun_ajaran_id'])) {
@@ -149,22 +150,28 @@ class JadwalPelajaranController extends Controller
     }
 
 
-    public function create()
+    public function create(Request $request)
     {
         $rombels  = Rombel::with('kelas')->get();
-        $mapels   = MataPelajaran::all();
+        $mapels   = MataPelajaran::orderBy('nama')->get();
         $gurus    = Guru::aktif()->get();
-        $hariList = [
-            1 => 'Senin', 
-            2 => 'Selasa', 
-            3 => 'Rabu', 
-            4 => 'Kamis', 
-            5 => 'Jumat', 
-            6 => 'Sabtu', 
-            7 => 'Minggu'
-        ];
+        // Hari disimpan sebagai string di DB (bukan integer)
+        $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
-        return view('akademik::jadwal-pelajaran.create', compact('rombels', 'mapels', 'gurus', 'hariList'));
+        $duplicateData = null;
+        if ($request->has('rombel_id') || $request->has('mapel_id') || $request->has('guru_id')) {
+            $duplicateData = (object) [
+                'rombel_id' => $request->get('rombel_id'),
+                'mapel_id'  => $request->get('mapel_id'),
+                'guru_id'   => $request->get('guru_id'),
+                'hari'      => $request->get('hari'),
+                'jamke'     => $request->get('jamke'),
+                'jamawal'   => $request->get('jamawal'),
+                'jamakhir'  => $request->get('jamakhir'),
+            ];
+        }
+
+        return view('akademik::jadwal-pelajaran.create', compact('rombels', 'mapels', 'gurus', 'hariList', 'duplicateData'));
     }
 
     public function store(StoreJadwalPelajaranRequest $request)
@@ -192,17 +199,10 @@ class JadwalPelajaranController extends Controller
     public function edit(JadwalPelajaran $jadwalPelajaran)
     {
         $rombels  = Rombel::with('kelas')->get();
-        $mapels   = MataPelajaran::all();
+        $mapels   = MataPelajaran::orderBy('nama')->get();
         $gurus    = Guru::aktif()->get();
-        $hariList = [
-            1 => 'Senin', 
-            2 => 'Selasa', 
-            3 => 'Rabu', 
-            4 => 'Kamis', 
-            5 => 'Jumat', 
-            6 => 'Sabtu', 
-            7 => 'Minggu'
-        ];
+        // Hari disimpan sebagai string di DB (bukan integer)
+        $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
         return view('akademik::jadwal-pelajaran.edit', compact('jadwalPelajaran', 'rombels', 'mapels', 'gurus', 'hariList'));
     }
@@ -325,8 +325,8 @@ class JadwalPelajaranController extends Controller
             }
 
             \Illuminate\Support\Facades\DB::commit();
-            return redirect()->route('akademik.jadwal-pelajaran.index')
-                ->with('success', "Berhasil menyimpan $created jadwal sekaligus!");
+            return redirect()->route('akademik.jadwal-pelajaran.create')
+                ->with('success', "Berhasil menyimpan $created jadwal! Silakan tambahkan jadwal lainnya.");
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\DB::rollBack();
             return redirect()->back()->withInput()->with('error', $e->getMessage());

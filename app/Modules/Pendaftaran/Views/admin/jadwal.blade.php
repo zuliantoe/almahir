@@ -13,13 +13,19 @@
 @section('content')
 
     <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">
-                {{ $pendaftaran->nama_lengkap }}
-            </h3>
-        </div>
+            <div class="card-header">
+            
+            
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="card-title mb-0">
+                        {{ $pendaftaran->nama_lengkap }}
+                    </h3>
 
-        <div class="card-body">
+                </div>
+            </div>
+
+            <div class="card-body">
+
 
             {{-- FORM TAMBAH JADWAL --}}
             <form method="POST" action="{{ route('pendaftaran.admin.jadwal.store', $pendaftaran->id) }}">

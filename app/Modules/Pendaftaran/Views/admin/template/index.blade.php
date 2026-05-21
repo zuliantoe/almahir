@@ -142,7 +142,12 @@
                                             </select>
                                         </td>
                                         <td class="p-2 border-0">
-                                            <input type="text" name="pengampu" class="form-control form-control-sm" placeholder="Nama Guru">
+                                            <select name="pengampu" class="form-control form-control-sm" required>
+                                                <option value="" selected disabled>-- Pilih Guru --</option>
+                                                @foreach(\Modules\Guru\Models\Guru::aktif()->get() as $guru)
+                                                    <option value="{{ $guru->nama }}">{{ $guru->nama }}</option>
+                                                @endforeach
+                                            </select>
                                         </td>
                                         <td class="p-2 border-0">
                                             <input type="text" name="lokasi" class="form-control form-control-sm" placeholder="R. Kelas A">

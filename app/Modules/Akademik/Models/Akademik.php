@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Akademik\Models;
+namespace App\Modules\Akademik\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

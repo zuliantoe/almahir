@@ -17,9 +17,68 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Langsung masuk ke modul Penilaian & Presensi sebagai dashboard utama (hanya untuk GURU)
+        // Jika user adalah GURU
         if ($user && $user->hasRole('GURU')) {
-            return redirect()->route('penilaiandanpresensi.index');
+            $guru = $user->ref; // Guru model via morphTo
+            $pegawai = $user->pegawai; // Pegawai model
+            
+            $hariIni = now()->locale('id')->dayName; // e.g. "Senin"
+            $hariIniEn = now()->format('l'); // e.g. "Monday"
+            $today = \Carbon\Carbon::now()->locale('id')->translatedFormat('l'); // e.g. "Senin"
+            
+            // 1. Jadwal Mengajar Hari Ini
+            $jadwalHariIni = collect();
+            if ($guru && class_exists(\App\Modules\Akademik\Models\JadwalPelajaran::class)) {
+                $jadwalHariIni = \App\Modules\Akademik\Models\JadwalPelajaran::with(['rombel.kelas', 'mataPelajaran'])
+                    ->where('guru_id', $guru->id)
+                    ->where('hari', $today)
+                    ->orderBy('jamawal')
+                    ->get();
+            }
+
+            // 2. Kalender Akademik (Event Terdekat)
+            $eventTerdekat = collect();
+            $tahunAjaranAktif = '2025/2026';
+            if (class_exists(\App\Modules\Akademik\Models\TahunAjaran::class)) {
+                $ta = \App\Modules\Akademik\Models\TahunAjaran::current();
+                if ($ta) {
+                    $tahunAjaranAktif = $ta->tahunajaran . ' (' . ($ta->keterangan ?? 'Aktif') . ')';
+                }
+            }
+            if (class_exists(\App\Modules\Akademik\Models\KalenderAkademik::class)) {
+                $eventTerdekat = \App\Modules\Akademik\Models\KalenderAkademik::where('tanggal_awal', '>=', now()->toDateString())
+                    ->orderBy('tanggal_awal')
+                    ->limit(3)
+                    ->get();
+            }
+
+            // 3. Rekap & Statistik untuk Guru
+            $totalJadwal = 0;
+            $totalRombel = 0;
+            if ($guru && class_exists(\App\Modules\Akademik\Models\JadwalPelajaran::class)) {
+                $totalJadwal = \App\Modules\Akademik\Models\JadwalPelajaran::where('guru_id', $guru->id)->count();
+                $totalRombel = \App\Modules\Akademik\Models\JadwalPelajaran::where('guru_id', $guru->id)
+                    ->distinct('rombel_id')
+                    ->count('rombel_id');
+            }
+
+            $pendingIzinSiswa = 0;
+            if (class_exists(\Modules\PenilaianDanPresensi\Models\IzinSakit::class)) {
+                $pendingIzinSiswa = \Modules\PenilaianDanPresensi\Models\IzinSakit::where('status', 'Pending')->count();
+            }
+
+            // 4. Status Absensi Pegawai Hari Ini
+            $absensiHariIni = null;
+            if ($pegawai && class_exists(\Modules\Absensi\Models\Absensi::class)) {
+                $absensiHariIni = \Modules\Absensi\Models\Absensi::where('pegawai_id', $pegawai->id)
+                    ->whereDate('tanggal', now()->toDateString())
+                    ->first();
+            }
+
+            return view('dashboard_guru', compact(
+                'guru', 'pegawai', 'tahunAjaranAktif', 'jadwalHariIni', 'eventTerdekat',
+                'totalJadwal', 'totalRombel', 'pendingIzinSiswa', 'absensiHariIni'
+            ));
         }
 
         // Jika user adalah siswa
@@ -72,7 +131,7 @@ class DashboardController extends Controller
             if ($rombelInfo && class_exists(\App\Modules\Akademik\Models\JadwalPelajaran::class)) {
                 $jadwalHariIni = \App\Modules\Akademik\Models\JadwalPelajaran::with(['mataPelajaran', 'guru'])
                     ->where('rombel_id', $rombelInfo->id)
-                    ->where('hari', $hariIniEn)
+                    ->where('hari', $hariIni)
                     ->orderBy('jamke')
                     ->get();
             }

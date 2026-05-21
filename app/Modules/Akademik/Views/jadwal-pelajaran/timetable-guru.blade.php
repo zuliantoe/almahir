@@ -7,9 +7,9 @@
 
     {{-- Header --}}
     <div class="row mb-3">
-        <div class="col-12 d-flex justify-content-between align-items-center">
-            <h1 class="h3 mb-0 text-gray-800">Jadwal Mengajar Mingguan</h1>
-            <div class="btn-group">
+        <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+            <h1 class="h3 mb-2 mb-md-0 text-gray-800">Jadwal Mengajar Mingguan</h1>
+            <div class="d-flex flex-wrap" style="gap: 8px;">
                 <x-btn :href="route('akademik.jadwal-pelajaran.index', ['tampil' => 'all'])" class="btn-outline-primary" icon="fas fa-list">
                     Lihat Semua Jadwal
                 </x-btn>
@@ -69,9 +69,10 @@
                             <th class="text-center" style="width:100px;">Jam</th>
                             @foreach($hariList as $hari)
                                 @php
-                                    $hariNames = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
-                                    $hariLabel = $hariNames[$hari] ?? $hari;
-                                    $isToday = \Carbon\Carbon::now()->dayOfWeekIso == $hari;
+                                    $hariNames = ['Senin'=>'Senin','Selasa'=>'Selasa','Rabu'=>'Rabu','Kamis'=>'Kamis','Jumat'=>'Jumat','Sabtu'=>'Sabtu','Minggu'=>'Minggu'];
+                                    $hariLabel = is_string($hari) ? $hari : ($hariNames[$hari] ?? $hari);
+                                    $todayLabel = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'][\Carbon\Carbon::now()->dayOfWeekIso - 1] ?? '';
+                                    $isToday = ($hariLabel === $todayLabel);
                                 @endphp
                                 <th class="text-center {{ $isToday ? 'bg-primary text-white' : '' }}">
                                     {{ $hariLabel }}
@@ -101,7 +102,7 @@
                                     <td class="align-middle p-2" style="min-width:130px;">
                                         @if($j)
                                             <div class="p-2 border-left border-primary bg-white shadow-sm rounded">
-                                                <div class="font-weight-bold text-primary small">{{ $j->mataPelajaran->nama ?? 'Mapel' }}</div>
+                                                <div class="font-weight-bold text-primary small">{{ $j->mataPelajaran?->nama ?? 'Mapel' }}</div>
                                                 <div class="text-muted" style="font-size: .75rem;">
                                                     <i class="fas fa-users mr-1"></i>{{ optional($j->rombel)->nama_rombel ?? '-' }}
                                                 </div>
@@ -128,13 +129,14 @@
         <div class="row">
             @foreach($hariList as $hari)
                 @php
-                    $hariNames = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+                    $hariNames = [1=>'Senin','Senin'=>'Senin',2=>'Selasa','Selasa'=>'Selasa',3=>'Rabu','Rabu'=>'Rabu',4=>'Kamis','Kamis'=>'Kamis',5=>'Jumat','Jumat'=>'Jumat',6=>'Sabtu','Sabtu'=>'Sabtu',7=>'Minggu','Minggu'=>'Minggu'];
                     $hariLabel = $hariNames[$hari] ?? $hari;
+                    $todayLabel = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'][\Carbon\Carbon::now()->dayOfWeekIso - 1] ?? '';
                     $jadwalHari = $rawJadwal->where('hari', $hari);
-                    $isToday = \Carbon\Carbon::now()->dayOfWeekIso == $hari;
+                    $isToday = ($hariLabel === $todayLabel);
                 @endphp
                 @if($jadwalHari->isNotEmpty())
-                <div class="col-md-4 mb-3">
+                <div class="col-12 col-md-4 mb-3 guru-day-card">
                     <x-card :title="$hariLabel" :type="$isToday ? 'primary' : 'secondary'" outline>
                         @if($isToday)
                             <x-slot name="tools">
@@ -161,4 +163,20 @@
 
     @endif
 </div>
+
+<style>
+    /* Mobile: ringkasan per hari menjadi full width */
+    @media (max-width: 767.98px) {
+        #timetable-guru th, #timetable-guru td {
+            font-size: 0.75rem;
+            padding: 0.35rem 0.4rem;
+        }
+        #timetable-guru td div.p-2 {
+            padding: 0.3rem !important;
+        }
+        .guru-day-card { flex: 0 0 100%; max-width: 100%; }
+    }
+    /* Timetable scrollable */
+    .table-responsive { -webkit-overflow-scrolling: touch; }
+</style>
 @endsection

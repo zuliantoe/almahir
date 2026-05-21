@@ -222,17 +222,17 @@
                 <h1><i class="fas fa-calendar-alt mr-2"></i>Kalender Akademik</h1>
                 <p>Jadwal dan agenda kegiatan akademik sekolah tahun ajaran ini.</p>
             </div>
-            <div class="header-actions d-flex gap-2 mt-3 mt-md-0" style="gap:8px;">
+            <div class="header-actions d-flex flex-wrap gap-2 mt-3 mt-md-0" style="gap:8px;">
                 <a href="{{ route('akademik.kalender-akademik.index') }}" class="btn-header btn-header-ghost">
                     <i class="fas fa-list"></i> Mode List
                 </a>
                 @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
                 <a href="{{ route('akademik.kalender-akademik.create') }}" class="btn-header btn-header-solid">
-                    <i class="fas fa-plus"></i> Tambah Kegiatan
+                    <i class="fas fa-plus"></i> Tambah
                 </a>
                 @endif
                 <button type="button" class="btn-header btn-header-ghost" data-toggle="modal" data-target="#syncModal">
-                    <i class="fas fa-sync"></i> Sinkron ke Google
+                    <i class="fas fa-sync"></i> Sinkron
                 </button>
             </div>
         </div>

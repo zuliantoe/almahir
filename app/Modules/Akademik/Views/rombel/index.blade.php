@@ -5,10 +5,10 @@
 @section('content')
 <div class="container-fluid">
     <div class="row mb-4">
-        <div class="col-12 d-flex justify-content-between align-items-center">
-            <div>
+        <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+            <div class="mb-3 mb-md-0">
                 <h1 class="h3 mb-0 text-gray-800 font-weight-bold">Daftar Rombel</h1>
-                <p class="text-muted">Kelola Rombongan Belajar, Siswa, dan Wali Kelas</p>
+                <p class="text-muted mb-0">Kelola Rombongan Belajar, Siswa, dan Wali Kelas</p>
             </div>
             @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
             <x-btn :href="route('akademik.rombel.create')" icon="fas fa-plus" class="btn-primary shadow-sm">
@@ -20,6 +20,9 @@
 
     @if(session('success'))
         <x-alert type="success" :message="session('success')" dismissible />
+    @endif
+    @if(session('error'))
+        <x-alert type="danger" :message="session('error')" dismissible />
     @endif
 
     <div class="card border-0 shadow-sm mb-4 bg-light">
@@ -56,12 +59,12 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2 d-flex">
-                    <button type="submit" class="btn btn-primary btn-block">
+                <div class="col-md-2 d-flex" style="gap: 6px;">
+                    <button type="submit" class="btn btn-primary flex-fill">
                         <i class="fas fa-filter mr-1"></i> Filter
                     </button>
                     @if(request()->anyFilled(['search', 'tahunajaran_id', 'tingkat_id']))
-                        <a href="{{ route('akademik.rombel.index') }}" class="btn btn-outline-secondary ml-2" title="Reset Filter">
+                        <a href="{{ route('akademik.rombel.index') }}" class="btn btn-outline-secondary" title="Reset Filter">
                             <i class="fas fa-undo"></i>
                         </a>
                     @endif
@@ -158,7 +161,7 @@
             </table>
         </div>
         <div class="mt-4 d-flex justify-content-center">
-            {{ $rombel->links() }}
+            {{ $rombel->withQueryString()->links() }}
         </div>
     </x-card>
 

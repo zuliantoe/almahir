@@ -32,7 +32,6 @@ class Pegawai extends Model
                 default   => "Aktivitas '{$eventName}' pada data Pegawai {$this->nama}.",
             });
     }
-
     protected $table = 'pegawai';
 
     public $incrementing = false;

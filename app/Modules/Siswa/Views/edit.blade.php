@@ -21,24 +21,24 @@
     <form action="{{ route('siswa.update', $siswa->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
-        
+
         <div class="row">
             {{-- Left Column: Personal Info --}}
             <div class="col-md-8">
                 <x-card title="Informasi Pribadi" type="primary">
                     <div class="row">
                         <div class="col-md-6">
-                            <x-input 
-                                label="NIS (Nomor Induk Siswa)" 
-                                name="nis" 
+                            <x-input
+                                label="NIS (Nomor Induk Siswa)"
+                                name="nis"
                                 value="{{ old('nis', $siswa->nis) }}"
                                 placeholder="Masukkan NIS"
                                 required />
                         </div>
                         <div class="col-md-6">
-                            <x-input 
-                                label="Nama Lengkap" 
-                                name="nama" 
+                            <x-input
+                                label="Nama Lengkap"
+                                name="nama"
                                 value="{{ old('nama', $siswa->nama) }}"
                                 placeholder="Masukkan nama lengkap"
                                 required />
@@ -47,18 +47,18 @@
 
                     <div class="row">
                         <div class="col-md-6">
-                            <x-input 
-                                label="Email" 
-                                name="email" 
+                            <x-input
+                                label="Email"
+                                name="email"
                                 type="email"
                                 value="{{ old('email', $siswa->email) }}"
                                 placeholder="siswa@email.com"
                                 required />
                         </div>
                         <div class="col-md-6">
-                            <x-input 
-                                label="Tanggal Lahir" 
-                                name="tanggal_lahir" 
+                            <x-input
+                                label="Tanggal Lahir"
+                                name="tanggal_lahir"
                                 type="date"
                                 value="{{ old('tanggal_lahir', $siswa->tanggal_lahir ? $siswa->tanggal_lahir->format('Y-m-d') : '') }}"
                                 required />
@@ -67,9 +67,9 @@
 
                     <div class="row">
                         <div class="col-md-6">
-                            <x-input 
-                                label="Tempat Lahir" 
-                                name="tempat_lahir" 
+                            <x-input
+                                label="Tempat Lahir"
+                                name="tempat_lahir"
                                 value="{{ old('tempat_lahir', $siswa->tempat_lahir) }}"
                                 placeholder="Kota kelahiran" />
                         </div>
@@ -90,9 +90,9 @@
 
                     <div class="row">
                         <div class="col-md-6">
-                            <x-input 
-                                label="No. Telepon" 
-                                name="telepon" 
+                            <x-input
+                                label="No. Telepon"
+                                name="telepon"
                                 value="{{ old('telepon', $siswa->telepon) }}"
                                 placeholder="08xxxxxxxxxx" />
                         </div>
@@ -114,7 +114,7 @@
 
                     <div class="form-group">
                         <label>Alamat Lengkap</label>
-                        <textarea name="alamat" class="form-control @error('alamat') is-invalid @enderror" 
+                        <textarea name="alamat" class="form-control @error('alamat') is-invalid @enderror"
                                   rows="3" placeholder="Masukkan alamat lengkap">{{ old('alamat', $siswa->alamat) }}</textarea>
                         @error('alamat')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -134,7 +134,7 @@
                             <option value="">-- Pilih Tahun Ajaran --</option>
                             @if(isset($tahunAjaran))
                                 @foreach($tahunAjaran as $ta)
-                                    <option value="{{ $ta->id }}" {{ old('tahun_masuk', $siswa->tahun_masuk) == $ta->id ? 'selected' : '' }}>
+                                    <option value="{{ $ta->tahunajaran }}" {{ old('tahun_masuk', $siswa->tahun_masuk) == $ta->id ? 'selected' : '' }}>
                                         {{ $ta->tahunajaran }}
                                     </option>
                                 @endforeach
@@ -186,12 +186,12 @@
     function previewImage(input) {
         if (input.files && input.files[0]) {
             var reader = new FileReader();
-            
+
             reader.onload = function(e) {
                 document.getElementById('foto-preview').src = e.target.result;
                 document.getElementById('preview-container').classList.remove('d-none');
             }
-            
+
             reader.readAsDataURL(input.files[0]);
         }
     }

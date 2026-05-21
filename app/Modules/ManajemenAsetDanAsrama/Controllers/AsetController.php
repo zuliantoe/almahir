@@ -17,6 +17,7 @@ class AsetController extends BaseController
     public function index(Request $request): View
     {
         $search = $request->input('search');
+        $kondisi = $request->input('kondisi');
 
         $query = Aset::with('pengadaan:id,nomor_po,pengajuan_id', 'pengadaan.pengajuan:id,nomor_pengajuan')
                     ->whereNull('deleted_at');
@@ -39,13 +40,21 @@ class AsetController extends BaseController
             });
         }
 
-        $aset = $query->latest()->paginate(15)->appends(['search' => $search]);
+        if (!empty($kondisi)) {
+            $query->where('status_kondisi', $kondisi);
+        }
+
+        $aset = $query->latest()->paginate(15)->appends([
+            'search' => $search,
+            'kondisi' => $kondisi,
+        ]);
         
         $stats = [
             'total'           => Aset::whereNull('deleted_at')->count(),
-            'baik'            => Aset::whereNull('deleted_at')->where('status_kondisi', 'baik')->count(),
+            'baik'            => Aset::whereNull('deleted_at')->whereIn('status_kondisi', ['baik', 'sudah_diperbaiki'])->count(),
             'rusak'           => Aset::whereNull('deleted_at')->where('status_kondisi', 'rusak')->count(),
             'dalam_perbaikan' => Aset::whereNull('deleted_at')->where('status_kondisi', 'dalam_perbaikan')->count(),
+            'sudah_diperbaiki'=> Aset::whereNull('deleted_at')->where('status_kondisi', 'sudah_diperbaiki')->count(),
         ];
         
         return view('manajemenasetdanasrama::aset.index', [

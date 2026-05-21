@@ -85,10 +85,10 @@
                             @endif
 
                         @elseif($mode == 'approver')
-                            <button type="button" class="btn btn-action-xs btn-success btn-approve" data-id="{{ $item->id }}" title="Setujui">
+                            <button type="button" class="btn btn-action-xs btn-success btn-approve" data-id="{{ $item->id }}" data-nama="{{ $item->nama_aset }}" title="Setujui">
                                 <i class="fas fa-check"></i>
                             </button>
-                            <button type="button" class="btn btn-action-xs btn-danger btn-reject" data-id="{{ $item->id }}" title="Tolak">
+                            <button type="button" class="btn btn-action-xs btn-danger btn-reject" data-id="{{ $item->id }}" data-nama="{{ $item->nama_aset }}" title="Tolak">
                                 <i class="fas fa-times"></i>
                             </button>
 

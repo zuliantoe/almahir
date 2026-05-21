@@ -47,8 +47,8 @@
                 <span class="info-box-icon bg-success elevation-1"><i class="fas fa-users"></i></span>
                 <div class="info-box-content">
                     <span class="info-box-text">Kelas</span>
-                    <span class="info-box-number text-truncate" title="{{ $rombelSiswa->rombel->nama_rombel ?? '-' }}">
-                        {{ $rombelSiswa->rombel->nama_rombel ?? '-' }}
+                    <span class="info-box-number text-truncate" title="{{ optional($rombelSiswa?->rombel)->nama_rombel ?? '-' }}">
+                        {{ optional($rombelSiswa?->rombel)->nama_rombel ?? '-' }}
                     </span>
                 </div>
             </div>
@@ -58,8 +58,23 @@
             <div class="info-box shadow-sm">
                 <span class="info-box-icon bg-primary elevation-1"><i class="fas fa-graduation-cap"></i></span>
                 <div class="info-box-content">
-                    <span class="info-box-text">Tahun Ajaran</span>
-                    <span class="info-box-number">{{ $tahunAjaranAktif->tahunajaran ?? '-' }}</span>
+                    <span class="info-box-text">Tahun Ajaran Aktif</span>
+                    <span class="info-box-number" style="font-size:1rem;">{{ $tahunAjaranAktif?->tahunajaran ?? 'Belum Diatur' }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box shadow-sm">
+                <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-layer-group"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Status</span>
+                    <span class="info-box-number">
+                        @if($tahunAjaranAktif)
+                            <span class="badge badge-success">Aktif</span>
+                        @else
+                            <span class="badge badge-danger">Tidak Ada</span>
+                        @endif
+                    </span>
                 </div>
             </div>
         </div>
@@ -86,10 +101,10 @@
             {{-- Ongoing Events --}}
             @if($eventHariIni->isNotEmpty())
                 @foreach($eventHariIni as $event)
-                <div class="callout callout-{{ $event->jenisKegiatan->is_kbm ? 'info' : 'warning' }} shadow-sm">
-                    <h5><i class="fas {{ $event->jenisKegiatan->is_kbm ? 'fa-info-circle' : 'fa-calendar-day' }} mr-2"></i> {{ $event->nama_kegiatan }}</h5>
+                <div class="callout callout-{{ optional($event->jenisKegiatan)->is_kbm ? 'info' : 'warning' }} shadow-sm">
+                    <h5><i class="fas {{ optional($event->jenisKegiatan)->is_kbm ? 'fa-info-circle' : 'fa-calendar-day' }} mr-2"></i> {{ $event->nama_kegiatan }}</h5>
                     <p>{{ $event->deskripsi ?: 'Kegiatan madrasah sedang berlangsung hari ini.' }}</p>
-                    @if(!$event->jenisKegiatan->is_kbm)
+                    @if($event->jenisKegiatan && !$event->jenisKegiatan->is_kbm)
                         <span class="badge badge-danger">KBM LIBUR</span>
                     @endif
                 </div>
@@ -120,34 +135,36 @@
                             <p class="text-muted">Ikuti kegiatan sekolah yang berlangsung hari ini.</p>
                         </div>
                     @else
-                        <table class="table table-striped table-valign-middle">
-                            <thead>
-                                <tr>
-                                    <th class="text-center" width="80">SESI</th>
-                                    <th>MATA PELAJARAN</th>
-                                    <th>PENGAJAR</th>
-                                    <th class="text-center">WAKTU</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($jadwalHariIni as $j)
-                                <tr>
-                                    <td class="text-center font-weight-bold text-info">{{ $j->jamke }}</td>
-                                    <td>
-                                        <div class="font-weight-bold">{{ $j->mataPelajaran->nama ?? '-' }}</div>
-                                    </td>
-                                    <td>
-                                        <small class="font-weight-bold text-muted text-uppercase">Ust. {{ explode(' ', $j->guru->nama)[0] }}</small>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge badge-light border">
-                                            {{ substr($j->jamawal, 0, 5) }} - {{ substr($j->jamakhir, 0, 5) }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-valign-middle">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center" width="80">SESI</th>
+                                        <th>MATA PELAJARAN</th>
+                                        <th>PENGAJAR</th>
+                                        <th class="text-center">WAKTU</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($jadwalHariIni as $j)
+                                    <tr>
+                                        <td class="text-center font-weight-bold text-info">{{ $j->jamke }}</td>
+                                        <td>
+                                            <div class="font-weight-bold">{{ $j->mataPelajaran->nama ?? '-' }}</div>
+                                        </td>
+                                        <td>
+                                            <small class="font-weight-bold text-muted text-uppercase">Ust. {{ optional($j->guru)->nama ? explode(' ', $j->guru->nama)[0] : '-' }}</small>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge badge-light border">
+                                                {{ substr($j->jamawal, 0, 5) }} - {{ substr($j->jamakhir, 0, 5) }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     @endif
                 </div>
             </div>

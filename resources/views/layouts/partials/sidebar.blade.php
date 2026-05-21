@@ -9,14 +9,12 @@
 
     $homeUrl = url('/');
     if (Auth::check()) {
-        if ($isGuru) {
-            $homeUrl = route('penilaiandanpresensi.index');
-        } elseif ($isWali) {
+        if ($isWali) {
             $homeUrl = route('walimurid.portal.dashboard');
         }
     }
 
-    // Active module detection for Siswa and Admin
+    // Active module detection for Siswa, Guru, and Admin
     $activeModule = null;
     if ($isSiswa) {
         if (request()->is('akademik*')) {
@@ -27,6 +25,10 @@
             $activeModule = 'asrama';
         } elseif (request()->is('keuangan*')) {
             $activeModule = 'keuangan';
+        }
+    } elseif ($isGuru) {
+        if (request()->is('manajemenasetdanasrama*')) {
+            $activeModule = 'asrama';
         }
     } elseif ($isStaffOrAdmin) {
         if (request()->is('akademik*')) {
@@ -89,15 +91,173 @@
 
                 @if($isGuru)
                     {{-- ========================================== --}}
-                    {{-- PORTAL GURU DIRECT VIEW                    --}}
+                    {{-- PORTAL GURU                                --}}
                     {{-- ========================================== --}}
-                    <li class="nav-header">PENILAIAN & PRESENSI</li>
-                    <li class="nav-item">
-                        <a href="{{ url('/') }}" class="nav-link bg-danger mb-3">
-                            <i class="nav-icon fas fa-arrow-left"></i>
-                            <p>Menu Utama</p>
-                        </a>
-                    </li>
+                    @if($activeModule === 'asrama')
+                        {{-- 1. TOMBOL KEMBALI KE MENU UTAMA --}}
+                        <li class="nav-item">
+                            <a href="{{ url('/') }}" class="nav-link bg-danger text-white mb-3" style="border-radius: 12px; box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);">
+                                <i class="nav-icon fas fa-arrow-left"></i>
+                                <p class="font-weight-bold">Menu Utama</p>
+                            </a>
+                        </li>
+
+                        {{-- 2. DYNAMIC MODULE SUBMENUS --}}
+                        @isset($moduleMenus)
+                            @foreach($moduleMenus as $section)
+                                @if($section['header'] === 'MANAJEMEN ASET & ASRAMA')
+                                    <li class="nav-header">{{ $section['header'] }}</li>
+
+                                    @foreach($section['items'] as $item)
+                                        @if(!empty($item['children']))
+                                            @php
+                                                $isTreeOpen = false;
+                                                foreach ($item['children'] as $child) {
+                                                    if (!empty($child['match']) && request()->is($child['match'])) {
+                                                        $isTreeOpen = true;
+                                                        break;
+                                                    }
+                                                }
+                                            @endphp
+                                            <li class="nav-item has-treeview {{ $isTreeOpen ? 'menu-open' : '' }}">
+                                                <a href="javascript:void(0);" class="nav-link {{ $isTreeOpen ? 'active' : '' }}">
+                                                    <i class="nav-icon {{ $item['icon'] ?? 'far fa-circle' }}"></i>
+                                                    <p>
+                                                        {{ $item['label'] }}
+                                                        <i class="fas fa-angle-left right"></i>
+                                                    </p>
+                                                </a>
+                                                <ul class="nav nav-treeview">
+                                                    @foreach($item['children'] as $child)
+                                                        @php
+                                                            $childUrl = 'javascript:void(0);';
+                                                            if (!empty($child['route'])) {
+                                                                try { $childUrl = route($child['route']); } catch (\Exception $e) { $childUrl = 'javascript:void(0);'; }
+                                                            } elseif (!empty($child['url'])) {
+                                                                $childUrl = $child['url'];
+                                                            }
+                                                            $childActive = !empty($child['match']) && request()->is($child['match']);
+                                                        @endphp
+                                                        <li class="nav-item">
+                                                            <a href="{{ $childUrl }}" class="nav-link {{ $childActive ? 'active' : '' }}">
+                                                                <i class="nav-icon {{ $child['icon'] ?? 'far fa-circle' }}"></i>
+                                                                <p>{{ $child['label'] }}</p>
+                                                            </a>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </li>
+                                        @else
+                                            @php
+                                                $itemUrl = 'javascript:void(0);';
+                                                if (!empty($item['route'])) {
+                                                    try { $itemUrl = route($item['route']); } catch (\Exception $e) { $itemUrl = 'javascript:void(0);'; }
+                                                } elseif (!empty($item['url'])) {
+                                                    $itemUrl = $item['url'];
+                                                }
+                                                $itemActive = !empty($item['match']) && request()->is($item['match']);
+                                            @endphp
+                                            <li class="nav-item">
+                                                <a href="{{ $itemUrl }}" class="nav-link {{ $itemActive ? 'active' : '' }}">
+                                                    <i class="nav-icon {{ $item['icon'] ?? 'far fa-circle' }}"></i>
+                                                    <p>{{ $item['label'] }}</p>
+                                                </a>
+                                            </li>
+                                        @endif
+                                    @endforeach
+                                @endif
+                            @endforeach
+                        @endisset
+                    @else
+                        <li class="nav-item">
+                            <a href="{{ url('/') }}" class="nav-link {{ request()->is('/') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>Dashboard Utama</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-header">MENU GURU</li>
+                        
+                        {{-- 1. Kaldik --}}
+                        <li class="nav-item">
+                            <a href="{{ route('guru.kalender-akademik') }}" class="nav-link {{ request()->is('guru/kalender-akademik*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-calendar-alt text-success"></i>
+                                <p>Kaldik</p>
+                            </a>
+                        </li>
+
+                        {{-- 2. Jadwal Mengajar --}}
+                        <li class="nav-item">
+                            <a href="{{ route('akademik.jadwal-pelajaran.index') }}" class="nav-link {{ request()->is('akademik/jadwal-pelajaran*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-calendar-day text-info"></i>
+                                <p>Jadwal Mengajar</p>
+                            </a>
+                        </li>
+
+                        {{-- 3. Absensi Siswa --}}
+                        <li class="nav-item">
+                            <a href="{{ route('penilaiandanpresensi.presensi.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/presensi*') && !request()->is('penilaiandanpresensi/presensi/siswa*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-user-check text-primary"></i>
+                                <p>Absensi Siswa</p>
+                            </a>
+                        </li>
+
+                        {{-- 4. Penilaian Akademik --}}
+                        <li class="nav-item">
+                            <a href="{{ route('penilaiandanpresensi.penilaianakademik.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik') && !request()->is('penilaiandanpresensi/penilaianakademik/raport*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-graduation-cap text-purple"></i>
+                                <p>Penilaian Akademik</p>
+                            </a>
+                        </li>
+
+                        {{-- 5. Penilaian Tahfidz --}}
+                        <li class="nav-item">
+                            <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaiantahfidz*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-quran text-pink"></i>
+                                <p>Penilaian Tahfidz</p>
+                            </a>
+                        </li>
+
+                        {{-- 6. Cetak Raport --}}
+                        <li class="nav-item">
+                            <a href="{{ route('penilaiandanpresensi.penilaianakademik.raport.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik/raport*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-file-invoice text-warning"></i>
+                                <p>Cetak Raport</p>
+                            </a>
+                        </li>
+
+                        {{-- 7. Konfirmasi Izin Sakit --}}
+                        <li class="nav-item">
+                            <a href="{{ route('penilaiandanpresensi.izinsakit.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/izinsakit*') && !request()->is('penilaiandanpresensi/izinsakit/siswa*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-envelope-open-text text-danger"></i>
+                                <p>Konfirmasi Izin Sakit</p>
+                            </a>
+                        </li>
+
+                        {{-- 8. Pengajuan Izin --}}
+                        <li class="nav-item">
+                            <a href="{{ route('perizinan.index') }}" class="nav-link {{ request()->is('perizinan*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-paper-plane text-teal"></i>
+                                <p>Pengajuan Izin</p>
+                            </a>
+                        </li>
+
+                        {{-- 9. Absensi Pegawai --}}
+                        <li class="nav-item">
+                            <a href="{{ route('absensi.index') }}" class="nav-link {{ request()->is('absensi*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-fingerprint text-purple"></i>
+                                <p>Absensi Pegawai</p>
+                            </a>
+                        </li>
+
+                        {{-- 10. Aset & Asrama --}}
+                        <li class="nav-item">
+                            <a href="{{ route('manajemenasetdanasrama.index') }}" class="nav-link {{ request()->is('manajemenasetdanasrama*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-building text-orange"></i>
+                                <p>Aset & Asrama</p>
+                            </a>
+                        </li>
+                    @endif
 
                 @elseif($isWali)
                     {{-- ========================================== --}}
@@ -113,129 +273,82 @@
 
                 @elseif($isSiswa)
                     {{-- ========================================== --}}
-                    {{-- PORTAL SISWA (WITH MODULE SWITCHER)        --}}
+                    {{-- PORTAL SISWA DIRECT VIEW                     --}}
                     {{-- ========================================== --}}
-                    @if($activeModule)
-                        {{-- 1. TOMBOL KEMBALI KE MENU UTAMA --}}
-                        <li class="nav-item">
-                            <a href="{{ url('/') }}" class="nav-link bg-danger text-white mb-3" style="border-radius: 12px; box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);">
-                                <i class="nav-icon fas fa-arrow-left"></i>
-                                <p class="font-weight-bold">Menu Utama</p>
-                            </a>
-                        </li>
+                    <li class="nav-item">
+                        <a href="{{ url('/') }}" class="nav-link {{ request()->is('/') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-tachometer-alt text-primary"></i>
+                            <p>Dashboard Utama</p>
+                        </a>
+                    </li>
 
-                        {{-- 2. DYNAMIC MODULE SUBMENUS --}}
-                        @if($activeModule === 'akademik')
-                            <li class="nav-header">AKADEMIK SANTRI</li>
-                            <li class="nav-item">
-                                <a href="{{ route('akademik.jadwal-pelajaran.index') }}" class="nav-link {{ request()->is('akademik/jadwal-pelajaran*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-calendar-day text-info"></i>
-                                    <p>Jadwal Pelajaran</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('akademik.kalender-akademik.index') }}" class="nav-link {{ request()->is('akademik/kalender-akademik*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-calendar-alt text-success"></i>
-                                    <p>Kalender Akademik</p>
-                                </a>
-                            </li>
-                        @endif
+                    <li class="nav-header">AKADEMIK SANTRI</li>
+                    <li class="nav-item">
+                        <a href="{{ route('akademik.jadwal-pelajaran.index') }}" class="nav-link {{ request()->is('akademik/jadwal-pelajaran*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-calendar-day text-info"></i>
+                            <p>Jadwal Pelajaran</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('akademik.kalender-akademik.index') }}" class="nav-link {{ request()->is('akademik/kalender-akademik*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-calendar-alt text-success"></i>
+                            <p>Kalender Akademik</p>
+                        </a>
+                    </li>
 
-                        @if($activeModule === 'penilaiandanpresensi')
-                            <li class="nav-header">KEHADIRAN & NILAI</li>
-                            <li class="nav-item">
-                                <a href="{{ route('penilaiandanpresensi.presensi.siswa.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/presensi/siswa*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-fingerprint text-info"></i>
-                                    <p>Absensi Saya</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('penilaiandanpresensi.izinsakit.siswa.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/izinsakit/siswa*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-envelope-open-text text-warning"></i>
-                                    <p>Izin & Sakit</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('penilaiandanpresensi.penilaianakademik.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-graduation-cap text-success"></i>
-                                    <p>Nilai Akademik</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaiantahfidz*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-quran text-pink"></i>
-                                    <p>Nilai Tahfidz</p>
-                                </a>
-                            </li>
-                        @endif
+                    <li class="nav-header">KEHADIRAN & NILAI</li>
+                    <li class="nav-item">
+                        <a href="{{ route('penilaiandanpresensi.presensi.siswa.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/presensi/siswa*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-fingerprint text-info"></i>
+                            <p>Absensi Saya</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('penilaiandanpresensi.izinsakit.siswa.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/izinsakit/siswa*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-envelope-open-text text-warning"></i>
+                            <p>Izin & Sakit</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('penilaiandanpresensi.penilaianakademik.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-graduation-cap text-success"></i>
+                            <p>Nilai Akademik</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaiantahfidz*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-quran text-pink"></i>
+                            <p>Nilai Tahfidz</p>
+                        </a>
+                    </li>
 
-                        @if($activeModule === 'asrama')
-                            <li class="nav-header">ASRAMA & PIKET</li>
-                            <li class="nav-item">
-                                <a href="{{ route('siswa.asrama.jadwal-piket.index') }}" class="nav-link {{ request()->is('siswa/asrama/jadwal-piket*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-clipboard-list text-orange"></i>
-                                    <p>Jadwal Piket</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('siswa.asrama.kamar.index') }}" class="nav-link {{ request()->is('siswa/asrama/kamar*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-hotel text-info"></i>
-                                    <p>Lihat Kamar</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('siswa.asrama.penghuni.index') }}" class="nav-link {{ request()->is('siswa/asrama/penghuni*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-users text-success"></i>
-                                    <p>Data Penghuni</p>
-                                </a>
-                            </li>
-                        @endif
+                    <li class="nav-header">ASRAMA & PIKET</li>
+                    <li class="nav-item">
+                        <a href="{{ route('siswa.asrama.jadwal-piket.index') }}" class="nav-link {{ request()->is('siswa/asrama/jadwal-piket*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-clipboard-list text-orange"></i>
+                            <p>Jadwal Piket</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('siswa.asrama.kamar.index') }}" class="nav-link {{ request()->is('siswa/asrama/kamar*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-hotel text-info"></i>
+                            <p>Lihat Kamar</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('siswa.asrama.penghuni.index') }}" class="nav-link {{ request()->is('siswa/asrama/penghuni*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-users text-success"></i>
+                            <p>Data Penghuni</p>
+                        </a>
+                    </li>
 
-                        @if($activeModule === 'keuangan')
-                            <li class="nav-header">KEUANGAN SANTRI</li>
-                            <li class="nav-item">
-                                <a href="{{ route('keuangan.uangsakus.index') }}" class="nav-link {{ request()->is('keuangan/uangsakus*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-wallet text-teal"></i>
-                                    <p>Uang Saku Saya</p>
-                                </a>
-                            </li>
-                        @endif
-
-                    @else
-                        {{-- MENU UTAMA SISWA (HANYA MUNCUL DI DASHBOARD) --}}
-                        <li class="nav-item">
-                            <a href="{{ url('/') }}" class="nav-link {{ request()->is('/') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-tachometer-alt"></i>
-                                <p>Dashboard Utama</p>
-                            </a>
-                        </li>
-
-                        <li class="nav-header">MODUL SISWA</li>
-                        <li class="nav-item">
-                            <a href="{{ route('akademik.jadwal-pelajaran.index') }}" class="nav-link">
-                                <i class="nav-icon fas fa-graduation-cap text-info"></i>
-                                <p>Modul Akademik</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('penilaiandanpresensi.presensi.siswa.index') }}" class="nav-link">
-                                <i class="nav-icon fas fa-user-check text-primary"></i>
-                                <p>Kehadiran & Nilai</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('keuangan.uangsakus.index') }}" class="nav-link">
-                                <i class="nav-icon fas fa-money-bill-wave text-teal"></i>
-                                <p>Modul Keuangan</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('siswa.asrama.kamar.index') }}" class="nav-link">
-                                <i class="nav-icon fas fa-building text-orange"></i>
-                                <p>Aset & Asrama</p>
-                            </a>
-                        </li>
-                    @endif
+                    <li class="nav-header">KEUANGAN SANTRI</li>
+                    <li class="nav-item">
+                        <a href="{{ route('keuangan.uangsakus.index') }}" class="nav-link {{ request()->is('keuangan/uangsakus*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-wallet text-teal"></i>
+                            <p>Uang Saku Saya</p>
+                        </a>
+                    </li>
 
                 @else
                     {{-- ========================================== --}}
@@ -333,40 +446,49 @@
                             @endisset
                         @endif
 
-                        {{-- 3. PENILAIAN & PRESENSI MODULE VIEW --}}
-                        @if($activeModule === 'penilaiandanpresensi' && Auth::user()->hasRole(['SUPER_ADMIN', 'GURU']))
-                            <li class="nav-header">PENILAIAN & PRESENSI</li>
-                            <li class="nav-item">
-                                <a href="{{ route('penilaiandanpresensi.penilaianakademik.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-graduation-cap text-success"></i>
-                                    <p>Penilaian Akademik</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaiantahfidz*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-quran text-primary"></i>
-                                    <p>Penilaian Tahfidz</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('penilaiandanpresensi.penilaianakademik.raport.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik/raport*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-print text-info"></i>
-                                    <p>Cetak Raport</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('penilaiandanpresensi.presensi.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/presensi') ? 'active' : (request()->is('penilaiandanpresensi/presensi/*') && !request()->is('penilaiandanpresensi/presensi/siswa*') ? 'active' : '') }}">
-                                    <i class="nav-icon fas fa-user-check text-warning"></i>
-                                    <p>Presensi (Daftar)</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('penilaiandanpresensi.izinsakit.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/izinsakit') ? 'active' : (request()->is('penilaiandanpresensi/izinsakit/*') && !request()->is('penilaiandanpresensi/izinsakit/siswa*') ? 'active' : '') }}">
-                                    <i class="nav-icon fas fa-user-clock text-danger"></i>
-                                    <p>Konfirmasi Izin Sakit</p>
-                                </a>
-                            </li>
-                        @endif
+                {{-- 
+                |--------------------------------------------------------------------------
+                | PENILAIAN & PRESENSI (SUPER_ADMIN, GURU)
+                |--------------------------------------------------------------------------
+                --}}
+                @if($activeModule === 'penilaiandanpresensi' && Auth::check() && (Auth::user()->hasRole(['SUPER_ADMIN', 'GURU'])))
+                <li class="nav-header">PENILAIAN & PRESENSI</li>
+                
+                <li class="nav-item">
+                    <a href="{{ route('penilaiandanpresensi.penilaianakademik.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-graduation-cap"></i>
+                        <p>Penilaian Akademik</p>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaiantahfidz*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-quran"></i>
+                        <p>Penilaian Tahfidz</p>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ route('penilaiandanpresensi.penilaianakademik.raport.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik/raport*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-print"></i>
+                        <p>Cetak Raport</p>
+                    </a>
+                </li>
+
+                    <li class="nav-item">
+                        <a href="{{ route('penilaiandanpresensi.presensi.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/presensi') ? 'active' : (request()->is('penilaiandanpresensi/presensi/*') && !request()->is('penilaiandanpresensi/presensi/siswa*') ? 'active' : '') }}">
+                            <i class="nav-icon fas fa-user-check"></i>
+                            <p>Presensi (Daftar)</p>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{{ route('penilaiandanpresensi.izinsakit.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/izinsakit') ? 'active' : (request()->is('penilaiandanpresensi/izinsakit/*') && !request()->is('penilaiandanpresensi/izinsakit/siswa*') ? 'active' : '') }}">
+                            <i class="nav-icon fas fa-user-clock"></i>
+                            <p>Konfirmasi Izin Sakit</p>
+                        </a>
+                    </li>
+                    @endif
 
                         {{-- 4. KEUANGAN MODULE VIEW --}}
                         @if($activeModule === 'keuangan' && Auth::user()->hasRole(['SUPER_ADMIN', 'KEUANGAN']))
@@ -422,6 +544,43 @@
                                     <p>Modul Kehadiran</p>
                                 </a>
                             </li>
+                            <li class="nav-item has-treeview {{ request()->is('siswa*') || request()->is('guru*') || request()->is('walimurid*') || request()->is('users*') ? 'menu-open' : '' }}">
+                                <a href="#" class="nav-link {{ request()->is('siswa*') || request()->is('guru*') || request()->is('walimurid*') || request()->is('users*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-users text-primary"></i>
+                                    <p>
+                                        Modul User
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <li class="nav-item">
+                                        <a href="{{ route('siswa.index') }}" class="nav-link {{ request()->is('siswa*') && !request()->is('siswa/asrama*') ? 'active' : '' }}">
+                                            <i class="far fa-circle nav-icon"></i>
+                                            <p>Data Siswa</p>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('guru.index') }}" class="nav-link {{ request()->is('guru*') ? 'active' : '' }}">
+                                            <i class="far fa-circle nav-icon"></i>
+                                            <p>Data Guru</p>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('walimurid.index') }}" class="nav-link {{ request()->is('walimurid*') ? 'active' : '' }}">
+                                            <i class="far fa-circle nav-icon"></i>
+                                            <p>Data Wali Murid</p>
+                                        </a>
+                                    </li>
+                                    @if(Auth::user()->hasRole('SUPER_ADMIN'))
+                                    <li class="nav-item">
+                                        <a href="{{ route('users.index') }}" class="nav-link {{ request()->is('users*') ? 'active' : '' }}">
+                                            <i class="far fa-circle nav-icon"></i>
+                                            <p>Semua Akun</p>
+                                        </a>
+                                    </li>
+                                    @endif
+                                </ul>
+                            </li>
                         @endif
                          @if(Auth::user()->hasRole(['PEGAWAI']))
 
@@ -454,15 +613,7 @@
 
 
 
-                        {{-- Shortcut Penilaian & Presensi di menu utama admin --}}
-                        @if(Auth::user()->hasRole(['SUPER_ADMIN']))
-                            <li class="nav-item">
-                                <a href="{{ route('penilaiandanpresensi.penilaianakademik.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-clipboard-check text-success"></i>
-                                    <p>Penilaian & Presensi</p>
-                                </a>
-                            </li>
-                        @endif
+
 
                         {{-- Asrama di menu utama admin --}}
                         @if(Auth::user()->hasRole(['SUPER_ADMIN', 'STAF_TU']))
@@ -476,18 +627,6 @@
 
                         @if(Auth::user()->hasRole('SUPER_ADMIN'))
                             <li class="nav-header">PENGATURAN</li>
-                            <li class="nav-item">
-                                <a href="{{ route('walimurid.index') }}" class="nav-link {{ request()->is('walimurid*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-user-friends text-warning"></i>
-                                    <p>Data Wali Murid</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('users.index') }}" class="nav-link {{ request()->is('users*') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-users-cog text-secondary"></i>
-                                    <p>Manajemen User</p>
-                                </a>
-                            </li>
                             <li class="nav-item">
                                 <a href="{{ route('rolepermission.index') }}" class="nav-link {{ request()->is('rolepermission*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-user-shield text-secondary"></i>

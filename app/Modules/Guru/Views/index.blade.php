@@ -72,6 +72,9 @@
                             @endif
                         </td>
                         <td>
+                            <a href="{{ route('guru.show', $g->id) }}" class="btn btn-info btn-sm" title="Detail">
+                                <i class="fas fa-eye"></i>
+                            </a>
                             <a href="{{ route('guru.edit', $g->id) }}" class="btn btn-warning btn-sm" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </a>

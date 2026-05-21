@@ -1,3 +1,6 @@
+@php
+    $isGuru = auth()->check() && auth()->user()->hasRole('GURU');
+@endphp
 <div class="table-responsive">
     <table class="table table-hover table-sm">
         <thead>
@@ -10,7 +13,7 @@
                 <th width="110">TINGKAT</th>
                 <th width="130">STATUS</th>
                 <th width="100" class="text-center">TANGGAL</th>
-                <th width="100" class="text-center">AKSI</th>
+                <th width="{{ $actionWidth ?? '100' }}" class="text-center">AKSI</th>
             </tr>
         </thead>
         <tbody>
@@ -64,12 +67,12 @@
                 <td class="text-center">{{ $item->created_at ? $item->created_at->format('d/m/Y') : '-' }}</td>
                 <td class="text-center">
                     <div class="d-flex justify-content-center" style="gap: 4px;">
-                        @if($item->aset_id)
+                        @if($item->aset_id && ($showAset ?? true))
                         <a href="{{ route('manajemenasetdanasrama.aset.show', $item->aset_id) }}" class="btn btn-action-xs btn-info" title="Detail Aset">
                             <i class="fas fa-eye"></i>
                         </a>
                         @endif
-                        @if($item->status_penanganan == 'belum_ditangani')
+                        @if($item->status_penanganan == 'belum_ditangani' && !$isGuru)
                         <form action="{{ route('manajemenasetdanasrama.kerusakan.proses-pemeliharaan', $item->id) }}" method="POST" class="d-inline">
                             @csrf
                             <button type="submit" class="btn btn-action-xs btn-success" title="Proses Pemeliharaan">

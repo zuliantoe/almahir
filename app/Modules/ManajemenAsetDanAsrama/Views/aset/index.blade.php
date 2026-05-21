@@ -2,6 +2,10 @@
 
 @section('title', $title)
 
+@php
+    $isGuru = auth()->user()->hasRole('GURU');
+@endphp
+
 @push('css')
 @include('manajemenasetdanasrama::partials.styles-dashboard')
 @endpush
@@ -66,9 +70,15 @@
     <div class="row mb-3">
         <div class="col-md-12 d-flex justify-content-between align-items-center">
             <div>
+                @if($isGuru)
+                <a href="{{ route('manajemenasetdanasrama.pengajuan.index') }}" class="btn btn-outline-secondary shadow-sm mr-2">
+                    <i class="fas fa-arrow-left"></i> Kembali ke Pengajuan
+                </a>
+                @else
                 <a href="{{ route('manajemenasetdanasrama.pengadaan.index') }}" class="btn btn-outline-secondary shadow-sm mr-2">
                     <i class="fas fa-arrow-left"></i> Kembali ke Pengadaan
                 </a>
+                @endif
             </div>
             <div class="d-flex">
                 <a href="{{ route('manajemenasetdanasrama.aset.scan') }}" class="btn btn-dark shadow-sm mr-2">
@@ -77,12 +87,14 @@
                 <button type="button" class="btn btn-info shadow-sm mr-2" data-toggle="modal" data-target="#modalBulkPrint">
                     <i class="fas fa-print mr-1"></i> Cetak Masal
                 </button>
+                @if(!$isGuru)
                 <button type="button" class="btn btn-danger shadow-sm mr-2" data-toggle="modal" data-target="#modalBulkDelete">
                     <i class="fas fa-trash-alt mr-1"></i> Hapus Massal
                 </button>
                 <a href="{{ route('manajemenasetdanasrama.aset.create') }}" class="btn btn-primary shadow-sm">
                     <i class="fas fa-plus-circle mr-1"></i> Tambah Aset Langsung
                 </a>
+                @endif
             </div>
         </div>
     </div>
@@ -98,23 +110,40 @@
     <div class="row">
         <div class="col-md-12">
             <x-card title="Daftar Master Aset" icon="fas fa-boxes">
-                <x-slot name="tools">
-                    <form action="{{ route('manajemenasetdanasrama.aset.index') }}" method="GET" class="form-inline m-0">
-                        <div class="input-group input-group-sm" style="width: 250px;">
-                            <input type="text" name="search" class="form-control float-right" placeholder="Cari kode atau nama (mis: kmp 8)" value="{{ request('search') }}">
-                            <div class="input-group-append">
-                                <button type="submit" class="btn btn-default">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                                @if(request('search'))
-                                <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="btn btn-default text-danger" title="Clear Search">
-                                    <i class="fas fa-times"></i>
+                <div class="card-body border-bottom bg-light py-3 px-4">
+                    <form action="{{ route('manajemenasetdanasrama.aset.index') }}" method="GET" class="row align-items-center">
+                        {{-- DROPDOWN FILTER KONDISI --}}
+                        <div class="col-md-4 mb-2 mb-md-0">
+                            <label class="small font-weight-bold text-muted uppercase mb-1">Filter Kondisi Aset</label>
+                            <select name="kondisi" class="form-control select2" data-placeholder="-- Semua Kondisi --">
+                                <option value="">-- Semua Kondisi --</option>
+                                <option value="baik" {{ request('kondisi') == 'baik' ? 'selected' : '' }}>Baik</option>
+                                <option value="rusak" {{ request('kondisi') == 'rusak' ? 'selected' : '' }}>Rusak</option>
+                                <option value="dalam_perbaikan" {{ request('kondisi') == 'dalam_perbaikan' ? 'selected' : '' }}>Dalam Perbaikan</option>
+                                <option value="sudah_diperbaiki" {{ request('kondisi') == 'sudah_diperbaiki' ? 'selected' : '' }}>Sudah Diperbaiki</option>
+                            </select>
+                        </div>
+
+                        {{-- INPUT PENCARIAN --}}
+                        <div class="col-md-5 mb-2 mb-md-0">
+                            <label class="small font-weight-bold text-muted uppercase mb-1">Cari Kode / Nama Aset</label>
+                            <input type="text" name="search" class="form-control" placeholder="Cari kode atau nama aset..." value="{{ request('search') }}">
+                        </div>
+
+                        {{-- TOMBOL FILTER & RESET --}}
+                        <div class="col-md-3 mt-md-4 d-flex" style="gap: 8px;">
+                            <button type="submit" class="btn btn-primary flex-grow-1 shadow-sm font-weight-bold text-white" style="border-radius: 8px;">
+                                Filter
+                            </button>
+                            @if(request()->filled('kondisi') || request()->filled('search'))
+                                <a href="{{ route('manajemenasetdanasrama.aset.index') }}" class="btn btn-outline-secondary shadow-sm" title="Reset Filter" style="border-radius: 8px;">
+                                    <i class="fas fa-sync-alt"></i>
                                 </a>
-                                @endif
-                            </div>
+                            @endif
                         </div>
                     </form>
-                </x-slot>
+                </div>
+
                 @include('manajemenasetdanasrama::partials.table-aset', [
                     'items' => $aset,
                     'showExtendedActions' => true,

@@ -14,8 +14,8 @@
 
     {{-- Header --}}
     <div class="row mb-4">
-        <div class="col-12 d-flex justify-content-between align-items-center">
-            <div>
+        <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+            <div class="mb-3 mb-md-0">
                 <h1 class="h3 mb-0 text-gray-800 font-weight-bold">Manajemen Jadwal Pelajaran</h1>
                 <p class="text-muted small mb-0">Atur dan pantau alokasi waktu pengajaran santri secara terpadu</p>
             </div>
@@ -31,65 +31,107 @@
         </div>
     </div>
 
-    {{-- Filter --}}
-    <x-card title="Penyaringan Data" icon="fas fa-filter" outline collapsible class="shadow-sm border-0 rounded-xl mb-4">
-        <form action="{{ route('akademik.jadwal-pelajaran.index') }}" method="GET">
-            <div class="row align-items-end">
-                <div class="col-md-3 mb-3">
-                    <label class="filter-label">Rombel / Kelas</label>
-                    <select name="rombel_id" class="form-control select2-premium">
-                        <option value="">— Semua Rombel —</option>
-                        @foreach($rombels as $rombel)
-                            <option value="{{ $rombel->id }}" {{ request('rombel_id') == $rombel->id ? 'selected' : '' }}>
-                                {{ $rombel->nama_rombel }} ({{ optional($rombel->kelas)->nama_kelas }})
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2 mb-3">
-                    <label class="filter-label">Hari</label>
-                    <select name="hari" class="form-control select2-premium">
-                        <option value="">— Semua —</option>
-                        @foreach(['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] as $h)
-                            <option value="{{ $h }}" {{ request('hari') == $h ? 'selected' : '' }}>{{ $h }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label class="filter-label">Mata Pelajaran</label>
-                    <select name="mapel_id" class="form-control select2-premium">
-                        <option value="">— Semua Mapel —</option>
-                        @foreach($mapels as $m)
-                            <option value="{{ $m->id }}" {{ request('mapel_id') == $m->id ? 'selected' : '' }}>{{ $m->nama }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2 mb-3">
-                    <label class="filter-label">Tahun Ajaran</label>
-                    <select name="tahun_ajaran_id" class="form-control select2-premium">
-                        <option value="">— Pilih Tahun —</option>
-                        @foreach($tahunAjarans as $ta)
-                            <option value="{{ $ta->id }}" {{ request('tahun_ajaran_id') == $ta->id ? 'selected' : '' }}>{{ $ta->tahunajaran }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2 mb-3">
-                    <button type="submit" class="btn btn-primary w-100 rounded-pill shadow-sm transition-all hover-scale">
-                        <i class="fas fa-search mr-2"></i> Terapkan
-                    </button>
-                </div>
-                <div class="col-md-12 mb-2">
-                    <label class="filter-label">Guru Pengajar</label>
-                    <select name="guru_id" class="form-control select2-premium">
-                        <option value="">— Semua Guru —</option>
-                        @foreach($gurus as $g)
-                            <option value="{{ $g->id }}" {{ request('guru_id') == $g->id ? 'selected' : '' }}>{{ $g->nama }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-        </form>
-    </x-card>
+    {{-- Filter & Duplikasi --}}
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <x-card title="Penyaringan Data" icon="fas fa-filter" outline collapsible class="shadow-sm border-0 rounded-xl h-100">
+                <form action="{{ route('akademik.jadwal-pelajaran.index') }}" method="GET">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="filter-label">Rombel / Kelas</label>
+                            <select name="rombel_id" class="form-control select2-premium">
+                                <option value="">— Semua Rombel —</option>
+                                @foreach($rombels as $rombel)
+                                    <option value="{{ $rombel->id }}" {{ request('rombel_id') == $rombel->id ? 'selected' : '' }}>
+                                        {{ $rombel->nama_rombel }} ({{ optional($rombel->kelas)->nama_kelas }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="filter-label">Hari</label>
+                            <select name="hari" class="form-control select2-premium">
+                                <option value="">— Semua —</option>
+                                @foreach(['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] as $h)
+                                    <option value="{{ $h }}" {{ request('hari') == $h ? 'selected' : '' }}>{{ $h }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="filter-label">Mata Pelajaran</label>
+                            <select name="mapel_id" class="form-control select2-premium">
+                                <option value="">— Semua Mapel —</option>
+                                @foreach($mapels as $m)
+                                    <option value="{{ $m->id }}" {{ request('mapel_id') == $m->id ? 'selected' : '' }}>{{ $m->nama }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="filter-label">Tahun Ajaran</label>
+                            <select name="tahun_ajaran_id" class="form-control select2-premium">
+                                <option value="">— Pilih Tahun —</option>
+                                @foreach($tahunAjarans as $ta)
+                                    <option value="{{ $ta->id }}" {{ request('tahun_ajaran_id') == $ta->id ? 'selected' : '' }}>{{ $ta->tahunajaran }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="filter-label">Guru Pengajar</label>
+                            <select name="guru_id" class="form-control select2-premium">
+                                <option value="">— Semua Guru —</option>
+                                @foreach($gurus as $g)
+                                    <option value="{{ $g->id }}" {{ request('guru_id') == $g->id ? 'selected' : '' }}>{{ $g->nama }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end mt-2" style="gap: 8px;">
+                        @if(request()->anyFilled(['rombel_id','hari','mapel_id','tahun_ajaran_id','guru_id']))
+                        <a href="{{ route('akademik.jadwal-pelajaran.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                            <i class="fas fa-undo mr-1"></i> Reset Filter
+                        </a>
+                        @endif
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                            <i class="fas fa-search mr-2"></i> Cari Jadwal
+                        </button>
+                    </div>
+                </form>
+            </x-card>
+        </div>
+        
+        @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
+        <div class="col-lg-4 mt-3 mt-lg-0">
+            <x-card title="Duplikasi Semua Jadwal Rombel" icon="fas fa-copy" type="success" outline collapsible class="shadow-sm border-0 rounded-xl h-100">
+                <form action="{{ route('akademik.jadwal-pelajaran.copy') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menyalin semua jadwal dari rombel asal ke rombel tujuan?')">
+                    @csrf
+                    <div class="mb-3">
+                        <label class="filter-label">Rombel Asal (Sumber data)</label>
+                        <select name="from_rombel_id" class="form-control select2-premium" required>
+                            <option value="">— Pilih Rombel Asal —</option>
+                            @foreach($rombels as $rombel)
+                                <option value="{{ $rombel->id }}">{{ $rombel->nama_rombel }} ({{ optional($rombel->kelas)->nama_kelas }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="filter-label">Rombel Tujuan (Sasaran salin)</label>
+                        <select name="to_rombel_id" class="form-control select2-premium" required>
+                            <option value="">— Pilih Rombel Tujuan —</option>
+                            @foreach($rombels as $rombel)
+                                <option value="{{ $rombel->id }}">{{ $rombel->nama_rombel }} ({{ optional($rombel->kelas)->nama_kelas }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-success rounded-pill px-4 shadow-sm w-100">
+                            <i class="fas fa-paste mr-2"></i> Proses Duplikasi
+                        </button>
+                    </div>
+                </form>
+            </x-card>
+        </div>
+        @endif
+    </div>
 
     @if(request()->filled('rombel_id') && count($summaryJP) > 0)
     <x-alert type="info" dismissible>
@@ -113,7 +155,7 @@
                         <th>HARI & WAKTU</th>
                         <th class="text-center">JAM</th>
                         <th>MATA PELAJARAN</th>
-                        <th class="text-center">EST. TOTAL JP</th>
+                        <th class="text-center"></th>
                         <th>GURU PENGAJAR</th>
                         <th class="text-center" width="120">AKSI</th>
                     </tr>
@@ -166,6 +208,17 @@
                                     <i class="fas fa-eye"></i>
                                 </x-btn>
                                 @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
+                                <a href="{{ route('akademik.jadwal-pelajaran.create', [
+                                    'rombel_id' => $item->rombel_id,
+                                    'mapel_id' => $item->mapel_id,
+                                    'guru_id' => $item->guru_id,
+                                    'hari' => $item->hari,
+                                    'jamke' => $item->jamke,
+                                    'jamawal' => substr($item->jamawal, 0, 5),
+                                    'jamakhir' => substr($item->jamakhir, 0, 5)
+                                ]) }}" class="btn btn-sm btn-light text-success border mr-1 rounded-circle" title="Duplikasi Jadwal">
+                                    <i class="fas fa-copy"></i>
+                                </a>
                                 <x-btn :href="route('akademik.jadwal-pelajaran.edit', $item->id)" size="sm" class="btn-light text-warning border mr-1 rounded-circle" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </x-btn>
@@ -204,58 +257,65 @@
 
 <style>
     .rounded-xl { border-radius: 1rem !important; }
-    .transition-all { transition: all 0.2s ease-in-out; }
-    .hover-scale:hover { transform: scale(1.05); }
+    .transition-all { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
     .table-premium thead th {
         background: #f8f9fc;
         text-transform: uppercase;
-        font-size: 0.7rem;
-        letter-spacing: 0.08rem;
-        color: #4e73df;
+        font-size: 0.72rem;
+        letter-spacing: 0.06rem;
+        color: #5a738e;
         border-top: 0;
-        border-bottom: 1px solid #e3e6f0;
+        border-bottom: 2px solid #eef2f6;
+        font-weight: 700;
     }
-    .hover-row:hover { background-color: #f8f9fc !important; transform: translateX(5px); }
-    .badge-soft-primary { background-color: rgba(78, 115, 223, 0.1); color: #4e73df; }
-    .badge-info-soft { background-color: rgba(54, 185, 204, 0.1); color: #36b9cc; }
+    .hover-row:hover { 
+        background-color: rgba(67, 97, 238, 0.02) !important; 
+        transform: translateX(4px); 
+    }
+    .badge-soft-primary { background-color: rgba(67, 97, 238, 0.08); color: #4361ee; }
+    .badge-info-soft { background-color: rgba(76, 201, 240, 0.12); color: #0077b6; }
     .jam-ke-badge {
-        width: 32px; height: 32px;
-        background: #4e73df;
-        color: white;
-        border-radius: 50%;
+        width: 28px; height: 28px;
+        background: #eef2ff;
+        color: #4361ee;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 0 auto;
-        font-weight: bold;
-        box-shadow: 0 2px 6px rgba(78, 115, 223, 0.3);
+        font-weight: 600;
+        font-size: 0.85rem;
+        border: 1px solid #dbe2ff;
     }
     .avatar-sm {
-        width: 28px; height: 28px;
-        background: #eaecf4;
-        color: #4e73df;
+        width: 32px; height: 32px;
+        background: #f1f3f9;
+        color: #4e5e7a;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: bold;
-        font-size: 0.75rem;
+        font-weight: 600;
+        font-size: 0.8rem;
+        border: 1px solid #e1e5ef;
     }
     .select2-premium { 
-        height: 45px !important; 
-        border-radius: 10px !important; 
-        border: 1px solid #d1d3e2 !important;
+        height: 42px !important; 
+        border-radius: 8px !important; 
+        border: 1px solid #e1e5ef !important;
         background-color: #fff !important;
-        color: #4e73df !important;
-        font-weight: 600 !important;
+        color: #4e5e7a !important;
+        font-weight: 500 !important;
+        font-size: 0.9rem !important;
+        padding: 8px 12px !important;
     }
     .filter-label {
-        font-size: 0.65rem;
-        font-weight: 800;
+        font-size: 0.7rem;
+        font-weight: 700;
         text-transform: uppercase;
-        color: #858796;
-        margin-bottom: 0.5rem;
-        letter-spacing: 0.05rem;
+        color: #8a8a8e;
+        margin-bottom: 0.4rem;
+        letter-spacing: 0.04rem;
     }
 </style>
 </div>

@@ -2,6 +2,12 @@
 
 @section('title', $title)
 
+@php
+    $isSiswa = auth()->user()->hasRole('SISWA');
+    $isGuru = auth()->user()->hasRole('GURU');
+    $canManageKamar = !$isSiswa && !$isGuru;
+@endphp
+
 @section('content-header')
 <div class="row mb-2">
     <div class="col-sm-6">
@@ -72,10 +78,12 @@
             <x-card title="Daftar Penghuni Aktif" icon="fas fa-users" class="card-outline card-success">
                 <x-slot name="tools">
                     <div class="no-print">
-                        @if(!auth()->user()->hasRole('SISWA'))
+                        @if(!$isSiswa)
                         <button type="button" data-toggle="modal" data-target="#modalCetakKamar" class="btn btn-sm btn-info mr-1 shadow-sm">
                             <i class="fas fa-print mr-1"></i> Cetak Laporan
                         </button>
+                        @endif
+                        @if($canManageKamar)
                         <a href="{{ route('manajemenasetdanasrama.penghuni.assign-multiple', $kamar->id) }}" class="btn btn-sm btn-primary mr-1 shadow-sm">
                             <i class="fas fa-user-plus mr-1"></i> Tambah Penghuni
                         </a>
@@ -160,7 +168,7 @@
                                                 title="Lihat Detail">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        @if(!auth()->user()->hasRole('SISWA'))
+                                        @if($canManageKamar)
                                         <a href="{{ route('manajemenasetdanasrama.penghuni.edit', $item->id) }}" class="btn btn-xs-custom btn-warning" title="Edit">
                                             <i class="fas fa-edit text-white"></i>
                                         </a>

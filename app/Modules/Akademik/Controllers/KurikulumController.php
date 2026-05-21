@@ -52,8 +52,8 @@ class KurikulumController extends Controller
             Kurikulum::create($request->validated());
 
             return redirect()
-                ->route('akademik.kurikulum.index')
-                ->with('success', 'Data kurikulum berhasil ditambahkan.');
+                ->route('akademik.kurikulum.create')
+                ->with('success', 'Data kurikulum berhasil ditambahkan. Silakan input data berikutnya.');
         } catch (\Exception $e) {
             return redirect()
                 ->back()

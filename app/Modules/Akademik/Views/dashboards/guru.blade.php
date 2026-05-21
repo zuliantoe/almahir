@@ -39,10 +39,25 @@
 
         <div class="col-12 col-sm-6 col-md-3">
             <div class="info-box shadow-sm">
-                <span class="info-box-icon bg-success elevation-1"><i class="fas fa-clock"></i></span>
+                <span class="info-box-icon bg-success elevation-1"><i class="fas fa-calendar-alt"></i></span>
                 <div class="info-box-content">
-                    <span class="info-box-text">Tahun Ajaran</span>
-                    <span class="info-box-number">{{ $tahunAjaranAktif->tahunajaran ?? '-' }}</span>
+                    <span class="info-box-text">Tahun Ajaran Aktif</span>
+                    <span class="info-box-number" style="font-size:1rem;">{{ $tahunAjaranAktif?->tahunajaran ?? 'Belum Diatur' }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box shadow-sm">
+                <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-layer-group"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Status</span>
+                    <span class="info-box-number">
+                        @if($tahunAjaranAktif)
+                            <span class="badge badge-success">Aktif</span>
+                        @else
+                            <span class="badge badge-danger">Tidak Ada</span>
+                        @endif
+                    </span>
                 </div>
             </div>
         </div>
@@ -69,10 +84,10 @@
             {{-- Ongoing Events --}}
             @if($eventHariIni->isNotEmpty())
                 @foreach($eventHariIni as $event)
-                <div class="callout callout-{{ $event->jenisKegiatan->is_kbm ? 'info' : 'warning' }} shadow-sm">
-                    <h5><i class="fas {{ $event->jenisKegiatan->is_kbm ? 'fa-info-circle' : 'fa-exclamation-triangle' }} mr-2"></i> {{ $event->nama_kegiatan }}</h5>
+                <div class="callout callout-{{ optional($event->jenisKegiatan)->is_kbm ? 'info' : 'warning' }} shadow-sm">
+                    <h5><i class="fas {{ optional($event->jenisKegiatan)->is_kbm ? 'fa-info-circle' : 'fa-exclamation-triangle' }} mr-2"></i> {{ $event->nama_kegiatan }}</h5>
                     <p>{{ $event->deskripsi ?: 'Agenda akademik sedang berlangsung hari ini.' }}</p>
-                    @if(!$event->jenisKegiatan->is_kbm)
+                    @if($event->jenisKegiatan && !$event->jenisKegiatan->is_kbm)
                         <span class="badge badge-danger">KBM LIBUR</span>
                     @endif
                 </div>

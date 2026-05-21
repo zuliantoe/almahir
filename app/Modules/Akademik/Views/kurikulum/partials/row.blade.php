@@ -3,11 +3,15 @@
     $nameMapel = $isEdit ? "mapel_id" : "details[$index][mapel_id]";
     $nameJam = $isEdit ? "totaljam" : "details[$index][total_jam_minggu]";
     $nameKKM = $isEdit ? "kkm" : "details[$index][kkm]";
+
+    // Prevent Select2 from initializing on template row by checking index
+    $isTemplate = ($index === 'REPLACE_INDEX');
+    $select2Class = $isTemplate ? 'select2-dynamic' : 'select2';
 @endphp
 
 <tr>
     <td>
-        <select name="{{ $nameMapel }}" class="form-control form-control-sm select2" required>
+        <select name="{{ $nameMapel }}" class="form-control form-control-sm {{ $select2Class }}" required>
             <option value="">Pilih Mata Pelajaran</option>
             @foreach($mapels as $mapel)
                 <option value="{{ $mapel->id }}" {{ (isset($data) && $data->mapel_id == $mapel->id) ? 'selected' : '' }}>

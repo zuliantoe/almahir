@@ -166,14 +166,16 @@ class RombelController extends Controller
             ]);
             $data['tingkat_id'] = $kelas->tingkat_id;
 
+            // BUGFIX: Simpan nilai original SEBELUM update() agar getOriginal() masih bisa digunakan.
+            // Setelah update(), Eloquent mengganti originalAttributes dengan nilai baru.
+            $oldTahunId = $rombel->tahunajaran_id;
+            $oldKelasId = $rombel->kelas_id;
+
             $rombel->update($data);
 
             // Pintar: Jangan asal delete. Jika tahun/kelas berubah, ini adalah "Kenakan Kelas" versi edit.
-            // Untuk mempermudah sesuai request user: "edit aja kelas tapi masih romblenya"
+            // Untuk mempermudah sesuai request user: "edit aja kelas tapi masih rombelnya"
             // Kita pastikan data siswa yang ada sekarang tercatat di snapshot baru jika berubah.
-            
-            $oldTahunId = $rombel->getOriginal('tahunajaran_id');
-            $oldKelasId = $rombel->getOriginal('kelas_id');
 
             if ($request->tahunajaran_id != $oldTahunId || $request->kelas_id != $oldKelasId) {
                 // Tandai yang lama sebagai 'naik' jika tahun/kelas berubah
@@ -190,17 +192,20 @@ class RombelController extends Controller
                     ->delete();
             }
             
-            $siswaData = collect($request->siswa_ids)->map(fn($id) => [
-                'rombel_id' => $rombel->id,
-                'siswa_id' => $id,
-                'tahunajaran_id' => $rombel->tahunajaran_id,
-                'kelas_id' => $rombel->kelas_id,
-                'status' => 'aktif',
-                'created_at' => now(),
-                'updated_at' => now()
-            ])->toArray();
+            $siswaIds = $request->siswa_ids ?? [];
+            if (!empty($siswaIds)) {
+                $siswaData = collect($siswaIds)->map(fn($id) => [
+                    'rombel_id' => $rombel->id,
+                    'siswa_id' => $id,
+                    'tahunajaran_id' => $rombel->tahunajaran_id,
+                    'kelas_id' => $rombel->kelas_id,
+                    'status' => 'aktif',
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ])->toArray();
 
-            RombelSiswa::insert($siswaData);
+                RombelSiswa::insert($siswaData);
+            }
 
             DB::commit();
             return redirect()->route('akademik.rombel.index')->with('success', 'Rombel berhasil diupdate');

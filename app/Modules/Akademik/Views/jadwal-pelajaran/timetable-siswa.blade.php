@@ -75,9 +75,9 @@
                             <th class="text-center" style="width:100px;">Jam</th>
                             @foreach($hariList as $hari)
                                 @php
-                                    $hariNames = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
-                                    $hariLabel = $hariNames[$hari] ?? $hari;
-                                    $isToday = \Carbon\Carbon::now()->dayOfWeekIso == $hari;
+                                    $hariLabel = is_string($hari) ? $hari : (['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'][$hari - 1] ?? $hari);
+                                    $todayLabel = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'][\Carbon\Carbon::now()->dayOfWeekIso - 1] ?? '';
+                                    $isToday = ($hariLabel === $todayLabel);
                                 @endphp
                                 <th class="text-center {{ $isToday ? 'bg-primary text-white' : '' }}">
                                     {{ $hariLabel }}
@@ -134,10 +134,10 @@
         <div class="row">
             @foreach($hariList as $hari)
                 @php
-                    $hariNames = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
-                    $hariLabel = $hariNames[$hari] ?? $hari;
+                    $hariLabel = is_string($hari) ? $hari : (['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'][$hari - 1] ?? $hari);
+                    $todayLabel = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'][\Carbon\Carbon::now()->dayOfWeekIso - 1] ?? '';
                     $jadwalHari = $rawJadwal->where('hari', $hari);
-                    $isToday = \Carbon\Carbon::now()->dayOfWeekIso == $hari;
+                    $isToday = ($hariLabel === $todayLabel);
                 @endphp
                 @if($jadwalHari->isNotEmpty())
                 <div class="col-md-4 mb-3">

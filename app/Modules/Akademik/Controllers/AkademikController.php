@@ -3,175 +3,141 @@
 namespace Modules\Akademik\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Modules\Akademik\Models\JadwalPelajaran;
+use App\Modules\Akademik\Models\KalenderAkademik;
+use App\Modules\Akademik\Models\Kelas;
+use App\Modules\Akademik\Models\MataPelajaran;
+use App\Modules\Akademik\Models\RombelSiswa;
+use App\Modules\Akademik\Models\TahunAjaran;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
  * AkademikController
- * 
- * CRUD operations for Akademik module.
+ * Menangani routing Dashboard Akademik untuk semua role (Admin/Staff/Guru/Siswa).
  */
 class AkademikController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        $user = auth()->user();
-        $today = \Carbon\Carbon::now()->locale('id')->translatedFormat('l');
-        $todayDate = \Carbon\Carbon::now()->toDateString();
+        $user      = auth()->user();
+        $today     = Carbon::now()->locale('id')->translatedFormat('l');
+        $todayDate = Carbon::now()->toDateString();
 
-        /*
-        // 1. Redirect Guru/Siswa who are NOT Admin/Staff
-        if ($user && ($user->hasRole('GURU') || $user->hasRole('SISWA'))) {
-            if (!$user->hasRole('SUPER_ADMIN') && !$user->hasRole('STAFF')) {
-                return redirect()->route('akademik.jadwal-pelajaran.index');
-            }
-        }
-        */
+        // Tahun ajaran aktif — dibutuhkan semua role
+        $tahunAjaranAktif = TahunAjaran::aktif()->first();
 
-        // Default Admin / Staff Context
-        $todayDate = \Carbon\Carbon::now()->toDateString();
-        $totalSiswa = \Modules\Siswa\Models\Siswa::count();
-        $totalGuru = \Modules\Guru\Models\Guru::count();
-        $totalKelas = \App\Modules\Akademik\Models\Kelas::count();
-        $totalMapel = \App\Modules\Akademik\Models\MataPelajaran::count();
-        
-        $siswaTerbaru = \Modules\Siswa\Models\Siswa::latest()->take(5)->get();
-        $guruTerbaru = \Modules\Guru\Models\Guru::latest()->take(5)->get();
-
-        // Upcoming events (next 30 days)
-        $upcomingEvents = \App\Modules\Akademik\Models\KalenderAkademik::with('jenisKegiatan')
-            ->whereDate('tanggal_awal', '>', $todayDate)
-            ->whereDate('tanggal_awal', '<=', \Carbon\Carbon::now()->addDays(30))
-            ->orderBy('tanggal_awal')
-            ->take(5)
-            ->get();
-
-        // Ongoing events (today is between start and end)
-        $ongoingEvents = \App\Modules\Akademik\Models\KalenderAkademik::with('jenisKegiatan')
+        // Events hari ini & akan datang (semua role)
+        $eventHariIni = KalenderAkademik::with('jenisKegiatan')
             ->whereDate('tanggal_awal', '<=', $todayDate)
             ->whereDate('tanggal_akhir', '>=', $todayDate)
             ->get();
 
-        // Jadwal Pelajaran Hari Ini (for Guru/Siswa)
-        $jadwalHariIni = collect();
-        if ($user->hasRole('GURU')) {
-            $guru = $user->guru;
+        $upcomingEvents = KalenderAkademik::with('jenisKegiatan')
+            ->whereDate('tanggal_awal', '>', $todayDate)
+            ->whereDate('tanggal_awal', '<=', Carbon::now()->addDays(30))
+            ->orderBy('tanggal_awal')
+            ->take(5)
+            ->get();
+
+        // ── Dashboard GURU ────────────────────────────────────────────
+        if ($user && $user->hasRole('GURU')) {
+            $guru = method_exists($user, 'guru') ? $user->guru : ($user->ref ?? null);
+
+            $jadwalHariIni  = collect();
+            $jadwalMingguan = collect();
+
             if ($guru) {
-                $jadwalHariIni = \App\Modules\Akademik\Models\JadwalPelajaran::with(['rombel', 'mataPelajaran'])
+                $jadwalHariIni = JadwalPelajaran::with(['rombel.kelas', 'mataPelajaran'])
                     ->where('guru_id', $guru->id)
                     ->where('hari', $today)
-                    ->orderBy('jamawal')
+                    ->when($tahunAjaranAktif, fn($q) => $q->whereHas(
+                        'rombel', fn($sq) => $sq->where('tahunajaran_id', $tahunAjaranAktif->id)
+                    ))
+                    ->orderBy('jamke')
+                    ->get();
+
+                $jadwalMingguan = JadwalPelajaran::with(['rombel.kelas', 'mataPelajaran'])
+                    ->where('guru_id', $guru->id)
+                    ->when($tahunAjaranAktif, fn($q) => $q->whereHas(
+                        'rombel', fn($sq) => $sq->where('tahunajaran_id', $tahunAjaranAktif->id)
+                    ))
+                    ->orderBy('hari')
+                    ->orderBy('jamke')
                     ->get();
             }
-        } elseif ($user->hasRole('SISWA')) {
-            $siswa = $user->siswa;
+
+            return view('akademik::dashboards.guru', compact(
+                'today', 'todayDate', 'guru',
+                'tahunAjaranAktif',
+                'jadwalHariIni', 'jadwalMingguan',
+                'eventHariIni', 'upcomingEvents'
+            ));
+        }
+
+        // ── Dashboard SISWA ───────────────────────────────────────────
+        if ($user && $user->hasRole('SISWA')) {
+            $siswa = method_exists($user, 'siswa') ? $user->siswa : ($user->ref ?? null);
+
+            $rombelSiswa    = null;
+            $jadwalHariIni  = collect();
+            $jadwalMingguan = collect();
+
             if ($siswa) {
-                $rombelSiswa = \App\Modules\Akademik\Models\RombelSiswa::where('siswa_id', $siswa->id)
+                $rombelSiswa = RombelSiswa::with(['rombel.kelas', 'rombel.tahunAjaran'])
+                    ->where('siswa_id', $siswa->id)
                     ->where('status', 'aktif')
+                    ->when($tahunAjaranAktif, fn($q) => $q->where('tahunajaran_id', $tahunAjaranAktif->id))
                     ->first();
+
                 if ($rombelSiswa) {
-                    $jadwalHariIni = \App\Modules\Akademik\Models\JadwalPelajaran::with(['guru', 'mataPelajaran'])
+                    $jadwalHariIni = JadwalPelajaran::with(['guru', 'mataPelajaran'])
                         ->where('rombel_id', $rombelSiswa->rombel_id)
                         ->where('hari', $today)
-                        ->orderBy('jamawal')
+                        ->orderBy('jamke')
+                        ->get();
+
+                    $jadwalMingguan = JadwalPelajaran::with(['guru', 'mataPelajaran'])
+                        ->where('rombel_id', $rombelSiswa->rombel_id)
+                        ->orderBy('hari')
+                        ->orderBy('jamke')
                         ->get();
                 }
             }
+
+            return view('akademik::dashboards.siswa', compact(
+                'today', 'todayDate', 'siswa', 'rombelSiswa',
+                'tahunAjaranAktif',
+                'jadwalHariIni', 'jadwalMingguan',
+                'eventHariIni', 'upcomingEvents'
+            ));
         }
 
+        // ── Dashboard ADMIN / STAFF ───────────────────────────────────
+        $totalSiswa = \Modules\Siswa\Models\Siswa::count();
+        $totalGuru  = \Modules\Guru\Models\Guru::count();
+        $totalKelas = Kelas::count();
+        $totalMapel = MataPelajaran::count();
+
+        $siswaTerbaru = \Modules\Siswa\Models\Siswa::latest()->take(5)->get();
+        $guruTerbaru  = \Modules\Guru\Models\Guru::latest()->take(5)->get();
+
         return view('akademik::index', [
-            'title' => 'Dashboard Akademik',
-            'totalSiswa' => $totalSiswa,
-            'totalGuru' => $totalGuru,
-            'totalKelas' => $totalKelas,
-            'totalMapel' => $totalMapel,
-            'siswaTerbaru' => $siswaTerbaru,
-            'guruTerbaru' => $guruTerbaru,
-            'upcomingEvents' => $upcomingEvents,
-            'ongoingEvents' => $ongoingEvents,
-            'jadwalHariIni' => $jadwalHariIni,
-            'today' => $today,
-            'todayDate' => $todayDate,
+            'title'            => 'Dashboard Akademik',
+            'totalSiswa'       => $totalSiswa,
+            'totalGuru'        => $totalGuru,
+            'totalKelas'       => $totalKelas,
+            'totalMapel'       => $totalMapel,
+            'siswaTerbaru'     => $siswaTerbaru,
+            'guruTerbaru'      => $guruTerbaru,
+            'upcomingEvents'   => $upcomingEvents,
+            'ongoingEvents'    => $eventHariIni,
+            'jadwalHariIni'    => collect(),
+            'tahunAjaranAktif' => $tahunAjaranAktif,
+            'today'            => $today,
+            'todayDate'        => $todayDate,
         ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): View
-    {
-        return view('akademik::create', [
-            'title' => 'Tambah Akademik',
-        ]);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            // TODO: Add validation rules
-        ]);
-
-        // TODO: Create record
-
-        return redirect()->route('akademik.index')
-            ->with('success', 'Data berhasil ditambahkan.');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id): View
-    {
-        // TODO: Find record
-        $akademik = null;
-        
-        return view('akademik::show', [
-            'title' => 'Detail Akademik',
-            'akademik' => $akademik,
-        ]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id): View
-    {
-        // TODO: Find record
-        $akademik = null;
-        
-        return view('akademik::edit', [
-            'title' => 'Edit Akademik',
-            'akademik' => $akademik,
-        ]);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id): RedirectResponse
-    {
-        $validated = $request->validate([
-            // TODO: Add validation rules
-        ]);
-
-        // TODO: Update record
-
-        return redirect()->route('akademik.index')
-            ->with('success', 'Data berhasil diperbarui.');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id): RedirectResponse
-    {
-        // TODO: Delete record
-
-        return redirect()->route('akademik.index')
-            ->with('success', 'Data berhasil dihapus.');
     }
 }

@@ -8,10 +8,13 @@
     @if(session('success'))
         <x-alert type="success" :message="session('success')" dismissible />
     @endif
+    @if(session('error'))
+        <x-alert type="danger" :message="session('error')" dismissible />
+    @endif
 
     <div class="row mb-3">
-        <div class="col-12 d-flex justify-content-between align-items-center">
-            <h1 class="h3 mb-0 text-gray-800">Manajemen Kurikulum</h1>
+        <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+            <h1 class="h3 mb-2 mb-md-0 text-gray-800">Manajemen Kurikulum</h1>
             @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
             <x-btn :href="route('akademik.kurikulum.create')" icon="fas fa-plus">
                 Tambah Kurikulum
@@ -24,7 +27,7 @@
     <x-card title="Filter Kurikulum" icon="fas fa-filter" outline collapsible>
         <form action="{{ route('akademik.kurikulum.index') }}" method="GET">
             <div class="row align-items-end">
-                <div class="col-md-5 mb-3">
+                <div class="col-md-4 mb-3">
                     <label>Master Kurikulum</label>
                     <select name="master_kurikulum_id" class="form-control">
                         <option value="">Semua Kurikulum</option>
@@ -44,10 +47,13 @@
                     </select>
                 </div>
 
-                <div class="col-md-3 mb-3">
-                    <x-btn type="submit" class="btn-info w-100" icon="fas fa-search">
-                        Filter
-                    </x-btn>
+                <div class="col-md-4 mb-3 d-flex" style="gap: 8px;">
+                    <x-btn type="submit" class="btn-info flex-fill" icon="fas fa-search">Filter</x-btn>
+                    @if(request()->anyFilled(['master_kurikulum_id', 'tingkat_id']))
+                    <a href="{{ route('akademik.kurikulum.index') }}" class="btn btn-outline-secondary" title="Reset Filter">
+                        <i class="fas fa-undo"></i>
+                    </a>
+                    @endif
                 </div>
             </div>
         </form>
@@ -115,7 +121,7 @@
         
         @if($kurikulum->hasPages())
         <x-slot name="footer">
-            {{ $kurikulum->links() }}
+            {{ $kurikulum->withQueryString()->links() }}
         </x-slot>
         @endif
     </x-card>

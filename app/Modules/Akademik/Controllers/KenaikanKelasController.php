@@ -69,8 +69,12 @@ class KenaikanKelasController extends Controller
     {
         $request->validate([
             'rombel_id' => 'required|exists:rombel,id',
-            'siswa_ids' => 'required|array',
+            'siswa_ids' => 'required|array|min:1',
+            'siswa_ids.*' => 'exists:siswa,id',
             'status'    => 'required|array'
+        ], [
+            'siswa_ids.required' => 'Pilih setidaknya satu siswa untuk diproses.',
+            'siswa_ids.min'      => 'Pilih setidaknya satu siswa untuk diproses.',
         ]);
 
         DB::beginTransaction();

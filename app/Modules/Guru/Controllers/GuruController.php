@@ -5,6 +5,8 @@ namespace Modules\Guru\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\Guru\Models\Guru;
+use App\Modules\Akademik\Models\JadwalPelajaran;
+use App\Modules\Akademik\Models\TahunAjaran;
 
 /**
  * GuruController
@@ -67,14 +69,45 @@ class GuruController extends Controller
             ->with('success', 'Data guru berhasil ditambahkan.');
     }
 
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
-        $guru = Guru::findOrFail($id);
+        $guru = Guru::with('user')->findOrFail($id);
+
+        $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
+        $activeTahunAjaran = $request->filled('tahun_ajaran_id')
+            ? TahunAjaran::find($request->tahun_ajaran_id)
+            : TahunAjaran::aktif()->first();
+
+        // Hari disimpan sebagai string di DB ('Senin','Selasa',dst)
+        $hariList  = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        $todayName = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'][\Carbon\Carbon::now()->dayOfWeekIso - 1] ?? '';
+
+        $rawJadwal = JadwalPelajaran::with(['mataPelajaran', 'rombel.kelas'])
+            ->where('guru_id', $guru->id)
+            ->when($activeTahunAjaran, function ($q) use ($activeTahunAjaran) {
+                return $q->whereHas('rombel', fn($sq) => $sq->where('tahunajaran_id', $activeTahunAjaran->id));
+            })
+            ->orderBy('hari')
+            ->orderBy('jamke')
+            ->get();
+
+        $timetable = [];
+        foreach ($rawJadwal as $j) {
+            $timetable[$j->hari][$j->jamke] = $j;
+        }
+        $usedJamKes = $rawJadwal->pluck('jamke')->unique()->sort()->values()->toArray();
 
         return view('guru::show', [
-            'title' => 'Detail Guru',
-            'breadcrumb' => 'Master Data / Guru / Detail',
-            'guru' => $guru,
+            'title'             => 'Detail Guru',
+            'breadcrumb'        => 'Master Data / Guru / Detail',
+            'guru'              => $guru,
+            'rawJadwal'         => $rawJadwal,
+            'timetable'         => $timetable,
+            'usedJamKes'        => $usedJamKes,
+            'hariList'          => $hariList,
+            'todayName'         => $todayName,
+            'tahunAjarans'      => $tahunAjarans,
+            'activeTahunAjaran' => $activeTahunAjaran,
         ]);
     }
 

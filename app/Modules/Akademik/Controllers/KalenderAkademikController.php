@@ -36,7 +36,9 @@ class KalenderAkademikController extends Controller
             ->withQueryString();
 
         $activeYear = TahunAjaran::where('status', 1)->first() ?? TahunAjaran::orderBy('id', 'desc')->first();
-        $tahunAjarans = TahunAjaran::where('id', '>=', $activeYear->id ?? 0)->orderBy('id', 'asc')->get();
+        $tahunAjarans = $activeYear 
+            ? TahunAjaran::where('id', '>=', $activeYear->id)->orderBy('id', 'asc')->get()
+            : TahunAjaran::orderBy('id', 'asc')->get();
         
         return view('akademik::kalender-akademik.index', compact('kalenderAkademik', 'tahunAjarans'));
     }
@@ -113,7 +115,9 @@ class KalenderAkademikController extends Controller
     public function create()
     {
         $activeYear = TahunAjaran::where('status', 1)->first() ?? TahunAjaran::orderBy('id', 'desc')->first();
-        $tahunAjarans = TahunAjaran::where('id', '>=', $activeYear->id ?? 0)->orderBy('id', 'asc')->get();
+        $tahunAjarans = $activeYear 
+            ? TahunAjaran::where('id', '>=', $activeYear->id)->orderBy('id', 'asc')->get()
+            : TahunAjaran::orderBy('id', 'asc')->get();
         
         $jenisKegiatans = JenisKegiatan::all();
         return view('akademik::kalender-akademik.create', compact('tahunAjarans', 'jenisKegiatans'));
@@ -145,10 +149,14 @@ class KalenderAkademikController extends Controller
     {
         $activeYear = TahunAjaran::where('status', 1)->first() ?? TahunAjaran::orderBy('id', 'desc')->first();
         // Untuk edit, tambahkan juga tahun ajaran yang sedang diedit jika dia tahun lalu (agar tidak pecah)
-        $tahunAjarans = TahunAjaran::where('id', '>=', $activeYear->id ?? 0)
-            ->orWhere('id', $kalenderAkademik->tahunajaran_id)
-            ->orderBy('id', 'asc')
-            ->get();
+        if ($activeYear) {
+            $tahunAjarans = TahunAjaran::where('id', '>=', $activeYear->id)
+                ->orWhere('id', $kalenderAkademik->tahunajaran_id)
+                ->orderBy('id', 'asc')
+                ->get();
+        } else {
+            $tahunAjarans = TahunAjaran::orderBy('id', 'asc')->get();
+        }
             
         $jenisKegiatans = JenisKegiatan::all();
         return view('akademik::kalender-akademik.edit', compact('kalenderAkademik', 'tahunAjarans', 'jenisKegiatans'));

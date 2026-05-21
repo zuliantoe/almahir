@@ -10,15 +10,15 @@
     @endif
 
     <div class="row mb-3">
-        <div class="col-12 d-flex justify-content-between align-items-center">
-            <h1 class="h3 mb-0 text-gray-800">Kalender Akademik</h1>
-            <div class="btn-group">
+        <div class="col-12 d-flex flex-wrap flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+            <h1 class="h3 mb-3 mb-md-0 text-gray-800">Kalender Akademik</h1>
+            <div class="d-flex flex-wrap gap-2" style="gap: 8px;">
                 <x-btn :href="route('akademik.kalender-akademik.index', ['view' => 'calendar'])" class="btn-outline-primary" icon="fas fa-calendar-alt">
                     Mode Kalender
                 </x-btn>
                 @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
                 <x-btn :href="route('akademik.kalender-akademik.create')" icon="fas fa-plus" class="ml-2">
-                    Tambah Kegiatan
+                    Tambah
                 </x-btn>
                 @endif
             </div>
@@ -29,7 +29,7 @@
     <x-card title="Filter Kegiatan" icon="fas fa-filter" outline collapsible>
         <form action="{{ route('akademik.kalender-akademik.index') }}" method="GET">
             <div class="row align-items-end">
-                <div class="col-md-5 mb-3">
+                <div class="col-md-4 mb-3">
                     <label>Tahun Ajaran</label>
                     <select name="tahunajaran_id" class="form-control">
                         <option value="">Semua Tahun Ajaran</option>
@@ -46,10 +46,15 @@
                     <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Nama kegiatan...">
                 </div>
 
-                <div class="col-md-3 mb-3">
-                    <x-btn type="submit" class="btn-info w-100" icon="fas fa-search">
+                <div class="col-md-4 mb-3 d-flex align-items-end" style="gap: 8px;">
+                    <x-btn type="submit" class="btn-info flex-fill" icon="fas fa-search">
                         Filter
                     </x-btn>
+                    @if(request()->anyFilled(['tahunajaran_id', 'search']))
+                    <a href="{{ route('akademik.kalender-akademik.index') }}" class="btn btn-outline-secondary" title="Reset Filter">
+                        <i class="fas fa-undo"></i>
+                    </a>
+                    @endif
                 </div>
             </div>
         </form>
@@ -84,8 +89,8 @@
                         </td>
                         <td><strong>{{ $item->nama_kegiatan }}</strong></td>
                         <td>
-                            <span class="badge badge-secondary">{{ $item->jenisKegiatan->jeniskegiatan }}</span>
-                            @if(!$item->jenisKegiatan->is_kbm)
+                            <span class="badge badge-secondary">{{ optional($item->jenisKegiatan)->jeniskegiatan ?? '-' }}</span>
+                            @if($item->jenisKegiatan && !$item->jenisKegiatan->is_kbm)
                                 <span class="badge badge-danger ml-1" title="Hari ini diliburkan/tidak ada KBM">Non-KBM</span>
                             @endif
                         </td>

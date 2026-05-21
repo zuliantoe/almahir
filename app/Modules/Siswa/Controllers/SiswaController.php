@@ -68,7 +68,7 @@ class SiswaController extends Controller
             'tahun_masuk' => 'required|string',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
-        $tahun_masuk = explode('/',$validated['tahun_masuk']);
+        $tahun_masuk = explode('/', $validated['tahun_masuk']);
         $validated['tahun_masuk'] = $tahun_masuk[0];
         $validated['status'] = 'aktif'; // default status for new student
 
@@ -173,6 +173,8 @@ class SiswaController extends Controller
         ]);
 
         $siswa = Siswa::findOrFail($id);
+        $tahun_masuk = explode('/', $validated['tahun_masuk']);
+        $validated['tahun_masuk'] = $tahun_masuk[0];
 
         if ($request->hasFile('foto')) {
             if ($siswa->foto && \Illuminate\Support\Facades\Storage::disk('public')->exists($siswa->foto)) {

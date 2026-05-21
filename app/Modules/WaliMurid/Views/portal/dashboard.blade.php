@@ -25,7 +25,7 @@
 
     {{-- Children Section --}}
     <h4 class="font-weight-bold text-dark mb-4"><i class="fas fa-child mr-2 text-primary"></i> Data Putra-Putri Anda</h4>
-    
+
     <div class="row">
         @forelse($siswas as $siswa)
             <div class="col-md-6 col-lg-4">
@@ -33,8 +33,8 @@
                     <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
                         <div class="d-flex align-items-center">
                             <div class="avatar-wrapper mr-3">
-                                <img src="{{ $siswa->avatar_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($siswa->nama) . '&background=random' }}" 
-                                     class="rounded-circle shadow-sm border" 
+                                <img src="{{ $siswa->avatar_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($siswa->nama) . '&background=random' }}"
+                                     class="rounded-circle shadow-sm border"
                                      style="width: 60px; height: 60px; object-fit: cover;">
                             </div>
                             <div>
@@ -43,7 +43,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="card-body p-4">
                         <div class="info-grid mb-4">
                             <div class="d-flex justify-content-between mb-2">
@@ -56,7 +56,7 @@
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted small">Tahun Masuk</span>
-                                <span class="text-dark small font-weight-bold">{{ $siswa->tahun_masuk ?? '-' }}</span>
+                                <span class="text-dark small font-weight-bold">{{ $siswa->tahun_ajaran->tahunajaran ?? '-' }}</span>
                             </div>
                         </div>
 
@@ -73,7 +73,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="card-footer bg-light border-0 text-center py-3">
                         <a href="{{ route('walimurid.portal.siswa-detail', $siswa->id) }}" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm">
                             Lihat Detail Lengkap <i class="fas fa-arrow-right ml-2"></i>

@@ -122,8 +122,8 @@ class KurikulumController extends Controller
             'kelas_id' => 'nullable|exists:kelas,id',
             'details' => 'required|array|min:1',
             'details.*.mapel_id' => 'required|exists:mata_pelajaran,id',
-            'details.*.total_jam_minggu' => 'required|integer',
-            'details.*.kkm' => 'required|numeric',
+            'details.*.total_jam_minggu' => 'required|integer|max:48',
+            'details.*.kkm' => 'required|numeric|between:0,100',
         ]);
 
         \Illuminate\Support\Facades\DB::beginTransaction();

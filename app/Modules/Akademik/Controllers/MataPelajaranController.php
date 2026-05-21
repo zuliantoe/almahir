@@ -54,7 +54,7 @@ class MataPelajaranController extends Controller
     {
         $request->validate([
             'kode' => 'required|string|max:50|unique:mata_pelajaran,kode',
-            'nama' => 'required|string|max:255',
+            'nama' => 'required|string|max:255|unique:mata_pelajaran,nama',
             'kategori_id' => 'required|exists:kategori_pelajaran,id',
         ]);
 
@@ -93,7 +93,13 @@ class MataPelajaranController extends Controller
                 Rule::unique('mata_pelajaran', 'kode')
                     ->ignore($mataPelajaran->id),
             ],
-            'nama' => 'required|string|max:255',
+            'nama' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('mata_pelajaran', 'nama')
+                    ->ignore($mataPelajaran->id),
+            ],
             'kategori_id' => 'required|exists:kategori_pelajaran,id',
         ]);
 
@@ -131,7 +137,7 @@ class MataPelajaranController extends Controller
 
         $file = $request->file('file');
         $handle = fopen($file->getRealPath(), 'r');
-        
+
         // Skip header
         fgetcsv($handle);
 

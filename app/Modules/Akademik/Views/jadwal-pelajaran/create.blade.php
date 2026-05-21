@@ -34,7 +34,7 @@
     @endif
 
     <x-card :title="(isset($jadwalPelajaran) ? 'Form Edit Data' : 'Form Input Massal Jadwal')" type="primary" outline class="shadow-lg border-0 rounded-xl overflow-hidden">
-        <form action="{{ isset($jadwalPelajaran) ? route('akademik.jadwal-pelajaran.update', $jadwalPelajaran->id) : route('akademik.jadwal-pelajaran.bulk-store') }}" 
+        <form action="{{ isset($jadwalPelajaran) ? route('akademik.jadwal-pelajaran.update', $jadwalPelajaran->id) : route('akademik.jadwal-pelajaran.bulk-store') }}"
               method="POST" id="schedule-form" class="p-2">
             @csrf
             @if(isset($jadwalPelajaran))
@@ -85,7 +85,7 @@
     <div class="bg-light p-4 rounded-lg border-top">
         <div class="row align-items-center">
             <div class="col-md-6 text-muted small">
-                <i class="fas fa-exclamation-triangle mr-1 text-warning"></i> 
+                <i class="fas fa-exclamation-triangle mr-1 text-warning"></i>
                 Wajib diisi. Pastikan rentang waktu tidak bentrok dengan jadwal lain di rombel yang sama.
             </div>
             <div class="col-md-6 d-flex justify-content-end" style="gap: 8px;">
@@ -113,7 +113,7 @@
     .hover-elevate:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; }
     .table th { font-weight: 700; letter-spacing: 0.05rem; font-size: 0.75rem; border-bottom: 0; white-space: nowrap; }
     .table td { border-color: #f8f9fc; vertical-align: middle; }
-    
+
     /* Modern Scrollbar */
     .table-responsive::-webkit-scrollbar { height: 8px; }
     .table-responsive::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
@@ -158,6 +158,51 @@
 </div>
 
 <script>
+    const JAMKE_MAP = {
+        1: { start: '07:00', end: '07:45' },
+        2: { start: '07:45', end: '08:30' },
+        3: { start: '08:30', end: '09:15' },
+        4: { start: '09:15', end: '10:00' },
+        5: { start: '10:00', end: '10:45' },
+        6: { start: '10:45', end: '11:30' },
+        7: { start: '11:30', end: '12:15' },
+        8: { start: '12:15', end: '13:00' },
+        9: { start: '13:00', end: '13:45' },
+        10:{ start: '13:45', end: '14:30' },
+        11:{ start: '14:30', end: '15:15' },
+        12:{ start: '15:15', end: '16:00' },
+    };
+
+    function applyJamKeToRow(tr) {
+        const jamkeInput = tr.querySelector('input[type="number"][name$="[jamke]"], input[type="number"][name$="jamke"], input[type="number"][name*="[jamke]"]');
+        if (!jamkeInput) return;
+
+        const jamke = parseInt(jamkeInput.value || jamkeInput.getAttribute('value'), 10);
+        if (!JAMKE_MAP[jamke]) return;
+
+        const jamawalInput = tr.querySelector('input[type="time"][name*="[jamawal]"], input[type="time"][name$="jamawal"]');
+        const jamakhirInput = tr.querySelector('input[type="time"][name*="[jamakhir]"], input[type="time"][name$="jamakhir"]');
+        if (jamawalInput) jamawalInput.value = JAMKE_MAP[jamke].start;
+        if (jamakhirInput) jamakhirInput.value = JAMKE_MAP[jamke].end;
+    }
+
+    function bindJamKeHandler(root) {
+        const rows = root.querySelectorAll('#schedule-rows tr');
+        rows.forEach(tr => {
+            const jamkeInput = tr.querySelector('input[type="number"][name*="jamke"]');
+            if (!jamkeInput) return;
+            jamkeInput.addEventListener('change', function() {
+                applyJamKeToRow(tr);
+            });
+            jamkeInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') applyJamKeToRow(tr);
+            });
+
+            // initial fill if already has jamke
+            applyJamKeToRow(tr);
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize from count of existing rows
         window.rowIndex = {{ isset($duplicateData) ? 1 : 1 }};
@@ -165,14 +210,14 @@
         window.addRow = function(count = 1) {
             const templateHtml = document.getElementById('row-template-body').innerHTML;
             const tbody = document.getElementById('schedule-rows');
-            
+
             for (let i = 0; i < count; i++) {
                 let html = templateHtml.replace(/REPLACE_INDEX/g, window.rowIndex);
-                
+
                 const tempTr = document.createElement('tbody');
                 tempTr.innerHTML = html;
                 const newRow = tempTr.querySelector('tr');
-                
+
                 tbody.appendChild(newRow);
 
                 // Initialize Select2 on the new row's dynamic elements
@@ -181,8 +226,11 @@
                     width: '100%',
                     allowClear: true
                 });
-                
+
                 window.rowIndex++;
+
+                // bind handler for the newly added row
+                bindJamKeHandler(tbody);
             }
         };
 
@@ -195,6 +243,8 @@
             }
         };
 
+        bindJamKeHandler(document);
+
         // Custom Reset Handler: clear dynamic rows and rebuild 1 fresh row
         $('#schedule-form').on('reset', function(e) {
             // Let the native form reset run first
@@ -202,7 +252,7 @@
                 const tbody = document.getElementById('schedule-rows');
                 tbody.innerHTML = '';
                 window.rowIndex = 0;
-                
+
                 // If it's a duplication, we can reset to a fresh blank row
                 @if(isset($duplicateData))
                     // Re-render empty row
@@ -210,7 +260,7 @@
                 @else
                     window.addRow(1);
                 @endif
-                
+
                 // Reset select2 value displays
                 $('.select2').val(null).trigger('change');
             }, 50);

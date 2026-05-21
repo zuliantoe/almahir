@@ -246,7 +246,7 @@
                                             {{ \Carbon\Carbon::parse($j->jamawal)->format('H:i') }} – {{ \Carbon\Carbon::parse($j->jamakhir)->format('H:i') }}
                                         </td>
                                         <td class="py-2 align-middle font-weight-bold text-dark">
-                                            {{ $j->mataPelajaran->nama_mapel ?? '-' }}
+                                            {{ $j->mataPelajaran->nama ?? '-' }}
                                         </td>
                                         <td class="py-2 align-middle">
                                             <span class="badge badge-light border text-dark font-weight-bold px-2 py-1" style="border-radius: 4px;">

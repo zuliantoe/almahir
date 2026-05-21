@@ -102,7 +102,7 @@
                                     <td class="align-middle p-2" style="min-width:130px;">
                                         @if($j)
                                             <div class="p-2 border-left border-primary bg-white shadow-sm rounded">
-                                                <div class="font-weight-bold text-primary small">{{ $j->mataPelajaran->nama ?? 'Mapel' }}</div>
+                                                <div class="font-weight-bold text-primary small">{{ $j->mataPelajaran?->nama ?? 'Mapel' }}</div>
                                                 <div class="text-muted" style="font-size: .75rem;">
                                                     <i class="fas fa-users mr-1"></i>{{ optional($j->rombel)->nama_rombel ?? '-' }}
                                                 </div>

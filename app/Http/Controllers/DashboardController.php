@@ -131,7 +131,7 @@ class DashboardController extends Controller
             if ($rombelInfo && class_exists(\App\Modules\Akademik\Models\JadwalPelajaran::class)) {
                 $jadwalHariIni = \App\Modules\Akademik\Models\JadwalPelajaran::with(['mataPelajaran', 'guru'])
                     ->where('rombel_id', $rombelInfo->id)
-                    ->where('hari', $hariIniEn)
+                    ->where('hari', $hariIni)
                     ->orderBy('jamke')
                     ->get();
             }

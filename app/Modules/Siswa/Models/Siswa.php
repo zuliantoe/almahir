@@ -9,10 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Siswa Model
- * 
+ *
  * Represents a student in the academic system.
  * Uses UUID as primary key for better distribution and security.
- * 
+ *
  * @property string $id UUID primary key
  * @property string $nis Nomor Induk Siswa (Student ID Number)
  * @property string $nama Student's full name
@@ -23,7 +23,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $alamat Address
  * @property string $telepon Phone number
  * @property string $kelas_id Current class ID
- * 
+ *
  * @author SIAKAD Development Team
  */
 class Siswa extends Model
@@ -64,7 +64,7 @@ class Siswa extends Model
 
     /**
      * Get the user account associated with this student.
-     * 
+     *
      * This is the inverse of the polymorphic relationship.
      * A Siswa can have one User account linked via ref_id.
      */
@@ -87,6 +87,10 @@ class Siswa extends Model
     public function scopeAktif($query)
     {
         return $query->where('status', 'aktif');
+    }
+    public function tahun_ajaran()
+    {
+        return $this->belongsTo(\App\Modules\Akademik\Models\Kelas::class, 'tahun_masuk');
     }
 
     /**

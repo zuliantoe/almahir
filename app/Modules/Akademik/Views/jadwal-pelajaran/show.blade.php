@@ -12,7 +12,7 @@
                         <tbody>
                             <tr>
                                 <th width="40%" class="text-muted small text-uppercase font-weight-bold">Rombongan Belajar</th>
-                                <td><strong>{{ $jadwalPelajaran->rombel->nama_rombel }} ({{ $jadwalPelajaran->rombel->kelas->nama_kelas }})</strong></td>
+                                <td><strong>{{ optional($jadwalPelajaran->rombel)->nama_rombel ?? '-' }} ({{ optional(optional($jadwalPelajaran->rombel)->kelas)->nama_kelas ?? '-' }})</strong></td>
                             </tr>
                             <tr>
                                 <th class="text-muted small text-uppercase font-weight-bold">Hari</th>
@@ -20,11 +20,11 @@
                             </tr>
                             <tr>
                                 <th class="text-muted small text-uppercase font-weight-bold">Mata Pelajaran</th>
-                                <td><strong>[{{ $jadwalPelajaran->mataPelajaran->kode }}] {{ $jadwalPelajaran->mataPelajaran->nama }}</strong></td>
+                                <td><strong>[{{ optional($jadwalPelajaran->mataPelajaran)->kode ?? '-' }}] {{ optional($jadwalPelajaran->mataPelajaran)->nama ?? '-' }}</strong></td>
                             </tr>
                             <tr>
                                 <th class="text-muted small text-uppercase font-weight-bold">Guru Pengajar</th>
-                                <td>{{ $jadwalPelajaran->guru->nama }}</td>
+                                <td>{{ optional($jadwalPelajaran->guru)->nama ?? '-' }}</td>
                             </tr>
                             <tr>
                                 <th class="text-muted small text-uppercase font-weight-bold">Jam Pelajaran</th>

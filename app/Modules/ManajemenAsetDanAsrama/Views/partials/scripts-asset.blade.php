@@ -68,6 +68,14 @@
                     $('#label_approved_at').text('Tgl Verifikasi');
                 }
 
+                // Tampilkan alasan pengajuan ulang jika ada
+                if (data.alasan_pengajuan_ulang) {
+                    $('#section_alasan_pengajuan_ulang').show();
+                    $('#detail_alasan_pengajuan_ulang').text(data.alasan_pengajuan_ulang);
+                } else {
+                    $('#section_alasan_pengajuan_ulang').hide();
+                }
+
                 // Tampilkan modal
                 $('#modalDetailPengajuan').modal('show');
             },

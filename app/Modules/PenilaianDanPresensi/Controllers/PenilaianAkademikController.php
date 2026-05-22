@@ -35,11 +35,15 @@ class PenilaianAkademikController extends Controller
     {
         $activeTahunAjaran = TahunAjaran::whereIn('status', [1, 'aktif'])->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
 
+        // If no filter is applied at all (first load), default to active year
+        if (!$request->has('tahunajaran_id') && $activeTahunAjaran) {
+            $request->merge(['tahunajaran_id' => $activeTahunAjaran->id]);
+        }
+
         $query = PenilaianAkademik::with(['siswa', 'guru', 'mataPelajaran', 'tahunAjaran']);
+        
         if ($request->filled('tahunajaran_id')) {
             $query->where('tahunajaran_id', $request->tahunajaran_id);
-        } elseif ($activeTahunAjaran) {
-            $query->where('tahunajaran_id', $activeTahunAjaran->id);
         }
         
         // Filter for students: they only see their own scores
@@ -769,11 +773,31 @@ class PenilaianAkademikController extends Controller
      */
     public function getKkm($rombelId, $mapelId): JsonResponse
     {
+        $mapel = MataPelajaran::with('kategori')->find($mapelId);
+        $fallbackKkm = 75; // Default
+
+        if ($mapel) {
+            $mapelNama = strtolower(trim($mapel->nama));
+            $kategoriNama = $mapel->kategori ? $mapel->kategori->kategori : '';
+            
+            $keywordsUmum = ['ipa', 'ips', 'matematika', 'inggris', 'indonesia', 'fisika', 'kimia', 'biologi', 'pkn', 'sejarah', 'seni', 'penjas', 'olahraga'];
+            
+            $isUmum = $kategoriNama === 'Nasional' || collect($keywordsUmum)->contains(fn($k) => str_contains($mapelNama, $k));
+            if ($isUmum) {
+                $fallbackKkm = 70;
+            }
+        }
+
+        if ($rombelId == 0) {
+            $kkm = Kurikulum::where('mapel_id', $mapelId)->value('kkm') ?? $fallbackKkm;
+            return response()->json(['kkm' => $kkm]);
+        }
+
         $rombel = Rombel::findOrFail($rombelId);
         $kkm = Kurikulum::where('mapel_id', $mapelId)
             ->where('tahunajaran_id', $rombel->tahunajaran_id)
             ->where('kelas_id', $rombel->kelas_id)
-            ->value('kkm') ?? 75;
+            ->value('kkm') ?? $fallbackKkm;
             
         return response()->json(['kkm' => $kkm]);
     }

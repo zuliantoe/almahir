@@ -176,34 +176,29 @@ document.addEventListener('DOMContentLoaded', function() {
         mapelSelect.innerHTML = options;
     }
 
-    // Auto-set KKM logic
-    function setKKM() {
+    function fetchKKM() {
         const mapelId = document.getElementById('mapel_id').value;
-        if (!mapelId) return;
+        const rombelId = "{{ \App\Modules\Akademik\Models\RombelSiswa::where('siswa_id', $penilaianAkademik->siswa_id)->where('status', 'aktif')->value('rombel_id') ?? 0 }}";
+        const kkmInput = document.getElementById('kkm');
 
-        const selectedMapel = allMapelsData.find(m => m.id == mapelId);
+        if (!rombelId || !mapelId || rombelId == '0') return;
 
-        if (selectedMapel) {
-            const mapelNama = selectedMapel.nama.toLowerCase();
-            const kategoriNama = selectedMapel.kategori ? selectedMapel.kategori.kategori : '';
-            const kkmInput = document.getElementById('kkm');
+        const url = "{{ route('penilaiandanpresensi.penilaianakademik.get-kkm', [':rombelId', ':mapelId']) }}"
+            .replace(':rombelId', rombelId)
+            .replace(':mapelId', mapelId);
 
-            const keywordsUmum = ['ipa', 'ips', 'matematika', 'inggris', 'indonesia', 'fisika', 'kimia', 'biologi', 'pkn', 'sejarah', 'seni', 'penjas', 'olahraga'];
-            const keywordsDiniyyah = ['tahfidz', 'arab', 'agama', 'fiqih', 'aqidah', 'hadits', 'diniyyah', 'quran', 'adab', 'sirah'];
-
-            let isUmum = kategoriNama === 'Nasional' || keywordsUmum.some(key => mapelNama.includes(key));
-            let isDiniyyah = kategoriNama === 'Internal' || keywordsDiniyyah.some(key => mapelNama.includes(key));
-
-            if (isUmum) {
-                kkmInput.value = 70;
-            } else if (isDiniyyah) {
-                kkmInput.value = 75;
-            }
-        }
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                kkmInput.value = data.kkm;
+            })
+            .catch(error => {
+                console.error('Error fetching KKM:', error);
+            });
     }
 
     document.getElementById('guru_id').addEventListener('change', updateMapelOptions);
-    document.getElementById('mapel_id').addEventListener('change', setKKM);
+    document.getElementById('mapel_id').addEventListener('change', fetchKKM);
 
     // Handle History Click
     $(document).on('click', '.btn-history', function() {
@@ -284,7 +279,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Jalankan saat pertama kali halaman dibuka agar data langsung muncul
     updateMapelOptions();
-    setKKM();
 });
 </script>
 @endsection

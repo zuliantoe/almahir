@@ -185,7 +185,14 @@ class PresensiController extends Controller
         $guruId = $request->guru_id;
         $mapelId = $request->mapel_id;
 
-        // Auto-detect if missing (e.g. scanning student ID instead of session QR)
+        // Reject random QR codes explicitly
+        if ($request->has('qr_content')) {
+            $msg = 'QR Code tidak dikenali atau format salah. Sistem menolak QR Code sembarangan.';
+            if ($request->ajax()) return response()->json(['message' => $msg], 422);
+            return back()->with('error', $msg);
+        }
+
+        // Auto-detect if missing
         if (!$jadwalId) {
             $rombelSiswa = \App\Modules\Akademik\Models\RombelSiswa::where('siswa_id', $siswa->id)
                 ->where('status', 'aktif')
@@ -209,6 +216,13 @@ class PresensiController extends Controller
 
         if (!$jadwalId || !$guruId || !$mapelId) {
             $msg = 'Gagal mendeteksi jadwal aktif. Silakan gunakan tombol "Absen" pada daftar jadwal.';
+            if ($request->ajax()) return response()->json(['message' => $msg], 422);
+            return back()->with('error', $msg);
+        }
+
+        $jadwal = \App\Modules\Akademik\Models\JadwalPelajaran::find($jadwalId);
+        if (!$jadwal) {
+            $msg = 'Jadwal pelajaran tidak ditemukan (Format QR mungkin tidak valid).';
             if ($request->ajax()) return response()->json(['message' => $msg], 422);
             return back()->with('error', $msg);
         }

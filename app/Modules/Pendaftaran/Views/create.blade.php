@@ -23,16 +23,44 @@
         border: 1px solid rgba(255, 255, 255, 0.8);
     }
 
+    .form-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;    
+    gap: 10px;
+    margin: 30px 0;
+    padding: 20px 0;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+    .form-header img {
+        height: 60px;
+        width: auto;
+    }
+
     h2 {
-        text-align: center;
+        margin: 0;
         font-size: 28px;
         font-weight: 800;
         color: #0f172a;
         letter-spacing: -0.5px;
-        margin-bottom: 30px;
         background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+    }
+
+    @media (max-width: 600px) {
+        .form-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .form-header img {
+            height: 50px;
+        }
+        h2 {
+            font-size: 22px;
+        }
     }
 
     h3 {
@@ -355,7 +383,10 @@
 
 <div class="container">
 
-    <h2>Form Pendaftaran Siswa Baru</h2>
+    <div class="form-header">
+        <img src="{{ asset('logo.png') }}" alt="Logo PPQITA">
+        <h2>Form Pendaftaran Siswa Baru</h2>
+    </div>
 
     @if(session('success'))
         <div class="success-alert" id="successAlert">

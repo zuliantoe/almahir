@@ -53,6 +53,10 @@ class AuthController extends Controller
             ]);
 
             // Redirect based on user role
+            if (Auth::user()->hasRole('WALI_MURID')) {
+                return redirect()->intended(route('walimurid.portal.dashboard'));
+            }
+
             if (Auth::user()->hasRole('SUPER_ADMIN')) {
                 return redirect()->intended(route('dashboard'));
             }

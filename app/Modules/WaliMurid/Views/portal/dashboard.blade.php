@@ -60,18 +60,7 @@
                             </div>
                         </div>
 
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <a href="#" class="btn btn-outline-primary btn-block btn-sm rounded-pill py-2 shadow-xs">
-                                    <i class="fas fa-file-invoice mr-1"></i> Rapor
-                                </a>
-                            </div>
-                            <div class="col-6">
-                                <a href="#" class="btn btn-outline-info btn-block btn-sm rounded-pill py-2 shadow-xs">
-                                    <i class="fas fa-calendar-check mr-1"></i> Absensi
-                                </a>
-                            </div>
-                        </div>
+                             
                     </div>
 
                     <div class="card-footer bg-light border-0 text-center py-3">

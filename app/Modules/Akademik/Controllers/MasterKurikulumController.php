@@ -31,6 +31,7 @@ class MasterKurikulumController extends Controller
         $validated = $request->validate([
             'nama_kurikulum' => 'required|string|max:255|unique:master_kurikulum,nama_kurikulum',
             'status' => 'required|boolean',
+            'beban_mengajar_maksimal' => 'required|integer|min:1',
         ]);
 
         MasterKurikulum::create($validated);
@@ -52,6 +53,7 @@ class MasterKurikulumController extends Controller
         $validated = $request->validate([
             'nama_kurikulum' => 'required|string|max:255|unique:master_kurikulum,nama_kurikulum,' . $masterKurikulum->id,
             'status' => 'required|boolean',
+            'beban_mengajar_maksimal' => 'required|integer|min:1',
         ]);
 
         $masterKurikulum->update($validated);

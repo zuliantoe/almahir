@@ -48,7 +48,11 @@
                             </div>
                         </div>
 
-
+                        <div class="col-md-6">
+                            <x-input label="Kapasitas Kelas" name="kapasitas" type="number" 
+                                     :value="old('kapasitas', 30)" 
+                                     placeholder="Contoh: 30" required min="1" max="100" />
+                        </div>
                     </div>
 
                     <hr>

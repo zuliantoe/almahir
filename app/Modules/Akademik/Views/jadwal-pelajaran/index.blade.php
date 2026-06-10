@@ -203,11 +203,11 @@
                             </div>
                         </td>
                         <td class="text-center">
-                            <div class="btn-group">
-                                <x-btn :href="route('akademik.jadwal-pelajaran.show', $item->id)" size="sm" class="btn-light text-info border mr-1 rounded-circle" title="Detail">
+                            <div class="d-flex justify-content-center align-items-center" style="gap: 6px;">
+                                <x-btn :href="route('akademik.jadwal-pelajaran.show', $item->id)" size="sm" class="btn-light text-info border rounded-circle" title="Detail" style="margin: 0; padding: 6px 10px;">
                                     <i class="fas fa-eye"></i>
                                 </x-btn>
-                                @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
+                                @if(Auth::check() && !Auth::user()->hasRole(['GURU', 'SISWA']))
                                 <a href="{{ route('akademik.jadwal-pelajaran.create', [
                                     'rombel_id' => $item->rombel_id,
                                     'mapel_id' => $item->mapel_id,
@@ -216,16 +216,16 @@
                                     'jamke' => $item->jamke,
                                     'jamawal' => substr($item->jamawal, 0, 5),
                                     'jamakhir' => substr($item->jamakhir, 0, 5)
-                                ]) }}" class="btn btn-sm btn-light text-success border mr-1 rounded-circle" title="Duplikasi Jadwal">
+                                ]) }}" class="btn btn-sm btn-light text-success border rounded-circle" title="Duplikasi Jadwal" style="margin: 0; padding: 6px 10px;">
                                     <i class="fas fa-copy"></i>
                                 </a>
-                                <x-btn :href="route('akademik.jadwal-pelajaran.edit', $item->id)" size="sm" class="btn-light text-warning border mr-1 rounded-circle" title="Edit">
+                                <x-btn :href="route('akademik.jadwal-pelajaran.edit', $item->id)" size="sm" class="btn-light text-warning border rounded-circle" title="Edit" style="margin: 0; padding: 6px 10px;">
                                     <i class="fas fa-edit"></i>
                                 </x-btn>
-                                <form action="{{ route('akademik.jadwal-pelajaran.destroy', $item->id) }}" method="POST" class="d-inline">
+                                <form action="{{ route('akademik.jadwal-pelajaran.destroy', $item->id) }}" method="POST" class="d-inline" style="margin: 0;">
                                     @csrf
                                     @method('DELETE')
-                                    <x-btn type="submit" size="sm" class="btn-light text-danger border rounded-circle btn-delete" title="Hapus">
+                                    <x-btn type="submit" size="sm" class="btn-light text-danger border rounded-circle btn-delete" title="Hapus" style="padding: 6px 10px;">
                                         <i class="fas fa-trash"></i>
                                     </x-btn>
                                 </form>

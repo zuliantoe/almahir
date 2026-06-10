@@ -19,7 +19,7 @@ use Modules\Akademik\Controllers\MasterKurikulumController;
 use Modules\Akademik\Controllers\BebanMengajarController;
 use Modules\Akademik\Controllers\RombelController;
 use Modules\Akademik\Controllers\KenaikanKelasController;
-
+use Modules\Akademik\Controllers\MasterJamPelajaranController;
 /*
 |--------------------------------------------------------------------------
 | Akademik Module Routes
@@ -66,7 +66,13 @@ Route::middleware(['web', 'auth', \Modules\Akademik\Middleware\ReadOnlyRoleMiddl
     Route::post('kenaikan-kelas/process', [KenaikanKelasController::class, 'process'])->name('kenaikan-kelas.process');
 
     Route::get('laporan', [\Modules\Akademik\Controllers\LaporanAkademikController::class, 'index'])->name('laporan.index');
+
+    // Master Jam Pelajaran
+    Route::post('master-jam-pelajaran/copy', [MasterJamPelajaranController::class, 'copyHari'])->name('master-jam-pelajaran.copy');
+    Route::get('master-jam-pelajaran/{master_jam_pelajaran}/duplicate', [MasterJamPelajaranController::class, 'duplicate'])->name('master-jam-pelajaran.duplicate');
+    Route::resource('master-jam-pelajaran', MasterJamPelajaranController::class);
 });
+
 
 // Public route for Calendar Sync (iCal) - Must be outside 'auth' so Google can fetch it
 Route::get('/kalender-akademik-export/ical', [KalenderAkademikController::class, 'exportIcal'])->name('kalender-akademik.export-ical');

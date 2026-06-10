@@ -15,6 +15,10 @@ class KenaikanKelasController extends Controller
 {
     public function index()
     {
+        if (auth()->user()->hasRole(['GURU', 'SISWA'])) {
+            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
+        }
+
         // 1. Identifikasi Tahun Aktif (Tujuan)
         $destinationYear = TahunAjaran::where('status', 1)->first();
         if (!$destinationYear) {
@@ -45,6 +49,10 @@ class KenaikanKelasController extends Controller
 
     public function getRombel(Request $request)
     {
+        if (auth()->user()->hasRole(['GURU', 'SISWA'])) {
+            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
+        }
+
         $activeYear = TahunAjaran::where('status', 1)->first();
         if (!$activeYear) $activeYear = TahunAjaran::orderBy('id', 'desc')->first();
 
@@ -57,6 +65,10 @@ class KenaikanKelasController extends Controller
 
     public function getSiswa(Request $request)
     {
+        if (auth()->user()->hasRole(['GURU', 'SISWA'])) {
+            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
+        }
+
         $siswas = RombelSiswa::where('rombel_id', $request->rombel_id)
             ->where('status', 'aktif')
             ->with('siswa')
@@ -67,6 +79,10 @@ class KenaikanKelasController extends Controller
 
     public function process(Request $request)
     {
+        if (auth()->user()->hasRole(['GURU', 'SISWA'])) {
+            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
+        }
+
         $request->validate([
             'rombel_id' => 'required|exists:rombel,id',
             'siswa_ids' => 'required|array|min:1',

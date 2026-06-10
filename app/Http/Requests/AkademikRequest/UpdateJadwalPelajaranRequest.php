@@ -11,6 +11,26 @@ class UpdateJadwalPelajaranRequest extends FormRequest
         return true;
     }
 
+    public function prepareForValidation(): void
+    {
+        // Jika user pilih master jam, derive jamke/jamawal/jamakhir dari master jam
+        $masterJamId = $this->input('master_jam_pelajaran_id');
+        if (!$masterJamId) {
+            return;
+        }
+
+        $masterJam = \App\Modules\Akademik\Models\MasterJamPelajaran::find($masterJamId);
+        if (!$masterJam) {
+            return;
+        }
+
+        $this->merge([
+            'jamke' => $masterJam->jamke,
+            'jamawal' => $masterJam->jamawal ? substr($masterJam->jamawal, 0, 5) : null,
+            'jamakhir' => $masterJam->jamakhir ? substr($masterJam->jamakhir, 0, 5) : null,
+        ]);
+    }
+
     public function rules(): array
     {
         return [
@@ -18,6 +38,9 @@ class UpdateJadwalPelajaranRequest extends FormRequest
             'mapel_id' => 'required|exists:mata_pelajaran,id',
             'guru_id' => 'required|exists:guru,id',
             'hari' => 'required|string|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu,Minggu',
+
+            'master_jam_pelajaran_id' => 'nullable|exists:master_jam_pelajarans,id',
+
             'jamke' => 'required|integer|min:1',
             'jamawal' => 'required|date_format:H:i',
             'jamakhir' => 'required|date_format:H:i|after:jamawal',
@@ -31,6 +54,8 @@ class UpdateJadwalPelajaranRequest extends FormRequest
             'mapel_id.required' => 'Mata pelajaran wajib dipilih.',
             'guru_id.required' => 'Guru wajib dipilih.',
             'hari.required' => 'Hari wajib dipilih.',
+            'master_jam_pelajaran_id.exists' => 'Master jam pelajaran tidak ditemukan.',
+
             'jamke.required' => 'Jam ke- wajib diisi.',
             'jamawal.required' => 'Jam mulai wajib diisi.',
             'jamakhir.required' => 'Jam selesai wajib diisi.',
@@ -53,6 +78,9 @@ class UpdateJadwalPelajaranRequest extends FormRequest
 
                 // Cek bentrok Guru
                 if ($guruId && $tahunAjaranId) {
+                    $currentMapel = \App\Modules\Akademik\Models\MataPelajaran::find($this->input('mapel_id'));
+                    $isDoubleMapel = $currentMapel && $currentMapel->bisa_double;
+
                     $guruConflict = \App\Modules\Akademik\Models\JadwalPelajaran::where('guru_id', $guruId)
                         ->where('hari', $hari)
                         ->where('jamke', $jamke)
@@ -65,7 +93,12 @@ class UpdateJadwalPelajaranRequest extends FormRequest
                         ->first();
 
                     if ($guruConflict) {
-                        $validator->errors()->add('guru_id', "Guru ini sudah mengajar di kelas lain pada hari {$hari} jam ke-{$jamke} di tahun ajaran yang sama.");
+                        $conflictingMapel = $guruConflict->mataPelajaran;
+                        $bothDouble = $isDoubleMapel && $conflictingMapel && $conflictingMapel->bisa_double;
+
+                        if (!$bothDouble) {
+                            $validator->errors()->add('guru_id', "Guru ini sudah mengajar di kelas lain pada hari {$hari} jam ke-{$jamke} di tahun ajaran yang sama.");
+                        }
                     }
                 }
 

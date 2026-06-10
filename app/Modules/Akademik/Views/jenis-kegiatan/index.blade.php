@@ -86,14 +86,14 @@
                         </td>
                         @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
                         <td class="text-center">
-                            <div class="btn-group">
-                                <x-btn :href="route('akademik.jenis-kegiatan.show', $item->id)" size="sm" class="btn-info" title="Detail">
+                            <div class="d-flex justify-content-center align-items-center" style="gap: 6px;">
+                                <x-btn :href="route('akademik.jenis-kegiatan.show', $item->id)" size="sm" class="btn-info" title="Detail" style="margin: 0;">
                                     <i class="fas fa-eye"></i>
                                 </x-btn>
-                                <x-btn :href="route('akademik.jenis-kegiatan.edit', $item->id)" size="sm" class="btn-warning" title="Edit">
+                                <x-btn :href="route('akademik.jenis-kegiatan.edit', $item->id)" size="sm" class="btn-warning" title="Edit" style="margin: 0;">
                                     <i class="fas fa-edit"></i>
                                 </x-btn>
-                                <form action="{{ route('akademik.jenis-kegiatan.destroy', $item->id) }}" method="POST" class="d-inline">
+                                <form action="{{ route('akademik.jenis-kegiatan.destroy', $item->id) }}" method="POST" class="d-inline" style="margin: 0;">
                                     @csrf
                                     @method('DELETE')
                                     <x-btn type="submit" size="sm" class="btn-danger btn-delete" title="Hapus">
@@ -106,7 +106,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">
+                        <td colspan="{{ Auth::user()->hasRole(['GURU', 'SISWA']) ? 5 : 6 }}" class="text-center py-5 text-muted">
                             <i class="fas fa-folder-open fa-2x mb-3"></i><br>
                             Tidak ada master jenis kegiatan.
                         </td>

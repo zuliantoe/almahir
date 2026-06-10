@@ -14,6 +14,7 @@ class MasterKurikulum extends Model
     protected $fillable = [
         'nama_kurikulum',
         'status',
+        'beban_mengajar_maksimal',
     ];
 
     public function detailKurikulum()

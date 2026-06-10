@@ -180,9 +180,9 @@
                         
                         {{-- 1. Kaldik --}}
                         <li class="nav-item">
-                            <a href="{{ route('guru.kalender-akademik') }}" class="nav-link {{ request()->is('guru/kalender-akademik*') ? 'active' : '' }}">
+                            <a href="{{ route('akademik.kalender-akademik.index') }}" class="nav-link {{ request()->is('akademik/kalender-akademik*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-calendar-alt text-success"></i>
-                                <p>Kaldik</p>
+                                <p>Kalender Akademik</p>
                             </a>
                         </li>
 
@@ -451,7 +451,11 @@
                 | PENILAIAN & PRESENSI (SUPER_ADMIN, GURU)
                 |--------------------------------------------------------------------------
                 --}}
+<<<<<<< HEAD
                 @if($activeModule === 'penilaiandanpresensi' && Auth::check() && (Auth::user()->hasRole(['SUPER_ADMIN', 'GURU'])))
+=======
+                @if(Auth::check() && (Auth::user()->hasRole(['SUPER_ADMIN', 'GURU'])) && $activeModule === 'penilaiandanpresensi')
+>>>>>>> 6acea83 (add master and feature in akademik)
                 <li class="nav-header">PENILAIAN & PRESENSI</li>
                 
                 <li class="nav-item">

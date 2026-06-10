@@ -24,6 +24,7 @@ class UpdateKelasRequest extends FormRequest
             'guru_id'    => 'nullable|string', // UUID
             'kode_kelas' => 'nullable|string|max:50',
             'tingkat_id' => 'nullable|integer|exists:tingkat,id',
+            'kapasitas'  => 'required|integer|min:1|max:100',
         ];
     }
 
@@ -34,6 +35,10 @@ class UpdateKelasRequest extends FormRequest
             'nama_kelas.string'   => 'Nama kelas harus berupa teks.',
             'nama_kelas.max'      => 'Nama kelas maksimal 255 karakter.',
             'nama_kelas.unique'   => 'Nama kelas sudah digunakan.',
+            'kapasitas.required'  => 'Kapasitas kelas wajib diisi.',
+            'kapasitas.integer'   => 'Kapasitas kelas harus berupa angka.',
+            'kapasitas.min'       => 'Kapasitas kelas minimal 1.',
+            'kapasitas.max'       => 'Kapasitas kelas maksimal 100.',
         ];
     }
 }

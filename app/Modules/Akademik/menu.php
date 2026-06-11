@@ -103,7 +103,6 @@ return [
                 ],
                 [
                     'label' => 'Master Jam Pelajaran',
-                    'icon' => 'fas fa-clock',
                     'route' => 'akademik.master-jam-pelajaran.index',
                     'match' => 'akademik/master-jam-pelajaran*',
                     'roles' => ['SUPER_ADMIN', 'STAFF'],

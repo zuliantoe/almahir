@@ -451,11 +451,7 @@
                 | PENILAIAN & PRESENSI (SUPER_ADMIN, GURU)
                 |--------------------------------------------------------------------------
                 --}}
-<<<<<<< HEAD
-                @if($activeModule === 'penilaiandanpresensi' && Auth::check() && (Auth::user()->hasRole(['SUPER_ADMIN', 'GURU'])))
-=======
-                @if(Auth::check() && (Auth::user()->hasRole(['SUPER_ADMIN', 'GURU'])) && $activeModule === 'penilaiandanpresensi')
->>>>>>> 6acea83 (add master and feature in akademik)
+                @if(Auth::check() && Auth::user()->hasRole(['SUPER_ADMIN', 'GURU']) && $activeModule === 'penilaiandanpresensi')
                 <li class="nav-header">PENILAIAN & PRESENSI</li>
                 
                 <li class="nav-item">

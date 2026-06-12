@@ -337,7 +337,7 @@
                 </div>
                 
                 <div class="text-center mb-4">
-                    <a href="https://www.google.com/calendar/render?cid={{ urlencode(route('akademik.kalender-akademik.export-ical')) }}" 
+                    <a id="btnSyncGoogle" href="#" 
                        target="_blank" class="btn btn-danger btn-lg shadow-sm">
                         <i class="fab fa-google mr-2"></i> Hubungkan ke Google Calendar (Sekali Klik)
                     </a>
@@ -359,7 +359,7 @@
                     <label class="text-xs font-weight-bold text-uppercase">Link Kalender Akademik (iCal URL)</label>
                     <div class="input-group">
                         <input type="text" id="icalUrl" class="form-control font-weight-bold bg-light" readonly 
-                               value="{{ route('akademik.kalender-akademik.export-ical') }}">
+                               value="">
                         <div class="input-group-append">
                             <button class="btn btn-primary" onclick="copyIcalUrl()">
                                 <i class="fas fa-copy mr-1"></i> Salin Link
@@ -391,6 +391,27 @@ function copyIcalUrl() {
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Set up Google Calendar Sync URLs based on current browser URL
+    const relativePath = '{{ route("akademik.kalender-akademik.export-ical", [], false) }}';
+    const protocol = window.location.protocol;
+    const host = window.location.host;
+    
+    // Construct URLs dynamically
+    const absoluteUrl = protocol + '//' + host + relativePath;
+    const webcalUrl = 'webcal://' + host + relativePath;
+    
+    // Set value for manual input field
+    const icalInput = document.getElementById('icalUrl');
+    if (icalInput) {
+        icalInput.value = absoluteUrl;
+    }
+    
+    // Set href for one-click button
+    const syncButton = document.getElementById('btnSyncGoogle');
+    if (syncButton) {
+        syncButton.href = 'https://www.google.com/calendar/render?cid=' + encodeURIComponent(webcalUrl);
+    }
+
     var calendarEl = document.getElementById('calendar');
     var loaderEl = document.getElementById('calendarLoader');
 

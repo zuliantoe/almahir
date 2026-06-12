@@ -75,4 +75,4 @@ Route::middleware(['web', 'auth', \Modules\Akademik\Middleware\ReadOnlyRoleMiddl
 
 
 // Public route for Calendar Sync (iCal) - Must be outside 'auth' so Google can fetch it
-Route::get('/kalender-akademik-export/ical', [KalenderAkademikController::class, 'exportIcal'])->name('kalender-akademik.export-ical');
+Route::get('/kalender-akademik-export/ical.ics', [KalenderAkademikController::class, 'exportIcal'])->name('kalender-akademik.export-ical');

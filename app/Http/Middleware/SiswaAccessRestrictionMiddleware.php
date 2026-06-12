@@ -25,6 +25,7 @@ class SiswaAccessRestrictionMiddleware
             // 1. Whitelist URL patterns for Student
             $allowedPatterns = [
                 '^$', // Dashboard
+                '^dashboard$', // Main Dashboard
                 '^profile',
                 '^notifications',
                 '^logout',

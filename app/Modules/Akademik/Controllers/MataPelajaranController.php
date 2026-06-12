@@ -56,13 +56,13 @@ class MataPelajaranController extends Controller
             'kode' => 'required|string|max:50|unique:mata_pelajaran,kode',
             'nama' => 'required|string|max:255|unique:mata_pelajaran,nama',
             'kategori_id' => 'required|exists:kategori_pelajaran,id',
+            'bisa_double' => 'nullable|boolean',
         ]);
 
-        MataPelajaran::create($request->only([
-            'kode',
-            'nama',
-            'kategori_id'
-        ]));
+        $data = $request->only(['kode', 'nama', 'kategori_id']);
+        $data['bisa_double'] = $request->has('bisa_double');
+
+        MataPelajaran::create($data);
 
         return redirect()->route('akademik.mata-pelajaran.index')
             ->with('success', 'Mata pelajaran berhasil ditambahkan.');
@@ -101,13 +101,13 @@ class MataPelajaranController extends Controller
                     ->ignore($mataPelajaran->id),
             ],
             'kategori_id' => 'required|exists:kategori_pelajaran,id',
+            'bisa_double' => 'nullable|boolean',
         ]);
 
-        $mataPelajaran->update($request->only([
-            'kode',
-            'nama',
-            'kategori_id'
-        ]));
+        $data = $request->only(['kode', 'nama', 'kategori_id']);
+        $data['bisa_double'] = $request->has('bisa_double');
+
+        $mataPelajaran->update($data);
 
         return redirect()->route('akademik.mata-pelajaran.index')
             ->with('success', 'Mata pelajaran berhasil diperbarui.');

@@ -115,6 +115,7 @@ class KurikulumController extends Controller
      */
     public function bulkStore(Request $request)
     {
+        $maxJamSeminggu = \App\Modules\Akademik\Models\MasterJamPelajaran::where('is_istirahat', false)->count() ?: 48;
         $request->validate([
             'master_kurikulum_id' => 'required|exists:master_kurikulum,id',
             'tingkat_id' => 'required|exists:tingkat,id',
@@ -122,9 +123,30 @@ class KurikulumController extends Controller
             'kelas_id' => 'nullable|exists:kelas,id',
             'details' => 'required|array|min:1',
             'details.*.mapel_id' => 'required|exists:mata_pelajaran,id',
-            'details.*.total_jam_minggu' => 'required|integer|max:48',
+            'details.*.total_jam_minggu' => 'required|integer|max:' . $maxJamSeminggu,
             'details.*.kkm' => 'required|numeric|between:0,100',
         ]);
+
+        $kelasId = $request->kelas_id;
+        $mapelIds = collect($request->details)->pluck('mapel_id')->toArray();
+        $newSum = collect($request->details)->sum('total_jam_minggu');
+
+        $existingSum = Kurikulum::where('master_kurikulum_id', $request->master_kurikulum_id)
+            ->where('tingkat_id', $request->tingkat_id)
+            ->where('tahunajaran_id', $request->tahunajaran_id)
+            ->where(function ($query) use ($kelasId) {
+                if ($kelasId === null || $kelasId === '') {
+                    $query->whereNull('kelas_id');
+                } else {
+                    $query->where('kelas_id', $kelasId);
+                }
+            })
+            ->whereNotIn('mapel_id', $mapelIds)
+            ->sum('totaljam');
+
+        if (($existingSum + $newSum) > $maxJamSeminggu) {
+            return redirect()->back()->withInput()->with('error', "Gagal simpan massal: Total akumulasi jam pelajaran per minggu untuk kurikulum ini tidak boleh melebihi {$maxJamSeminggu} jam pelajaran. (Saat ini sudah terisi {$existingSum} jam di database untuk mata pelajaran lain, dan yang Anda input baru berjumlah {$newSum} jam).");
+        }
 
         \Illuminate\Support\Facades\DB::beginTransaction();
         try {

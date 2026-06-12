@@ -17,6 +17,11 @@ class MataPelajaran extends Model
         'nama',        
         'kategori_id',
         'kelompok',
+        'bisa_double',
+    ];
+
+    protected $casts = [
+        'bisa_double' => 'boolean',
     ];
 
     public function kategori(): BelongsTo

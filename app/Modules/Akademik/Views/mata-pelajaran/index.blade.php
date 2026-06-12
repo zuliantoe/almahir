@@ -66,6 +66,7 @@
                         <th>Kode</th>
                         <th>Nama Mata Pelajaran</th>
                         <th>Kategori</th>
+                        <th>Tipe Kelas</th>
                         @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
                         <th width="150px" class="text-center">Aksi</th>
                         @endif
@@ -86,16 +87,23 @@
                                 <span class="text-muted">-</span>
                             @endif
                         </td>
+                        <td>
+                            @if($item->bisa_double)
+                                <span class="badge badge-success" style="background: rgba(40, 167, 69, 0.15); color: #28a745; border: 1px solid rgba(40,167,69,0.3);"><i class="fas fa-check-double mr-1"></i> Kelas Gabungan (Double)</span>
+                            @else
+                                <span class="badge badge-secondary" style="background: rgba(108, 117, 125, 0.15); color: #6c757d; border: 1px solid rgba(108,117,125,0.3);">Kelas Reguler</span>
+                            @endif
+                        </td>
                         @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
                         <td class="text-center">
-                            <div class="btn-group">
-                                <x-btn :href="route('akademik.mata-pelajaran.show', $item)" size="sm" class="btn-info" title="Detail">
+                            <div class="d-flex justify-content-center align-items-center" style="gap: 6px;">
+                                <x-btn :href="route('akademik.mata-pelajaran.show', $item)" size="sm" class="btn-info" title="Detail" style="margin: 0;">
                                     <i class="fas fa-eye"></i>
                                 </x-btn>
-                                <x-btn :href="route('akademik.mata-pelajaran.edit', $item)" size="sm" class="btn-warning" title="Edit">
+                                <x-btn :href="route('akademik.mata-pelajaran.edit', $item)" size="sm" class="btn-warning" title="Edit" style="margin: 0;">
                                     <i class="fas fa-edit"></i>
                                 </x-btn>
-                                <form action="{{ route('akademik.mata-pelajaran.destroy', $item->id) }}" method="POST" class="d-inline">
+                                <form action="{{ route('akademik.mata-pelajaran.destroy', $item->id) }}" method="POST" class="d-inline" style="margin: 0;">
                                     @csrf
                                     @method('DELETE')
                                     <x-btn type="submit" size="sm" class="btn-danger btn-delete" title="Hapus">

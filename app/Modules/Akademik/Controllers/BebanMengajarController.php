@@ -29,11 +29,16 @@ class BebanMengajarController extends Controller
 
         $tahunAjarans = TahunAjaran::orderByDesc('id')->get();
 
+        // Get active curriculum's maximum teaching load limit (default to 24)
+        $activeKurikulum = \App\Modules\Akademik\Models\MasterKurikulum::where('status', true)->first();
+        $maxBeban = $activeKurikulum ? $activeKurikulum->beban_mengajar_maksimal : 24;
+
         return view('akademik::beban-mengajar.index', [
             'title' => 'Beban Mengajar Guru',
             'gurus' => $gurus,
             'tahunAjarans' => $tahunAjarans,
             'tahunAjaranAktif' => $tahunAjaranAktif,
+            'maxBeban' => $maxBeban,
         ]);
     }
 }

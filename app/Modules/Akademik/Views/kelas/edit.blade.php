@@ -46,6 +46,11 @@
                                 @error('tingkat_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
+                        <div class="col-md-6">
+                            <x-input label="Kapasitas Kelas" name="kapasitas" type="number" 
+                                     :value="old('kapasitas', $kelas->kapasitas)" 
+                                     placeholder="Contoh: 30" required min="1" max="100" />
+                        </div>
                     </div>
 
 

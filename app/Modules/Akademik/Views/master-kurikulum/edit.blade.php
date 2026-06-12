@@ -34,6 +34,27 @@
                         </div>
 
                         <div class="form-group mt-4">
+                            <label for="beban_mengajar_maksimal">Maksimal Beban Mengajar Guru <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" 
+                                       name="beban_mengajar_maksimal" 
+                                       id="beban_mengajar_maksimal" 
+                                       class="form-control @error('beban_mengajar_maksimal') is-invalid @enderror" 
+                                       placeholder="Contoh: 24" 
+                                       value="{{ old('beban_mengajar_maksimal', $masterKurikulum->beban_mengajar_maksimal) }}" 
+                                       min="1" 
+                                       required>
+                                <div class="input-group-append">
+                                    <span class="input-group-text">Jam Pelajaran / Minggu</span>
+                                </div>
+                            </div>
+                            @error('beban_mengajar_maksimal')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted">Standar maksimal beban mengajar guru per minggu untuk kurikulum ini.</small>
+                        </div>
+
+                        <div class="form-group mt-4">
                             <label class="d-block">Status Kurikulum <span class="text-danger">*</span></label>
                             <div class="custom-control custom-radio custom-control-inline">
                                 <input type="radio" id="status1" name="status" class="custom-control-input" value="1" {{ old('status', $masterKurikulum->status) == '1' ? 'checked' : '' }}>

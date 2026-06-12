@@ -3,6 +3,23 @@
 @section('title', 'Jadwal Pelajaran')
 
 @section('content')
+@php
+    $getColor = function($mapelName) {
+        $colors = [
+            ['bg' => 'rgba(67, 97, 238, 0.05)',  'border' => '#4361ee', 'text' => '#2b47d6'],
+            ['bg' => 'rgba(16, 185, 129, 0.05)', 'border' => '#10b981', 'text' => '#0c8f63'],
+            ['bg' => 'rgba(139, 92, 246, 0.05)', 'border' => '#8b5cf6', 'text' => '#6d28d9'],
+            ['bg' => 'rgba(245, 158, 11, 0.05)',  'border' => '#f59e0b', 'text' => '#b45309'],
+            ['bg' => 'rgba(239, 68, 68, 0.05)',  'border' => '#ef4444', 'text' => '#b91c1c'],
+            ['bg' => 'rgba(20, 184, 166, 0.05)', 'border' => '#14b8a6', 'text' => '#0f766e'],
+            ['bg' => 'rgba(244, 63, 94, 0.05)',  'border' => '#f43f5e', 'text' => '#be123c'],
+            ['bg' => 'rgba(6, 182, 212, 0.05)',  'border' => '#06b6d4', 'text' => '#0369a1'],
+        ];
+        $hash = crc32($mapelName);
+        $index = abs($hash) % count($colors);
+        return $colors[$index];
+    };
+@endphp
 <div class="container-fluid">
     {{-- Messages --}}
     @if(session('success'))
@@ -182,9 +199,14 @@
                             <div class="jam-ke-badge">{{ $item->jamke }}</div>
                         </td>
                         <td>
-                            <div class="d-flex flex-column">
-                                <span class="font-weight-bold text-primary">{{ optional($item->mataPelajaran)->nama ?? '-' }}</span>
-                                <span class="badge badge-light border small px-2 py-0" style="width: fit-content;">Kode: {{ optional($item->mataPelajaran)->kode }}</span>
+                            <div class="d-flex flex-column align-items-start">
+                                @php
+                                    $color = $getColor(optional($item->mataPelajaran)->nama ?? 'Mapel');
+                                @endphp
+                                <span class="badge px-3 py-2 rounded-pill font-weight-bold mb-1" style="background-color: {{ $color['bg'] }}; color: {{ $color['text'] }}; border: 1px solid {{ $color['border'] }}2b;">
+                                    {{ optional($item->mataPelajaran)->nama ?? '-' }}
+                                </span>
+                                <span class="text-xs text-secondary font-weight-bold ml-1"><i class="fas fa-barcode mr-1 opacity-5"></i>Kode: {{ optional($item->mataPelajaran)->kode }}</span>
                             </div>
                         </td>
                         <td class="text-center">
@@ -203,11 +225,11 @@
                             </div>
                         </td>
                         <td class="text-center">
-                            <div class="btn-group">
-                                <x-btn :href="route('akademik.jadwal-pelajaran.show', $item->id)" size="sm" class="btn-light text-info border mr-1 rounded-circle" title="Detail">
+                            <div class="d-flex justify-content-center align-items-center" style="gap: 6px;">
+                                <x-btn :href="route('akademik.jadwal-pelajaran.show', $item->id)" size="sm" class="btn-light text-info border rounded-circle" title="Detail" style="margin: 0; padding: 6px 10px;">
                                     <i class="fas fa-eye"></i>
                                 </x-btn>
-                                @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
+                                @if(Auth::check() && !Auth::user()->hasRole(['GURU', 'SISWA']))
                                 <a href="{{ route('akademik.jadwal-pelajaran.create', [
                                     'rombel_id' => $item->rombel_id,
                                     'mapel_id' => $item->mapel_id,
@@ -216,16 +238,16 @@
                                     'jamke' => $item->jamke,
                                     'jamawal' => substr($item->jamawal, 0, 5),
                                     'jamakhir' => substr($item->jamakhir, 0, 5)
-                                ]) }}" class="btn btn-sm btn-light text-success border mr-1 rounded-circle" title="Duplikasi Jadwal">
+                                ]) }}" class="btn btn-sm btn-light text-success border rounded-circle" title="Duplikasi Jadwal" style="margin: 0; padding: 6px 10px;">
                                     <i class="fas fa-copy"></i>
                                 </a>
-                                <x-btn :href="route('akademik.jadwal-pelajaran.edit', $item->id)" size="sm" class="btn-light text-warning border mr-1 rounded-circle" title="Edit">
+                                <x-btn :href="route('akademik.jadwal-pelajaran.edit', $item->id)" size="sm" class="btn-light text-warning border rounded-circle" title="Edit" style="margin: 0; padding: 6px 10px;">
                                     <i class="fas fa-edit"></i>
                                 </x-btn>
-                                <form action="{{ route('akademik.jadwal-pelajaran.destroy', $item->id) }}" method="POST" class="d-inline">
+                                <form action="{{ route('akademik.jadwal-pelajaran.destroy', $item->id) }}" method="POST" class="d-inline" style="margin: 0;">
                                     @csrf
                                     @method('DELETE')
-                                    <x-btn type="submit" size="sm" class="btn-light text-danger border rounded-circle btn-delete" title="Hapus">
+                                    <x-btn type="submit" size="sm" class="btn-light text-danger border rounded-circle btn-delete" title="Hapus" style="padding: 6px 10px;">
                                         <i class="fas fa-trash"></i>
                                     </x-btn>
                                 </form>
@@ -259,45 +281,52 @@
     .rounded-xl { border-radius: 1rem !important; }
     .transition-all { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
     .table-premium thead th {
-        background: #f8f9fc;
+        background: #f8fafc;
         text-transform: uppercase;
         font-size: 0.72rem;
         letter-spacing: 0.06rem;
-        color: #5a738e;
+        color: #64748b;
         border-top: 0;
-        border-bottom: 2px solid #eef2f6;
+        border-bottom: 2px solid #e2e8f0;
         font-weight: 700;
+        padding: 14px;
     }
     .hover-row:hover { 
-        background-color: rgba(67, 97, 238, 0.02) !important; 
-        transform: translateX(4px); 
+        background-color: rgba(67, 97, 238, 0.03) !important; 
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+    }
+    .hover-row {
+        transition: all 0.2s ease;
     }
     .badge-soft-primary { background-color: rgba(67, 97, 238, 0.08); color: #4361ee; }
-    .badge-info-soft { background-color: rgba(76, 201, 240, 0.12); color: #0077b6; }
+    .badge-info-soft { background-color: rgba(54, 185, 204, 0.08); color: #0c8f63; }
     .jam-ke-badge {
-        width: 28px; height: 28px;
+        width: 32px; height: 32px;
         background: #eef2ff;
         color: #4361ee;
-        border-radius: 8px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 0 auto;
-        font-weight: 600;
+        font-weight: 700;
         font-size: 0.85rem;
         border: 1px solid #dbe2ff;
+        box-shadow: 0 2px 4px rgba(67, 97, 238, 0.05);
     }
     .avatar-sm {
         width: 32px; height: 32px;
-        background: #f1f3f9;
-        color: #4e5e7a;
+        background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+        color: #4338ca;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 600;
-        font-size: 0.8rem;
-        border: 1px solid #e1e5ef;
+        font-weight: 700;
+        font-size: 0.85rem;
+        border: 1.5px solid #ffffff;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
     .select2-premium { 
         height: 42px !important; 

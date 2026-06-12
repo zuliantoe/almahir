@@ -30,6 +30,7 @@
                         <th>Kode</th>
                         <th>Nama Kelas</th>
                         <th class="text-center">Tingkat</th>
+                        <th class="text-center">Kapasitas</th>
                         @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
                         <th width="150px" class="text-center">Aksi</th>
                         @endif
@@ -44,16 +45,19 @@
                             <td class="text-center">
                                 <span class="badge badge-info">{{ $k->tingkat->nama_tingkat ?? '-' }}</span>
                             </td>
+                            <td class="text-center">
+                                <span class="badge badge-secondary font-weight-bold">{{ $k->kapasitas ?? '30' }} Santri</span>
+                            </td>
                             @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
                             <td class="text-center">
-                                <div class="btn-group">
-                                    <x-btn :href="route('akademik.kelas.show', $k->id)" size="sm" class="btn-info" title="Detail">
+                                <div class="d-flex justify-content-center align-items-center" style="gap: 6px;">
+                                    <x-btn :href="route('akademik.kelas.show', $k->id)" size="sm" class="btn-info" title="Detail" style="margin: 0;">
                                         <i class="fas fa-eye"></i>
                                     </x-btn>
-                                    <x-btn :href="route('akademik.kelas.edit', $k->id)" size="sm" class="btn-warning" title="Edit">
+                                    <x-btn :href="route('akademik.kelas.edit', $k->id)" size="sm" class="btn-warning" title="Edit" style="margin: 0;">
                                         <i class="fas fa-edit"></i>
                                     </x-btn>
-                                    <form action="{{ route('akademik.kelas.destroy', $k->id) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('akademik.kelas.destroy', $k->id) }}" method="POST" class="d-inline" style="margin: 0;">
                                         @csrf
                                         @method('DELETE')
                                         <x-btn type="submit" size="sm" class="btn-danger btn-delete" title="Hapus">

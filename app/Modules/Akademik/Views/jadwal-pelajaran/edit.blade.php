@@ -62,20 +62,29 @@
                             @error('hari') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
-                        <div class="col-md-4 mb-3">
-                            <x-input label="Jam Ke-" type="number" name="jamke" 
-                                     :value="old('jamke', $jadwalPelajaran->jamke)" 
-                                     placeholder="Contoh: 1" />
-                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="font-weight-bold">Master Jam Pelajaran <span class="text-danger">*</span></label>
+                            <select name="master_jam_pelajaran_id"
+                                    class="form-control @error('master_jam_pelajaran_id') is-invalid @enderror" required>
+                                <option value="">Pilih Master Jam</option>
+                                @foreach($masterJams as $mj)
+                                    <option value="{{ $mj->id }}"
+                                        {{ (old('master_jam_pelajaran_id', $selectedMasterJamId ?? null) == $mj->id) ? 'selected' : '' }}
+                                        data-jamawal="{{ $mj->jamawal }}"
+                                        data-jamakhir="{{ $mj->jamakhir }}"
+                                        data-jamke="{{ $mj->jamke }}"
+                                        data-hari="{{ $mj->hari }}"
+                                        data-istirahat="{{ $mj->is_istirahat ? 1 : 0 }}"
+                                    >
+                                        {{ $mj->jamke }} ({{ \Carbon\Carbon::parse($mj->jamawal)->format('H:i') }}-{{ \Carbon\Carbon::parse($mj->jamakhir)->format('H:i') }}) {{ $mj->is_istirahat ? '[ISTIRAHAT]' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('master_jam_pelajaran_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
 
-                        <div class="col-md-4 mb-3">
-                            <x-input label="Jam Mulai" type="time" name="jamawal" 
-                                     :value="old('jamawal', substr($jadwalPelajaran->jamawal, 0, 5))" />
-                        </div>
-
-                        <div class="col-md-4 mb-3">
-                            <x-input label="Jam Selesai" type="time" name="jamakhir" 
-                                     :value="old('jamakhir', substr($jadwalPelajaran->jamakhir, 0, 5))" />
+                            <input type="hidden" name="jamke" value="{{ old('jamke', $jadwalPelajaran->jamke) }}">
+                            <input type="hidden" name="jamawal" value="{{ old('jamawal', substr($jadwalPelajaran->jamawal, 0, 5)) }}">
+                            <input type="hidden" name="jamakhir" value="{{ old('jamakhir', substr($jadwalPelajaran->jamakhir, 0, 5)) }}">
                         </div>
                     </div>
 
@@ -94,4 +103,65 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const masterSelect = document.querySelector('select[name="master_jam_pelajaran_id"]');
+        const hariSelect = document.querySelector('select[name="hari"]');
+        if (!masterSelect || !hariSelect) return;
+
+        const updateFields = () => {
+            const selected = masterSelect.options[masterSelect.selectedIndex];
+            if (!selected) return;
+
+            const jamke = selected.dataset.jamke || '';
+            const jamawal = selected.dataset.jamawal || '';
+            const jamakhir = selected.dataset.jamakhir || '';
+
+            const jamkeInput = document.querySelector('input[name="jamke"]');
+            const jamawalInput = document.querySelector('input[name="jamawal"]');
+            const jamakhirInput = document.querySelector('input[name="jamakhir"]');
+
+            if (jamkeInput) jamkeInput.value = jamke;
+            if (jamawalInput) jamawalInput.value = jamawal;
+            if (jamakhirInput) jamakhirInput.value = jamakhir;
+        };
+
+        const filterMasterJamByHari = () => {
+            if (!masterSelect.originalOptions) {
+                masterSelect.originalOptions = Array.from(masterSelect.options);
+            }
+
+            const selectedHari = hariSelect.value;
+            const currentSelectedValue = masterSelect.value;
+
+            masterSelect.innerHTML = '';
+
+            const filtered = masterSelect.originalOptions.filter((opt, index) => {
+                if (index === 0) return true; // Keep placeholder "Pilih Master Jam"
+                const optHari = opt.getAttribute('data-hari');
+                const optIstirahat = opt.getAttribute('data-istirahat');
+                return optHari === selectedHari && optIstirahat === '0';
+            });
+
+            filtered.forEach(opt => {
+                masterSelect.appendChild(opt);
+            });
+
+            const hasValue = filtered.some(opt => opt.value === currentSelectedValue);
+            if (hasValue && currentSelectedValue !== "") {
+                masterSelect.value = currentSelectedValue;
+            } else {
+                masterSelect.value = "";
+            }
+
+            updateFields();
+        };
+
+        hariSelect.addEventListener('change', filterMasterJamByHari);
+        masterSelect.addEventListener('change', updateFields);
+
+        filterMasterJamByHari(); // Filter initially
+    });
+</script>
 @endsection

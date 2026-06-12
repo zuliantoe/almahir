@@ -68,7 +68,7 @@
                     <select name="kelas_id" class="form-control select2">
                         <option value="">Semua Kelas di Tingkat Ini</option>
                         @foreach($kelases as $kelas)
-                            <option value="{{ $kelas->id }}" {{ (old('kelas_id', $kurikulum->kelas_id ?? '') == $kelas->id) ? 'selected' : '' }}>
+                            <option value="{{ $kelas->id }}" data-tingkat="{{ $kelas->tingkat_id }}" {{ (old('kelas_id', $kurikulum->kelas_id ?? '') == $kelas->id) ? 'selected' : '' }}>
                                 {{ $kelas->nama_kelas }}
                             </option>
                         @endforeach
@@ -142,6 +142,43 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Dynamic Kelas filtering based on selected Tingkat
+        var $tingkat = $('select[name="tingkat_id"]');
+        var $kelas = $('select[name="kelas_id"]');
+        if ($tingkat.length && $kelas.length) {
+            var originalOptions = $kelas.find('option').clone();
+            
+            function filterKelas() {
+                var tingkatId = $tingkat.val();
+                var currentVal = $kelas.val();
+                
+                $kelas.empty();
+                
+                originalOptions.each(function() {
+                    var $opt = $(this);
+                    if ($opt.val() === "" || $opt.data('tingkat') == tingkatId) {
+                        $kelas.append($opt.clone());
+                    }
+                });
+                
+                // Restore value if it's still available in the filtered list
+                if ($kelas.find('option[value="' + currentVal + '"]').length) {
+                    $kelas.val(currentVal);
+                } else {
+                    $kelas.val("");
+                }
+                
+                $kelas.trigger('change.select2');
+            }
+            
+            $tingkat.on('change', filterKelas);
+            
+            // Run initially if there is a selected value
+            if ($tingkat.val()) {
+                filterKelas();
+            }
+        }
+
         window.rowIndex = {{ isset($kurikulum) ? 1 : 3 }};
 
         window.addRow = function(count = 1) {

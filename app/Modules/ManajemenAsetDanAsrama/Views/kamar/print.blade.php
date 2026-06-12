@@ -135,7 +135,7 @@
                 <p class="sig-name">( {{ $musyrif ?? '................................' }} )</p>
             </div>
             <div class="sig-box">
-                <p>Malang, {{ date('d F Y') }}<br><strong>Kepala Sekolah</strong></p>
+                <p>Karanganyar, {{ date('d F Y') }}<br><strong>Kepala Sekolah</strong></p>
                 <div class="sig-space"></div>
                 <p class="sig-name">( {{ $kepsek ?? '................................' }} )</p>
             </div>
@@ -186,7 +186,7 @@
                         <p class="sig-name">( {{ $musyrif ?? '................................' }} )</p>
                     </div>
                     <div class="sig-box">
-                        <p>Malang, {{ date('d F Y') }}<br><strong>Kepala Sekolah</strong></p>
+                        <p>Karanganyar, {{ date('d F Y') }}<br><strong>Kepala Sekolah</strong></p>
                         <div class="sig-space"></div>
                         <p class="sig-name">( {{ $kepsek ?? '................................' }} )</p>
                     </div>

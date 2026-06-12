@@ -26,18 +26,22 @@ class JadwalPelajaranController extends Controller
 
     public function index(Request $request)
     {
+        /** @var \App\Models\User|null $user */
         $user = auth()->user();
         // Hari disimpan sebagai string di DB ('Senin','Selasa',dst)
         $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
-        if ($user && $user->hasRole('GURU')) {
+        $isGuru = $user && method_exists($user, 'hasRole') ? $user->hasRole('GURU') : false;
+        $isSiswa = $user && method_exists($user, 'hasRole') ? $user->hasRole('SISWA') : false;
+
+        if ($isGuru) {
             if ($request->get('tampil') === 'all' || $request->hasAny(['rombel_id', 'hari', 'guru_id', 'mapel_id', 'tahun_ajaran_id'])) {
                 return $this->renderListView($request);
             }
             return $this->renderGuruTimetable($user->ref, $hariList, $request);
         }
 
-        if ($user && $user->hasRole('SISWA')) {
+        if ($isSiswa) {
             return $this->renderSiswaTimetable($user->ref, $hariList, $request);
         }
 
@@ -73,7 +77,7 @@ class JadwalPelajaranController extends Controller
                 $mapelsInRombel = JadwalPelajaran::where('rombel_id', $rombel->id)
                     ->pluck('mapel_id')
                     ->unique();
-                
+
                 foreach ($mapelsInRombel as $mId) {
                     $summaryJP[$mId] = $this->jadwalService->hitungEstimasiTotalJP($mId, $rombel->id, $rombel->tahunajaran_id);
                 }
@@ -86,8 +90,8 @@ class JadwalPelajaranController extends Controller
     private function renderGuruTimetable($guru, $hariList, Request $request)
     {
         $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
-        $activeTahunAjaran = $request->filled('tahun_ajaran_id') 
-            ? TahunAjaran::find($request->tahun_ajaran_id) 
+        $activeTahunAjaran = $request->filled('tahun_ajaran_id')
+            ? TahunAjaran::find($request->tahun_ajaran_id)
             : TahunAjaran::aktif()->first();
 
         $rawJadwal = JadwalPelajaran::with(['mataPelajaran', 'rombel.kelas'])
@@ -109,8 +113,8 @@ class JadwalPelajaranController extends Controller
     private function renderSiswaTimetable($siswa, $hariList, Request $request)
     {
         $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
-        $activeTahunAjaran = $request->filled('tahun_ajaran_id') 
-            ? TahunAjaran::find($request->tahun_ajaran_id) 
+        $activeTahunAjaran = $request->filled('tahun_ajaran_id')
+            ? TahunAjaran::find($request->tahun_ajaran_id)
             : TahunAjaran::aktif()->first();
 
         $rombelSiswa = RombelSiswa::with(['rombel.kelas'])
@@ -158,6 +162,8 @@ class JadwalPelajaranController extends Controller
         // Hari disimpan sebagai string di DB (bukan integer)
         $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
+        $masterJams = \App\Modules\Akademik\Models\MasterJamPelajaran::orderBy('jamke')->get();
+
         $duplicateData = null;
         if ($request->has('rombel_id') || $request->has('mapel_id') || $request->has('guru_id')) {
             $duplicateData = (object) [
@@ -168,10 +174,11 @@ class JadwalPelajaranController extends Controller
                 'jamke'     => $request->get('jamke'),
                 'jamawal'   => $request->get('jamawal'),
                 'jamakhir'  => $request->get('jamakhir'),
+                'master_jam_pelajaran_id' => $request->get('master_jam_pelajaran_id'),
             ];
         }
 
-        return view('akademik::jadwal-pelajaran.create', compact('rombels', 'mapels', 'gurus', 'hariList', 'duplicateData'));
+        return view('akademik::jadwal-pelajaran.create', compact('rombels', 'mapels', 'gurus', 'hariList', 'duplicateData', 'masterJams'));
     }
 
     public function store(StoreJadwalPelajaranRequest $request)
@@ -204,7 +211,21 @@ class JadwalPelajaranController extends Controller
         // Hari disimpan sebagai string di DB (bukan integer)
         $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
-        return view('akademik::jadwal-pelajaran.edit', compact('jadwalPelajaran', 'rombels', 'mapels', 'gurus', 'hariList'));
+        $masterJams = \App\Modules\Akademik\Models\MasterJamPelajaran::orderBy('jamke')->get();
+
+        // master_jam_pelajaran_id belum tersimpan di jadwal_pelajaran,
+        // jadi saat edit kita cocokkan berdasarkan jamke
+        $selectedMasterJamId = $masterJams->firstWhere('jamke', $jadwalPelajaran->jamke)?->id;
+
+        return view('akademik::jadwal-pelajaran.edit', compact(
+            'jadwalPelajaran',
+            'rombels',
+            'mapels',
+            'gurus',
+            'hariList',
+            'masterJams',
+            'selectedMasterJamId'
+        ));
     }
 
     public function update(UpdateJadwalPelajaranRequest $request, JadwalPelajaran $jadwalPelajaran)
@@ -251,7 +272,7 @@ class JadwalPelajaranController extends Controller
         $sourceJadwal = JadwalPelajaran::where('rombel_id', $request->from_rombel_id)->get();
         $targetRombel = \App\Modules\Akademik\Models\Rombel::find($request->to_rombel_id);
         $targetTahunAjaranId = $targetRombel ? $targetRombel->tahunajaran_id : null;
-        
+
         $copied = 0;
         foreach ($sourceJadwal as $item) {
             // Check if target already has this schedule
@@ -267,9 +288,17 @@ class JadwalPelajaranController extends Controller
                 ->whereHas('rombel', function($q) use ($targetTahunAjaranId) {
                     $q->where('tahunajaran_id', $targetTahunAjaranId);
                 })
-                ->exists();
+                ->first();
 
-            if (!$existsRombel && !$existsGuru) {
+            $bothDouble = false;
+            if ($existsGuru) {
+                $currentMapel = \App\Modules\Akademik\Models\MataPelajaran::find($item->mapel_id);
+                $isDoubleMapel = $currentMapel && $currentMapel->bisa_double;
+                $conflictingMapel = $existsGuru->mataPelajaran;
+                $bothDouble = $isDoubleMapel && $conflictingMapel && $conflictingMapel->bisa_double;
+            }
+
+            if (!$existsRombel && (!$existsGuru || $bothDouble)) {
                 $newItem = $item->replicate();
                 $newItem->rombel_id = $request->to_rombel_id;
                 $newItem->save();
@@ -303,21 +332,34 @@ class JadwalPelajaranController extends Controller
                 $rombel = \App\Modules\Akademik\Models\Rombel::find($data['rombel_id']);
                 $tahunAjaranId = $rombel ? $rombel->tahunajaran_id : null;
 
-                // Reuse existing conflict logic if possible, or simple check here
-                $conflict = JadwalPelajaran::where('hari', $data['hari'])
+                // Check Rombel Conflict
+                $rombelConflict = JadwalPelajaran::where('hari', $data['hari'])
                     ->where('jamke', $data['jamke'])
-                    ->where(function($q) use ($data, $tahunAjaranId) {
-                        $q->where('rombel_id', $data['rombel_id'])
-                          ->orWhere(function($sq) use ($data, $tahunAjaranId) {
-                              $sq->where('guru_id', $data['guru_id'])
-                                 ->whereHas('rombel', function($rq) use ($tahunAjaranId) {
-                                     $rq->where('tahunajaran_id', $tahunAjaranId);
-                                 });
-                          });
-                    })->first();
+                    ->where('rombel_id', $data['rombel_id'])
+                    ->first();
 
-                if ($conflict) {
-                    throw new \Exception("Baris ke-" . ($index + 1) . " bentrok: Guru/Rombel sudah ada jadwal di hari {$data['hari']} jam ke-{$data['jamke']}.");
+                if ($rombelConflict) {
+                    throw new \Exception("Baris ke-" . ($index + 1) . " bentrok: Rombel sudah memiliki mata pelajaran lain pada hari {$data['hari']} jam ke-{$data['jamke']}.");
+                }
+
+                // Check Guru Conflict
+                $guruConflict = JadwalPelajaran::where('hari', $data['hari'])
+                    ->where('jamke', $data['jamke'])
+                    ->where('guru_id', $data['guru_id'])
+                    ->whereHas('rombel', function($q) use ($tahunAjaranId) {
+                        $q->where('tahunajaran_id', $tahunAjaranId);
+                    })
+                    ->first();
+
+                if ($guruConflict) {
+                    $currentMapel = \App\Modules\Akademik\Models\MataPelajaran::find($data['mapel_id']);
+                    $isDoubleMapel = $currentMapel && $currentMapel->bisa_double;
+                    $conflictingMapel = $guruConflict->mataPelajaran;
+                    $bothDouble = $isDoubleMapel && $conflictingMapel && $conflictingMapel->bisa_double;
+
+                    if (!$bothDouble) {
+                        throw new \Exception("Baris ke-" . ($index + 1) . " bentrok: Guru sudah mengajar di kelas lain pada hari {$data['hari']} jam ke-{$data['jamke']}.");
+                    }
                 }
 
                 JadwalPelajaran::create($data);

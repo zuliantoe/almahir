@@ -127,15 +127,15 @@
                                 </span>
                             </td>
                             <td class="text-center">
-                                <div class="btn-group">
-                                    <a href="{{ route('akademik.rombel.show', $r->id) }}" class="btn btn-sm btn-info shadow-sm" title="Lihat Detail">
+                                <div class="d-flex justify-content-center align-items-center" style="gap: 6px;">
+                                    <a href="{{ route('akademik.rombel.show', $r->id) }}" class="btn btn-sm btn-info shadow-sm" title="Lihat Detail" style="margin: 0;">
                                         <i class="fas fa-search-plus"></i>
                                     </a>
                                     @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
-                                    <a href="{{ route('akademik.rombel.edit', $r->id) }}" class="btn btn-sm btn-warning shadow-sm mx-1 text-white" title="Edit Data">
+                                    <a href="{{ route('akademik.rombel.edit', $r->id) }}" class="btn btn-sm btn-warning shadow-sm text-white" title="Edit Data" style="margin: 0;">
                                         <i class="fas fa-pencil-alt"></i>
                                     </a>
-                                    <form action="{{ route('akademik.rombel.destroy', $r->id) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('akademik.rombel.destroy', $r->id) }}" method="POST" class="d-inline" style="margin: 0;">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-danger shadow-sm btn-delete" title="Hapus">

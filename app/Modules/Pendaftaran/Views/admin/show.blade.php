@@ -5,6 +5,17 @@
         $logoData = file_get_contents($logoPath);
         $logoBase64 = 'data:image/png;base64,' . base64_encode($logoData);
     }
+
+    // Normalisasi nomor HP untuk tombol WhatsApp
+    $normalizePhone = function($phone) {
+        $clean = preg_replace('/[^0-9]/', '', $phone);
+        if (strpos($clean, '0') === 0) {
+            $clean = '62' . substr($clean, 1);
+        }
+        return $clean;
+    };
+    $waAyah = $pendaftaran->no_hp_ayah ? $normalizePhone($pendaftaran->no_hp_ayah) : '';
+    $waIbu = $pendaftaran->no_hp_ibu ? $normalizePhone($pendaftaran->no_hp_ibu) : '';
 @endphp
 @extends('layouts.app')
 
@@ -198,7 +209,13 @@
                         <tr>
                             <th>No HP</th>
                             <td>
-                                {{ $pendaftaran->no_hp_ayah ?? '-' }}
+                                @if($pendaftaran->no_hp_ayah)
+                                    <a href="https://wa.me/{{ $waAyah }}" target="_blank" class="text-success font-weight-bold">
+                                        <i class="fab fa-whatsapp"></i> {{ $pendaftaran->no_hp_ayah }}
+                                    </a>
+                                @else
+                                    -
+                                @endif
                             </td>
                         </tr>
                         <tr>
@@ -221,7 +238,13 @@
                         <tr>
                             <th>No HP</th>
                             <td>
-                                {{ $pendaftaran->no_hp_ibu ?? '-' }}
+                                @if($pendaftaran->no_hp_ibu)
+                                    <a href="https://wa.me/{{ $waIbu }}" target="_blank" class="text-success font-weight-bold">
+                                        <i class="fab fa-whatsapp"></i> {{ $pendaftaran->no_hp_ibu }}
+                                    </a>
+                                @else
+                                    -
+                                @endif
                             </td>
                         </tr>
                         <tr>
@@ -513,6 +536,24 @@
                     <p class="text-muted">Belum ada jadwal tes</p>
                 @endif
             </div>
+
+            {{-- ACTION BUTTONS FOR PRINT & WHATSAPP --}}
+            @if ($pendaftaran->seleksis->count() > 0)
+                <div class="mt-4 border-top pt-3">
+                    <button type="button" id="btn-download-jadwal" class="btn btn-primary" onclick="downloadJadwal()">
+                        <i class="fas fa-file-pdf mr-1"></i> Cetak Jadwal (PDF)
+                    </button>
+                    
+                    @php
+                        $primaryWa = $waAyah ?: $waIbu;
+                    @endphp
+                    @if($primaryWa)
+                        <button type="button" class="btn btn-success ml-2" onclick="sendToWhatsApp('{{ $primaryWa }}')">
+                            <i class="fab fa-whatsapp mr-1"></i> Cetak & Kirim ke WA
+                        </button>
+                    @endif
+                </div>
+            @endif
         </div>
 
 
@@ -703,6 +744,22 @@
             btn.disabled = false;
             alert('Gagal mengunduh jadwal tes.');
         });
+    }
+
+    function sendToWhatsApp(phone) {
+        // Trigger the PDF download first
+        downloadJadwal();
+
+        // Prefilled message template
+        const namaSiswa = "{{ $pendaftaran->nama_lengkap }}";
+        const message = `Assalamualaikum wr. wb.,\n\nBerikut kami kirimkan jadwal tes seleksi PPDB Pondok Pesantren Qur'an & IT Al-Mahir untuk calon santri atas nama *${namaSiswa}*.\n\nSilakan lampirkan dokumen PDF jadwal tes yang baru saja terunduh.\n\nSyukran, Jazakumullahu Khairan.`;
+        const encodedMessage = encodeURIComponent(message);
+        const waUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
+        
+        // Open WhatsApp Web/App in a new window after 1 second
+        setTimeout(() => {
+            window.open(waUrl, '_blank');
+        }, 1000);
     }
 </script>
 @endpush

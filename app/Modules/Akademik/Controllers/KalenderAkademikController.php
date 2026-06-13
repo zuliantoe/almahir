@@ -195,35 +195,38 @@ class KalenderAkademikController extends Controller
 
     public function exportIcal()
     {
-        $activeYear = TahunAjaran::where('status', 1)->first();
-        
-        $events = KalenderAkademik::with('jenisKegiatan')
-            ->when($activeYear, function($query) use ($activeYear) {
-                return $query->where('tahunajaran_id', $activeYear->id);
-            })
-            ->get();
-
+        $events = KalenderAkademik::with('jenisKegiatan')->get();
+ 
         $ics = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
             'PRODID:-//Almahir//Academic Calendar//ID',
             'X-WR-CALNAME:Kalender Akademik Almahir',
             'X-WR-TIMEZONE:Asia/Jakarta',
+            'X-WR-CALCOLOR:#1e3c72',
             'CALSCALE:GREGORIAN',
             'METHOD:PUBLISH',
         ];
-
+ 
         foreach ($events as $event) {
             if (!$event->tanggal_awal) {
                 continue;
             }
-
+ 
             $endDateObj = ($event->tanggal_akhir ?? $event->tanggal_awal);
             $dtStart = $event->tanggal_awal->format('Ymd');
             $dtEnd = $endDateObj->copy()->addDay()->format('Ymd');
-
+ 
             $jenisLabel = $event->jenisKegiatan ? '[' . $event->jenisKegiatan->jeniskegiatan . '] ' : '';
-
+            
+            $jenis = $event->jenisKegiatan;
+            $isKbm = $jenis ? $jenis->is_kbm : true;
+            $color = ($jenis && $jenis->warna) ? $jenis->warna : '#007bff';
+            
+            if (!$isKbm && (!$jenis || !$jenis->warna)) {
+                $color = '#dc3545';
+            }
+ 
             $ics[] = 'BEGIN:VEVENT';
             $ics[] = 'UID:' . $event->id . '@almahir';
             $ics[] = 'DTSTAMP:' . gmdate('Ymd\THis\Z');
@@ -232,12 +235,14 @@ class KalenderAkademikController extends Controller
             $ics[] = 'SUMMARY:' . $jenisLabel . $event->nama_kegiatan;
             $ics[] = 'DESCRIPTION:' . ($event->deskripsi ?: 'Agenda Akademik Sekolah');
             $ics[] = 'LOCATION:Sekolah Almahir';
+            $ics[] = 'COLOR:' . $color;
+            $ics[] = 'X-COLOR:' . $color;
             $ics[] = 'STATUS:CONFIRMED';
             $ics[] = 'END:VEVENT';
         }
-
+ 
         $ics[] = 'END:VCALENDAR';
-
+ 
         return response(implode("\r\n", $ics))
             ->header('Content-Type', 'text/calendar; charset=utf-8')
             ->header('Content-Disposition', 'attachment; filename="kalender_akademik_almahir.ics"');

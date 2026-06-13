@@ -103,18 +103,26 @@ class CalonPegawaiController extends Controller
                 $password = $request->password ?? 'password123';
                 $roleName = $request->role_name ?? 'PEGAWAI';
 
-                // 1. Buat Akun User
-                $user = User::create([
-                    'id' => (string) Str::uuid(),
-                    'name' => $calon->nama,
-                    'email' => $calon->email,
-                    'phone' => $calon->no_hp,
-                    'password' => Hash::make($password),
-                    'account_status' => 'active',
-                ]);
+                // 1. Cek atau Buat Akun User
+                $user = User::where('email', $calon->email)->first();
+                $isNewUser = false;
+
+                if (!$user) {
+                    $user = User::create([
+                        'id' => (string) Str::uuid(),
+                        'name' => $calon->nama,
+                        'email' => $calon->email,
+                        'phone' => $calon->no_hp,
+                        'password' => Hash::make($password),
+                        'account_status' => 'active',
+                    ]);
+                    $isNewUser = true;
+                }
                 
                 // Tentukan Role di System (RBAC Spatie)
-                $user->assignRole($roleName);
+                if (!$user->hasRole($roleName)) {
+                    $user->assignRole($roleName);
+                }
 
                 // 2. Buat Data Pegawai (Master Data Almahira)
                 Pegawai::create([
@@ -131,12 +139,14 @@ class CalonPegawaiController extends Controller
                     'qr_token' => (string) Str::uuid()
                 ]);
 
-                // 2.5 Kirim Email Pemberitahuan Akun Baru
-                try {
-                    Mail::to($user->email)->send(new AkunPegawaiBaruMail($user, $password, $roleName));
-                } catch (\Exception $e) {
-                    // Log error if mail fails, but don't abort the transaction
-                    \Log::error('Gagal mengirim email akun baru: ' . $e->getMessage());
+                // 2.5 Kirim Email Pemberitahuan Akun Baru (hanya jika akun baru dibuat)
+                if ($isNewUser) {
+                    try {
+                        Mail::to($user->email)->send(new AkunPegawaiBaruMail($user, $password, $roleName));
+                    } catch (\Exception $e) {
+                        // Log error if mail fails, but don't abort the transaction
+                        \Log::error('Gagal mengirim email akun baru: ' . $e->getMessage());
+                    }
                 }
 
                 // 3. Sinkronisasi Data ke Tabel Guru (Khusus untuk sistem eksternal/teman)

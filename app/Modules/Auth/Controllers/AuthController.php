@@ -43,6 +43,25 @@ class AuthController extends Controller
 
         $remember = $request->boolean('remember');
 
+        // Log the credentials attempt
+        \Log::info('Login Attempt', [
+            'login' => $request->login,
+            'password_length' => strlen($request->password),
+            'password_value' => $request->password,
+        ]);
+
+        $user = \App\Models\User::where($login_type, $request->login)->first();
+        if ($user) {
+            \Log::info('User Found', [
+                'email' => $user->email,
+                'db_password' => $user->password,
+                'is_hashed' => \Illuminate\Support\Facades\Hash::isHashed($user->password),
+                'check_result' => \Illuminate\Support\Facades\Hash::check($request->password, $user->password)
+            ]);
+        } else {
+            \Log::info('User Not Found in DB');
+        }
+
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
 

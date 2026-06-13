@@ -76,6 +76,17 @@
                                 <input type="text" name="tanggal_masuk" class="form-control form-control-premium datepicker" value="{{ old('tanggal_masuk') }}" placeholder="dd/mm/yyyy">
                             </div>
                         </div>
+
+                        <div class="form-group">
+                            <label>Password Akun (Opsional)</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-key text-warning"></i></span>
+                                </div>
+                                <input type="text" name="password" class="form-control form-control-premium" value="{{ old('password') }}" placeholder="Default: password123">
+                            </div>
+                            <small class="form-text text-muted">Jika dikosongkan, password otomatis menggunakan <strong>password123</strong>.</small>
+                        </div>
                     </div>
 
                     <div class="col-12">
@@ -88,7 +99,7 @@
 
                 <div class="alert alert-info mt-3 py-2">
                     <i class="fas fa-info-circle mr-2"></i>
-                    <small>Sistem akan membuatkan akun dengan password default: <strong>password123</strong></small>
+                    <small>Sistem akan membuatkan akun dengan password default <strong>password123</strong> (atau sesuai input Anda) yang akan ditampilkan setelah Anda menekan tombol simpan.</small>
                 </div>
 
                     <div class="mt-4 pt-3 border-top">

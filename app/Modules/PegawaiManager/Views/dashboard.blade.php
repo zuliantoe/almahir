@@ -226,8 +226,7 @@
                     @if(auth()->user()->hasRole('SUPER_ADMIN'))
                     <hr class="my-3 border-light">
                     <a href="{{ route('system.backup') }}"
-                       class="btn btn-dark btn-block rounded-pill font-weight-bold shadow-sm p-2"
-                       onclick="return confirm('Download backup database sekarang?\nFile .sql akan terunduh otomatis.')">
+                       class="btn btn-dark btn-block rounded-pill font-weight-bold shadow-sm p-2 btn-confirm-backup">
                         <i class="fas fa-database mr-2"></i> Backup Database (.sql)
                     </a>
                     @endif
@@ -374,6 +373,31 @@ document.addEventListener('DOMContentLoaded', function() {
         legend: { position: 'top', fontWeight: 600, labels: { colors: '#334155' } },
         grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
     }).render();
+
+    // Backup SweetAlert Confirmation
+    $(document).on('click', '.btn-confirm-backup', function(e) {
+        e.preventDefault();
+        let url = $(this).attr('href');
+        
+        Swal.fire({
+            title: 'Backup Database?',
+            text: "Download backup database sekarang? File .sql akan terunduh otomatis.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Download',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+            buttonsStyling: false,
+            customClass: {
+                confirmButton: 'btn btn-primary rounded-pill px-4 mx-2',
+                cancelButton: 'btn btn-light rounded-pill px-4 mx-2 border'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = url;
+            }
+        });
+    });
 
 });
 </script>

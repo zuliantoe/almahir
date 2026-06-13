@@ -371,7 +371,9 @@
             
             Swal.fire({
                 title: 'Reset Password?',
-                text: "Sistem akan menghasilkan password baru secara acak. Anda harus memberikannya ke pegawai bersangkutan.",
+                html: "Masukkan password baru untuk pegawai ini.<br><small class='text-muted'>Biarkan kosong untuk menghasilkan password acak secara otomatis.</small>",
+                input: 'text',
+                inputPlaceholder: 'Ketik password baru...',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'Ya, Reset Password',
@@ -380,10 +382,21 @@
                 buttonsStyling: false,
                 customClass: {
                     confirmButton: 'btn btn-gradient-primary rounded-pill px-4 mx-2',
-                    cancelButton: 'btn btn-light rounded-pill px-4 mx-2 border'
+                    cancelButton: 'btn btn-light rounded-pill px-4 mx-2 border',
+                    input: 'form-control rounded-pill text-center mx-auto mt-3 w-75'
+                },
+                inputValidator: (value) => {
+                    if (value && value.trim().length < 6) {
+                        return 'Password minimal 6 karakter!';
+                    }
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
+                    let newPassword = result.value;
+                    form.find('input[name="new_password"]').remove();
+                    if (newPassword && newPassword.trim() !== '') {
+                        form.append(`<input type="hidden" name="new_password" value="${newPassword.trim()}">`);
+                    }
                     form.submit();
                 }
             });

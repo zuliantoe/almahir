@@ -57,7 +57,7 @@
                                                 @method('PUT')
                                                 <input type="hidden" name="action_type" value="status_update">
                                                 <input type="hidden" name="status_seleksi" value="diterima">
-                                                <button type="submit" class="btn btn-success btn-sm rounded-pill px-4 font-weight-bold shadow-sm btn-animate" onclick="return confirm('Kandidat akan resmi dijadikan pegawai. Lanjutkan?')">
+                                                <button type="button" class="btn btn-success btn-sm rounded-pill px-4 font-weight-bold shadow-sm btn-animate btn-confirm-accept" data-name="{{ $calon->nama }}">
                                                     <i class="fas fa-check-circle mr-1"></i> Terima Pegawai
                                                 </button>
                                             </form>
@@ -104,3 +104,58 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        $(document).on('click', '.btn-confirm-accept', function(e) {
+            e.preventDefault();
+            let form = $(this).closest('form');
+            let name = $(this).data('name');
+
+            Swal.fire({
+                title: 'Terima Pegawai?',
+                html: `Kandidat <strong>${name}</strong> akan resmi dijadikan pegawai.<br><br>
+                       <div class="text-left">
+                           <label class="font-weight-bold text-dark small text-uppercase mb-1">Role Sistem</label>
+                           <select id="swalRole" class="form-control mb-3" style="border-radius: 10px; border: 2px solid #e2e8f0; height: 45px;">
+                               <option value="PEGAWAI" selected>PEGAWAI</option>
+                               <option value="GURU">GURU</option>
+                               <option value="STAF_TU">STAF TU</option>
+                           </select>
+                           <label class="font-weight-bold text-dark small text-uppercase mb-1">Password Akun Baru</label>
+                           <input type="text" id="swalPassword" class="form-control" placeholder="Biarkan kosong untuk password123" style="border-radius: 10px; border: 2px solid #e2e8f0; height: 45px;">
+                       </div>`,
+                icon: 'question',
+                showCancelButton: true,
+                buttonsStyling: false,
+                customClass: {
+                    confirmButton: 'btn btn-success rounded-pill px-4 mx-2',
+                    cancelButton: 'btn btn-light rounded-pill px-4 mx-2 border'
+                },
+                confirmButtonText: 'Ya, Terima Pegawai',
+                cancelButtonText: 'Batal',
+                preConfirm: () => {
+                    return {
+                        role_name: document.getElementById('swalRole').value,
+                        password: document.getElementById('swalPassword').value
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let role = result.value.role_name;
+                    let pass = result.value.password;
+                    
+                    form.append(`<input type="hidden" name="role_name" value="${role}">`);
+                    if(pass.trim() !== '') {
+                        form.append(`<input type="hidden" name="password" value="${pass.trim()}">`);
+                    }
+                    
+                    form.submit();
+                }
+            });
+        });
+    });
+</script>
+@endpush
+

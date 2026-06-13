@@ -109,7 +109,7 @@ class PegawaiManagerController extends Controller
             DB::beginTransaction();
 
             // 1. Create User Account
-            $password = Str::random(10);
+            $password = $validated['password'] ?? 'password123';
             $user = User::create([
                 'id' => (string) Str::uuid(),
                 'name' => $validated['nama'],
@@ -505,23 +505,9 @@ class PegawaiManagerController extends Controller
                 ]);
 
                 // 4. Sinkronisasi Data ke Tabel Guru jika posisinya Guru
-                $isGuru = strpos(strtolower($nama_type), 'guru') !== false;
-                if ($isGuru) {
-                    \Modules\Guru\Models\Guru::create([
-                        'user_id' => $user->id,
-                        'type_pegawai_id' => $type_id,
-                        'nip' => $nip,
-                        'nama' => $nama,
-                        'tempat_lahir' => $tempat_lahir,
-                        'tanggal_lahir' => $tanggal_lahir,
-                        'jenis_kelamin' => $jenis_kelamin,
-                        'alamat' => $alamat,
-                        'tanggal_masuk' => $tanggal,
-                        'status' => in_array($status, ['aktif', 'nonaktif', 'pensiun']) ? $status : 'aktif',
-                        'sisa_cuti' => 12 // Default
-                    ]);
-                }
-                
+                // PENTING: Proses sinkronisasi ke tabel `guru` sekarang ditangani SEPENUHNYA
+                // oleh `PegawaiObserver` saat `Pegawai::create()` dipanggil di atas.
+                // Jangan membuat entitas `Guru` secara manual di sini untuk mencegah duplikasi.
                 $successCount++;
             }
             
@@ -551,7 +537,7 @@ class PegawaiManagerController extends Controller
     /**
      * Reset Password User
      */
-    public function resetPassword(string $id): RedirectResponse
+    public function resetPassword(Request $request, string $id): RedirectResponse
     {
         $pegawai = Pegawai::with('user')->findOrFail($id);
         $user = $pegawai->user;
@@ -570,7 +556,15 @@ class PegawaiManagerController extends Controller
         }
 
         try {
-            $newPassword = Str::random(10);
+            $newPassword = $request->input('new_password');
+            if (empty($newPassword)) {
+                $newPassword = Str::random(10);
+            } else {
+                $request->validate([
+                    'new_password' => 'string|min:6'
+                ]);
+            }
+
             $user->update([
                 'password' => Hash::make($newPassword),
                 'must_change_password' => true

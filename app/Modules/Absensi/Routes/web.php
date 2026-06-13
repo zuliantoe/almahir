@@ -21,7 +21,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Admin/Manage Routes (Only accessible by SUPER_ADMIN)
     Route::middleware(['role:SUPER_ADMIN'])->group(function () {
-        Route::resource('hari-libur', \Modules\Absensi\Controllers\HariLiburController::class)->except(['create', 'show', 'edit', 'update']);
+        Route::resource('hari-libur', \Modules\Absensi\Controllers\HariLiburController::class)->except(['create', 'show', 'edit']);
         Route::get('/manage', [\Modules\Absensi\Controllers\ManageAbsensiController::class, 'index'])->name('manage.index');
         Route::post('/manage/store-manual', [\Modules\Absensi\Controllers\ManageAbsensiController::class, 'storeManual'])->name('manage.store-manual');
         Route::get('/manage/export', [\Modules\Absensi\Controllers\ManageAbsensiController::class, 'export'])->name('manage.export');

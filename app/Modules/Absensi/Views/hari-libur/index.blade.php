@@ -39,6 +39,25 @@
         font-size: 0.95rem;
         font-weight: 500;
     }
+    .btn-edit-holiday {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+        border: 1px solid #dbeafe;
+        color: #3b82f6;
+        background: #eff6ff;
+        margin-right: 8px;
+    }
+    .btn-edit-holiday:hover {
+        background: #3b82f6;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    }
     .btn-delete-holiday {
         width: 36px;
         height: 36px;
@@ -108,6 +127,9 @@
                                 <div class="desc-text">{{ $item->keterangan }}</div>
                             </td>
                             <td class="text-center align-middle">
+                                <button type="button" class="btn btn-edit-holiday shadow-sm" onclick="editHoliday('{{ $item->id }}', '{{ $item->tanggal }}', '{{ addslashes($item->keterangan) }}')" title="Edit Hari Libur">
+                                    <i class="fas fa-edit"></i>
+                                </button>
                                 <form action="{{ route('absensi.hari-libur.destroy', $item->id) }}" method="POST" class="d-inline form-delete-holiday">
                                     @csrf
                                     @method('DELETE')
@@ -175,6 +197,40 @@
         </form>
     </div>
 </div>
+
+<!-- Modal Edit Hari Libur -->
+<div class="modal fade" id="editLiburModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <form id="editLiburForm" method="POST">
+            @csrf
+            @method('PUT')
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+                <div class="modal-header bg-info text-white border-0 py-3 d-flex align-items-center">
+                    <h5 class="modal-title font-weight-bold mb-0"><i class="fas fa-edit mr-2"></i> Edit Hari Libur</h5>
+                    <button type="button" class="close text-white opacity-75 ml-auto" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <div class="card border-0 shadow-sm p-3" style="border-radius: 14px; background: white;">
+                        <div class="form-group mb-3 text-left">
+                            <label class="font-weight-bold text-muted small text-uppercase mb-2"><i class="far fa-calendar text-info mr-1"></i> Tanggal Libur <span class="text-danger">*</span></label>
+                            <input type="date" name="tanggal" id="edit_tanggal" class="form-control" style="border-radius: 10px; font-weight: 500;" required>
+                        </div>
+                        <div class="form-group mb-0 text-left">
+                            <label class="font-weight-bold text-muted small text-uppercase mb-2"><i class="fas fa-sticky-note text-warning mr-1"></i> Keterangan / Deskripsi <span class="text-danger">*</span></label>
+                            <textarea name="keterangan" id="edit_keterangan" class="form-control" rows="3" style="border-radius: 10px;" required></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between">
+                    <button type="button" class="btn btn-light rounded-pill px-4 shadow-sm" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-info rounded-pill px-4 shadow-sm btn-animate"><i class="fas fa-save mr-1"></i> Perbarui Hari Libur</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -204,6 +260,16 @@
                 button.closest('form').submit();
             }
         });
+    }
+
+    function editHoliday(id, tanggal, keterangan) {
+        const form = document.getElementById('editLiburForm');
+        form.action = "{{ route('absensi.hari-libur.index') }}/" + id;
+        
+        document.getElementById('edit_tanggal').value = tanggal;
+        document.getElementById('edit_keterangan').value = keterangan;
+        
+        $('#editLiburModal').modal('show');
     }
 </script>
 @endpush

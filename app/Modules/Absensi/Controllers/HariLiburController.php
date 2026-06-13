@@ -45,6 +45,23 @@ class HariLiburController extends Controller
     }
 
     /**
+     * Update the specified holiday in storage.
+     */
+    public function update(Request $request, $id): RedirectResponse
+    {
+        $libur = HariLibur::findOrFail($id);
+
+        $request->validate([
+            'tanggal' => 'required|date|unique:hari_liburs,tanggal,' . $id,
+            'keterangan' => 'required|string|max:255',
+        ]);
+
+        $libur->update($request->all());
+
+        return redirect()->back()->with('success', 'Hari libur berhasil diperbarui.');
+    }
+
+    /**
      * Remove the specified holiday from storage.
      */
     public function destroy($id): RedirectResponse

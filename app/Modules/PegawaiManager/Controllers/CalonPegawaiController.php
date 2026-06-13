@@ -100,7 +100,7 @@ class CalonPegawaiController extends Controller
                 $isAdmin = strpos($namaPosisi, 'admin') !== false || strpos($namaPosisi, 'staf') !== false || strpos($namaPosisi, 'tu') !== false;
 
                 // Ambil password dan role dari request
-                $password = $request->password ?? Str::random(10);
+                $password = $request->password ?? 'password123';
                 $roleName = $request->role_name ?? 'PEGAWAI';
 
                 // 1. Buat Akun User
@@ -140,28 +140,18 @@ class CalonPegawaiController extends Controller
                 }
 
                 // 3. Sinkronisasi Data ke Tabel Guru (Khusus untuk sistem eksternal/teman)
-                if ($isGuru) {
-                    \Modules\Guru\Models\Guru::create([
-                        'user_id' => $user->id,
-                        'type_pegawai_id' => $calon->type_pegawai_id,
-                        'nip' => null, // Dikosongkan agar bisa diisi manual oleh HRD nanti
-                        'nama' => $calon->nama,
-                        'tempat_lahir' => $calon->tempat_lahir,
-                        'tanggal_lahir' => $calon->tanggal_lahir,
-                        'jenis_kelamin' => $calon->jenis_kelamin,
-                        'alamat' => $calon->alamat,
-                        'tanggal_masuk' => date('Y-m-d'),
-                        'status' => 'aktif',
-                        'sisa_cuti' => 12
-                    ]);
-                }
+                // PENTING: Proses sinkronisasi ke tabel `guru` sekarang ditangani SEPENUHNYA
+                // oleh `PegawaiObserver` saat `Pegawai::create()` dipanggil di atas.
+                // Jangan membuat entitas `Guru` secara manual di sini untuk mencegah duplikasi.
 
                 // 4. Update status pelamar dan hilangkan dari daftar (Soft Delete)
                 $calon->update(['status_seleksi' => 'diterima']);
                 $calon->delete();
 
                 DB::commit();
-                return redirect()->route('pegawaimanager.calon-pegawai.index')->with('success', 'Calon berhasil diterima dan telah resmi menjadi Pegawai.');
+                return redirect()->route('pegawaimanager.index')
+                    ->with('success', 'Calon berhasil diterima dan telah resmi menjadi Pegawai.')
+                    ->with('new_password', $password);
             } catch (\Exception $e) {
                 DB::rollBack();
                 return redirect()->back()->with('error', 'Terjadi kesalahan saat menerima pegawai: ' . $e->getMessage());

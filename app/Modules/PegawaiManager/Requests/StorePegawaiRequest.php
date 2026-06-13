@@ -22,6 +22,7 @@ class StorePegawaiRequest extends FormRequest
             'alamat' => 'nullable|string',
             'tanggal_masuk' => 'nullable|date',
             'role_name' => 'required|string|exists:sys_roles,name',
+            'password' => 'nullable|string|min:6',
         ];
     }
 }

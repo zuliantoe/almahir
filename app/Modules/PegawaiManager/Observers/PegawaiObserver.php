@@ -21,12 +21,17 @@ class PegawaiObserver
                 Guru::updateOrCreate(
                     ['id' => $pegawai->id],
                     [
-                        'nama'   => $pegawai->nama,
-                        'email'  => $pegawai->email,
-                        'telepon'=> $pegawai->no_hp,
-                        'alamat' => $pegawai->alamat,
-                        'foto'   => $pegawai->foto,
-                        'status' => 'aktif',
+                        'user_id'         => $pegawai->user_id,
+                        'type_pegawai_id' => $pegawai->type_pegawai_id,
+                        'nip'             => $pegawai->nip,
+                        'nama'            => $pegawai->nama,
+                        'tempat_lahir'    => $pegawai->tempat_lahir,
+                        'tanggal_lahir'   => $pegawai->tanggal_lahir,
+                        'jenis_kelamin'   => $pegawai->jenis_kelamin,
+                        'alamat'          => $pegawai->alamat,
+                        'tanggal_masuk'   => $pegawai->tanggal_masuk,
+                        'status'          => $pegawai->status ?? 'aktif',
+                        'sisa_cuti'       => $pegawai->sisa_cuti ?? 12,
                     ]
                 );
             } catch (\Exception $e) {

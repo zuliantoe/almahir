@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - master # Akan berjalan jika push ke main atau master
+      - master
 
 jobs:
   deploy:
@@ -17,8 +17,34 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3.31' # Sesuaikan dengan versi PHP di VPS Anda
+          php-version: '8.3'
 
+      # ── Build frontend assets on GitHub runner (bukan di VPS) ──────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node Dependencies
+        run: npm ci --prefer-offline
+
+      - name: Build Frontend Assets
+        run: npm run build
+
+      # ── Upload built assets ke VPS via SCP ────────────────────────────────
+      - name: Upload Built Assets to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          source: "public/build"
+          target: "/var/www/siakad.almahirsoft.com/almahir"
+          overwrite: true
+
+      # ── Deploy ke VPS via SSH (tanpa npm) ────────────────────────────────
       - name: Execute Deployment via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -27,29 +53,23 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            # 1. Masuk ke folder project (Ubah path di bawah ini sesuai lokasi project di VPS!)
-            # Contoh jika pakai cPanel: cd /home/almahir/public_html
-            # Contoh jika pakai CyberPanel: cd /home/siakad.almahirsoft.com/public_html
+            set -e
             cd /var/www/siakad.almahirsoft.com/almahir
-            
-            # 2. Ambil perubahan terbaru dari GitHub
+
+            # 1. Ambil perubahan terbaru dari GitHub
             git pull origin main
-            
-            # 3. Install/Update dependensi PHP (Composer)
-            composer install --no-interaction --prefer-dist --optimize-autoloader
-            
-            # 4. Jalankan migrasi database
+
+            # 2. Install/Update dependensi PHP (Composer)
+            composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+
+            # 3. Jalankan migrasi database
             php artisan migrate --force
-            
-            # 5. Build asset frontend (Vite/Mix) - Hapus baris ini jika tidak perlu
-            npm install
-            npm run build
-            
-            # 6. Bersihkan dan cache ulang konfigurasi Laravel
+
+            # 4. Bersihkan dan rebuild cache Laravel
             php artisan optimize:clear
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
-            
-            # 7. Restart queue worker (jika Anda menggunakan background jobs)
+
+            # 5. Restart queue worker jika ada
             # php artisan queue:restart

@@ -470,7 +470,6 @@ document.addEventListener('DOMContentLoaded', function () {
     
     // Construct URLs dynamically
     const absoluteUrl = protocol + '//' + host + relativePath;
-    const webcalUrl = 'webcal://' + host + relativePath;
     
     // Set value for manual input field
     const icalInput = document.getElementById('icalUrl');
@@ -481,7 +480,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Set href for one-click button
     const syncButton = document.getElementById('btnSyncGoogle');
     if (syncButton) {
-        syncButton.href = 'https://www.google.com/calendar/render?cid=' + encodeURIComponent(webcalUrl);
+        syncButton.href = 'https://www.google.com/calendar/render?cid=' + encodeURIComponent(absoluteUrl);
     }
 
     var calendarEl = document.getElementById('calendar');

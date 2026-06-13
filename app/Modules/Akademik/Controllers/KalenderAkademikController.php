@@ -226,7 +226,7 @@ class KalenderAkademikController extends Controller
 
             $ics[] = 'BEGIN:VEVENT';
             $ics[] = 'UID:' . $event->id . '@almahir';
-            $ics[] = 'DTSTAMP:' . date('Ymd\THis\Z');
+            $ics[] = 'DTSTAMP:' . gmdate('Ymd\THis\Z');
             $ics[] = 'DTSTART;VALUE=DATE:' . $dtStart;
             $ics[] = 'DTEND;VALUE=DATE:' . $dtEnd;
             $ics[] = 'SUMMARY:' . $jenisLabel . $event->nama_kegiatan;

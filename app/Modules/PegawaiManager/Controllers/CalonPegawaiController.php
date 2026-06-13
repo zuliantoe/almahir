@@ -10,6 +10,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use App\Models\Role;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AkunPegawaiBaruMail;
 
 class CalonPegawaiController extends Controller
 {
@@ -26,11 +29,13 @@ class CalonPegawaiController extends Controller
         }
 
         $calonPegawai = $query->paginate(10)->withQueryString();
+        $roles = Role::all();
 
         return view('pegawaimanager::calon-pegawai.index', [
             'title' => 'Daftar Calon Pegawai',
             'breadcrumb' => 'Kepegawaian / Calon Pegawai',
-            'calonPegawai' => $calonPegawai
+            'calonPegawai' => $calonPegawai,
+            'roles' => $roles
         ]);
     }
 
@@ -94,24 +99,22 @@ class CalonPegawaiController extends Controller
                 $isGuru = strpos($namaPosisi, 'guru') !== false;
                 $isAdmin = strpos($namaPosisi, 'admin') !== false || strpos($namaPosisi, 'staf') !== false || strpos($namaPosisi, 'tu') !== false;
 
+                // Ambil password dan role dari request
+                $password = $request->password ?? Str::random(10);
+                $roleName = $request->role_name ?? 'PEGAWAI';
+
                 // 1. Buat Akun User
                 $user = User::create([
                     'id' => (string) Str::uuid(),
                     'name' => $calon->nama,
                     'email' => $calon->email,
                     'phone' => $calon->no_hp,
-                    'password' => Hash::make('password123'),
+                    'password' => Hash::make($password),
                     'account_status' => 'active',
                 ]);
                 
                 // Tentukan Role di System (RBAC Spatie)
-                if ($isGuru) {
-                    $user->assignRole('GURU');
-                } elseif ($isAdmin) {
-                    $user->assignRole('STAFF');
-                } else {
-                    $user->assignRole('PEGAWAI'); // Default role
-                }
+                $user->assignRole($roleName);
 
                 // 2. Buat Data Pegawai (Master Data Almahira)
                 Pegawai::create([
@@ -124,8 +127,17 @@ class CalonPegawaiController extends Controller
                     'alamat' => $calon->alamat,
                     'tanggal_masuk' => date('Y-m-d'),
                     'status' => 'aktif',
-                    'sisa_cuti' => 12
+                    'sisa_cuti' => 12,
+                    'qr_token' => (string) Str::uuid()
                 ]);
+
+                // 2.5 Kirim Email Pemberitahuan Akun Baru
+                try {
+                    Mail::to($user->email)->send(new AkunPegawaiBaruMail($user, $password, $roleName));
+                } catch (\Exception $e) {
+                    // Log error if mail fails, but don't abort the transaction
+                    \Log::error('Gagal mengirim email akun baru: ' . $e->getMessage());
+                }
 
                 // 3. Sinkronisasi Data ke Tabel Guru (Khusus untuk sistem eksternal/teman)
                 if ($isGuru) {

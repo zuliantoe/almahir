@@ -2,6 +2,102 @@
 
 @section('content')
 <div class="container-fluid">
+    @php
+        $months = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
+            7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        $days = [
+            'Senin' => 'Senin', 'Selasa' => 'Selasa', 'Rabu' => 'Rabu', 
+            'Kamis' => 'Kamis', 'Jumat' => 'Jumat', 'Sabtu' => 'Sabtu', 'Minggu' => 'Ahad'
+        ];
+
+        $currentYear = request('year', date('Y'));
+        $currentMonth = request('month', date('n'));
+        $currentDay = request('day', 'all');
+        $searchKeyword = request('search', '');
+        
+        // Ambil semua tahun dari seluruh data (sebelum difilter) untuk dropdown
+        $allYears = $pemasukans->pluck('tanggal')->map(function($date) {
+            return date('Y', strtotime($date));
+        })->unique()->sort()->values();
+        if($allYears->isEmpty()) {
+            $allYears = collect([date('Y')]);
+        }
+        
+        // === LOGIKA FILTERING (Tumpang tindih dihindari dengan mengecek kondisi sekaligus) ===
+        $filteredIncomes = $pemasukans->filter(function($item) use ($currentYear, $currentMonth, $currentDay, $searchKeyword) {
+            $date = \Carbon\Carbon::parse($item->tanggal);
+            
+            // 1. Filter Tahun (selalu aktif)
+            if ($date->format('Y') != $currentYear) return false;
+            
+            // 2. Filter Bulan
+            if ($currentMonth != 'all' && $date->format('n') != $currentMonth) return false;
+            
+            // 3. Filter Hari
+            if ($currentDay != 'all' && $date->locale('id')->translatedFormat('l') != $currentDay) return false;
+            
+            // 4. Filter Pencarian (Sumber atau Deskripsi)
+            if (!empty($searchKeyword)) {
+                $keyword = strtolower($searchKeyword);
+                $sumberMatch = $item->sumber ? str_contains(strtolower($item->sumber->nama), $keyword) : false;
+                $descMatch = $item->deskripsi ? str_contains(strtolower($item->deskripsi), $keyword) : false;
+                if (!$sumberMatch && !$descMatch) return false;
+            }
+            
+            // Jika lolos semua filter, maka data dipertahankan
+            return true;
+        });
+
+        // === KALKULASI KARTU STATISTIK (Berdasarkan data yang TERFILTER) ===
+        $nonDraftIncomes = $filteredIncomes->filter(function($item) { return !$item->is_draft; });
+        $totalIncome = $nonDraftIncomes->sum('jumlah');
+        $totalTransactions = $nonDraftIncomes->count();
+        $avgTransaction = $totalTransactions > 0 ? $totalIncome / $totalTransactions : 0;
+        
+        $mostFrequentSource = $filteredIncomes->groupBy('sumber_id')->sortByDesc(function($group) {
+            return $group->count();
+        })->first();
+        $sourceName = $mostFrequentSource ? $mostFrequentSource->first()->sumber->nama : '-';
+
+        // === SORTING ===
+        // Kanban board logic: Sort by date first, then by the most recent update time
+        $sortedIncomes = $filteredIncomes->sort(function($a, $b) {
+            // Primary sort: Date (tanggal) descending
+            if ($a->tanggal != $b->tanggal) {
+                return $a->tanggal > $b->tanggal ? -1 : 1;
+            }
+            // Secondary sort: Updated at descending
+            return $a->updated_at > $b->updated_at ? -1 : 1;
+        });
+
+        // === GROUPING UNTUK BOARD KANBAN ===
+        $groupedIncomes = $sortedIncomes->groupBy(function($item) { 
+            return \Carbon\Carbon::parse($item->tanggal)->format('Y-m-d'); 
+        });
+
+        // === PAGINATION KANBAN BOARD ===
+        $userAgent = request()->userAgent();
+        $isMobileOrTablet = preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $userAgent);
+        
+        $perPage = $isMobileOrTablet ? 4 : 6;
+        
+        $page = request()->get('page', 1);
+        $paginatedGroups = new \Illuminate\Pagination\LengthAwarePaginator(
+            $groupedIncomes->slice(($page - 1) * $perPage, $perPage)->all(),
+            $groupedIncomes->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        $currentPageItemsCount = collect($paginatedGroups->items())->flatten(1)->count();
+        $currentPageItems = $sortedIncomes->count(); // This is the grand total
+        $totalDays = $groupedIncomes->count();
+    @endphp
+
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Pemasukan</h1>
@@ -10,102 +106,75 @@
         </div>
     </div>
 
+    <!-- Advanced Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Filter Pemasukan</h6>
+                </div>
+                <div class="card-body">
+                    <form id="filterForm" method="GET" action="{{ route('keuangan.pemasukans.index') }}">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-6 col-md-3 col-lg-2">
+                                <label class="form-label small text-muted font-weight-bold mb-1">Tahun</label>
+                                <select name="year" class="form-select custom-select shadow-sm" onchange="this.form.submit()">
+                                    @foreach($allYears as $yearItem)
+                                        <option value="{{ $yearItem }}" {{ $currentYear == $yearItem ? 'selected' : '' }}>
+                                            {{ $yearItem }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-6 col-md-3 col-lg-2">
+                                <label class="form-label small text-muted font-weight-bold mb-1">Bulan</label>
+                                <select name="month" class="form-select custom-select shadow-sm" onchange="this.form.submit()">
+                                    <option value="all" {{ $currentMonth == 'all' ? 'selected' : '' }}>Semua Bulan</option>
+                                    @foreach($months as $key => $monthName)
+                                        <option value="{{ $key }}" {{ $currentMonth == $key ? 'selected' : '' }}>
+                                            {{ $monthName }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-md-3 col-lg-2">
+                                <label class="form-label small text-muted font-weight-bold mb-1">Hari</label>
+                                <select name="day" class="form-select custom-select shadow-sm" onchange="this.form.submit()">
+                                    <option value="all" {{ $currentDay == 'all' ? 'selected' : '' }}>Semua Hari</option>
+                                    @foreach($days as $dayVal => $dayLabel)
+                                        <option value="{{ $dayVal }}" {{ $currentDay == $dayVal ? 'selected' : '' }}>
+                                            {{ $dayLabel }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-12 col-lg-6">
+                                <label class="form-label small text-muted font-weight-bold mb-1">Cari Pemasukan</label>
+                                <div class="input-group shadow-sm">
+                                    <input type="text" name="search" class="form-control" 
+                                           placeholder="Cari berdasarkan sumber atau deskripsi..." value="{{ $searchKeyword }}">
+                                    <button type="submit" class="btn btn-primary px-3">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    @if($searchKeyword || $currentMonth != 'all' || $currentDay != 'all')
+                                    <a href="{{ route('keuangan.pemasukans.index') }}" class="btn btn-outline-danger px-3" title="Reset Filter">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Statistics Cards -->
     <div class="row">
-        @php
-            $months = [
-                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
-                7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
-            ];
 
-            $days = [];
-            for ($i = 1; $i <= 31; $i++) {
-                $days[$i] = $i;
-            }
-
-            $currentYear = request('year', date('Y'));
-            $currentMonth = request('month', 'all');
-            $currentDay = request('day', 'all');
-            $searchKeyword = request('search', '');
-            
-            // Ambil semua tahun dari seluruh data (sebelum difilter) untuk dropdown
-            $allYears = $pemasukans->pluck('tanggal')->map(function($date) {
-                return date('Y', strtotime($date));
-            })->unique()->sort()->values();
-            if($allYears->isEmpty()) {
-                $allYears = collect([date('Y')]);
-            }
-            
-            // === LOGIKA FILTERING (Tumpang tindih dihindari dengan mengecek kondisi sekaligus) ===
-            $filteredIncomes = $pemasukans->filter(function($item) use ($currentYear, $currentMonth, $currentDay, $searchKeyword) {
-                $date = \Carbon\Carbon::parse($item->tanggal);
-                
-                // 1. Filter Tahun (selalu aktif)
-                if ($date->format('Y') != $currentYear) return false;
-                
-                // 2. Filter Bulan
-                if ($currentMonth != 'all' && $date->format('n') != $currentMonth) return false;
-                
-                // 3. Filter Hari
-                if ($currentDay != 'all' && $date->format('j') != $currentDay) return false;
-                
-                // 4. Filter Pencarian (Sumber atau Deskripsi)
-                if (!empty($searchKeyword)) {
-                    $keyword = strtolower($searchKeyword);
-                    $sumberMatch = $item->sumber ? str_contains(strtolower($item->sumber->nama), $keyword) : false;
-                    $descMatch = $item->deskripsi ? str_contains(strtolower($item->deskripsi), $keyword) : false;
-                    if (!$sumberMatch && !$descMatch) return false;
-                }
-                
-                // Jika lolos semua filter, maka data dipertahankan
-                return true;
-            });
-
-            // === KALKULASI KARTU STATISTIK (Berdasarkan data yang TERFILTER) ===
-            $totalIncome = $filteredIncomes->sum('jumlah');
-            $totalTransactions = $filteredIncomes->count();
-            $avgTransaction = $totalTransactions > 0 ? $totalIncome / $totalTransactions : 0;
-            
-            $mostFrequentSource = $filteredIncomes->groupBy('sumber_id')->sortByDesc(function($group) {
-                return $group->count();
-            })->first();
-            $sourceName = $mostFrequentSource ? $mostFrequentSource->first()->sumber->nama : '-';
-
-            // === SORTING ===
-            // Kanban board logic: Sort by date first, then by the most recent update time
-            $sortedIncomes = $filteredIncomes->sort(function($a, $b) {
-                // Primary sort: Date (tanggal) descending
-                if ($a->tanggal != $b->tanggal) {
-                    return $a->tanggal > $b->tanggal ? -1 : 1;
-                }
-                // Secondary sort: Updated at descending
-                return $a->updated_at > $b->updated_at ? -1 : 1;
-            });
-
-            // === GROUPING UNTUK BOARD KANBAN ===
-            $groupedIncomes = $sortedIncomes->groupBy(function($item) { 
-                return \Carbon\Carbon::parse($item->tanggal)->format('Y-m-d'); 
-            });
-
-            // === PAGINATION KANBAN BOARD ===
-            $userAgent = request()->userAgent();
-            $isMobileOrTablet = preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $userAgent);
-            
-            $perPage = $isMobileOrTablet ? 4 : 6;
-            
-            $page = request()->get('page', 1);
-            $paginatedGroups = new \Illuminate\Pagination\LengthAwarePaginator(
-                $groupedIncomes->slice(($page - 1) * $perPage, $perPage)->all(),
-                $groupedIncomes->count(),
-                $perPage,
-                $page,
-                ['path' => request()->url(), 'query' => request()->query()]
-            );
-
-            $currentPageItemsCount = collect($paginatedGroups->items())->flatten(1)->count();
-            $currentPageItems = $sortedIncomes->count(); // This is the grand total
-            $totalDays = $groupedIncomes->count();
-        @endphp
 
         <!-- Total Pemasukan -->
         <div class="col-xl-6 col-lg-6 col-md-6 mb-4">
@@ -192,77 +261,6 @@
         </div>
     </div>
 
-    <!-- Advanced Filters -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Filter Pemasukan</h6>
-                </div>
-                <div class="card-body">
-                    <form id="filterForm" method="GET" action="{{ route('keuangan.pemasukans.index') }}">
-                        <div class="row g-3 align-items-end">
-                            <div class="col-6 col-md-3 col-lg-2">
-                                <label class="form-label small text-muted font-weight-bold mb-1">Tahun</label>
-                                <select name="year" class="form-select custom-select shadow-sm" onchange="this.form.submit()">
-                                    @foreach($allYears as $yearItem)
-                                        <option value="{{ $yearItem }}" {{ $currentYear == $yearItem ? 'selected' : '' }}>
-                                            {{ $yearItem }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="col-6 col-md-3 col-lg-2">
-                                <label class="form-label small text-muted font-weight-bold mb-1">Bulan</label>
-                                <select name="month" class="form-select custom-select shadow-sm" onchange="this.form.submit()">
-                                    <option value="all" {{ $currentMonth == 'all' ? 'selected' : '' }}>Semua Bulan</option>
-                                    @foreach($months as $key => $monthName)
-                                        <option value="{{ $key }}" {{ $currentMonth == $key ? 'selected' : '' }}>
-                                            {{ $monthName }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            @if($currentMonth != 'all')
-                            <div class="col-12 col-md-3 col-lg-2">
-                                <label class="form-label small text-muted font-weight-bold mb-1">Hari</label>
-                                <select name="day" class="form-select custom-select shadow-sm" onchange="this.form.submit()">
-                                    <option value="all" {{ $currentDay == 'all' ? 'selected' : '' }}>Semua Hari</option>
-                                    @foreach($days as $dayNum)
-                                        <option value="{{ $dayNum }}" {{ $currentDay == $dayNum ? 'selected' : '' }}>
-                                            {{ $dayNum }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-12 col-md-12 col-lg-6">
-                            @else
-                            <input type="hidden" name="day" value="all">
-                            <div class="col-12 col-md-6 col-lg-8">
-                            @endif
-                                <label class="form-label small text-muted font-weight-bold mb-1">Cari Pemasukan</label>
-                                <div class="input-group shadow-sm">
-                                    <input type="text" name="search" class="form-control" 
-                                           placeholder="Cari berdasarkan sumber atau deskripsi..." value="{{ $searchKeyword }}">
-                                    <button type="submit" class="btn btn-primary px-3">
-                                        <i class="fas fa-search"></i>
-                                    </button>
-                                    @if($searchKeyword || $currentMonth != 'all' || $currentDay != 'all')
-                                    <a href="{{ route('keuangan.pemasukans.index') }}" class="btn btn-outline-danger px-3" title="Reset Filter">
-                                        <i class="fas fa-times"></i>
-                                    </a>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Quick Actions -->
     <div class="row mb-4">
         <div class="col-12">
@@ -296,10 +294,19 @@
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
                     <div class="row align-items-center">
-                        <div class="col-12 col-md-4 mb-2 mb-md-0">
-                            <h6 class="m-0 font-weight-bold text-primary">Board Pemasukan</h6>
+                        <div class="col-12 col-md-6 mb-2 mb-md-0">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                Board Pemasukan
+                                <span>
+                                    @if($currentMonth == 'all')
+                                        Semua Bulan Tahun {{ $currentYear }}
+                                    @else
+                                        Bulan {{ $months[$currentMonth] }} Tahun {{ $currentYear }}
+                                    @endif
+                                </span>
+                            </h6>
                         </div>
-                        <div class="col-12 col-md-8 text-center text-md-end">
+                        <div class="col-12 col-md-6 text-center text-md-end">
                             <div class="text-muted small">
                                 <span id="incomeCount">{{ $currentPageItemsCount }}</span> pemasukan di halaman {{ $paginatedGroups->currentPage() }}
                                 @if($searchKeyword)
@@ -322,7 +329,7 @@
                             @php
                                 $dayName = \Carbon\Carbon::parse($date)->locale('id')->translatedFormat('l');
                                 $formattedDate = \Carbon\Carbon::parse($date)->locale('id')->translatedFormat('j M Y');
-                                $dailyTotal = $dailyIncomes->sum('jumlah');
+                                $dailyTotal = $dailyIncomes->filter(function($i) { return !$i->is_draft; })->sum('jumlah');
                             @endphp
                             
                             <div class="kanban-column">
@@ -353,9 +360,10 @@
                                             $incomeAmount = $income->jumlah;
                                             $incomeTime = optional($income->updated_at)->setTimezone('Asia/Jakarta')->format('H.i') ?? '-';
                                             $incomeDescription = $income->deskripsi;
+                                            $canEditDelete = auth()->check() && auth()->user()->isSuperAdmin();
                                         @endphp
                                         
-                                        <div class="income-card-modern" 
+                                        <div class="income-card-modern {{ $income->is_draft ? 'income-card-draft' : '' }}" 
                                              data-source="{{ strtolower($sourceName) }}"
                                              data-description="{{ strtolower($incomeDescription ?? '') }}">
                                             <div class="income-card-header">
@@ -381,27 +389,50 @@
 
                                             <div class="income-card-footer">
                                                 <div class="card-actions justify-content-end d-flex gap-1 mb-2">
+                                                     @if($income->is_draft)
+                                                         <form action="{{ route('keuangan.pemasukans.confirmDraft', $incomeId) }}" method="POST" class="d-inline confirm-draft-form">
+                                                             @csrf
+                                                             <button type="button" class="btn-action btn-success confirm-draft-btn" title="Konfirmasi Draft">
+                                                                 <i class="fas fa-check"></i>
+                                                             </button>
+                                                         </form>
+                                                     @endif
                                                     <a href="{{ route('keuangan.pemasukans.show', $incomeId) }}" 
                                                        class="btn-action btn-view" 
                                                        title="Detail Pemasukan">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
+                                                    @if($canEditDelete)
                                                     <a href="{{ route('keuangan.pemasukans.edit', $incomeId) }}" 
                                                        class="btn-action btn-edit" 
                                                        title="Edit Pemasukan">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
+                                                    @else
+                                                     <button type="button" class="btn-action btn-edit" title="Edit Pemasukan" onclick="Swal.fire('Akses Ditolak', 'Hanya super admin yang memiliki wewenang untuk mengubah atau menghapus data pemasukan.', 'error'); return false;">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    @endif
                                                     <form action="{{ route('keuangan.pemasukans.destroy', $incomeId) }}" 
                                                           method="POST" 
                                                           class="d-inline delete-form">
                                                         @csrf
                                                         @method('DELETE')
+                                                        @if($canEditDelete)
                                                         <button type="button" 
                                                                 class="btn-action btn-delete delete-btn" 
                                                                 title="Hapus Pemasukan"
                                                                 data-source="{{ $sourceName }}">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
+                                                        @else
+                                                         <button type="button" 
+                                                                class="btn-action btn-delete" 
+                                                                title="Hapus Pemasukan"
+                                                                onclick="Swal.fire('Akses Ditolak', 'Hanya super admin yang memiliki wewenang untuk mengubah atau menghapus data pemasukan.', 'error'); return false;">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                        @endif
                                                     </form>
                                                 </div>
                                                 <div class="card-time text-start">
@@ -655,6 +686,18 @@
         background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
     }
 
+    .income-card-draft {
+        background: #f8f9fa !important;
+        border-left: 5px solid #858796 !important;
+        opacity: 0.85;
+    }
+    .income-card-draft .card-source-badge {
+        background: #858796 !important;
+    }
+    .income-card-draft .card-amount {
+        color: #858796 !important;
+    }
+
     .income-card-modern:hover {
         transform: translateY(-3px);
         box-shadow: 0 8px 15px rgba(0,0,0,0.1);
@@ -728,6 +771,11 @@
 
     .btn-view {
         background: var(--primary);
+        color: white;
+    }
+
+    .btn-success {
+        background: #1cc88a;
         color: white;
     }
 
@@ -899,6 +947,29 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Confirmation for Drafts
+        document.querySelectorAll('.confirm-draft-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const form = this.closest('.confirm-draft-form');
+                Swal.fire({
+                    title: 'Konfirmasi Draft',
+                    text: 'Apakah Anda yakin ingin mengonfirmasi data ini menjadi transaksi riil?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#1cc88a',
+                    cancelButtonColor: '#858796',
+                    confirmButtonText: 'Ya, Konfirmasi!',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -910,9 +981,10 @@
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
+                    cancelButtonColor: '#858796',
                     confirmButtonText: 'Ya, Hapus!',
-                    cancelButtonText: 'Batal'
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
                 }).then((result) => {
                     if (result.isConfirmed) {
                         form.submit();

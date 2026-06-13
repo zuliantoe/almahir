@@ -10,9 +10,11 @@
             <a href="{{ route('keuangan.uangsakus.index') }}" class="btn btn-sm btn-secondary shadow-sm mr-2">
                 <i class="fas fa-arrow-left fa-sm mr-2 d-none d-sm-inline-block"></i> Kembali
             </a>
+            @if(!auth()->user()->hasRole('SISWA'))
             <a href="{{ route('keuangan.uangsakus.edit', $uangsaku->id) }}" class="btn btn-sm btn-primary shadow-sm">
                 <i class="fas fa-edit fa-sm mr-2 d-none d-sm-inline-block"></i> Edit
             </a>
+            @endif
         </div>
     </div>
 
@@ -33,7 +35,18 @@
                                 <div>
                                     <div class="small text-muted font-weight-bold uppercase">Santri</div>
                                     <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $uangsaku->siswa->nama ?? 'Unknown' }}</div>
-                                    <div class="small text-muted">NIS: {{ $uangsaku->siswa->nis ?? '-' }}</div>
+                                    <div class="small text-muted">
+                                        NIS: {{ $uangsaku->siswa->nis ?? '-' }}
+                                        @php
+                                            $kelasObj = $uangsaku->kelas ?? ($uangsaku->siswa->kelas ?? null);
+                                            $kelasName = $kelasObj ? $kelasObj->nama_kelas : null;
+                                            $tingkatName = $kelasObj && $kelasObj->tingkat ? $kelasObj->tingkat->nama_tingkat : null;
+                                            $kelasDisplay = $kelasName ? ($tingkatName ? "$tingkatName - $kelasName" : $kelasName) : null;
+                                        @endphp
+                                        @if($kelasDisplay)
+                                            | Kelas: {{ $kelasDisplay }}
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -63,7 +76,7 @@
                         </div>
 
                         <div class="col-md-6 mb-4">
-                            <label class="small font-weight-bold text-muted mb-1 text-uppercase">Waktu Dicatat</label>
+                            <label class="small font-weight-bold text-muted mb-1 text-uppercase">Terakhir Diperbarui</label>
                             <div class="text-gray-800">
                                 {{ $uangsaku->updated_at->setTimezone('Asia/Jakarta')->locale('id')->translatedFormat('H.i') }} WIB, {{ $uangsaku->updated_at->locale('id')->translatedFormat('d F Y') }}
                             </div>
@@ -77,6 +90,7 @@
                         </div>
                     </div>
                 </div>
+                @if(!auth()->user()->hasRole('SISWA'))
                 <div class="card-footer bg-white py-3">
                     <form action="{{ route('keuangan.uangsakus.destroy', $uangsaku->id) }}" method="POST" class="delete-form d-inline">
                         @csrf
@@ -86,6 +100,7 @@
                         </button>
                     </form>
                 </div>
+                @endif
             </div>
         </div>
     </div>

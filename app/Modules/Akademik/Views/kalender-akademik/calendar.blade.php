@@ -125,6 +125,18 @@
         font-weight: 700 !important;
         color: #343a40 !important;
     }
+    .fc-header-toolbar .fc-toolbar-chunk {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .fc .fc-button-group {
+        gap: 6px;
+    }
+    .fc .fc-button-group > .fc-button {
+        border-radius: 6px !important;
+        margin-left: 0 !important;
+    }
     .fc .fc-button {
         border-radius: 6px !important;
         font-size: 0.85rem !important;
@@ -209,7 +221,67 @@
         color: #212529;
         margin: 0;
     }
+
+    /* ── Responsive Styling ── */
+    @media (max-width: 767.98px) {
+        .kalender-header {
+            padding: 16px 20px;
+            margin-bottom: 16px;
+        }
+        .kalender-header h1 {
+            font-size: 1.35rem;
+        }
+        .kalender-header p {
+            font-size: 0.8rem;
+        }
+        .kalender-header .header-actions {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px !important;
+            margin-top: 15px !important;
+        }
+        .kalender-header .header-actions .btn-header {
+            width: 100%;
+            justify-content: center;
+        }
+        .legend-bar {
+            padding: 10px 14px;
+            gap: 8px !important;
+        }
+        .legend-title {
+            width: 100%;
+            margin-bottom: 4px;
+            font-size: 0.7rem;
+        }
+        .legend-chip {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+        }
+        /* FullCalendar Toolbar Responsiveness */
+        .fc .fc-toolbar.fc-header-toolbar {
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+        .fc .fc-toolbar-title {
+            font-size: 1.1rem !important;
+            text-align: center;
+            margin: 4px 0;
+        }
+        .fc .fc-button {
+            padding: 5px 8px !important;
+            font-size: 0.8rem !important;
+        }
+        .fc .fc-toolbar-chunk {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+    }
 </style>
+
 @endpush
 
 @section('content')
@@ -415,11 +487,17 @@ document.addEventListener('DOMContentLoaded', function () {
     var calendarEl = document.getElementById('calendar');
     var loaderEl = document.getElementById('calendarLoader');
 
+    var isMobile = window.innerWidth < 768;
+
     var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
+        initialView: isMobile ? 'listMonth' : 'dayGridMonth',
         locale: 'id',
         height: 'auto',
-        headerToolbar: {
+        headerToolbar: isMobile ? {
+            left: 'prev,next',
+            center: 'title',
+            right: 'today listMonth'
+        } : {
             left: 'prev,next today',
             center: 'title',
             right: 'multiMonthYear,dayGridMonth,listMonth'

@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Validation\Rules\Password;
 
 class ProfileController extends Controller
 {
@@ -41,21 +40,19 @@ class ProfileController extends Controller
             'alamat' => ['nullable', 'string'],
         ]);
 
-        // Mencegah error jika mengganti email dan ada conflict di tabel pegawai 
-        // yang secara unik mengikat email
         $user->fill([
             'email' => $validated['email'],
         ]);
 
         if ($user->isDirty('email')) {
-            $user->email_verified_at = null; // optional logic
+            $user->email_verified_at = null;
         }
 
         $user->save();
 
         if ($user->pegawai) {
             $user->pegawai->update([
-                'email' => $validated['email'], // Sinkronasi tabel pegawai jika exist
+                'email' => $validated['email'],
                 'no_hp' => $validated['no_hp'] ?? $user->pegawai->no_hp,
                 'alamat' => $validated['alamat'] ?? $user->pegawai->alamat,
             ]);
@@ -95,11 +92,12 @@ class ProfileController extends Controller
     {
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
-            'password' => ['required', Password::defaults(), 'confirmed'],
+            'password' => ['required', \Illuminate\Validation\Rules\Password::defaults(), 'confirmed'],
         ]);
 
         $request->user()->update([
             'password' => Hash::make($validated['password']),
+            'must_change_password' => false,
         ]);
 
         return redirect()->route('profile.edit')->with('success', 'Sandi keamanan berhasil diperbarui.');

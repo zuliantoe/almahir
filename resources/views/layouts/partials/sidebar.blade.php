@@ -259,6 +259,37 @@
                         </li>
                     @endif
 
+                    <li class="nav-item">
+                        <a href="{{ route('penilaiandanpresensi.penilaianakademik.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-graduation-cap text-success"></i>
+                            <p>Penilaian Akademik</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('penilaiandanpresensi.penilaiantahfidz.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaiantahfidz*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-quran text-primary"></i>
+                            <p>Penilaian Tahfidz</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('penilaiandanpresensi.penilaianakademik.raport.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/penilaianakademik/raport*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-print text-info"></i>
+                            <p>Cetak Raport</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('penilaiandanpresensi.presensi.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/presensi') ? 'active' : (request()->is('penilaiandanpresensi/presensi/*') && !request()->is('penilaiandanpresensi/presensi/siswa*') ? 'active' : '') }}">
+                            <i class="nav-icon fas fa-user-check text-warning"></i>
+                            <p>Presensi (Daftar)</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('penilaiandanpresensi.izinsakit.index') }}" class="nav-link {{ request()->is('penilaiandanpresensi/izinsakit') ? 'active' : (request()->is('penilaiandanpresensi/izinsakit/*') && !request()->is('penilaiandanpresensi/izinsakit/siswa*') ? 'active' : '') }}">
+                            <i class="nav-icon fas fa-user-clock text-danger"></i>
+                            <p>Konfirmasi Izin Sakit</p>
+                        </a>
+                    </li>
+
                 @elseif($isWali)
                     {{-- ========================================== --}}
                     {{-- PORTAL WALI MURID                           --}}
@@ -268,6 +299,12 @@
                         <a href="{{ route('walimurid.portal.dashboard') }}" class="nav-link {{ request()->is('walimurid/portal/dashboard*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-user-shield text-info"></i>
                             <p>Dashboard Wali</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('keuangan.uangsakus.index') }}" class="nav-link {{ request()->is('keuangan/uangsakus*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-wallet text-teal"></i>
+                            <p>Uang Saku Anak</p>
                         </a>
                     </li>
 

@@ -15,12 +15,14 @@ class Pengeluaran extends Model
         'tanggal',
         'waktu', 
         'deskripsi',
-        'is_otomatis'
+        'is_otomatis',
+        'is_draft'
     ];
 
     protected $casts = [
         'tanggal' => 'date',
-        'jumlah' => 'decimal:2'
+        'jumlah' => 'decimal:2',
+        'is_draft' => 'boolean'
     ];
 
     public function tujuan()

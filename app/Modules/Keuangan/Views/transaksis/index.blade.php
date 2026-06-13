@@ -2,6 +2,12 @@
 
 @section('content')
 <div class="container-fluid">
+    @php
+        $months = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
+            7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+    @endphp
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Laporan Transaksi</h1>
@@ -10,14 +16,93 @@
         </div>
     </div>
 
+    <!-- Filter & Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-body p-3 p-lg-4">
+                    <div class="row align-items-center g-3">
+                        <!-- Left: Filter Form -->
+                        <div class="col-12 col-lg-7 mb-4 mb-lg-0">
+                            <form id="filterForm" method="GET" action="{{ route('keuangan.transaksis.index') }}">
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-12 col-md-4">
+                                        <label class="form-label small text-muted font-weight-bold mb-1 d-block">Tahun</label>
+                                        <select name="year" class="form-select custom-select shadow-sm w-100" onchange="this.form.submit()">
+                                            @foreach($allYears as $yearItem)
+                                                <option value="{{ $yearItem }}" {{ $currentYear == $yearItem ? 'selected' : '' }}>
+                                                    {{ $yearItem }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <label class="form-label small text-muted font-weight-bold mb-1 d-block">Bulan</label>
+                                        <select name="month" class="form-select custom-select shadow-sm w-100" onchange="this.form.submit()">
+                                            <option value="all" {{ $currentMonth == 'all' ? 'selected' : '' }}>Semua Bulan</option>
+                                            @foreach($months as $key => $monthName)
+                                                <option value="{{ $key }}" {{ $currentMonth == $key ? 'selected' : '' }}>
+                                                    {{ $monthName }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <label class="form-label small text-muted font-weight-bold mb-1 d-block">Jenis Transaksi</label>
+                                        <select name="type" class="form-select custom-select shadow-sm w-100" onchange="this.form.submit()">
+                                            <option value="all" {{ $currentType == 'all' ? 'selected' : '' }}>Semua Transaksi</option>
+                                            <option value="Pemasukan" {{ $currentType == 'Pemasukan' ? 'selected' : '' }}>Pemasukan</option>
+                                            <option value="Pengeluaran" {{ $currentType == 'Pengeluaran' ? 'selected' : '' }}>Pengeluaran</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Right: Action Buttons Grouped -->
+                        <div class="col-12 col-lg-5">
+                            <div class="d-flex flex-column gap-3 h-100 justify-content-center">
+                                <!-- Row 1: Print & Export -->
+                                <div class="row g-2 mb-3">
+                                    @php
+                                        $printUrl = route('keuangan.transaksis.print', ['year' => $currentYear, 'month' => $currentMonth, 'type' => $currentType]);
+                                        $pdfUrl = route('keuangan.transaksis.print', ['year' => $currentYear, 'month' => $currentMonth, 'type' => $currentType, 'export' => 'pdf']);
+                                    @endphp
+                                    <div class="col-6">
+                                        <a href="javascript:void(0)" onclick="confirmPrint('{{ $printUrl }}')" class="btn btn-primary w-100 shadow-sm py-2" title="Print Laporan">
+                                            <i class="fas fa-print me-1"></i> Print
+                                        </a>
+                                    </div>
+                                    <div class="col-6">
+                                        <a href="javascript:void(0)" onclick="confirmExport('{{ $pdfUrl }}')" class="btn btn-danger w-100 shadow-sm py-2" title="Export PDF">
+                                            <i class="fas fa-file-pdf me-1"></i> Export PDF
+                                        </a>
+                                    </div>
+                                </div>
+                                <!-- Row 2: Add Income & Expense -->
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <a href="{{ route('keuangan.pemasukans.create') }}" class="btn btn-success w-100 shadow-sm py-2" title="Tambah Pemasukan">
+                                            Tambah Pemasukan
+                                        </a>
+                                    </div>
+                                    <div class="col-6">
+                                        <a href="{{ route('keuangan.pengeluarans.create') }}" class="btn btn-danger w-100 shadow-sm py-2" style="background-color: var(--danger); border-color: var(--danger);" title="Tambah Pengeluaran">
+                                            Tambah Pengeluaran
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Statistics Cards -->
     <div class="row">
-        @php
-            $months = [
-                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
-                7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
-            ];
-        @endphp
+
 
         <!-- Total Saldo -->
         <div class="col-xl-6 col-lg-6 col-md-6 mb-4">
@@ -26,13 +111,13 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Total Saldo Tahun {{ $currentYear }}
+                                Total Saldo Keseluruhan
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                @if($totalSaldoYear < 0)
-                                    -Rp{{ number_format(abs($totalSaldoYear), 0, ',', '.') }}
+                                @if($totalSaldoKeseluruhan < 0)
+                                    -Rp{{ number_format(abs($totalSaldoKeseluruhan), 0, ',', '.') }}
                                 @else
-                                    Rp{{ number_format($totalSaldoYear, 0, ',', '.') }}
+                                    Rp{{ number_format($totalSaldoKeseluruhan, 0, ',', '.') }}
                                 @endif
                             </div>
                         </div>
@@ -101,90 +186,6 @@
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-receipt fa-2x text-info"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Filter & Actions -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow border-0">
-                <div class="card-body p-3 p-lg-4">
-                    <div class="row align-items-center g-3">
-                        <!-- Left: Filter Form -->
-                        <div class="col-12 col-lg-7 mb-4 mb-lg-0">
-                            <form id="filterForm" method="GET" action="{{ route('keuangan.transaksis.index') }}">
-                                <div class="row g-2 align-items-end">
-                                    <div class="col-12 col-md-4">
-                                        <label class="form-label small text-muted font-weight-bold mb-1 d-block">Tahun</label>
-                                        <select name="year" class="form-select custom-select shadow-sm w-100" onchange="this.form.submit()">
-                                            @foreach($allYears as $yearItem)
-                                                <option value="{{ $yearItem }}" {{ $currentYear == $yearItem ? 'selected' : '' }}>
-                                                    {{ $yearItem }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-6 col-md-4">
-                                        <label class="form-label small text-muted font-weight-bold mb-1 d-block">Bulan</label>
-                                        <select name="month" class="form-select custom-select shadow-sm w-100" onchange="this.form.submit()">
-                                            <option value="all" {{ $currentMonth == 'all' ? 'selected' : '' }}>Semua Bulan</option>
-                                            @foreach($months as $key => $monthName)
-                                                <option value="{{ $key }}" {{ $currentMonth == $key ? 'selected' : '' }}>
-                                                    {{ $monthName }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-6 col-md-4">
-                                        <label class="form-label small text-muted font-weight-bold mb-1 d-block">Jenis Transaksi</label>
-                                        <select name="type" class="form-select custom-select shadow-sm w-100" onchange="this.form.submit()">
-                                            <option value="all" {{ $currentType == 'all' ? 'selected' : '' }}>Semua Transaksi</option>
-                                            <option value="Pemasukan" {{ $currentType == 'Pemasukan' ? 'selected' : '' }}>Pemasukan</option>
-                                            <option value="Pengeluaran" {{ $currentType == 'Pengeluaran' ? 'selected' : '' }}>Pengeluaran</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-
-                        <!-- Right: Action Buttons Grouped -->
-                        <div class="col-12 col-lg-5">
-                            <div class="d-flex flex-column gap-3 h-100 justify-content-center">
-                                <!-- Row 1: Print & Export -->
-                                <div class="row g-2 mb-3">
-                                    @php
-                                        $printUrl = route('keuangan.transaksis.print', ['year' => $currentYear, 'month' => $currentMonth, 'type' => $currentType]);
-                                        $pdfUrl = route('keuangan.transaksis.print', ['year' => $currentYear, 'month' => $currentMonth, 'type' => $currentType, 'export' => 'pdf']);
-                                    @endphp
-                                    <div class="col-6">
-                                        <a href="{{ $printUrl }}" target="_blank" class="btn btn-primary w-100 shadow-sm py-2" title="Print Laporan">
-                                            <i class="fas fa-print me-1"></i> Print
-                                        </a>
-                                    </div>
-                                    <div class="col-6">
-                                        <a href="javascript:void(0)" onclick="confirmExport('{{ $pdfUrl }}')" class="btn btn-danger w-100 shadow-sm py-2" title="Export PDF">
-                                            <i class="fas fa-file-pdf me-1"></i> Export PDF
-                                        </a>
-                                    </div>
-                                </div>
-                                <!-- Row 2: Add Income & Expense -->
-                                <div class="row g-2">
-                                    <div class="col-6">
-                                        <a href="{{ route('keuangan.pemasukans.create') }}" class="btn btn-success w-100 shadow-sm py-2" title="Tambah Pemasukan">
-                                            Tambah Pemasukan
-                                        </a>
-                                    </div>
-                                    <div class="col-6">
-                                        <a href="{{ route('keuangan.pengeluarans.create') }}" class="btn btn-danger w-100 shadow-sm py-2" style="background-color: var(--danger); border-color: var(--danger);" title="Tambah Pengeluaran">
-                                            Tambah Pengeluaran
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -309,9 +310,9 @@
                                     </tr>
                                     @if($currentType == 'all')
                                     <tr style="background-color: #fff3cd;">
-                                        <td colspan="2" class="text-right font-weight-bold">SALDO AKHIR {{ $currentMonth != 'all' ? 'BULAN' : 'TAHUN' }}:</td>
-                                        <td colspan="2" class="text-center font-weight-bold {{ ($grandTotalKredit - $grandTotalDebit) < 0 ? 'text-danger' : 'text-success' }}">
-                                            Rp{{ number_format($grandTotalKredit - $grandTotalDebit, 0, ',', '.') }}
+                                        <td colspan="2" class="text-right font-weight-bold">SALDO AKHIR:</td>
+                                        <td colspan="2" class="text-center font-weight-bold {{ $totalSaldoKeseluruhan < 0 ? 'text-danger' : 'text-success' }}">
+                                            {{ $totalSaldoKeseluruhan < 0 ? '-' : '' }}Rp{{ number_format(abs($totalSaldoKeseluruhan), 0, ',', '.') }}
                                         </td>
                                     </tr>
                                     @endif
@@ -601,10 +602,28 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    function confirmPrint(url) {
+        Swal.fire({
+            title: 'Cetak Laporan',
+            text: "Sistem akan membuka halaman cetak (print). Pastikan anda memilih printer anda pada opsi Tujuan (Destination).",
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Lanjutkan',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.open(url, '_blank');
+            }
+        });
+    }
+
     function confirmExport(url) {
         Swal.fire({
             title: 'Export ke PDF',
-            text: "Sistem akan membuka jendela cetak. Pastikan Anda memilih 'Simpan sebagai PDF' (Save as PDF) pada opsi Tujuan (Destination).",
+            text: "Sistem akan membuka halaman cetak (print). Pastikan anda memilih 'Simpan sebagai PDF' (Save as PDF) pada opsi Tujuan (Destination).",
             icon: 'info',
             showCancelButton: true,
             confirmButtonColor: '#dc3545',

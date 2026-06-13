@@ -26,33 +26,16 @@
                             <!-- Sumber Pemasukan -->
                              <div class="col-md-6 mb-4">
                                 <label for="sumber_id" class="small font-weight-bold text-muted mb-2">
-                                    Sumber Pemasukan 
-                                    @if(!$pemasukan->uang_saku_id)
-                                        <span class="text-danger">*</span>
-                                    @endif
+                                    Sumber Pemasukan <span class="text-danger">*</span>
                                 </label>
-                                @if($pemasukan->uang_saku_id)
-                                    <select class="form-control bg-light border-0 shadow-sm rounded-lg no-arrow" disabled>
-                                        @foreach ($sumbers as $sumber)
-                                            <option value="{{ $sumber->id }}" {{ $pemasukan->sumber_id == $sumber->id ? 'selected' : '' }}>
-                                                {{ $sumber->nama }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <input type="hidden" name="sumber_id" value="{{ $pemasukan->sumber_id }}">
-                                    <small class="text-danger mt-1 d-block" style="font-size: 0.7rem;">
-                                        <i class="fas fa-exclamation-circle mr-1"></i> Sumber pemasukan tidak bisa diubah
-                                    </small>
-                                @else
-                                    <select name="sumber_id" id="sumber_id" class="form-control bg-light border-0 shadow-sm rounded-lg @error('sumber_id') is-invalid @enderror" required>
-                                        <option value="">-- Pilih Sumber Pemasukan --</option>
-                                        @foreach ($sumbers as $sumber)
-                                            <option value="{{ $sumber->id }}" {{ (old('sumber_id') ?? $pemasukan->sumber_id) == $sumber->id ? 'selected' : '' }}>
-                                                {{ $sumber->nama }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                @endif
+                                <select name="sumber_id" id="sumber_id" class="form-control bg-light border-0 shadow-sm rounded-lg @error('sumber_id') is-invalid @enderror" required>
+                                    <option value="">-- Pilih Sumber Pemasukan --</option>
+                                    @foreach ($sumbers as $sumber)
+                                        <option value="{{ $sumber->id }}" {{ (old('sumber_id') ?? $pemasukan->sumber_id) == $sumber->id ? 'selected' : '' }}>
+                                            {{ $sumber->nama }}
+                                        </option>
+                                    @endforeach
+                                </select>
                                 @error('sumber_id')
                                     <div class="invalid-feedback ml-2">{{ $message }}</div>
                                 @enderror
@@ -97,22 +80,13 @@
                             <!-- Deskripsi -->
                              <div class="col-md-6 mb-4">
                                 <label for="deskripsi" class="small font-weight-bold text-muted mb-2">
-                                    Deskripsi 
-                                    @if(!$pemasukan->uang_saku_id)
-                                        <span class="text-muted font-weight-normal">(Opsional)</span>
-                                    @endif
+                                    Deskripsi <span class="text-muted font-weight-normal">(Opsional)</span>
                                 </label>
                                 <textarea name="deskripsi" 
                                           id="deskripsi" 
                                           class="form-control bg-light border-0 shadow-sm rounded-lg @error('deskripsi') is-invalid @enderror" 
                                           rows="2"
-                                          placeholder="Tambahkan deskripsi pemasukan"
-                                          {{ $pemasukan->uang_saku_id ? 'readonly' : '' }}>{{ old('deskripsi', $pemasukan->deskripsi) }}</textarea>
-                                @if($pemasukan->uang_saku_id)
-                                    <small class="text-danger mt-1 d-block" style="font-size: 0.7rem;">
-                                        <i class="fas fa-info-circle mr-1"></i> Deskripsi ini hanya bisa diedit di halaman edit uang saku
-                                    </small>
-                                @endif
+                                          placeholder="Tambahkan deskripsi pemasukan">{{ old('deskripsi', $pemasukan->deskripsi) }}</textarea>
                                 @error('deskripsi')
                                     <div class="invalid-feedback ml-2">{{ $message }}</div>
                                 @enderror

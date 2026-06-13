@@ -33,12 +33,20 @@ class PemasukanController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $dateRules = 'required|date|before_or_equal:' . date('Y-m-d');
+        if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+            $dateRules .= '|after_or_equal:' . date('Y-m-01');
+        }
+
         // Validasi input
         $request->validate([
             'sumber_id'   => 'required|exists:sumbers,id',
             'jumlah'      => 'required|numeric|min:0|max:99999999999999999999999999',
-            'tanggal'     => 'required|date',
+            'tanggal'     => $dateRules,
             'deskripsi'   => 'nullable|string'
+        ], [
+            'tanggal.after_or_equal' => 'Tanggal tidak boleh kurang dari awal bulan ini.',
+            'tanggal.before_or_equal' => 'Tanggal tidak boleh melebihi hari ini.'
         ]);
 
         $pemasukan = new Pemasukan;
@@ -59,52 +67,74 @@ class PemasukanController extends Controller
 
     public function edit(string $id): View
     {
+        if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+            abort(403, 'Akses Ditolak: Hanya super admin yang memiliki wewenang untuk mengubah atau menghapus data pemasukan.');
+        }
         $pemasukan = Pemasukan::findOrFail($id);
+
         $sumbers = Sumber::all();
         return view('keuangan::pemasukans.edit', compact('pemasukan', 'sumbers'));
     }
 
     public function update(Request $request, string $id): RedirectResponse
     {
+        if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+            abort(403, 'Akses Ditolak: Hanya super admin yang memiliki wewenang untuk mengubah atau menghapus data pemasukan.');
+        }
+        $pemasukan = Pemasukan::findOrFail($id);
+
+        $dateRules = 'required|date|before_or_equal:' . date('Y-m-d');
+        if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+            $dateRules .= '|after_or_equal:' . date('Y-m-01');
+        }
+
         $request->validate([
             'sumber_id'   => 'required|exists:sumbers,id',
             'jumlah'      => 'required|numeric',
-            'tanggal'     => 'required|date',
+            'tanggal'     => $dateRules,
             'deskripsi'   => 'nullable|string'
+        ], [
+            'tanggal.after_or_equal' => 'Tanggal tidak boleh kurang dari awal bulan ini.',
+            'tanggal.before_or_equal' => 'Tanggal tidak boleh melebihi hari ini.'
         ]);
 
-        $pemasukan = Pemasukan::findOrFail($id);
+
         $pemasukan->sumber_id   = $request->sumber_id;
         $pemasukan->jumlah      = $request->jumlah;
         $pemasukan->tanggal     = $request->tanggal;
         $pemasukan->deskripsi   = $request->deskripsi;
         $pemasukan->save();
 
-        // Sync back to Uang Saku if linked and status is "Belum Diterima Santri"
-        if ($pemasukan->uang_saku_id) {
-            $uangsaku = UangSaku::find($pemasukan->uang_saku_id);
-            if ($uangsaku && $uangsaku->status === 'Belum Diterima Santri') {
-                $uangsaku->update([
-                    'jumlah' => $pemasukan->jumlah,
-                    'tanggal' => $pemasukan->tanggal
-                ]);
-            }
-        }
+        // Uang Saku sync removed
 
         return redirect()->route('keuangan.pemasukans.index')->with('success', 'Pemasukan berhasil diperbarui!');
     }
 
     public function destroy(string $id): RedirectResponse
     {
+        if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+            abort(403, 'Akses Ditolak: Hanya super admin yang memiliki wewenang untuk mengubah atau menghapus data pemasukan.');
+        }
         $pemasukan = Pemasukan::findOrFail($id);
         
-        // If this pemasukan is linked to a Uang Saku, delete the Uang Saku as well
-        if ($pemasukan->uang_saku_id) {
-            UangSaku::where('id', $pemasukan->uang_saku_id)->delete();
-        }
+        // Uang Saku sync removed
 
         $pemasukan->delete();
 
         return redirect()->route('keuangan.pemasukans.index')->with('success', 'Pemasukan berhasil dihapus!');
+    }
+
+    public function confirmDraft(Request $request, string $id): RedirectResponse
+    {
+        $pemasukan = Pemasukan::findOrFail($id);
+        
+        if (!$pemasukan->is_draft) {
+            return back()->with('error', 'Data ini sudah dikonfirmasi sebelumnya.');
+        }
+
+        $pemasukan->is_draft = false;
+        $pemasukan->save();
+
+        return back()->with('success', 'Draft pemasukan berhasil dikonfirmasi menjadi transaksi.');
     }
 }

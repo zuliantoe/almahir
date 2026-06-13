@@ -117,6 +117,7 @@ class PegawaiManagerController extends Controller
                 'phone' => $validated['no_hp'] ?? null,
                 'password' => Hash::make($password),
                 'account_status' => 'active',
+                'must_change_password' => true,
             ]);
 
             // 2. Assign Selected Role
@@ -134,7 +135,8 @@ class PegawaiManagerController extends Controller
             DB::commit();
 
             return redirect()->route('pegawaimanager.index')
-                ->with('success', 'Pegawai dan akun user berhasil ditambahkan. PASSWORD LOGIN DEFAULT: ' . $password . ' (Silakan catat password ini sebelum dibagikan)');
+                ->with('success', 'Pegawai dan akun user berhasil ditambahkan.')
+                ->with('new_password', $password);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -544,5 +546,61 @@ class PegawaiManagerController extends Controller
             }
             return redirect()->back()->with('error', 'Terjadi kesalahan sistem saat memproses file: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Reset Password User
+     */
+    public function resetPassword(string $id): RedirectResponse
+    {
+        $pegawai = Pegawai::with('user')->findOrFail($id);
+        $user = $pegawai->user;
+
+        if (!$user) {
+            return redirect()->back()->with('error', 'Akun user tidak ditemukan untuk pegawai ini.');
+        }
+
+        // Batasi maksimal 3 kali reset per user dalam 1 hari
+        $today = date('Y-m-d');
+        $cacheKey = "password_reset_count:{$user->id}:{$today}";
+        $resetCount = Cache::get($cacheKey, 0);
+
+        if ($resetCount >= 3) {
+            return redirect()->back()->with('error', 'Gagal. Batas reset password untuk pegawai ini hari ini sudah mencapai maksimal (3 kali).');
+        }
+
+        try {
+            $newPassword = Str::random(10);
+            $user->update([
+                'password' => Hash::make($newPassword),
+                'must_change_password' => true
+            ]);
+
+            // Tambahkan hitungan reset di Cache selama 24 jam
+            Cache::put($cacheKey, $resetCount + 1, 86400);
+
+            return redirect()->back()
+                ->with('success', 'Password berhasil di-reset.')
+                ->with('new_password', $newPassword);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mereset password: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Print QR Card for Employee.
+     */
+    public function printCard($id): View
+    {
+        $pegawai = Pegawai::with(['user', 'typePegawai'])->findOrFail($id);
+
+        if (!$pegawai->qr_token) {
+            $pegawai->update(['qr_token' => (string) \Illuminate\Support\Str::uuid()]);
+        }
+
+        return view('pegawaimanager::print-card', [
+            'title' => 'Cetak Kartu Pegawai - ' . $pegawai->nama,
+            'pegawai' => $pegawai
+        ]);
     }
 }

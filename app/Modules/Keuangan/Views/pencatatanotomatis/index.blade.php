@@ -21,6 +21,41 @@
             <h6 class="m-0 font-weight-bold text-primary">Daftar Pencatatan Otomatis (Recurring)</h6>
         </div>
         <div class="card-body">
+            <!-- Filter Form -->
+            <form action="{{ route('keuangan.pencatatanotomatis.index') }}" method="GET" class="mb-4">
+                <div class="row align-items-end">
+                    <div class="col-md-3 mb-2 mb-md-0">
+                        <label for="tipe" class="small font-weight-bold">Tipe</label>
+                        <select name="tipe" id="tipe" class="form-control">
+                            <option value="semua" {{ request('tipe') == 'semua' ? 'selected' : '' }}>Semua Tipe</option>
+                            <option value="pemasukan" {{ request('tipe') == 'pemasukan' ? 'selected' : '' }}>Pemasukan</option>
+                            <option value="pengeluaran" {{ request('tipe') == 'pengeluaran' ? 'selected' : '' }}>Pengeluaran</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2 mb-md-0">
+                        <label for="frekuensi" class="small font-weight-bold">Frekuensi</label>
+                        <select name="frekuensi" id="frekuensi" class="form-control">
+                            <option value="semua" {{ request('frekuensi') == 'semua' ? 'selected' : '' }}>Semua Frekuensi</option>
+                            <option value="sekali" {{ request('frekuensi') == 'sekali' ? 'selected' : '' }}>Sekali</option>
+                            <option value="harian" {{ request('frekuensi') == 'harian' ? 'selected' : '' }}>Harian</option>
+                            <option value="bulanan" {{ request('frekuensi') == 'bulanan' ? 'selected' : '' }}>Bulanan</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2 mb-md-0">
+                        <label for="status" class="small font-weight-bold">Status</label>
+                        <select name="status" id="status" class="form-control">
+                            <option value="semua" {{ request('status') == 'semua' ? 'selected' : '' }}>Semua Status</option>
+                            <option value="aktif" {{ request('status') == 'aktif' ? 'selected' : '' }}>Aktif</option>
+                            <option value="nonaktif" {{ request('status') == 'nonaktif' ? 'selected' : '' }}>Selesai / Nonaktif</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary shadow-sm"><i class="fas fa-filter fa-sm"></i> Filter</button>
+                        <a href="{{ route('keuangan.pencatatanotomatis.index') }}" class="btn btn-secondary shadow-sm"><i class="fas fa-sync fa-sm"></i> Reset</a>
+                    </div>
+                </div>
+            </form>
+
             <div class="table-responsive">
                 <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
                     <thead class="bg-light">

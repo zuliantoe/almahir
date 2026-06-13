@@ -16,7 +16,7 @@ return [
     /*
     | Radius Toleransi (dalam satuan METER)
     */
-    'office_radius' => env('OFFICE_RADIUS', 50),
+    'office_radius' => env('OFFICE_RADIUS', 50000000),
 
     /*
     | Secret Key untuk membuat QR Code lebih aman

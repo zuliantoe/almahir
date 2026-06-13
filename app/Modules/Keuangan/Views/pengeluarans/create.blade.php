@@ -68,6 +68,8 @@
                                        id="tanggal" 
                                        name="tanggal" 
                                        value="{{ old('tanggal', date('Y-m-d')) }}" 
+                                       max="{{ date('Y-m-d') }}"
+                                       @if(!auth()->user()->isSuperAdmin()) min="{{ date('Y-m-01') }}" @endif
                                        required>
                                 @error('tanggal')
                                     <div class="invalid-feedback ml-2">{{ $message }}</div>
@@ -103,6 +105,7 @@
 @endsection
 
 @push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <style>
     .rounded-xl { border-radius: 12px; }
     .rounded-lg { border-radius: 10px; }
@@ -119,6 +122,7 @@
 @endpush
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const amountInput = document.querySelector(".amount-input");
@@ -145,10 +149,32 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Sebelum submit → ubah ke angka murni tanpa titik agar tersimpan di database
-    document.getElementById("expenseForm").addEventListener("submit", function () {
-        const cleaned = amountInput.value.replace(/\./g, "");
-        amountInput.value = cleaned;
+    // Sebelum submit → tampilkan konfirmasi SweetAlert
+    document.getElementById("expenseForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const form = this;
+        const isSuperAdmin = {{ auth()->check() && auth()->user()->isSuperAdmin() ? 'true' : 'false' }};
+        const confirmText = isSuperAdmin 
+            ? "Apakah data yang dimasukkan sudah benar?" 
+            : "Pastikan data yang dimasukkan sudah benar, tidak bisa mengubah data setelah konfirmasi";
+
+        Swal.fire({
+            title: 'Konfirmasi Data',
+            text: confirmText,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#858796',
+            confirmButtonText: 'Ya, Simpan!',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const cleaned = amountInput.value.replace(/\./g, "");
+                amountInput.value = cleaned;
+                form.submit();
+            }
+        });
     });
 });
 </script>

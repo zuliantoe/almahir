@@ -49,6 +49,7 @@ class Pegawai extends Model
         'tanggal_masuk',
         'status',
         'sisa_cuti',
+        'qr_token',
     ];
 
     protected $attributes = [
@@ -61,11 +62,22 @@ class Pegawai extends Model
     ];
 
     /**
-     * Accessor untuk jatah cuti agar selalu default ke 12 jika kosong (null) di database
+     * Accessor untuk jatah cuti agar selalu dihitung secara dinamis dan real-time (Base Quota - Approved Days)
+     * Default base quota adalah 12 jika kosong (null) di database.
      */
     public function getSisaCutiAttribute($value)
     {
-        return $value !== null ? (int)$value : 12;
+        $baseCuti = $value !== null ? (int)$value : 12;
+        if (class_exists('\Modules\Perizinan\Models\Perizinan')) {
+            $currentYear = date('Y');
+            $approvedDays = \Modules\Perizinan\Models\Perizinan::where('user_id', $this->id)
+                ->where('potong_kuota', true)
+                ->where('status', 'disetujui')
+                ->whereYear('tanggal_mulai', $currentYear)
+                ->sum('total_hari');
+            return max(0, $baseCuti - (int)$approvedDays);
+        }
+        return $baseCuti;
     }
 
     /*
@@ -97,18 +109,21 @@ class Pegawai extends Model
     }
 
     /**
-     * Hitung sisa jatah cuti tersedia (Total - Pending)
+     * Hitung sisa jatah cuti tersedia secara dinamis dan real-time (Total - Approved - Pending)
      */
     public function getAvailableQuota(): int
     {
-        $currentYear = date('Y');
-        $pendingDays = \Modules\Perizinan\Models\Perizinan::where('user_id', $this->id)
-            ->where('potong_kuota', true)
-            ->where('status', 'menunggu')
-            ->whereYear('tanggal_mulai', $currentYear)
-            ->sum('total_hari');
-            
-        return max(0, $this->sisa_cuti - (int)$pendingDays);
+        if (class_exists('\Modules\Perizinan\Models\Perizinan')) {
+            $currentYear = date('Y');
+            $pendingDays = \Modules\Perizinan\Models\Perizinan::where('user_id', $this->id)
+                ->where('potong_kuota', true)
+                ->where('status', 'menunggu')
+                ->whereYear('tanggal_mulai', $currentYear)
+                ->sum('total_hari');
+                
+            return max(0, $this->sisa_cuti - (int)$pendingDays);
+        }
+        return $this->sisa_cuti;
     }
 
     /**
@@ -125,30 +140,24 @@ class Pegawai extends Model
     }
 
     /**
-     * Kurangi sisa cuti pegawai dengan validasi aman.
-     * Digunakan oleh modul Perizinan saat izin cuti disetujui.
-     * Memastikan nilai tidak pernah negatif dan perubahan tercatat oleh Audit Trail.
+     * Kurangi sisa cuti pegawai dengan validasi aman (No-op karena dihitung secara dinamis dan real-time).
      *
      * @param int $days   Jumlah hari yang akan dikurangi
-     * @return bool        True jika berhasil, false jika saldo tidak cukup
+     * @return bool        Selalu true
      */
     public function deductLeave(int $days): bool
     {
-        if ($days <= 0) return false;
-        $this->sisa_cuti = max(0, $this->sisa_cuti - $days);
-        return $this->save();
+        return true;
     }
 
     /**
-     * Tambah sisa cuti pegawai (misal: jika izin dibatalkan/ditolak setelah dikurangi).
+     * Tambah sisa cuti pegawai (No-op karena dihitung secara dinamis dan real-time).
      *
      * @param int $days   Jumlah hari yang akan ditambahkan
-     * @return bool
+     * @return bool        Selalu true
      */
     public function addLeave(int $days): bool
     {
-        if ($days <= 0) return false;
-        $this->sisa_cuti = $this->sisa_cuti + $days;
-        return $this->save();
+        return true;
     }
 }

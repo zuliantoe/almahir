@@ -1,65 +1,81 @@
 <?php
-\Schema::disableForeignKeyConstraints();
-\App\Modules\Akademik\Models\JadwalPelajaran::truncate();
-\App\Modules\Akademik\Models\RombelSiswa::truncate();
-\App\Modules\Akademik\Models\Rombel::truncate();
-\App\Modules\Akademik\Models\Kelas::truncate();
-\App\Modules\Akademik\Models\MataPelajaran::truncate();
-\App\Modules\Akademik\Models\KategoriPelajaran::truncate();
-\App\Modules\Akademik\Models\Tingkat::truncate();
-\App\Modules\Akademik\Models\TahunAjaran::truncate();
-\App\Modules\Akademik\Models\JenisKegiatan::truncate();
 
-$tahun = \App\Modules\Akademik\Models\TahunAjaran::create(['tahunajaran' => '2024/2025', 'semester' => 'Genap', 'status' => 'Aktif']);
-$tingkat = \App\Modules\Akademik\Models\Tingkat::create(['kode_tingkat' => '10', 'nama_tingkat' => 'Kelas 10']);
-$kat = \App\Modules\Akademik\Models\KategoriPelajaran::create(['kategori' => 'Internal', 'deskripsi' => 'Pelajaran Internal']);
-$mapel = \App\Modules\Akademik\Models\MataPelajaran::create(['kode' => 'MAP01', 'nama' => 'Pendidikan Agama', 'kategori_id' => $kat->id]);
-$jk = \App\Modules\Akademik\Models\JenisKegiatan::create(['jeniskegiatan' => 'KBM', 'deskripsi' => 'Kegiatan Belajar Mengajar']);
-$kelas = \App\Modules\Akademik\Models\Kelas::create(['nama_kelas' => 'X IPA 1', 'kode_kelas' => 'X-PA-1', 'tingkat_id' => $tingkat->id]);
+use Modules\WaliMurid\Models\WaliMurid;
+use Modules\Siswa\Models\Siswa;
+use App\Models\User;
+use App\Models\Role;
+use Modules\Keuangan\Models\UangSaku;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
-$guru = \Modules\Guru\Models\Guru::first();
-if (!$guru) {
-    $guru = \Modules\Guru\Models\Guru::create([
-        'id' => \Illuminate\Support\Str::uuid(), 
-        'nama' => 'Ustadz Ahmad', 
-        'nip' => '123', 
-        'email' => 'ahmad@web.com', 
-        'status' => 'aktif'
+$siswaIds = [
+    "019df194-9863-7156-9b54-9b0f7e663ad4",
+    "019df195-74ad-7219-b377-f2e03a645ef0"
+];
+
+$userExists = User::where('email', 'walitest@almahir.id')->first();
+if ($userExists) {
+    echo "User already exists! Email: walitest@almahir.id, Password: password123\n";
+    return;
+}
+
+$wali = WaliMurid::create([
+    'nama' => 'Bapak Test Wali',
+    'email' => 'walitest@almahir.id',
+    'telepon' => '081234567899',
+    'alamat' => 'Jl. Test Dummy No. 123',
+    'pekerjaan' => 'Pengusaha',
+    'hubungan' => 'Ayah',
+]);
+
+foreach($siswaIds as $sId) {
+    DB::table('siswa_wali')->insert([
+        'id' => (string) Str::uuid(),
+        'siswa_id' => $sId,
+        'wali_murid_id' => $wali->id,
+        'created_at' => Carbon::now(),
+        'updated_at' => Carbon::now(),
     ]);
 }
 
-$siswa = \Modules\Siswa\Models\Siswa::first();
-if (!$siswa) {
-    $siswa = \Modules\Siswa\Models\Siswa::create([
-        'id' => \Illuminate\Support\Str::uuid(), 
-        'nis' => '555', 
-        'nama' => 'Zaidan Al-Fatih', 
-        'email' => 'zaidan@web.com', 
-        'status' => 'aktif'
+$role = Role::where('name', 'WALI_MURID')->first();
+
+$user = User::create([
+    'name' => 'Bapak Test Wali',
+    'email' => 'walitest@almahir.id',
+    'password' => Hash::make('password123'),
+    'ref_type' => WaliMurid::class,
+    'ref_id' => $wali->id,
+    'account_status' => 'active'
+]);
+
+$user->syncRoles([$role->id]);
+
+foreach($siswaIds as $index => $sId) {
+    $siswa = Siswa::find($sId);
+    if (!$siswa) continue;
+    
+    UangSaku::create([
+        'siswa_id' => $sId,
+        'kelas_id' => $siswa->kelas_id,
+        'jumlah' => 100000 + ($index * 50000),
+        'tanggal' => Carbon::now()->format('Y-m-d'),
+        'status' => 'Belum Diterima Santri',
+        'deskripsi' => 'Uang Saku Bulan Ini (' . $siswa->nama . ')',
+    ]);
+    
+    UangSaku::create([
+        'siswa_id' => $sId,
+        'kelas_id' => $siswa->kelas_id,
+        'jumlah' => 200000,
+        'tanggal' => Carbon::now()->subDays(5)->format('Y-m-d'),
+        'status' => 'Sudah Diterima Santri',
+        'deskripsi' => 'Sisa uang saku bulan lalu (' . $siswa->nama . ')',
     ]);
 }
 
-$rombel = \App\Modules\Akademik\Models\Rombel::create([
-    'nama_rombel' => 'Rombel X IPA 1 2024', 
-    'kelas_id' => $kelas->id, 
-    'tahunajaran_id' => $tahun->id, 
-    'wali_kelas_id' => $guru->id, 
-    'keterangan' => 'Rombongan Belajar Utama'
-]);
-
-\App\Modules\Akademik\Models\RombelSiswa::create([
-    'rombel_id' => $rombel->id, 
-    'siswa_id' => $siswa->id
-]);
-
-\App\Modules\Akademik\Models\JadwalPelajaran::create([
-    'rombel_id' => $rombel->id, 
-    'hari' => 'Senin', 
-    'jamke' => 1, 
-    'jamawal' => '07:00', 
-    'jamakhir' => '08:00', 
-    'mapel_id' => $mapel->id, 
-    'guru_id' => $guru->id
-]);
-\Schema::enableForeignKeyConstraints();
-echo "Success! Dummy data seeded.\n";
+echo "Berhasil! Wali Murid Dummy dibuat.\n";
+echo "Email: walitest@almahir.id\n";
+echo "Password: password123\n";

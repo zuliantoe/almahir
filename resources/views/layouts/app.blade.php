@@ -415,7 +415,7 @@
     {{-- SweetAlert Global Handler --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            @if(session('success'))
+            @if(session('success') && !session('new_password'))
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil!',

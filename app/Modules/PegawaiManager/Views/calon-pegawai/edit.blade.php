@@ -54,8 +54,13 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label font-weight-bold">Tanggal Lahir</label>
-                        <input type="date" name="tanggal_lahir" class="form-control @error('tanggal_lahir') is-invalid @enderror" value="{{ old('tanggal_lahir', $calon->tanggal_lahir ? $calon->tanggal_lahir->format('Y-m-d') : '') }}">
-                        @error('tanggal_lahir') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-calendar-alt text-primary"></i></span>
+                            </div>
+                            <input type="text" name="tanggal_lahir" class="form-control datepicker @error('tanggal_lahir') is-invalid @enderror" value="{{ old('tanggal_lahir', $calon->tanggal_lahir ? $calon->tanggal_lahir->format('Y-m-d') : '') }}" placeholder="dd/mm/yyyy">
+                        </div>
+                        @error('tanggal_lahir') <span class="text-danger small mt-1 d-block">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="col-md-6 mb-3">
@@ -77,8 +82,13 @@
 
                     <div class="col-md-6 mb-3">
                         <label class="form-label font-weight-bold">Tanggal Melamar <span class="text-danger">*</span></label>
-                        <input type="date" name="tanggal_melamar" class="form-control @error('tanggal_melamar') is-invalid @enderror" value="{{ old('tanggal_melamar', $calon->tanggal_melamar ? $calon->tanggal_melamar->format('Y-m-d') : '') }}" required>
-                        @error('tanggal_melamar') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-calendar-alt text-primary"></i></span>
+                            </div>
+                            <input type="text" name="tanggal_melamar" class="form-control datepicker @error('tanggal_melamar') is-invalid @enderror" value="{{ old('tanggal_melamar', $calon->tanggal_melamar ? $calon->tanggal_melamar->format('Y-m-d') : '') }}" required placeholder="dd/mm/yyyy">
+                        </div>
+                        @error('tanggal_melamar') <span class="text-danger small mt-1 d-block">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label font-weight-bold">Status Seleksi <span class="text-danger">*</span></label>
@@ -100,4 +110,33 @@
         </div>
     </div>
 </div>
+
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .flatpickr-calendar {
+        border-radius: 12px !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
+        border: 1px solid #e1e5ef !important;
+        font-family: 'Outfit', sans-serif !important;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr(".datepicker", {
+            altInput: true,
+            altFormat: "d/m/Y",
+            dateFormat: "Y-m-d",
+            locale: "id",
+            allowInput: true
+        });
+    });
+</script>
+@endpush
+
 @endsection

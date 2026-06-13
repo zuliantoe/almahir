@@ -51,6 +51,11 @@ class JadwalPelajaranController extends Controller
 
     private function renderListView(Request $request)
     {
+        $activeTahunAjaran = TahunAjaran::aktif()->first();
+        if (!$request->has('tahun_ajaran_id') && $activeTahunAjaran) {
+            $request->merge(['tahun_ajaran_id' => $activeTahunAjaran->id]);
+        }
+
         $jadwalPelajaran = JadwalPelajaran::query()
             ->with(['rombel.kelas', 'mataPelajaran', 'guru'])
             ->when($request->filled('rombel_id'), fn($q) => $q->where('rombel_id', $request->rombel_id))

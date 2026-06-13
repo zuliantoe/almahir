@@ -2,64 +2,108 @@
 
 @section('title', $title)
 
+@push('styles')
+<style>
+    .glass-panel-card {
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        overflow: hidden;
+    }
+    
+    .form-group label {
+        font-weight: 700;
+        color: #334155;
+        letter-spacing: 0.5px;
+    }
+    
+    .form-control {
+        border-radius: 10px;
+        border: 2px solid #e2e8f0;
+        padding: 0.75rem 1rem;
+        color: #1e293b;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #4cc9f0;
+        box-shadow: 0 0 0 0.25rem rgba(76, 201, 240, 0.25);
+    }
+    
+    .btn-gradient-primary { background: linear-gradient(135deg, #4361ee, #4cc9f0); color: white; border: none; transition: all 0.3s ease; padding: 10px 24px; font-weight: bold;}
+    .btn-gradient-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(67, 97, 238, 0.4); color: white; }
+</style>
+@endpush
+
 @section('content')
-<div class="container-fluid">
-    <x-card title="Tambah Tipe Pegawai" icon="fas fa-plus">
+<div class="container-fluid py-4">
 
-        <x-slot name="tools">
-            <a href="{{ route('pegawaimanager.types.index') }}" class="btn btn-secondary btn-sm rounded-pill px-3 shadow-sm btn-animate">
-                <i class="fas fa-arrow-left mr-1"></i> Kembali
-            </a>
-        </x-slot>
-
-        @if ($errors->any())
-            <div class="alert alert-danger alert-dismissible shadow-sm mb-4">
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
-                <i class="fas fa-exclamation-circle mr-2"></i>
-                <ul class="mb-0 mt-1">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+    @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4 p-3 animate__animated animate__headShake" style="border-radius: 12px; background: #fef2f2; border-left: 5px solid #ef4444 !important; color: #b91c1c;">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-circle fa-2x mr-3 text-danger"></i>
+                <div>
+                    <h6 class="font-weight-bold mb-1">Terdapat Kesalahan</h6>
+                    <ul class="mb-0 pl-3 small">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             </div>
-        @endif
-
-        <div class="p-4 glass-card mb-4">
-            <form action="{{ route('pegawaimanager.types.store') }}" method="POST">
-                @csrf
-
-                <div class="form-group row mb-4">
-                    <label for="nama_type" class="col-sm-3 col-form-label">
-                        <i class="fas fa-tag mr-1 text-muted"></i> Nama Tipe Pegawai <span class="text-danger">*</span>
-                    </label>
-                    <div class="col-sm-9">
-                        <input type="text"
-                               name="nama_type"
-                               id="nama_type"
-                               class="form-control @error('nama_type') is-invalid @enderror"
-                               value="{{ old('nama_type') }}"
-                               placeholder="Contoh: Guru Tetap, Staf TU, Cleaning Service"
-                               required>
-                        @error('nama_type')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <small class="text-muted"><i class="fas fa-info-circle mr-1"></i>Masukkan nama kategori atau tipe status pegawai.</small>
-                    </div>
-                </div>
-
-                <div class="form-group row mt-4">
-                    <div class="col-sm-9 offset-sm-3">
-                        <button type="submit" class="btn btn-primary px-4 py-2 shadow-sm rounded-pill btn-animate gradient-primary border-0">
-                            <i class="fas fa-save mr-1"></i> Simpan Tipe Pegawai
-                        </button>
-                        <a href="{{ route('pegawaimanager.types.index') }}" class="btn btn-secondary px-4 py-2 shadow-sm rounded-pill ml-2 btn-animate">
-                            <i class="fas fa-times mr-1"></i> Batal
-                        </a>
-                    </div>
-                </div>
-            </form>
+            <button type="button" class="close text-danger" data-dismiss="alert" aria-label="Close" style="opacity: 0.7; padding: 1rem;">
+                <span aria-hidden="true">&times;</span>
+            </button>
         </div>
+    @endif
 
-    </x-card>
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card glass-panel-card mb-4">
+                <div class="card-header bg-white p-4 border-bottom d-flex flex-wrap justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1 font-weight-bold text-dark"><i class="fas fa-plus-circle text-primary mr-2"></i> Tambah Tipe Pegawai</h5>
+                        <p class="text-muted small mb-0 mt-1">Buat kategori tipe pegawai baru.</p>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5 bg-light">
+                    <form action="{{ route('pegawaimanager.types.store') }}" method="POST">
+                        @csrf
+                        
+                        <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+                            <div class="card-body p-4">
+                                <div class="form-group mb-4">
+                                    <label for="nama_type" class="text-uppercase small"><i class="fas fa-tag text-muted mr-1"></i> Nama Tipe Pegawai <span class="text-danger">*</span></label>
+                                    <input type="text"
+                                           name="nama_type"
+                                           id="nama_type"
+                                           class="form-control @error('nama_type') is-invalid @enderror"
+                                           value="{{ old('nama_type') }}"
+                                           placeholder="Contoh: Guru Tetap, Staf TU, Cleaning Service"
+                                           required>
+                                    @error('nama_type')
+                                        <div class="invalid-feedback font-weight-bold">{{ $message }}</div>
+                                    @enderror
+                                    <small class="form-text text-muted mt-2"><i class="fas fa-info-circle mr-1"></i>Masukkan nama kategori yang representatif untuk pegawai.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <a href="{{ route('pegawaimanager.types.index') }}" class="btn btn-light rounded-pill px-4 py-2 font-weight-bold mr-2 shadow-sm" style="border: 1px solid #e2e8f0; color: #475569;">
+                                <i class="fas fa-times mr-2"></i> Batal
+                            </a>
+                            <button type="submit" class="btn btn-gradient-primary rounded-pill shadow-sm">
+                                <i class="fas fa-save mr-2"></i> Simpan Tipe Pegawai
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection

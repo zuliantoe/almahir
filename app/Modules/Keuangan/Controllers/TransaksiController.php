@@ -59,10 +59,10 @@ class TransaksiController extends Controller
             return Carbon::parse($item['tanggal'])->format('Y') == $currentYear;
         });
 
-        // Kalkulasi Total Saldo Tahun (semua bulan di tahun tersebut)
-        $totalPemasukanYear = $transactionsForYear->where('jenis', 'Pemasukan')->sum('jumlah');
-        $totalPengeluaranYear = $transactionsForYear->where('jenis', 'Pengeluaran')->sum('jumlah');
-        $totalSaldoYear = $totalPemasukanYear - $totalPengeluaranYear;
+        // Kalkulasi Total Saldo Keseluruhan
+        $totalPemasukanKeseluruhan = $allTransactions->where('jenis', 'Pemasukan')->sum('jumlah');
+        $totalPengeluaranKeseluruhan = $allTransactions->where('jenis', 'Pengeluaran')->sum('jumlah');
+        $totalSaldoKeseluruhan = $totalPemasukanKeseluruhan - $totalPengeluaranKeseluruhan;
 
         // Filter Bulan
         $filteredTransactions = $transactionsForYear;
@@ -104,7 +104,7 @@ class TransaksiController extends Controller
 
         return view('keuangan::transaksis.index', compact(
             'groupedTransactions', 'currentYear', 'currentMonth', 'currentType', 'allYears',
-            'totalSaldoYear', 'totalPemasukanFilter', 'totalPengeluaranFilter', 'totalTransaksiFilter'
+            'totalSaldoKeseluruhan', 'totalPemasukanFilter', 'totalPengeluaranFilter', 'totalTransaksiFilter'
         ));
     }
 
@@ -158,7 +158,10 @@ class TransaksiController extends Controller
 
         $totalPemasukanFilter = $filteredTransactions->where('jenis', 'Pemasukan')->sum('jumlah');
         $totalPengeluaranFilter = $filteredTransactions->where('jenis', 'Pengeluaran')->sum('jumlah');
-        $totalSaldoFilter = $totalPemasukanFilter - $totalPengeluaranFilter;
+        
+        $totalPemasukanKeseluruhan = $allTransactions->where('jenis', 'Pemasukan')->sum('jumlah');
+        $totalPengeluaranKeseluruhan = $allTransactions->where('jenis', 'Pengeluaran')->sum('jumlah');
+        $totalSaldoKeseluruhan = $totalPemasukanKeseluruhan - $totalPengeluaranKeseluruhan;
 
         $sortedTransactions = $filteredTransactions->sortBy(function($item) {
             return Carbon::parse($item['tanggal'])->format('Y-m-d') . ' ' . $item['waktu'];
@@ -170,7 +173,7 @@ class TransaksiController extends Controller
 
         return view('keuangan::transaksis.print', compact(
             'groupedTransactions', 'currentYear', 'currentMonth', 'currentType',
-            'totalPemasukanFilter', 'totalPengeluaranFilter', 'totalSaldoFilter'
+            'totalPemasukanFilter', 'totalPengeluaranFilter', 'totalSaldoKeseluruhan'
         ));
     }
 }

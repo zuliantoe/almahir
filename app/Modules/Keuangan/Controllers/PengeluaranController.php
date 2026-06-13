@@ -33,13 +33,29 @@ class PengeluaranController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $dateRules = 'required|date|before_or_equal:' . date('Y-m-d');
+        if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+            $dateRules .= '|after_or_equal:' . date('Y-m-01');
+        }
+
         // Validasi input
         $request->validate([
             'tujuan_id'   => 'required|exists:tujuans,id',
             'jumlah'      => 'required|numeric|min:0|max:99999999999999999999999999',
-            'tanggal'     => 'required|date',
+            'tanggal'     => $dateRules,
             'deskripsi'   => 'nullable|string'
+        ], [
+            'tanggal.after_or_equal' => 'Tanggal tidak boleh kurang dari awal bulan ini.',
+            'tanggal.before_or_equal' => 'Tanggal tidak boleh melebihi hari ini.'
         ]);
+
+        $totalPemasukan = \Modules\Keuangan\Models\Pemasukan::where('is_draft', false)->sum('jumlah');
+        $totalPengeluaran = \Modules\Keuangan\Models\Pengeluaran::where('is_draft', false)->sum('jumlah');
+        $saldo = $totalPemasukan - $totalPengeluaran;
+
+        if ($request->jumlah > $saldo) {
+            return back()->withErrors(['jumlah' => 'Jumlah pengeluaran melebihi saldo yang tersedia (Rp ' . number_format($saldo, 0, ',', '.') . ').'])->withInput();
+        }
 
         $pengeluaran = new Pengeluaran;
         $pengeluaran->tujuan_id   = $request->tujuan_id;
@@ -59,52 +75,90 @@ class PengeluaranController extends Controller
 
     public function edit(string $id): View
     {
+        if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+            abort(403, 'Akses Ditolak: Hanya super admin yang memiliki wewenang untuk mengubah atau menghapus data pengeluaran.');
+        }
         $pengeluaran = Pengeluaran::findOrFail($id);
+
         $tujuans = Tujuan::all();
         return view('keuangan::pengeluarans.edit', compact('pengeluaran', 'tujuans'));
     }
 
     public function update(Request $request, string $id): RedirectResponse
     {
+        if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+            abort(403, 'Akses Ditolak: Hanya super admin yang memiliki wewenang untuk mengubah atau menghapus data pengeluaran.');
+        }
+        $pengeluaran = Pengeluaran::findOrFail($id);
+
+        $dateRules = 'required|date|before_or_equal:' . date('Y-m-d');
+        if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+            $dateRules .= '|after_or_equal:' . date('Y-m-01');
+        }
+
         $request->validate([
             'tujuan_id'   => 'required|exists:tujuans,id',
-            'jumlah'      => 'required|numeric',
-            'tanggal'     => 'required|date',
+            'jumlah'      => 'required|numeric|min:0|max:99999999999999999999999999',
+            'tanggal'     => $dateRules,
             'deskripsi'   => 'nullable|string'
+        ], [
+            'tanggal.after_or_equal' => 'Tanggal tidak boleh kurang dari awal bulan ini.',
+            'tanggal.before_or_equal' => 'Tanggal tidak boleh melebihi hari ini.'
         ]);
+        
+        $totalPemasukan = \Modules\Keuangan\Models\Pemasukan::where('is_draft', false)->sum('jumlah');
+        $totalPengeluaranLain = \Modules\Keuangan\Models\Pengeluaran::where('id', '!=', $id)->where('is_draft', false)->sum('jumlah');
+        $saldo = $totalPemasukan - $totalPengeluaranLain;
 
-        $pengeluaran = Pengeluaran::findOrFail($id);
+        if ($request->jumlah > $saldo) {
+            return back()->withErrors(['jumlah' => 'Jumlah pengeluaran melebihi saldo yang tersedia (Rp ' . number_format($saldo, 0, ',', '.') . ').'])->withInput();
+        }
+
         $pengeluaran->tujuan_id   = $request->tujuan_id;
         $pengeluaran->jumlah      = $request->jumlah;
         $pengeluaran->tanggal     = $request->tanggal;
         $pengeluaran->deskripsi   = $request->deskripsi;
         $pengeluaran->save();
 
-        // Sync back to Uang Saku if linked and status is "Sudah Diterima Santri"
-        if ($pengeluaran->uang_saku_id) {
-            $uangsaku = UangSaku::find($pengeluaran->uang_saku_id);
-            if ($uangsaku && $uangsaku->status === 'Sudah Diterima Santri') {
-                $uangsaku->update([
-                    'jumlah' => $pengeluaran->jumlah,
-                    'tanggal' => $pengeluaran->tanggal
-                ]);
-            }
-        }
+        // Uang Saku sync removed
 
         return redirect()->route('keuangan.pengeluarans.index')->with('success', 'Pengeluaran berhasil diperbarui!');
     }
 
     public function destroy(string $id): RedirectResponse
     {
+        if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+            abort(403, 'Akses Ditolak: Hanya super admin yang memiliki wewenang untuk mengubah atau menghapus data pengeluaran.');
+        }
         $pengeluaran = Pengeluaran::findOrFail($id);
 
-        // If this pengeluaran is linked to a Uang Saku, delete the Uang Saku as well
-        if ($pengeluaran->uang_saku_id) {
-            UangSaku::where('id', $pengeluaran->uang_saku_id)->delete();
-        }
+        // Uang Saku sync removed
 
         $pengeluaran->delete();
 
         return redirect()->route('keuangan.pengeluarans.index')->with('success', 'Pengeluaran berhasil dihapus!');
+    }
+
+    public function confirmDraft(Request $request, string $id): RedirectResponse
+    {
+        $pengeluaran = Pengeluaran::findOrFail($id);
+        
+        if (!$pengeluaran->is_draft) {
+            return back()->with('error', 'Data ini sudah dikonfirmasi sebelumnya.');
+        }
+
+        // Validate balance
+        $totalPemasukan = \Modules\Keuangan\Models\Pemasukan::where('is_draft', false)->sum('jumlah');
+        $totalPengeluaranLain = \Modules\Keuangan\Models\Pengeluaran::where('is_draft', false)->sum('jumlah');
+        $saldo = $totalPemasukan - $totalPengeluaranLain;
+
+        if ($pengeluaran->jumlah > $saldo) {
+            return back()->with('error', 'Saldo tidak mencukupi untuk menambahkan data pengeluaran yang dijadwalkan (Rp ' . number_format($saldo, 0, ',', '.') . ').');
+        }
+
+        $pengeluaran->is_draft = false;
+        $pengeluaran->save();
+
+        return back()->with('success', 'Draft pengeluaran berhasil dikonfirmasi menjadi transaksi.');
     }
 }

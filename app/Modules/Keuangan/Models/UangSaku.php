@@ -11,6 +11,7 @@ class UangSaku extends Model
 
     protected $fillable = [
         'siswa_id',
+        'kelas_id',
         'jumlah',
         'tanggal',
         'status',
@@ -26,6 +27,12 @@ class UangSaku extends Model
     public function siswa()
     {
         return $this->belongsTo(Siswa::class);
+    }
+
+    // relasi ke Kelas
+    public function kelas()
+    {
+        return $this->belongsTo(\App\Modules\Akademik\Models\Kelas::class, 'kelas_id');
     }
     
     // Accessor untuk status default

@@ -31,7 +31,9 @@ class KeuanganController extends Controller
             ->whereYear('tanggal', $currentYear)
             ->sum('jumlah');
             
-        $saldo = $totalPemasukan - $totalPengeluaran;
+        $saldoKeseluruhanPemasukan = \Modules\Keuangan\Models\Pemasukan::sum('jumlah');
+        $saldoKeseluruhanPengeluaran = \Modules\Keuangan\Models\Pengeluaran::sum('jumlah');
+        $saldo = $saldoKeseluruhanPemasukan - $saldoKeseluruhanPengeluaran;
         
         $countTransaksi = \Modules\Keuangan\Models\Pemasukan::whereMonth('tanggal', $currentMonth)
             ->whereYear('tanggal', $currentYear)
@@ -40,9 +42,9 @@ class KeuanganController extends Controller
             ->whereYear('tanggal', $currentYear)
             ->count();
             
-        $totalUangSaku = \Modules\Keuangan\Models\UangSaku::whereMonth('tanggal', $currentMonth)
-            ->whereYear('tanggal', $currentYear)
-            ->sum('jumlah');
+        $uangSakuMasuk = \Modules\Keuangan\Models\UangSaku::where('status', '!=', 'Sudah Diterima Santri')->sum('jumlah');
+        $uangSakuKeluar = \Modules\Keuangan\Models\UangSaku::where('status', 'Sudah Diterima Santri')->sum('jumlah');
+        $saldoUangSaku = $uangSakuMasuk - $uangSakuKeluar;
         
         return view('keuangan::index', [
             'title' => 'Dashboard Keuangan - ' . $monthName,
@@ -51,7 +53,7 @@ class KeuanganController extends Controller
             'totalPengeluaran' => $totalPengeluaran,
             'saldo' => $saldo,
             'countTransaksi' => $countTransaksi,
-            'totalUangSaku' => $totalUangSaku,
+            'saldoUangSaku' => $saldoUangSaku,
         ]);
     }
 

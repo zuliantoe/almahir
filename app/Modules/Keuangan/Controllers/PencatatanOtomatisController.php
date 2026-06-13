@@ -13,9 +13,27 @@ use Carbon\Carbon;
 
 class PencatatanOtomatisController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $pencatatans = PencatatanOtomatis::with(['sumber', 'tujuan'])->orderBy('created_at', 'desc')->get();
+        $query = PencatatanOtomatis::with(['sumber', 'tujuan'])->orderBy('created_at', 'desc');
+
+        if ($request->filled('tipe') && $request->tipe != 'semua') {
+            $query->where('tipe', $request->tipe);
+        }
+
+        if ($request->filled('frekuensi') && $request->frekuensi != 'semua') {
+            $query->where('frekuensi', $request->frekuensi);
+        }
+
+        if ($request->filled('status') && $request->status != 'semua') {
+            if ($request->status == 'aktif') {
+                $query->where('is_active', true);
+            } elseif ($request->status == 'nonaktif') {
+                $query->where('is_active', false);
+            }
+        }
+
+        $pencatatans = $query->get();
         return view('keuangan::pencatatanotomatis.index', compact('pencatatans'));
     }
 
@@ -133,7 +151,8 @@ class PencatatanOtomatisController extends Controller
                         'tanggal' => $today,
                         'waktu' => $currentTime,
                         'deskripsi' => $task->deskripsi,
-                        'is_otomatis' => true
+                        'is_otomatis' => true,
+                        'is_draft' => true
                     ]);
                 } elseif ($task->tipe == 'pengeluaran') {
                     Pengeluaran::create([
@@ -142,7 +161,8 @@ class PencatatanOtomatisController extends Controller
                         'tanggal' => $today,
                         'waktu' => $currentTime,
                         'deskripsi' => $task->deskripsi,
-                        'is_otomatis' => true
+                        'is_otomatis' => true,
+                        'is_draft' => true
                     ]);
                 }
 

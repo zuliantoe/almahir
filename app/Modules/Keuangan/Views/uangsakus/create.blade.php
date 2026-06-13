@@ -67,6 +67,8 @@
                                        id="tanggal" 
                                        name="tanggal" 
                                        value="{{ old('tanggal', date('Y-m-d')) }}" 
+                                       max="{{ date('Y-m-d') }}"
+                                       @if(!auth()->check() || !auth()->user()->isSuperAdmin()) min="{{ date('Y-m-01') }}" @endif
                                        required>
                                 @error('tanggal')
                                     <div class="invalid-feedback ml-2">{{ $message }}</div>
@@ -115,6 +117,7 @@
 @endsection
 
 @push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
 <style>
@@ -132,6 +135,7 @@
 @endpush
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -156,9 +160,30 @@ document.addEventListener("DOMContentLoaded", function () {
         this.value = formatNominal(this.value);
     });
 
-    document.getElementById("uangSakuForm").addEventListener("submit", function () {
-        const cleaned = amountInput.value.replace(/\./g, "");
-        amountInput.value = cleaned;
+    document.getElementById("uangSakuForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const isSuperAdmin = {{ auth()->check() && auth()->user()->isSuperAdmin() ? 'true' : 'false' }};
+        const confirmText = isSuperAdmin 
+            ? "Apakah data yang dimasukkan sudah benar?" 
+            : "Pastikan data yang dimasukkan sudah benar, tidak bisa mengubah data setelah konfirmasi";
+
+        Swal.fire({
+            title: 'Konfirmasi',
+            text: confirmText,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#4e73df',
+            cancelButtonColor: '#858796',
+            confirmButtonText: 'Ya, Benar!',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const cleaned = amountInput.value.replace(/\./g, "");
+                amountInput.value = cleaned;
+                this.submit();
+            }
+        });
     });
 });
 </script>

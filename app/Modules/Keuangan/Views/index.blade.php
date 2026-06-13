@@ -45,7 +45,7 @@
                     <i class="fas fa-wallet fa-fw"></i>
                 </span>
                 <div class="info-box-content">
-                    <span class="info-box-text text-uppercase text-muted small font-weight-bold">Saldo ({{ $monthName }})</span>
+                    <span class="info-box-text text-uppercase text-muted small font-weight-bold">Saldo per {{ $monthName }}</span>
                     <span class="info-box-number font-weight-bolder mb-0 {{ $saldo < 0 ? 'text-danger' : 'text-dark' }}" style="font-size: 1.15rem;">
                         Rp {{ number_format($saldo, 0, ',', '.') }}
                     </span>
@@ -93,9 +93,9 @@
                     <i class="fas fa-coins fa-fw"></i>
                 </span>
                 <div class="info-box-content">
-                    <span class="info-box-text text-uppercase text-muted small font-weight-bold">Uang Saku ({{ $monthName }})</span>
+                    <span class="info-box-text text-uppercase text-muted small font-weight-bold">Saldo Uang Saku</span>
                     <span class="info-box-number font-weight-bolder mb-0 text-dark" style="font-size: 1.15rem;">
-                        Rp {{ number_format($totalUangSaku, 0, ',', '.') }}
+                        Rp {{ number_format($saldoUangSaku, 0, ',', '.') }}
                     </span>
                 </div>
             </div>

@@ -43,6 +43,12 @@
             border-collapse: collapse;
             margin-bottom: 30px;
         }
+        .main-table thead {
+            display: table-header-group;
+        }
+        .main-table tfoot {
+            display: table-footer-group;
+        }
         .main-table th, .main-table td {
             border: 1px solid #dee2e6;
             padding: 8px;
@@ -56,6 +62,8 @@
         .row-date {
             background-color: #dbe4f9; /* Light blue from image */
             font-weight: bold;
+            page-break-after: avoid;
+            break-after: avoid;
         }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
@@ -87,8 +95,18 @@
             white-space: pre-line;
         }
         
+        .main-table tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .main-table thead tr {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
+        }
         .row-total-hari {
             background-color: #f8f9fa;
+            page-break-before: avoid;
+            break-before: avoid;
         }
         .row-grand-total {
             background-color: #e9ecef;
@@ -103,6 +121,14 @@
             width: 100%;
             margin-top: 50px;
             page-break-inside: avoid;
+        }
+        .keep-with-next {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
+        }
+        .keep-with-prev {
+            page-break-before: avoid !important;
+            break-before: avoid !important;
         }
         .signature-box {
             width: 50%;
@@ -121,8 +147,11 @@
                 padding: 0 2cm; /* Margin Kiri & Kanan */
                 margin: 0;
             }
-            .header {
+            .kop-surat {
                 padding-top: 2cm; /* Margin atas khusus Halaman 1 */
+            }
+            .header {
+                margin-top: 0;
                 margin-bottom: 20px;
             }
             .no-print {
@@ -162,7 +191,37 @@
             7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
         ];
         $periode = $currentMonth != 'all' ? $months[$currentMonth] . ' ' . $currentYear : 'Tahun ' . $currentYear;
+        
+        $titlePrefix = 'Laporan Keuangan';
+        if ($currentType == 'Pemasukan') {
+            $titlePrefix = 'Laporan Pemasukan';
+        } elseif ($currentType == 'Pengeluaran') {
+            $titlePrefix = 'Laporan Pengeluaran';
+        }
+        $fileName = $titlePrefix . ' ' . $periode;
+
+        // Calculate total transactions to see if the table is short
+        $totalTransactions = 0;
+        foreach($groupedTransactions as $date => $transactions) {
+            $totalTransactions += $transactions->count();
+        }
+        $isShortTable = $totalTransactions <= 2;
     @endphp
+
+    <table class="kop-surat" style="width: 100%; border-bottom: 1px solid #000; margin-bottom: 55px; padding-bottom: 10px;">
+        <tr>
+            <td style="width: 15%; vertical-align: middle; text-align: center;">
+                <img src="{{ asset('logo.png') }}" alt="Logo" style="max-width: 100px; height: auto;">
+            </td>
+            <td style="width: 85%; text-align: center; vertical-align: middle; padding-right: 15%;">
+                <div style="font-size: 16px; font-weight: bold; text-transform: uppercase; color: #000; font-family: Arial, sans-serif;">YAYASAN ALMAHIR ATTARBAWIYYAH SURAKARTA</div>
+                <div style="font-size: 18px; font-weight: bold; text-transform: uppercase; color: #000; font-family: Arial, sans-serif; margin-top: 4px; margin-bottom: 4px;">PONDOK PESANTREN QUR'AN DAN IT AL MAHIR</div>
+                <div style="font-size: 13px; color: #000; font-family: Arial, sans-serif;">NSP : 510033130037</div>
+                <div style="font-size: 13px; color: #000; font-family: Arial, sans-serif;">Alamat : Jl. Adi Sumarmo RT 001/RW 007 Gawanan, Colomadu,</div>
+                <div style="font-size: 13px; color: #000; font-family: Arial, sans-serif;">Karanganyar, Jawa Tengah 57175 No Telp : (0271) 7686636</div>
+            </td>
+        </tr>
+    </table>
 
     <div class="header">
         <h1>Buku Tabungan Keuangan</h1>
@@ -174,7 +233,7 @@
             <td width="15%"><b>Periode</b></td>
             <td width="35%">: {{ $periode }}</td>
             <td width="15%"><b>Tanggal Cetak</b></td>
-            <td width="35%">: {{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}</td>
+            <td width="35%">: {{ \Carbon\Carbon::now()->format('H:i') }} WIB {{ \Carbon\Carbon::now()->format('d/m/Y') }}</td>
         </tr>
         <tr>
             <td width="15%"><b>Jenis Transaksi</b></td>
@@ -183,7 +242,7 @@
     </table>
 
     <div class="table-pull-up">
-        <table class="main-table">
+        <table class="main-table" style="{{ $isShortTable ? 'page-break-inside: avoid !important; break-inside: avoid !important;' : '' }}">
             <thead>
             <tr style="border: none !important;">
                 <th colspan="{{ $currentType == 'all' ? '4' : '3' }}" class="page-spacer-header" style="border: none !important; background: transparent !important;"></th>
@@ -213,6 +272,21 @@
                 @php
                     $grandTotalKredit = 0;
                     $grandTotalDebit = 0;
+                    foreach($groupedTransactions as $date => $transactions) {
+                        $grandTotalKredit += $transactions->where('jenis', 'Pemasukan')->sum('jumlah');
+                        $grandTotalDebit += $transactions->where('jenis', 'Pengeluaran')->sum('jumlah');
+                    }
+
+                    $shouldKeepLastGroupTogether = false;
+                    if (!$groupedTransactions->isEmpty()) {
+                        $allDates = $groupedTransactions->keys();
+                        $lastDate = $allDates->last();
+                        $lastDateTransactions = $groupedTransactions->get($lastDate);
+                        
+                        if ($lastDateTransactions->count() === 1) {
+                            $shouldKeepLastGroupTogether = true;
+                        }
+                    }
                 @endphp
 
                 @foreach($groupedTransactions as $date => $transactions)
@@ -223,16 +297,25 @@
                         $dailyKredit = $transactions->where('jenis', 'Pemasukan')->sum('jumlah');
                         $dailyDebit = $transactions->where('jenis', 'Pengeluaran')->sum('jumlah');
                         
-                        $grandTotalKredit += $dailyKredit;
-                        $grandTotalDebit += $dailyDebit;
+                        $isLastDate = ($date === $lastDate);
+                        $trxCount = $transactions->count();
                     @endphp
                     
+                    @if($isLastDate && $trxCount === 1)
+                        </tbody><tbody style="page-break-inside: avoid; break-inside: avoid;">
+                        @php $secondTbodyOpened = true; @endphp
+                    @endif
+
                     <tr class="row-date">
                         <td class="text-center">{{ $formattedDate }}</td>
                         <td colspan="{{ $currentType == 'all' ? '3' : '2' }}">{{ $dayName }} - {{ $transactions->count() }} transaksi</td>
                     </tr>
 
                     @foreach($transactions as $trx)
+                    @if($isLastDate && $trxCount > 1 && $loop->last)
+                        </tbody><tbody style="page-break-inside: avoid; break-inside: avoid;">
+                        @php $secondTbodyOpened = true; @endphp
+                    @endif
                     <tr>
                         <td class="text-center">{{ $trx['waktu'] != '-' ? $trx['waktu'] . ' WIB' : '-' }}</td>
                         <td>
@@ -275,6 +358,14 @@
                     </tr>
                 @endforeach
                 
+            @endif
+
+            @if(!isset($secondTbodyOpened) || !$secondTbodyOpened)
+        </tbody>
+        <tbody style="page-break-inside: avoid; break-inside: avoid;">
+            @endif
+
+            @if(!$groupedTransactions->isEmpty())
                 <!-- Spacer -->
                 <tr style="border: none; background-color: transparent;">
                     <td colspan="{{ $currentType == 'all' ? '4' : '3' }}" style="border: none; height: 30px;"></td>
@@ -291,29 +382,32 @@
                 </tr>
                 @if($currentType == 'all')
                 <tr class="row-saldo">
-                    <td colspan="2" class="text-right">SALDO AKHIR {{ $currentMonth != 'all' ? 'BULAN' : 'TAHUN' }}:</td>
-                    <td colspan="2" class="text-center {{ ($grandTotalKredit - $grandTotalDebit) < 0 ? 'text-danger' : 'text-success' }}">
-                        Rp{{ number_format($grandTotalKredit - $grandTotalDebit, 0, ',', '.') }}
+                    <td colspan="2" class="text-right">SALDO AKHIR:</td>
+                    <td colspan="2" class="text-center {{ $totalSaldoKeseluruhan < 0 ? 'text-danger' : 'text-success' }}">
+                        {{ $totalSaldoKeseluruhan < 0 ? '-' : '' }}Rp{{ number_format(abs($totalSaldoKeseluruhan), 0, ',', '.') }}
                     </td>
                 </tr>
                 @endif
             @endif
+            <tr style="border: none !important;">
+                <td colspan="{{ $currentType == 'all' ? '4' : '3' }}" style="border: none !important; background-color: transparent;">
+                    <div class="signature-area" style="margin-top: 30px;">
+                        <div class="signature-box">
+                            Mengetahui,
+                            <div class="signature-space"></div>
+                            (..................................)
+                        </div>
+                        <div class="signature-box">
+                            Dibuat Oleh,
+                            <div class="signature-space"></div>
+                            (..................................)
+                        </div>
+                        <div style="clear: both;"></div>
+                    </div>
+                </td>
+            </tr>
         </tbody>
     </table>
-    </div>
-
-    <div class="signature-area">
-        <div class="signature-box">
-            Mengetahui,
-            <div class="signature-space"></div>
-            (..................................)
-        </div>
-        <div class="signature-box">
-            Dibuat Oleh,
-            <div class="signature-space"></div>
-            (..................................)
-        </div>
-        <div style="clear: both;"></div>
     </div>
 </div> <!-- End of laporan-content -->
 
@@ -321,10 +415,10 @@
 <script>
     window.onload = function() {
         // Ubah title dokumen sementara untuk nama file default saat Save as PDF
-        document.title = 'Laporan_Keuangan_{{ str_replace(' ', '_', $periode) }}';
+        document.title = '{{ $fileName }}';
         
         setTimeout(function() {
-            alert("PENTING:\n\nPada jendela cetak (Print) yang muncul, pastikan Anda mengubah opsi 'Tujuan' (Destination/Printer) menjadi 'Simpan sebagai PDF' (Save as PDF) lalu klik Simpan.");
+            alert("PENTING:\n\nPada halaman cetak (Print) yang muncul, pastikan anda mengubah opsi 'Tujuan' (Destination/Printer) menjadi 'Simpan sebagai PDF' (Save as PDF) lalu klik Simpan.");
             window.print();
         }, 500);
     }
@@ -332,8 +426,12 @@
 @else
 <script>
     window.onload = function() {
-        document.title = 'Laporan_Keuangan_{{ str_replace(' ', '_', $periode) }}';
-        window.print();
+        document.title = '{{ $fileName }}';
+        
+        setTimeout(function() {
+            alert("PENTING:\n\nPada halaman cetak (Print) yang muncul, pastikan anda memilih printer anda pada opsi Tujuan (Destination).");
+            window.print();
+        }, 500);
     }
 </script>
 @endif

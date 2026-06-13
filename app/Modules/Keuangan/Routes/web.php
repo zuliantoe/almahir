@@ -24,7 +24,9 @@ use Modules\Keuangan\Controllers\PembayaranSantriController;
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [KeuanganController::class, 'index'])->name('index');
     Route::resource('pemasukans', PemasukanController::class);
+    Route::post('pemasukans/{id}/confirm', [PemasukanController::class, 'confirmDraft'])->name('pemasukans.confirmDraft');
     Route::resource('pengeluarans', PengeluaranController::class);
+    Route::post('pengeluarans/{id}/confirm', [PengeluaranController::class, 'confirmDraft'])->name('pengeluarans.confirmDraft');
     Route::resource('sumbers', SumberController::class);
     Route::resource('tujuans', TujuanController::class);
     

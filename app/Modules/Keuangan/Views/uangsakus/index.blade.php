@@ -2,11 +2,160 @@
 
 @section('content')
 <div class="container-fluid">
+    @php
+        $months = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
+            7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        $days = [
+            'Senin' => 'Senin', 'Selasa' => 'Selasa', 'Rabu' => 'Rabu', 
+            'Kamis' => 'Kamis', 'Jumat' => 'Jumat', 'Sabtu' => 'Sabtu', 'Minggu' => 'Ahad'
+        ];
+
+        $currentYear = request('year', date('Y'));
+        $currentMonth = request('month', date('n'));
+        $currentDay = (auth()->user()->hasRole('SISWA') || auth()->user()->hasRole('WALI_MURID')) ? 'all' : request('day', 'all');
+        $currentStatus = 'all';
+        
+        // For Admin/Pengurus
+        if (auth()->user()->hasRole('SISWA') || auth()->user()->hasRole('WALI_MURID')) {
+            $currentSantri = 'all';
+        } else {
+            $currentSantri = request('santri_id', 'all');
+        }
+        
+        $searchKeyword = (auth()->user()->hasRole('SISWA') || auth()->user()->hasRole('WALI_MURID')) ? '' : request('search', '');
+        
+        // Filter logic
+        $filteredData = $uangsakus->filter(function($item) use ($currentYear, $currentMonth, $currentDay, $currentSantri, $searchKeyword) {
+            $date = \Carbon\Carbon::parse($item->tanggal);
+            if ($date->format('Y') != $currentYear) return false;
+            if ($currentMonth != 'all' && $date->format('n') != $currentMonth) return false;
+            if ($currentDay != 'all' && $date->locale('id')->translatedFormat('l') != $currentDay) return false;
+            
+            if ($currentSantri != 'all' && $item->siswa_id != $currentSantri) return false;
+
+            if (!empty($searchKeyword)) {
+                $keyword = strtolower($searchKeyword);
+                $siswaMatch = $item->siswa ? str_contains(strtolower($item->siswa->nama), $keyword) : false;
+                $descMatch = $item->deskripsi ? str_contains(strtolower($item->deskripsi), $keyword) : false;
+                if (!$siswaMatch && !$descMatch) return false;
+            }
+            return true;
+        });
+
+        // Filter logic for monthly stats (ignores status filter, applies year/month/day/santri/search filters)
+        $monthlyData = $uangsakus->filter(function($item) use ($currentYear, $currentMonth, $currentDay, $currentSantri, $searchKeyword) {
+            $date = \Carbon\Carbon::parse($item->tanggal);
+            if ($date->format('Y') != $currentYear) return false;
+            if ($currentMonth != 'all' && $date->format('n') != $currentMonth) return false;
+            if ($currentDay != 'all' && $date->locale('id')->translatedFormat('l') != $currentDay) return false;
+            if ($currentSantri != 'all' && $item->siswa_id != $currentSantri) return false;
+
+            if (!empty($searchKeyword)) {
+                $keyword = strtolower($searchKeyword);
+                $siswaMatch = $item->siswa ? str_contains(strtolower($item->siswa->nama), $keyword) : false;
+                $descMatch = $item->deskripsi ? str_contains(strtolower($item->deskripsi), $keyword) : false;
+                if (!$siswaMatch && !$descMatch) return false;
+            }
+            return true;
+        });
+
+        // Filter logic for overall stats (ignores date/month/year/day/status filters)
+        $allTimeData = $uangsakus->filter(function($item) use ($currentSantri, $searchKeyword) {
+            if ($currentSantri != 'all' && $item->siswa_id != $currentSantri) return false;
+            if (!empty($searchKeyword)) {
+                $keyword = strtolower($searchKeyword);
+                $siswaMatch = $item->siswa ? str_contains(strtolower($item->siswa->nama), $keyword) : false;
+                $descMatch = $item->deskripsi ? str_contains(strtolower($item->deskripsi), $keyword) : false;
+                if (!$siswaMatch && !$descMatch) return false;
+            }
+            return true;
+        });
+
+        // New Stats Logic based on Status
+        $totalBelumDiberikan = $allTimeData->where('status', '!=', 'Sudah Diterima Santri')->sum('jumlah');
+        if (auth()->user()->hasRole('SISWA') || auth()->user()->hasRole('WALI_MURID')) {
+            $totalSudahDiberikan = $allTimeData->where('status', 'Sudah Diterima Santri')->sum('jumlah');
+        } else {
+            $totalSudahDiberikan = $monthlyData->where('status', 'Sudah Diterima Santri')->sum('jumlah');
+        }
+
+        // Group by santri for more accurate per-person status
+        $groupedBySantri = $monthlyData->groupBy('siswa_id');
+        
+        $santriBelumDiberikan = $groupedBySantri->filter(function($items) {
+            // Santri Belum Menerima: Jika punya minimal satu data yang belum diterima
+            return $items->where('status', '!=', 'Sudah Diterima Santri')->count() > 0;
+        })->count();
+
+        $santriSudahDiberikan = $groupedBySantri->filter(function($items) {
+            // Santri Sudah Menerima: Jika SEMUA datanya sudah diterima
+            return $items->where('status', '!=', 'Sudah Diterima Santri')->count() === 0;
+        })->count();
+
+        // Kanban board logic
+        // === SORTING ===
+        // Kanban board logic: Sort by date first, then by the most recent update time
+        $sortedData = $filteredData->sort(function($a, $b) {
+            // Primary sort: Date (tanggal) descending
+            if ($a->tanggal != $b->tanggal) {
+                return $a->tanggal > $b->tanggal ? -1 : 1;
+            }
+            // Secondary sort: Updated at descending
+            return $a->updated_at > $b->updated_at ? -1 : 1;
+        });
+        $groupedData = $sortedData->groupBy(function($item) { 
+            return \Carbon\Carbon::parse($item->tanggal)->format('Y-m-d'); 
+        });
+
+        $userAgent = request()->userAgent();
+        $isMobileOrTablet = preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $userAgent);
+        
+        $perPage = $isMobileOrTablet ? 4 : 6;
+        
+        $page = request()->get('page', 1);
+        $paginatedGroups = new \Illuminate\Pagination\LengthAwarePaginator(
+            $groupedData->slice(($page - 1) * $perPage, $perPage)->all(),
+            $groupedData->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        $currentPageItemsCount = collect($paginatedGroups->items())->flatten(1)->count();
+
+        $dynamicStatTitle = 'Total Uang Saku Sudah Diterima Santri';
+        if (!auth()->user()->hasRole('SISWA') && !auth()->user()->hasRole('WALI_MURID')) {
+            if ($currentDay != 'all') {
+                $dynamicStatTitle .= ' Hari ' . ($days[$currentDay] ?? $currentDay);
+            }
+            if ($currentMonth != 'all') {
+                $dynamicStatTitle .= ' Bulan ' . ($months[$currentMonth] ?? $currentMonth);
+            }
+            $dynamicStatTitle .= ' Tahun ' . $currentYear;
+        }
+
+        $dynamicBoardTitle = 'Board Uang Saku';
+        if ($currentDay != 'all') {
+            $dynamicBoardTitle .= ' Hari ' . ($days[$currentDay] ?? $currentDay);
+        }
+        if ($currentMonth != 'all') {
+            $dynamicBoardTitle .= ' Bulan ' . ($months[$currentMonth] ?? $currentMonth);
+        } else {
+            $dynamicBoardTitle .= ' Semua Bulan';
+        }
+        $dynamicBoardTitle .= ' Tahun ' . $currentYear;
+    @endphp
+
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">
             @if(auth()->user()->hasRole('SISWA'))
                 Catatan Uang Saku Saya
+            @elseif(auth()->user()->hasRole('WALI_MURID'))
+                Catatan Uang Saku Anak Saya
             @else
                 Manajemen Uang Saku Santri
             @endif
@@ -16,82 +165,141 @@
         </div>
     </div>
 
+    @if(auth()->user()->hasRole('WALI_MURID') && isset($anakSiswas) && $anakSiswas->count() > 1)
+    <div class="row mb-4">
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card shadow-sm border-left-primary">
+                <div class="card-body py-2">
+                    <form method="GET" action="{{ route('keuangan.uangsakus.index') }}" class="mb-0">
+                        <input type="hidden" name="year" value="{{ $currentYear }}">
+                        <input type="hidden" name="month" value="{{ $currentMonth }}">
+                        <label class="form-label small text-muted font-weight-bold mb-1">Pilih Anak</label>
+                        <select name="santri_id" class="form-select custom-select shadow-sm" onchange="this.form.submit()">
+                            @foreach($anakSiswas as $anak)
+                                <option value="{{ $anak->id }}" {{ (isset($selectedAnakId) && $selectedAnakId == $anak->id) ? 'selected' : '' }}>
+                                    {{ $anak->nama }} {{ isset($anak->kelas->tingkat) ? '(' . $anak->kelas->tingkat->nama_tingkat . ')' : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Advanced Filters -->
+    @if(!auth()->user()->hasRole('SISWA') && !auth()->user()->hasRole('WALI_MURID'))
+    <!-- Total Uang Saku Belum Diterima Santri (Khusus Admin/Super Admin, di atas filter) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body" style="font-family: system-ui, -apple-system, sans-serif;">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Total Uang Saku Belum Diterima Santri
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                Rp{{ number_format($totalBelumDiberikan, 0, ',', '.') }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-hand-holding-usd fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Filter Riwayat Uang Saku</h6>
+                </div>
+                <div class="card-body">
+                    <form id="filterForm" method="GET" action="{{ route('keuangan.uangsakus.index') }}">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-6 {{ (auth()->user()->hasRole('SISWA') || auth()->user()->hasRole('WALI_MURID')) ? 'col-md-6 col-lg-6' : 'col-md-4 col-lg-2' }}">
+                                <label class="form-label small text-muted font-weight-bold mb-1">Tahun</label>
+                                <select name="year" class="form-select custom-select shadow-sm" onchange="this.form.submit()">
+                                    @for($i = date('Y'); $i >= date('Y')-5; $i--)
+                                        <option value="{{ $i }}" {{ $currentYear == $i ? 'selected' : '' }}>{{ $i }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+
+                            <div class="col-6 {{ (auth()->user()->hasRole('SISWA') || auth()->user()->hasRole('WALI_MURID')) ? 'col-md-6 col-lg-6' : 'col-md-4 col-lg-2' }}">
+                                <label class="form-label small text-muted font-weight-bold mb-1">Bulan</label>
+                                <select name="month" class="form-select custom-select shadow-sm" onchange="this.form.submit()">
+                                    <option value="all" {{ $currentMonth == 'all' ? 'selected' : '' }}>Semua Bulan</option>
+                                    @foreach($months as $key => $monthName)
+                                        <option value="{{ $key }}" {{ $currentMonth == $key ? 'selected' : '' }}>
+                                            {{ $monthName }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            @if(!auth()->user()->hasRole('SISWA') && !auth()->user()->hasRole('WALI_MURID'))
+                            <div class="col-6 col-md-4 col-lg-2">
+                                <label class="form-label small text-muted font-weight-bold mb-1">Hari</label>
+                                <select name="day" class="form-select custom-select shadow-sm" onchange="this.form.submit()">
+                                    <option value="all" {{ $currentDay == 'all' ? 'selected' : '' }}>Semua Hari</option>
+                                    @foreach($days as $dayVal => $dayLabel)
+                                        <option value="{{ $dayVal }}" {{ $currentDay == $dayVal ? 'selected' : '' }}>
+                                            {{ $dayLabel }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            @endif
+
+                            @if(!auth()->user()->hasRole('SISWA') && !auth()->user()->hasRole('WALI_MURID'))
+                            <div class="col-12 col-md-12 col-lg-6">
+                                <label class="form-label small text-muted font-weight-bold mb-1">Santri</label>
+                                <select name="santri_id" class="form-select custom-select shadow-sm select2" onchange="this.form.submit()">
+                                    <option value="all" {{ $currentSantri == 'all' ? 'selected' : '' }}>Semua Santri</option>
+                                    @foreach($siswas as $siswa)
+                                        @php
+                                            $tingkat = isset($siswa->kelas->tingkat) ? "(" . $siswa->kelas->tingkat->nama_tingkat . ")" : "";
+                                        @endphp
+                                        <option value="{{ $siswa->id }}" {{ $currentSantri == $siswa->id ? 'selected' : '' }}>
+                                            {{ $siswa->nama }} {{ $tingkat }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-12 col-lg-12 mt-3">
+                                <label class="form-label small text-muted font-weight-bold mb-1">Cari Transaksi</label>
+                                <div class="input-group shadow-sm">
+                                    <input type="text" name="search" class="form-control" 
+                                           placeholder="Cari santri atau keterangan..." value="{{ $searchKeyword }}">
+                                    <button type="submit" class="btn btn-primary px-3">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    @if($searchKeyword || $currentMonth != 'all' || $currentDay != 'all' || (!auth()->user()->hasRole('SISWA') && $currentSantri != 'all'))
+                                    <a href="{{ route('keuangan.uangsakus.index') }}" class="btn btn-outline-danger px-3" title="Reset Filter">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                    @endif
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Statistics Cards -->
     <div class="row">
-        @php
-            $months = [
-                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
-                7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
-            ];
-
-            $currentYear = request('year', date('Y'));
-            $currentMonth = request('month', 'all');
-            $searchKeyword = request('search', '');
-            
-            // Filter logic
-            $filteredData = $uangsakus->filter(function($item) use ($currentYear, $currentMonth, $searchKeyword) {
-                $date = \Carbon\Carbon::parse($item->tanggal);
-                if ($date->format('Y') != $currentYear) return false;
-                if ($currentMonth != 'all' && $date->format('n') != $currentMonth) return false;
-                if (!empty($searchKeyword)) {
-                    $keyword = strtolower($searchKeyword);
-                    $siswaMatch = $item->siswa ? str_contains(strtolower($item->siswa->nama), $keyword) : false;
-                    $descMatch = $item->deskripsi ? str_contains(strtolower($item->deskripsi), $keyword) : false;
-                    if (!$siswaMatch && !$descMatch) return false;
-                }
-                return true;
-            });
-
-            // New Stats Logic based on Status
-            $totalBelumDiberikan = $filteredData->where('status', '!=', 'Sudah Diterima Santri')->sum('jumlah');
-            $totalSudahDiberikan = $filteredData->where('status', 'Sudah Diterima Santri')->sum('jumlah');
-
-            // Group by santri for more accurate per-person status
-            $groupedBySantri = $filteredData->groupBy('siswa_id');
-            
-            $santriBelumDiberikan = $groupedBySantri->filter(function($items) {
-                // Santri Belum Menerima: Jika punya minimal satu data yang belum diterima
-                return $items->where('status', '!=', 'Sudah Diterima Santri')->count() > 0;
-            })->count();
-
-            $santriSudahDiberikan = $groupedBySantri->filter(function($items) {
-                // Santri Sudah Menerima: Jika SEMUA datanya sudah diterima
-                return $items->where('status', '!=', 'Sudah Diterima Santri')->count() === 0;
-            })->count();
-
-            // Kanban board logic
-            // === SORTING ===
-            // Kanban board logic: Sort by date first, then by the most recent update time
-            $sortedData = $filteredData->sort(function($a, $b) {
-                // Primary sort: Date (tanggal) descending
-                if ($a->tanggal != $b->tanggal) {
-                    return $a->tanggal > $b->tanggal ? -1 : 1;
-                }
-                // Secondary sort: Updated at descending
-                return $a->updated_at > $b->updated_at ? -1 : 1;
-            });
-            $groupedData = $sortedData->groupBy(function($item) { 
-                return \Carbon\Carbon::parse($item->tanggal)->format('Y-m-d'); 
-            });
-
-            $userAgent = request()->userAgent();
-            $isMobileOrTablet = preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $userAgent);
-            
-            $perPage = $isMobileOrTablet ? 4 : 6;
-            
-            $page = request()->get('page', 1);
-            $paginatedGroups = new \Illuminate\Pagination\LengthAwarePaginator(
-                $groupedData->slice(($page - 1) * $perPage, $perPage)->all(),
-                $groupedData->count(),
-                $perPage,
-                $page,
-                ['path' => request()->url(), 'query' => request()->query()]
-            );
-
-            $currentPageItemsCount = collect($paginatedGroups->items())->flatten(1)->count();
-        @endphp
-
-        <!-- Total Uang Saku Belum Diberikan -->
+        <!-- Total Uang Saku Belum Diberikan (Siswa / Wali) -->
+        @if(auth()->user()->hasRole('SISWA') || auth()->user()->hasRole('WALI_MURID'))
         <div class="col-xl-6 col-lg-6 col-md-6 mb-4">
             <div class="card border-left-warning shadow h-100 py-2">
                 <div class="card-body" style="font-family: system-ui, -apple-system, sans-serif;">
@@ -111,15 +319,20 @@
                 </div>
             </div>
         </div>
+        @endif
 
         <!-- Total Uang Saku Sudah Diberikan -->
-        <div class="col-xl-6 col-lg-6 col-md-6 mb-4">
+        <div class="{{ (auth()->user()->hasRole('SISWA') || auth()->user()->hasRole('WALI_MURID')) ? 'col-xl-6 col-lg-6 col-md-6' : 'col-12' }} mb-4">
             <div class="card border-left-success shadow h-100 py-2">
                 <div class="card-body" style="font-family: system-ui, -apple-system, sans-serif;">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Total Uang Saku Sudah Diterima Santri
+                                @if(auth()->user()->hasRole('SISWA') || auth()->user()->hasRole('WALI_MURID'))
+                                    Total Uang Saku Sudah Diterima Santri
+                                @else
+                                    {{ $dynamicStatTitle }}
+                                @endif
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
                                 Rp{{ number_format($totalSudahDiberikan, 0, ',', '.') }}
@@ -134,7 +347,8 @@
         </div>
 
         <!-- Total Santri Belum Diberikan -->
-        <div class="col-xl-6 col-lg-6 col-md-6 mb-4">
+        @if(!auth()->user()->hasRole('SISWA') && !auth()->user()->hasRole('WALI_MURID'))
+        <div class="col-12 mb-4">
             <div class="card border-left-danger shadow h-100 py-2">
                 <div class="card-body" style="font-family: system-ui, -apple-system, sans-serif;">
                     <div class="row no-gutters align-items-center">
@@ -155,7 +369,7 @@
         </div>
 
         <!-- Total Santri Sudah Diberikan -->
-        <div class="col-xl-6 col-lg-6 col-md-6 mb-4">
+        <div class="col-12 mb-4">
             <div class="card border-left-info shadow h-100 py-2">
                 <div class="card-body" style="font-family: system-ui, -apple-system, sans-serif;">
                     <div class="row no-gutters align-items-center">
@@ -174,59 +388,7 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Advanced Filters -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Filter Riwayat Uang Saku</h6>
-                </div>
-                <div class="card-body">
-                    <form id="filterForm" method="GET" action="{{ route('keuangan.uangsakus.index') }}">
-                        <div class="row g-3 align-items-end">
-                            <div class="col-6 col-md-3 col-lg-2">
-                                <label class="form-label small text-muted font-weight-bold mb-1">Tahun</label>
-                                <select name="year" class="form-select custom-select shadow-sm" onchange="this.form.submit()">
-                                    @for($i = date('Y'); $i >= date('Y')-5; $i--)
-                                        <option value="{{ $i }}" {{ $currentYear == $i ? 'selected' : '' }}>{{ $i }}</option>
-                                    @endfor
-                                </select>
-                            </div>
-
-                            <div class="col-6 col-md-3 col-lg-2">
-                                <label class="form-label small text-muted font-weight-bold mb-1">Bulan</label>
-                                <select name="month" class="form-select custom-select shadow-sm" onchange="this.form.submit()">
-                                    <option value="all" {{ $currentMonth == 'all' ? 'selected' : '' }}>Semua Bulan</option>
-                                    @foreach($months as $key => $monthName)
-                                        <option value="{{ $key }}" {{ $currentMonth == $key ? 'selected' : '' }}>
-                                            {{ $monthName }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="col-12 col-md-6 col-lg-8">
-                                <label class="form-label small text-muted font-weight-bold mb-1">Cari Transaksi</label>
-                                <div class="input-group shadow-sm">
-                                    <input type="text" name="search" class="form-control" 
-                                           placeholder="Cari santri atau keterangan..." value="{{ $searchKeyword }}">
-                                    <button type="submit" class="btn btn-primary px-3">
-                                        <i class="fas fa-search"></i>
-                                    </button>
-                                    @if($searchKeyword || $currentMonth != 'all')
-                                    <a href="{{ route('keuangan.uangsakus.index') }}" class="btn btn-outline-danger px-3" title="Reset Filter">
-                                        <i class="fas fa-times"></i>
-                                    </a>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+        @endif
     </div>
 
     <!-- Quick Actions -->
@@ -243,7 +405,7 @@
                             </div>
                         </div>
                         <div class="col-md-6 text-end">
-                            @if(!auth()->user()->hasRole('SISWA'))
+                            @if(!auth()->user()->hasRole('SISWA') && !auth()->user()->hasRole('WALI_MURID'))
                                 <div class="add-transaction-buttons">
                                     <a href="{{ route('keuangan.uangsakus.create') }}" class="btn btn-primary btn-add">
                                         <i class="fas fa-plus mr-2 me-2"></i>
@@ -264,10 +426,38 @@
             <div class="card shadow mb-4">
                 <div class="card-header py-3 bg-white border-bottom-0">
                     <div class="row align-items-center">
-                        <div class="col-12 col-md-4 mb-2 mb-md-0">
-                            <h6 class="m-0 font-weight-bold text-primary">Board Uang Saku</h6>
+                        <div class="col-12 col-md-6 mb-2 mb-md-0">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                {{ $dynamicBoardTitle }}
+                            </h6>
+                            @if(auth()->user()->hasRole('SISWA') || auth()->user()->hasRole('WALI_MURID'))
+                                <div class="mt-2">
+                                    <form method="GET" action="{{ route('keuangan.uangsakus.index') }}" class="d-flex align-items-center flex-wrap">
+                                        @if(auth()->user()->hasRole('WALI_MURID') && isset($selectedAnakId))
+                                            <input type="hidden" name="santri_id" value="{{ $selectedAnakId }}">
+                                        @endif
+                                        <div class="mr-2 mb-2" style="min-width: 130px;">
+                                            <select name="month" class="form-select custom-select shadow-sm" onchange="this.form.submit()" style="border-radius: 8px; font-size: 0.85rem; height: calc(1.5em + 0.5rem + 2px); padding: 0.25rem 0.5rem;">
+                                                <option value="all" {{ $currentMonth == 'all' ? 'selected' : '' }}>Semua Bulan</option>
+                                                @foreach($months as $key => $monthName)
+                                                    <option value="{{ $key }}" {{ $currentMonth == $key ? 'selected' : '' }}>
+                                                        {{ $monthName }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="mr-2 mb-2" style="min-width: 90px;">
+                                            <select name="year" class="form-select custom-select shadow-sm" onchange="this.form.submit()" style="border-radius: 8px; font-size: 0.85rem; height: calc(1.5em + 0.5rem + 2px); padding: 0.25rem 0.5rem;">
+                                                @for($i = date('Y'); $i >= date('Y')-5; $i--)
+                                                    <option value="{{ $i }}" {{ $currentYear == $i ? 'selected' : '' }}>{{ $i }}</option>
+                                                @endfor
+                                            </select>
+                                        </div>
+                                    </form>
+                                </div>
+                            @endif
                         </div>
-                        <div class="col-12 col-md-8 text-center text-md-end">
+                        <div class="col-12 col-md-6 text-center text-md-end">
                             <div class="text-muted small">
                                 <span>{{ $currentPageItemsCount }}</span> uang saku di halaman {{ $paginatedGroups->currentPage() }}
                                 @if($searchKeyword)
@@ -321,7 +511,7 @@
                                                     <p class="card-description">{{ $item->deskripsi ?? 'Tanpa keterangan' }}</p>
                                                 </div>
                                                 <div class="mt-2">
-                                                    @if(!auth()->user()->hasRole('SISWA'))
+                                                    @if(!auth()->user()->hasRole('SISWA') && !auth()->user()->hasRole('WALI_MURID'))
                                                         <div class="btn-group btn-group-sm w-100" role="group" style="border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                                                             <form action="{{ route('keuangan.uangsakus.updateStatus', $item->id) }}" method="POST" class="flex-fill m-0">
                                                                 @csrf @method('PATCH')
@@ -353,16 +543,25 @@
                                                     <a href="{{ route('keuangan.uangsakus.show', $item->id) }}" class="btn-action bg-primary" title="Detail">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    @if(!auth()->user()->hasRole('SISWA'))
-                                                        <a href="{{ route('keuangan.uangsakus.edit', $item->id) }}" class="btn-action btn-edit" title="Edit">
-                                                            <i class="fas fa-edit"></i>
-                                                        </a>
-                                                        <form action="{{ route('keuangan.uangsakus.destroy', $item->id) }}" method="POST" class="d-inline delete-form">
-                                                            @csrf @method('DELETE')
-                                                            <button type="button" class="btn-action btn-delete delete-btn" data-source="{{ $item->siswa->nama }}">
+                                                    @if(!auth()->user()->hasRole('SISWA') && !auth()->user()->hasRole('WALI_MURID'))
+                                                        @if(auth()->check() && auth()->user()->isSuperAdmin())
+                                                            <a href="{{ route('keuangan.uangsakus.edit', $item->id) }}" class="btn-action btn-edit" title="Edit">
+                                                                <i class="fas fa-edit"></i>
+                                                            </a>
+                                                            <form action="{{ route('keuangan.uangsakus.destroy', $item->id) }}" method="POST" class="d-inline delete-form">
+                                                                @csrf @method('DELETE')
+                                                                <button type="button" class="btn-action btn-delete delete-btn" data-source="{{ $item->siswa->nama }}">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                        @else
+                                                            <button type="button" class="btn-action btn-edit" title="Edit" onclick="Swal.fire('Akses Ditolak', 'Hanya super admin yang memiliki wewenang untuk mengubah atau menghapus data uang saku.', 'error'); return false;">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <button type="button" class="btn-action btn-delete" title="Hapus" onclick="Swal.fire('Akses Ditolak', 'Hanya super admin yang memiliki wewenang untuk mengubah atau menghapus data uang saku.', 'error'); return false;">
                                                                 <i class="fas fa-trash"></i>
                                                             </button>
-                                                        </form>
+                                                        @endif
                                                     @endif
                                                 </div>
                                                 <div class="card-time text-start">
@@ -398,6 +597,8 @@
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
 <style>
     :root {
         --primary: #4e73df;
@@ -412,7 +613,14 @@
         --glass-blur: 10px;
     }
 
-    /* Statistics Cards - EXACTLY SAME AS PEMASUKAN */
+    /* Statistics Cards - SAMA DENGAN REFERENSI */
+    .select2-container--bootstrap4 .select2-selection {
+        background-color: #f8f9fc !important;
+        border: none !important;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+        border-radius: 10px !important;
+        height: calc(1.5em + 0.75rem + 2px) !important;
+    }
     .card {
         background: var(--card-bg);
         backdrop-filter: var(--glass-blur);
@@ -700,8 +908,16 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        if (typeof jQuery !== 'undefined') {
+            $('.select2').select2({
+                theme: 'bootstrap4',
+                placeholder: "Semua Santri",
+                allowClear: true
+            });
+        }
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const form = this.closest('.delete-form');

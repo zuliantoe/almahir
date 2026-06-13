@@ -20,8 +20,15 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // Check if admin user already exists
-        if (User::where('email', 'admin@siakad.local')->exists()) {
-            $this->command->info('✓ Super Admin already exists: admin@siakad.local');
+        $admin = User::where('email', 'admin@siakad.local')->first();
+        if ($admin) {
+            $superAdminRole = Role::where('name', 'SUPER_ADMIN')->first();
+            if ($superAdminRole && !$admin->hasRole('SUPER_ADMIN')) {
+                $admin->assignRole($superAdminRole->id);
+                $this->command->info('✓ Assigned SUPER_ADMIN role to existing admin: admin@siakad.local');
+            } else {
+                $this->command->info('✓ Super Admin already exists: admin@siakad.local');
+            }
             return;
         }
 

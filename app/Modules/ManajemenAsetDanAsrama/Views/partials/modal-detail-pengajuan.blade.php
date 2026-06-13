@@ -64,6 +64,11 @@
                     <p id="detail_catatan_tolak" class="mb-0 text-dark small italic"></p>
                 </div>
 
+                <div id="section_alasan_pengajuan_ulang" class="mt-4 p-3 rounded border border-warning" style="display:none; background: #fffbeb;">
+                    <label class="small text-warning font-weight-bold mb-1 text-uppercase"><i class="fas fa-redo mr-1"></i> Alasan Pengajuan Ulang</label>
+                    <p id="detail_alasan_pengajuan_ulang" class="mb-0 text-dark small"></p>
+                </div>
+
                 <div class="mt-4 pt-3 border-top">
                     <h6 class="font-weight-bold text-muted mb-3 text-uppercase small"><i class="fas fa-link mr-1"></i> Riwayat Pengadaan Terkait</h6>
                     <div id="detail_pengadaan" class="table-responsive">

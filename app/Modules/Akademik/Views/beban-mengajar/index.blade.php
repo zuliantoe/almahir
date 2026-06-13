@@ -29,23 +29,26 @@
                     <div class="row">
                         @forelse($gurus as $guru)
                             @php
-                                // Asumsi: 24 jam adalah beban standar. 
-                                // Bisa disesuaikan dengan aturan sekolah sebenarnya.
-                                $progress = ($guru->total_jam / 24) * 100;
+                                $limit = $maxBeban ?? 24;
+                                $progress = $limit > 0 ? ($guru->total_jam / $limit) * 100 : 0;
                                 $progressClass = 'bg-info';
                                 $statusText = 'Belum Maksimal';
                                 
-                                if($guru->total_jam >= 24) {
+                                if($guru->total_jam == 0) {
+                                    $progressClass = 'bg-secondary';
+                                    $statusText = 'Belum Ada Jadwal';
+                                    $progress = 0;
+                                } elseif($guru->total_jam > $limit) {
+                                    $progressClass = 'bg-danger';
+                                    $statusText = 'Overload';
+                                    $progress = min($progress, 100);
+                                } elseif($guru->total_jam == $limit) {
                                     $progressClass = 'bg-success';
                                     $statusText = 'Full (Standar)';
                                     $progress = 100;
-                                } elseif($guru->total_jam == 0) {
-                                    $progressClass = 'bg-secondary';
-                                    $statusText = 'Belum Ada Jadwal';
-                                } elseif($guru->total_jam > 30) {
-                                    $progressClass = 'bg-danger';
-                                    $statusText = 'Overload';
-                                    $progress = 100;
+                                } else {
+                                    $progressClass = 'bg-info';
+                                    $statusText = 'Belum Maksimal';
                                 }
                             @endphp
                             <div class="col-md-4 col-sm-6 col-12">
@@ -54,7 +57,7 @@
                                     <div class="info-box-content">
                                         <span class="info-box-text font-weight-bold text-truncate" title="{{ $guru->nama }}">{{ $guru->nama }}</span>
                                         <span class="info-box-number text-lg mb-1">
-                                            {{ $guru->total_jam }} <small class="font-weight-normal text-muted">Jam / Minggu</small>
+                                            {{ $guru->total_jam }} <small class="font-weight-normal text-muted">/ {{ $limit }} Jam/Minggu</small>
                                         </span>
                                         <div class="progress" style="height: 6px;">
                                             <div class="progress-bar {{ $progressClass }}" style="width: {{ $progress }}%"></div>

@@ -32,6 +32,16 @@
                         @enderror
                     </div>
 
+                    <div class="form-group mb-4">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" name="bisa_double" value="1" class="custom-control-input" id="bisa_double" {{ old('bisa_double', $mataPelajaran->bisa_double) ? 'checked' : '' }}>
+                            <label class="custom-control-label font-weight-bold text-dark" for="bisa_double">Bisa Double / Kelas Gabungan</label>
+                        </div>
+                        <small class="form-text text-muted">
+                            Aktifkan jika mata pelajaran ini dapat diajarkan oleh guru yang sama di kelas/rombel yang berbeda pada hari dan jam pelajaran yang sama secara bersamaan (misal: Tahfidz/Halaqah/Upacara).
+                        </small>
+                    </div>
+
                     <hr>
 
                     <div class="d-flex justify-content-end">

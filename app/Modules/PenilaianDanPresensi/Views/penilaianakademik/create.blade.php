@@ -237,11 +237,12 @@
     }
 
     function fetchKKM() {
-        const rombelId = document.getElementById('rombel_id').value;
+        let rombelId = document.getElementById('rombel_id').value;
         const mapelId = document.getElementById('mapel_id').value;
         const kkmInput = document.getElementById('kkm');
 
-        if (!rombelId || !mapelId) return;
+        if (!mapelId) return;
+        if (!rombelId) rombelId = '0';
 
         const url = "{{ route('penilaiandanpresensi.penilaianakademik.get-kkm', [':rombelId', ':mapelId']) }}"
             .replace(':rombelId', rombelId)

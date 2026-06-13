@@ -214,17 +214,21 @@ class KalenderAkademikController extends Controller
         ];
 
         foreach ($events as $event) {
-            $start = date('Ymd\THis\Z', strtotime($event->tanggal_awal . ' 00:00:00'));
-            // Google and others treat the end date as exclusive for all-day events
-            $end = date('Ymd\THis\Z', strtotime($event->tanggal_akhir . ' 23:59:59'));
+            if (!$event->tanggal_awal) {
+                continue;
+            }
+
+            $endDateObj = ($event->tanggal_akhir ?? $event->tanggal_awal);
+            $dtStart = $event->tanggal_awal->format('Ymd');
+            $dtEnd = $endDateObj->copy()->addDay()->format('Ymd');
 
             $jenisLabel = $event->jenisKegiatan ? '[' . $event->jenisKegiatan->jeniskegiatan . '] ' : '';
 
             $ics[] = 'BEGIN:VEVENT';
             $ics[] = 'UID:' . $event->id . '@almahir';
             $ics[] = 'DTSTAMP:' . date('Ymd\THis\Z');
-            $ics[] = 'DTSTART;VALUE=DATE:' . date('Ymd', strtotime($event->tanggal_awal));
-            $ics[] = 'DTEND;VALUE=DATE:' . date('Ymd', strtotime($event->tanggal_akhir . ' +1 day'));
+            $ics[] = 'DTSTART;VALUE=DATE:' . $dtStart;
+            $ics[] = 'DTEND;VALUE=DATE:' . $dtEnd;
             $ics[] = 'SUMMARY:' . $jenisLabel . $event->nama_kegiatan;
             $ics[] = 'DESCRIPTION:' . ($event->deskripsi ?: 'Agenda Akademik Sekolah');
             $ics[] = 'LOCATION:Sekolah Almahir';

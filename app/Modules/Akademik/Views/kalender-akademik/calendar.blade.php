@@ -209,7 +209,67 @@
         color: #212529;
         margin: 0;
     }
+
+    /* ── Responsive Styling ── */
+    @media (max-width: 767.98px) {
+        .kalender-header {
+            padding: 16px 20px;
+            margin-bottom: 16px;
+        }
+        .kalender-header h1 {
+            font-size: 1.35rem;
+        }
+        .kalender-header p {
+            font-size: 0.8rem;
+        }
+        .kalender-header .header-actions {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px !important;
+            margin-top: 15px !important;
+        }
+        .kalender-header .header-actions .btn-header {
+            width: 100%;
+            justify-content: center;
+        }
+        .legend-bar {
+            padding: 10px 14px;
+            gap: 8px !important;
+        }
+        .legend-title {
+            width: 100%;
+            margin-bottom: 4px;
+            font-size: 0.7rem;
+        }
+        .legend-chip {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+        }
+        /* FullCalendar Toolbar Responsiveness */
+        .fc .fc-toolbar.fc-header-toolbar {
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+        .fc .fc-toolbar-title {
+            font-size: 1.1rem !important;
+            text-align: center;
+            margin: 4px 0;
+        }
+        .fc .fc-button {
+            padding: 5px 8px !important;
+            font-size: 0.8rem !important;
+        }
+        .fc .fc-toolbar-chunk {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+    }
 </style>
+
 @endpush
 
 @section('content')
@@ -337,7 +397,7 @@
                 </div>
                 
                 <div class="text-center mb-4">
-                    <a href="https://www.google.com/calendar/render?cid={{ urlencode(route('akademik.kalender-akademik.export-ical')) }}" 
+                    <a id="btnSyncGoogle" href="#" 
                        target="_blank" class="btn btn-danger btn-lg shadow-sm">
                         <i class="fab fa-google mr-2"></i> Hubungkan ke Google Calendar (Sekali Klik)
                     </a>
@@ -359,7 +419,7 @@
                     <label class="text-xs font-weight-bold text-uppercase">Link Kalender Akademik (iCal URL)</label>
                     <div class="input-group">
                         <input type="text" id="icalUrl" class="form-control font-weight-bold bg-light" readonly 
-                               value="{{ route('akademik.kalender-akademik.export-ical') }}">
+                               value="">
                         <div class="input-group-append">
                             <button class="btn btn-primary" onclick="copyIcalUrl()">
                                 <i class="fas fa-copy mr-1"></i> Salin Link
@@ -391,14 +451,41 @@ function copyIcalUrl() {
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Set up Google Calendar Sync URLs based on current browser URL
+    const relativePath = '{{ route("akademik.kalender-akademik.export-ical", [], false) }}';
+    const protocol = window.location.protocol;
+    const host = window.location.host;
+    
+    // Construct URLs dynamically
+    const absoluteUrl = protocol + '//' + host + relativePath;
+    const webcalUrl = 'webcal://' + host + relativePath;
+    
+    // Set value for manual input field
+    const icalInput = document.getElementById('icalUrl');
+    if (icalInput) {
+        icalInput.value = absoluteUrl;
+    }
+    
+    // Set href for one-click button
+    const syncButton = document.getElementById('btnSyncGoogle');
+    if (syncButton) {
+        syncButton.href = 'https://www.google.com/calendar/render?cid=' + encodeURIComponent(webcalUrl);
+    }
+
     var calendarEl = document.getElementById('calendar');
     var loaderEl = document.getElementById('calendarLoader');
 
+    var isMobile = window.innerWidth < 768;
+
     var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
+        initialView: isMobile ? 'listMonth' : 'dayGridMonth',
         locale: 'id',
         height: 'auto',
-        headerToolbar: {
+        headerToolbar: isMobile ? {
+            left: 'prev,next',
+            center: 'title',
+            right: 'today listMonth'
+        } : {
             left: 'prev,next today',
             center: 'title',
             right: 'multiMonthYear,dayGridMonth,listMonth'

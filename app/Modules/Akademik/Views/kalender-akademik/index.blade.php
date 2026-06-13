@@ -97,16 +97,16 @@
 
                         <td><i class="far fa-calendar-alt mr-1"></i> {{ date('d/m/Y', strtotime($item->tanggal_awal)) }}</td>
                         <td><i class="far fa-calendar-check mr-1"></i> {{ date('d/m/Y', strtotime($item->tanggal_akhir)) }}</td>
-                        @if(Auth::check() && !Auth::user()->hasRole('GURU') && !Auth::user()->hasRole('SISWA'))
+                        @if(Auth::check() && !Auth::user()->hasRole(['GURU', 'SISWA']))
                         <td class="text-center">
-                            <div class="btn-group">
-                                <x-btn :href="route('akademik.kalender-akademik.show', $item->id)" size="sm" class="btn-info" title="Detail">
+                            <div class="d-flex justify-content-center align-items-center" style="gap: 6px;">
+                                <x-btn :href="route('akademik.kalender-akademik.show', $item->id)" size="sm" class="btn-info" title="Detail" style="margin: 0;">
                                     <i class="fas fa-eye"></i>
                                 </x-btn>
-                                <x-btn :href="route('akademik.kalender-akademik.edit', $item->id)" size="sm" class="btn-warning" title="Edit">
+                                <x-btn :href="route('akademik.kalender-akademik.edit', $item->id)" size="sm" class="btn-warning" title="Edit" style="margin: 0;">
                                     <i class="fas fa-edit"></i>
                                 </x-btn>
-                                <form action="{{ route('akademik.kalender-akademik.destroy', $item->id) }}" method="POST" class="d-inline">
+                                <form action="{{ route('akademik.kalender-akademik.destroy', $item->id) }}" method="POST" class="d-inline" style="margin: 0;">
                                     @csrf
                                     @method('DELETE')
                                     <x-btn type="submit" size="sm" class="btn-danger btn-delete" title="Hapus">
@@ -119,7 +119,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">
+                        <td colspan="{{ Auth::user()->hasRole(['GURU', 'SISWA']) ? 6 : 7 }}" class="text-center py-5 text-muted">
                             <i class="fas fa-calendar-times fa-2x mb-3"></i><br>
                             Tidak ada data kalender akademik
                         </td>

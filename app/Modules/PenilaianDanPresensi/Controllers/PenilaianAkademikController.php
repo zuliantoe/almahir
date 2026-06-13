@@ -33,7 +33,18 @@ class PenilaianAkademikController extends Controller
      */
     public function index(Request $request): View
     {
+        $activeTahunAjaran = TahunAjaran::whereIn('status', [1, 'aktif'])->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
+
+        // If no filter is applied at all (first load), default to active year
+        if (!$request->has('tahunajaran_id') && $activeTahunAjaran) {
+            $request->merge(['tahunajaran_id' => $activeTahunAjaran->id]);
+        }
+
         $query = PenilaianAkademik::with(['siswa', 'guru', 'mataPelajaran', 'tahunAjaran']);
+        
+        if ($request->filled('tahunajaran_id')) {
+            $query->where('tahunajaran_id', $request->tahunajaran_id);
+        }
         
         // Filter for students: they only see their own scores
         if (auth()->user()->ref_type === ModelsSiswa::class) {
@@ -87,7 +98,7 @@ class PenilaianAkademikController extends Controller
         $penilaianAkademiks = $query->latest()->paginate(10);
         $allMapels = MataPelajaran::with('kategori')->orderBy('nama')->get();
         $tahunAjarans = TahunAjaran::orderBy('tahunajaran', 'desc')->get();
-        $rombels = Rombel::where('tahunajaran_id', $request->tahunajaran_id ?? (TahunAjaran::whereIn('status', [1, 'aktif'])->first()->id ?? 0))
+        $rombels = Rombel::where('tahunajaran_id', $request->tahunajaran_id ?? ($activeTahunAjaran->id ?? 0))
             ->orderBy('nama_rombel')->get();
 
         return view('penilaiandanpresensi::penilaianakademik.index', [
@@ -131,6 +142,9 @@ class PenilaianAkademikController extends Controller
         // Subject selection
         if ($isGuru) {
             $myMapelIds = JadwalPelajaran::where('guru_id', $loggedGuruId)
+                ->whereHas('rombel', function($q) use ($activeTahunAjaran) {
+                    $q->where('tahunajaran_id', $activeTahunAjaran->id ?? 0);
+                })
                 ->pluck('mapel_id')->unique();
             $mapels = MataPelajaran::whereIn('id', $myMapelIds)->with('kategori')->orderBy('nama')->get();
         } else {
@@ -168,6 +182,10 @@ class PenilaianAkademikController extends Controller
             'jenis_nilai' => 'required|string|in:Harian,UTS,UAS',
             'kkm' => 'required|integer|min:0|max:100',
         ]);
+
+        if (auth()->user()->ref_type === ModelsGuru::class) {
+            $request->merge(['guru_id' => auth()->user()->ref_id]);
+        }
 
         $request->validate([
             'penilaian' => 'required|array|min:1',
@@ -246,7 +264,11 @@ class PenilaianAkademikController extends Controller
 
         // Get mapels for this guru specifically if needed
         if ($isGuru) {
-            $myMapelIds = JadwalPelajaran::where('guru_id', $loggedGuruId)->pluck('mapel_id')->unique();
+            $myMapelIds = JadwalPelajaran::where('guru_id', $loggedGuruId)
+                ->whereHas('rombel', function($q) use ($activeTahunAjaran) {
+                    $q->where('tahunajaran_id', $activeTahunAjaran->id ?? 0);
+                })
+                ->pluck('mapel_id')->unique();
             $mapels = MataPelajaran::whereIn('id', $myMapelIds)->with('kategori')->orderBy('nama')->get();
         } else {
             $mapels = $allMapels;
@@ -319,7 +341,13 @@ class PenilaianAkademikController extends Controller
      */
     public function exportExcel(Request $request)
     {
+        $activeTahunAjaran = TahunAjaran::whereIn('status', [1, 'aktif'])->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
         $query = PenilaianAkademik::with(['siswa', 'guru', 'mataPelajaran', 'tahunAjaran']);
+        if ($request->filled('tahunajaran_id')) {
+            $query->where('tahunajaran_id', $request->tahunajaran_id);
+        } elseif ($activeTahunAjaran) {
+            $query->where('tahunajaran_id', $activeTahunAjaran->id);
+        }
         
         // Filter for Guru: they only export their own class students' scores (if they are Wali Kelas)
         if (auth()->user()->ref_type === ModelsGuru::class) {
@@ -337,7 +365,6 @@ class PenilaianAkademikController extends Controller
 
         if ($request->filled('mapel_id')) $query->where('mapel_id', $request->mapel_id);
         if ($request->filled('jenis_nilai')) $query->where('jenis_nilai', $request->jenis_nilai);
-        if ($request->filled('tahunajaran_id')) $query->where('tahunajaran_id', $request->tahunajaran_id);
 
         $data = $query->get();
         $filename = "Rekap_Nilai_AlMahir_" . date('Ymd_His') . ".xls";
@@ -746,11 +773,31 @@ class PenilaianAkademikController extends Controller
      */
     public function getKkm($rombelId, $mapelId): JsonResponse
     {
+        $mapel = MataPelajaran::with('kategori')->find($mapelId);
+        $fallbackKkm = 75; // Default
+
+        if ($mapel) {
+            $mapelNama = strtolower(trim($mapel->nama));
+            $kategoriNama = $mapel->kategori ? $mapel->kategori->kategori : '';
+            
+            $keywordsUmum = ['ipa', 'ips', 'matematika', 'inggris', 'indonesia', 'fisika', 'kimia', 'biologi', 'pkn', 'sejarah', 'seni', 'penjas', 'olahraga'];
+            
+            $isUmum = $kategoriNama === 'Nasional' || collect($keywordsUmum)->contains(fn($k) => str_contains($mapelNama, $k));
+            if ($isUmum) {
+                $fallbackKkm = 70;
+            }
+        }
+
+        if ($rombelId == 0) {
+            $kkm = Kurikulum::where('mapel_id', $mapelId)->value('kkm') ?? $fallbackKkm;
+            return response()->json(['kkm' => $kkm]);
+        }
+
         $rombel = Rombel::findOrFail($rombelId);
         $kkm = Kurikulum::where('mapel_id', $mapelId)
             ->where('tahunajaran_id', $rombel->tahunajaran_id)
             ->where('kelas_id', $rombel->kelas_id)
-            ->value('kkm') ?? 75;
+            ->value('kkm') ?? $fallbackKkm;
             
         return response()->json(['kkm' => $kkm]);
     }
@@ -760,6 +807,10 @@ class PenilaianAkademikController extends Controller
      */
     public function getDataByGuru(Request $request, string $guruId): JsonResponse
     {
+        if (auth()->user()->ref_type === ModelsGuru::class) {
+            $guruId = auth()->user()->ref_id;
+        }
+
         $taId = $request->tahunajaran_id;
         
         if (!$taId) {

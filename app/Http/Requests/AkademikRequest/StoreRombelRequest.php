@@ -73,6 +73,12 @@ class StoreRombelRequest extends FormRequest
                     if ($kelasDipakai) {
                         $validator->errors()->add('kelas_id', 'Kelas ini sudah digunakan oleh Rombel lain pada tahun ajaran yang sama.');
                     }
+
+                    // 4. Validasi Kapasitas Kelas terhadap Jumlah Siswa Terpilih
+                    $kelas = \App\Modules\Akademik\Models\Kelas::find($kelasId);
+                    if ($kelas && $kelas->kapasitas && count($siswaIds) > $kelas->kapasitas) {
+                        $validator->errors()->add('siswa_ids', "Jumlah siswa terpilih (" . count($siswaIds) . ") melebihi kapasitas maksimal kelas ini ({$kelas->kapasitas} siswa).");
+                    }
                 }
             }
         });

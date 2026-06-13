@@ -265,7 +265,7 @@
                         {{-- Signatures Section --}}
                         <div class="signature-section mt-4">
                             <div class="text-right mb-5" style="padding-right: 50px;">
-                                <p class="mb-0">Boyolali, {{ date('d F Y') }}</p>
+                                <p class="mb-0">Karanganyar, {{ date('d F Y') }}</p>
                             </div>
                             
                             <div class="row">

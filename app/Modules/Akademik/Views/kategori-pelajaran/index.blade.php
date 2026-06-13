@@ -15,9 +15,11 @@
     <div class="row mb-3">
         <div class="col-12 d-flex justify-content-between align-items-center">
             <h1 class="h3 mb-0 text-gray-800">Kategori Mata Pelajaran</h1>
+            @if(!Auth::user()->hasRole(['GURU', 'SISWA']))
             <x-btn :href="route('akademik.kategori-pelajaran.create')" icon="fas fa-plus">
                 Tambah Kategori
             </x-btn>
+            @endif
         </div>
     </div>
 
@@ -49,7 +51,9 @@
                         <th width="5%" class="text-center">No</th>
                         <th>Nama Kategori</th>
                         <th class="text-center">Jumlah Mata Pelajaran</th>
+                        @if(!Auth::user()->hasRole(['GURU', 'SISWA']))
                         <th width="150px" class="text-center">Aksi</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -66,15 +70,16 @@
                                 <span class="text-muted">-</span>
                             @endif
                         </td>
+                        @if(!Auth::user()->hasRole(['GURU', 'SISWA']))
                         <td class="text-center">
-                            <div class="btn-group">
-                                <x-btn :href="route('akademik.kategori-pelajaran.show', $item->id)" size="sm" class="btn-info" title="Detail">
+                            <div class="d-flex justify-content-center align-items-center" style="gap: 6px;">
+                                <x-btn :href="route('akademik.kategori-pelajaran.show', $item->id)" size="sm" class="btn-info" title="Detail" style="margin: 0;">
                                     <i class="fas fa-eye"></i>
                                 </x-btn>
-                                <x-btn :href="route('akademik.kategori-pelajaran.edit', $item->id)" size="sm" class="btn-warning" title="Edit">
+                                <x-btn :href="route('akademik.kategori-pelajaran.edit', $item->id)" size="sm" class="btn-warning" title="Edit" style="margin: 0;">
                                     <i class="fas fa-edit"></i>
                                 </x-btn>
-                                <form action="{{ route('akademik.kategori-pelajaran.destroy', $item->id) }}" method="POST" class="d-inline">
+                                <form action="{{ route('akademik.kategori-pelajaran.destroy', $item->id) }}" method="POST" class="d-inline" style="margin: 0;">
                                     @csrf
                                     @method('DELETE')
                                     <x-btn type="submit" size="sm" class="btn-danger btn-delete" title="Hapus">
@@ -83,10 +88,11 @@
                                 </form>
                             </div>
                         </td>
+                        @endif
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="text-center py-5 text-muted">
+                        <td colspan="{{ Auth::user()->hasRole(['GURU', 'SISWA']) ? 3 : 4 }}" class="text-center py-5 text-muted">
                             <i class="fas fa-tags fa-2x mb-3"></i><br>
                             Tidak ada data kategori pelajaran.
                         </td>

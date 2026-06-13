@@ -124,3 +124,50 @@
     background-color: #cff4fc;
     color: #055160;
 }
+
+/* ── Responsive Button & Action Spacing Utilities ── */
+.gap-1 { gap: 0.25rem !important; }
+.gap-2 { gap: 0.5rem !important; }
+.gap-3 { gap: 1rem !important; }
+.gap-4 { gap: 1.5rem !important; }
+.gap-5 { gap: 2rem !important; }
+
+/* Flex row/col gap support */
+.row-gap-1 { row-gap: 0.25rem !important; }
+.row-gap-2 { row-gap: 0.5rem !important; }
+.row-gap-3 { row-gap: 1rem !important; }
+
+/* Ensure card footer and form action buttons wrap nicely on mobile devices */
+@media (max-width: 575.98px) {
+    form .d-flex.justify-content-end,
+    form .d-flex.justify-content-between,
+    .card-body .d-flex.justify-content-end,
+    .card-body .d-flex.justify-content-between,
+    .card-footer .d-flex.justify-content-end,
+    .card-footer .d-flex.justify-content-between {
+        flex-direction: column-reverse !important;
+        gap: 10px !important;
+        width: 100% !important;
+    }
+
+    form .d-flex.justify-content-end > .btn,
+    form .d-flex.justify-content-end > a.btn,
+    form .d-flex.justify-content-between > .btn,
+    form .d-flex.justify-content-between > a.btn,
+    .card-body .d-flex.justify-content-end > .btn,
+    .card-body .d-flex.justify-content-end > a.btn,
+    .card-body .d-flex.justify-content-between > .btn,
+    .card-body .d-flex.justify-content-between > a.btn,
+    .card-footer .d-flex.justify-content-end > .btn,
+    .card-footer .d-flex.justify-content-end > a.btn,
+    .card-footer .d-flex.justify-content-between > .btn,
+    .card-footer .d-flex.justify-content-between > a.btn {
+        width: 100% !important;
+        margin-right: 0 !important;
+        margin-left: 0 !important;
+        display: inline-flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+}
+

@@ -12,9 +12,15 @@ use Modules\Auth\Controllers\AuthController;
 
 use App\Http\Controllers\DashboardController;
 
-// Dashboard / Home (requires auth)
-Route::middleware('auth')->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+// Dashboard (requires auth)
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
+
+// Public Root Route (landing page for guests, redirects to dashboard for authenticated users)
+Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+    return view('landing');
 });
 
 /*

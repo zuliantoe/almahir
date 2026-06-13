@@ -29,6 +29,12 @@ class PenilaianTahfidzController extends Controller
         $activeTahunAjaran = TahunAjaran::whereIn('status', [1, 'aktif'])->first() ?: TahunAjaran::orderBy('tahunajaran', 'desc')->first();
         $query = PenilaianTahfidz::with(['siswa.kelas', 'rombel', 'guru']);
         
+        if ($request->filled('tahunajaran_id')) {
+            $query->where('tahunajaran_id', $request->tahunajaran_id);
+        } elseif ($activeTahunAjaran) {
+            $query->where('tahunajaran_id', $activeTahunAjaran->id);
+        }
+        
         // Filter for students: they only see their own scores
         if (auth()->user()->ref_type === ModelsSiswa::class) {
             $siswaId = auth()->user()->ref_id;

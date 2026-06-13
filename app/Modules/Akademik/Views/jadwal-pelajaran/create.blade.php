@@ -49,9 +49,7 @@
                             <th class="py-3 px-4" width="220">MATA PELAJARAN <span class="text-white-50">*</span></th>
                             <th class="py-3 px-4" width="220">GURU PENGAJAR <span class="text-white-50">*</span></th>
                             <th class="py-3 px-4" width="180">HARI <span class="text-white-50">*</span></th>
-                            <th class="py-3 px-4" width="100">JAM KE- <span class="text-white-50">*</span></th>
-                            <th class="py-3 px-4" width="180">JAM MULAI <span class="text-white-50">*</span></th>
-                            <th class="py-3 px-4" width="180">JAM SELESAI <span class="text-white-50">*</span></th>
+                            <th class="py-3 px-4" width="250">JAM PELAJARAN (MASTER) <span class="text-white-50">*</span></th>
                             @if(!isset($jadwalPelajaran))
                             <th class="py-3 px-4 text-center" width="60">AKSI</th>
                             @endif
@@ -158,48 +156,83 @@
 </div>
 
 <script>
-    const JAMKE_MAP = {
-        1: { start: '07:00', end: '07:45' },
-        2: { start: '07:45', end: '08:30' },
-        3: { start: '08:30', end: '09:15' },
-        4: { start: '09:15', end: '10:00' },
-        5: { start: '10:00', end: '10:45' },
-        6: { start: '10:45', end: '11:30' },
-        7: { start: '11:30', end: '12:15' },
-        8: { start: '12:15', end: '13:00' },
-        9: { start: '13:00', end: '13:45' },
-        10:{ start: '13:45', end: '14:30' },
-        11:{ start: '14:30', end: '15:15' },
-        12:{ start: '15:15', end: '16:00' },
-    };
+    function applyMasterJamToRow(tr) {
+        const masterSelect = tr.querySelector('select.master-jam-select');
+        if (!masterSelect) return;
 
-    function applyJamKeToRow(tr) {
-        const jamkeInput = tr.querySelector('input[type="number"][name$="[jamke]"], input[type="number"][name$="jamke"], input[type="number"][name*="[jamke]"]');
-        if (!jamkeInput) return;
+        const selected = masterSelect.options[masterSelect.selectedIndex];
+        if (!selected) return;
 
-        const jamke = parseInt(jamkeInput.value || jamkeInput.getAttribute('value'), 10);
-        if (!JAMKE_MAP[jamke]) return;
+        const jamke = selected.dataset.jamke || '';
+        const jamawal = selected.dataset.jamawal || '';
+        const jamakhir = selected.dataset.jamakhir || '';
 
-        const jamawalInput = tr.querySelector('input[type="time"][name*="[jamawal]"], input[type="time"][name$="jamawal"]');
-        const jamakhirInput = tr.querySelector('input[type="time"][name*="[jamakhir]"], input[type="time"][name$="jamakhir"]');
-        if (jamawalInput) jamawalInput.value = JAMKE_MAP[jamke].start;
-        if (jamakhirInput) jamakhirInput.value = JAMKE_MAP[jamke].end;
+        const jamkeInput = tr.querySelector('.jamke-input');
+        const jamawalInput = tr.querySelector('.jamawal-input');
+        const jamakhirInput = tr.querySelector('.jamakhir-input');
+
+        if (jamkeInput) jamkeInput.value = jamke;
+        if (jamawalInput) jamawalInput.value = jamawal;
+        if (jamakhirInput) jamakhirInput.value = jamakhir;
     }
 
-    function bindJamKeHandler(root) {
+    function filterMasterJamByHari(tr) {
+        const hariSelect = tr.querySelector('select.hari-select');
+        const masterSelect = tr.querySelector('select.master-jam-select');
+        if (!hariSelect || !masterSelect) return;
+
+        // Save original options if not already saved
+        if (!masterSelect.originalOptions) {
+            masterSelect.originalOptions = Array.from(masterSelect.options);
+        }
+
+        const selectedHari = hariSelect.value;
+        const currentSelectedValue = masterSelect.value;
+
+        // Clear and rebuild options
+        masterSelect.innerHTML = '';
+
+        const filtered = masterSelect.originalOptions.filter((opt, index) => {
+            if (index === 0) return true; // Keep placeholder "Pilih Master Jam"
+            const optHari = opt.getAttribute('data-hari');
+            const optIstirahat = opt.getAttribute('data-istirahat');
+            return optHari === selectedHari && optIstirahat === '0';
+        });
+
+        filtered.forEach(opt => {
+            masterSelect.appendChild(opt);
+        });
+
+        const hasValue = filtered.some(opt => opt.value === currentSelectedValue);
+        if (hasValue && currentSelectedValue !== "") {
+            masterSelect.value = currentSelectedValue;
+        } else {
+            masterSelect.value = "";
+        }
+
+        applyMasterJamToRow(tr);
+    }
+
+    function bindRowHandlers(root) {
         const rows = root.querySelectorAll('#schedule-rows tr');
         rows.forEach(tr => {
-            const jamkeInput = tr.querySelector('input[type="number"][name*="jamke"]');
-            if (!jamkeInput) return;
-            jamkeInput.addEventListener('change', function() {
-                applyJamKeToRow(tr);
-            });
-            jamkeInput.addEventListener('keyup', function(e) {
-                if (e.key === 'Enter') applyJamKeToRow(tr);
+            const masterSelect = tr.querySelector('select.master-jam-select');
+            const hariSelect = tr.querySelector('select.hari-select');
+            if (!masterSelect || !hariSelect) return;
+
+            if (masterSelect.dataset.handlersBound) return;
+            masterSelect.dataset.handlersBound = 'true';
+
+            // Filter master jam options initially based on current selected hari
+            filterMasterJamByHari(tr);
+
+            hariSelect.addEventListener('change', function() {
+                filterMasterJamByHari(tr);
             });
 
-            // initial fill if already has jamke
-            applyJamKeToRow(tr);
+            masterSelect.addEventListener('change', function() {
+                applyMasterJamToRow(tr);
+            });
         });
     }
 
@@ -230,7 +263,7 @@
                 window.rowIndex++;
 
                 // bind handler for the newly added row
-                bindJamKeHandler(tbody);
+                bindRowHandlers(tbody);
             }
         };
 
@@ -243,7 +276,7 @@
             }
         };
 
-        bindJamKeHandler(document);
+        bindRowHandlers(document);
 
         // Custom Reset Handler: clear dynamic rows and rebuild 1 fresh row
         $('#schedule-form').on('reset', function(e) {

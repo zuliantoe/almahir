@@ -17,6 +17,11 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
+        // Jika user adalah WALI_MURID
+        if ($user && $user->hasRole('WALI_MURID')) {
+            return redirect()->route('walimurid.portal.dashboard');
+        }
+
         // Jika user adalah GURU
         if ($user && $user->hasRole('GURU')) {
             $guru = $user->ref; // Guru model via morphTo

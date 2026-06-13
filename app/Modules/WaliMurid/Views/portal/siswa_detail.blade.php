@@ -48,26 +48,7 @@
                 </div>
             </div>
 
-            {{-- Quick Stats --}}
-            <div class="card border-0 shadow-sm" style="border-radius: 20px;">
-                <div class="card-body p-4">
-                    <h6 class="font-weight-bold mb-3">Ringkasan Akademik</h6>
-                    <div class="row text-center">
-                        <div class="col-6 mb-3">
-                            <div class="p-3 bg-light rounded" style="border-radius: 15px;">
-                                <div class="text-primary h4 font-weight-bold mb-0">A</div>
-                                <div class="text-muted x-small">Predikat Rata-rata</div>
-                            </div>
-                        </div>
-                        <div class="col-6 mb-3">
-                            <div class="p-3 bg-light rounded" style="border-radius: 15px;">
-                                <div class="text-success h4 font-weight-bold mb-0">98%</div>
-                                <div class="text-muted x-small">Kehadiran</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          
         </div>
 
         {{-- Detailed Info --}}
@@ -107,32 +88,36 @@
             {{-- Placeholder for additional sections --}}
             <div class="row">
                 <div class="col-md-6 mb-4">
-                    <div class="card border-0 shadow-sm h-100" style="border-radius: 20px;">
-                        <div class="card-body p-4 d-flex align-items-center">
-                            <div class="icon-box bg-info-light text-info mr-3 p-3 rounded-circle" style="background: rgba(23, 162, 184, 0.1);">
-                                <i class="fas fa-book fa-lg"></i>
+                    <a href="{{ route('walimurid.portal.siswa-jadwal', $siswa->id) }}" class="text-decoration-none card-link-hover">
+                        <div class="card border-0 shadow-sm h-100" style="border-radius: 20px;">
+                            <div class="card-body p-4 d-flex align-items-center">
+                                <div class="icon-box bg-info-light text-info mr-3 p-3 rounded-circle" style="background: rgba(23, 162, 184, 0.1);">
+                                    <i class="fas fa-book fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h6 class="font-weight-bold mb-1 text-dark">Mata Pelajaran</h6>
+                                    <p class="text-muted small mb-0">Lihat jadwal pelajaran aktif</p>
+                                </div>
+                                <i class="fas fa-chevron-right ml-auto text-muted"></i>
                             </div>
-                            <div>
-                                <h6 class="font-weight-bold mb-1">Mata Pelajaran</h6>
-                                <p class="text-muted small mb-0">Lihat jadwal pelajaran aktif</p>
-                            </div>
-                            <i class="fas fa-chevron-right ml-auto text-muted"></i>
                         </div>
-                    </div>
+                    </a>
                 </div>
                 <div class="col-md-6 mb-4">
-                    <div class="card border-0 shadow-sm h-100" style="border-radius: 20px;">
-                        <div class="card-body p-4 d-flex align-items-center">
-                            <div class="icon-box bg-warning-light text-warning mr-3 p-3 rounded-circle" style="background: rgba(255, 193, 7, 0.1);">
-                                <i class="fas fa-wallet fa-lg"></i>
+                    <a href="{{ route('walimurid.portal.siswa-pembayaran', $siswa->id) }}" class="text-decoration-none card-link-hover">
+                        <div class="card border-0 shadow-sm h-100" style="border-radius: 20px;">
+                            <div class="card-body p-4 d-flex align-items-center">
+                                <div class="icon-box bg-warning-light text-warning mr-3 p-3 rounded-circle" style="background: rgba(255, 193, 7, 0.1);">
+                                    <i class="fas fa-wallet fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h6 class="font-weight-bold mb-1 text-dark">Pembayaran</h6>
+                                    <p class="text-muted small mb-0">Status SPP dan biaya lainnya</p>
+                                </div>
+                                <i class="fas fa-chevron-right ml-auto text-muted"></i>
                             </div>
-                            <div>
-                                <h6 class="font-weight-bold mb-1">Pembayaran</h6>
-                                <p class="text-muted small mb-0">Status SPP dan biaya lainnya</p>
-                            </div>
-                            <i class="fas fa-chevron-right ml-auto text-muted"></i>
                         </div>
-                    </div>
+                    </a>
                 </div>
             </div>
         </div>
@@ -145,5 +130,16 @@
     }
     .x-small { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
     .shadow-sm { box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important; }
+    .card-link-hover {
+        display: block;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        text-decoration: none !important;
+    }
+    .card-link-hover:hover {
+        transform: translateY(-5px);
+    }
+    .card-link-hover:hover .card {
+        box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
+    }
 </style>
 @endsection

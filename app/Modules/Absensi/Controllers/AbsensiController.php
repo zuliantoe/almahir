@@ -144,7 +144,146 @@ class AbsensiController extends Controller
     /**
      * Store Check-in
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
+    {
+        $user = Auth::user();
+        $pegawai = $user->pegawai;
+
+        if (!$pegawai) {
+            return $this->returnResponse($request, false, 'Akun Anda belum terhubung dengan data Pegawai.', 'absensi.index');
+        }
+
+        $today = Carbon::today()->toDateString();
+        $now = Carbon::now();
+
+        // Validasi Hari Libur (Minggu atau Tanggal Merah)
+        if ($now->isSunday()) {
+            return $this->returnResponse($request, false, 'Hari ini adalah hari Minggu (Libur). Anda tidak perlu melakukan presensi.', 'absensi.index');
+        }
+
+        $hariLibur = \Modules\Absensi\Models\HariLibur::where('tanggal', $today)->first();
+        if ($hariLibur) {
+            return $this->returnResponse($request, false, 'Hari ini adalah hari libur (' . $hariLibur->keterangan . '). Anda tidak perlu melakukan presensi.', 'absensi.index');
+        }
+
+        // 1. Validasi: Presensi baru dibuka jam 06:00 pagi
+        if ($now->hour < 6) {
+            return $this->returnResponse($request, false, 'Presensi belum dibuka. Silakan kembali lagi pukul 06:00 pagi.', 'absensi.index');
+        }
+
+        // VALIDASI QR CODE
+        $expectedToken = md5(config('absensi.qr_secret') . $today);
+        if ($request->qr_token !== $expectedToken) {
+            return $this->returnResponse($request, false, 'QR Code tidak valid atau sudah kedaluwarsa. Silakan scan ulang di lobi.', 'absensi.index');
+        }
+
+        // VALIDASI GPS LOKASI
+        if (!$request->lat || !$request->long) {
+            return $this->returnResponse($request, false, 'Koordinat GPS tidak ditemukan. Pastikan izin lokasi aktif di browser Anda.', 'absensi.index');
+        }
+        $officeLat = config('absensi.office_latitude');
+        $officeLong = config('absensi.office_longitude');
+        $officeRadius = config('absensi.office_radius');
+        $distance = $this->calculateDistance($request->lat, $request->long, $officeLat, $officeLong);
+        
+        if ($distance > $officeRadius) {
+            return $this->returnResponse($request, false, 'Anda berada di luar radius kantor (Jarak: ' . round($distance) . 'm). Maksimal radius adalah ' . $officeRadius . 'm.', 'absensi.index');
+        }
+
+        // 2. Cek apakah sudah absen hari ini
+        $existing = Absensi::where('pegawai_id', $pegawai->id)
+            ->where('tanggal', $today)
+            ->first();
+
+        if ($existing) {
+            return $this->returnResponse($request, false, 'Anda sudah melakukan presensi masuk hari ini.', 'absensi.index');
+        }
+
+        // 3. Logika Tepat Waktu: Batas jam 07:00 + Toleransi 15 menit = 07:15
+        $limitTime = Carbon::createFromTimeString('07:15:00');
+        $status = $now->gt($limitTime) ? 'TERLAMBAT' : 'TEPAT WAKTU';
+
+        Absensi::create([
+            'pegawai_id' => $pegawai->id,
+            'tanggal' => $today,
+            'jam_masuk' => $now->toTimeString(),
+            'status' => $status,
+            'lat_masuk' => $request->lat,
+            'long_masuk' => $request->long,
+            'keterangan' => $request->keterangan
+        ]);
+
+        $msg = $status == 'TERLAMBAT' ? 'Absen masuk berhasil (Terlambat).' : 'Absen masuk berhasil (Tepat Waktu).';
+        
+        return $this->returnResponse($request, true, $msg, 'absensi.index');
+    }
+
+    /**
+     * Update/Clock-out
+     */
+    public function update(Request $request)
+    {
+        $user = Auth::user();
+        $pegawai = $user->pegawai;
+
+        if (!$pegawai) {
+            return $this->returnResponse($request, false, 'Akun Anda belum terhubung dengan data Pegawai.', 'absensi.index');
+        }
+
+        $today = Carbon::today()->toDateString();
+        $now = Carbon::now();
+
+        $absensi = Absensi::where('pegawai_id', $pegawai->id)
+            ->where('tanggal', $today)
+            ->first();
+
+        if (!$absensi) {
+            return $this->returnResponse($request, false, 'Anda belum melakukan absen masuk hari ini.', 'absensi.index');
+        }
+
+        if ($absensi->jam_pulang) {
+            return $this->returnResponse($request, false, 'Anda sudah melakukan absen pulang hari ini.', 'absensi.index');
+        }
+
+        // Validasi Jam Pulang (Minimal Jam 16:00)
+        if ($now->hour < 16) {
+            $sisaJam = 16 - $now->hour - 1;
+            $sisaMenit = 60 - $now->minute;
+            return $this->returnResponse($request, false, "Belum waktunya pulang! Jam pulang minimal pukul 16:00 (Sisa waktu: $sisaJam jam $sisaMenit menit lagi).", 'absensi.index');
+        }
+
+        // VALIDASI QR CODE PULANG
+        $expectedToken = md5(config('absensi.qr_secret') . $today);
+        if ($request->qr_token !== $expectedToken) {
+            return $this->returnResponse($request, false, 'QR Code tidak valid. Silakan scan ulang di lobi untuk pulang.', 'absensi.index');
+        }
+
+        // VALIDASI GPS PULANG
+        if (!$request->lat || !$request->long) {
+            return $this->returnResponse($request, false, 'Koordinat GPS tidak ditemukan.', 'absensi.index');
+        }
+        $officeLat = config('absensi.office_latitude');
+        $officeLong = config('absensi.office_longitude');
+        $officeRadius = config('absensi.office_radius');
+        $distance = $this->calculateDistance($request->lat, $request->long, $officeLat, $officeLong);
+        
+        if ($distance > $officeRadius) {
+            return $this->returnResponse($request, false, 'Anda berada di luar radius kantor (Jarak: ' . round($distance) . 'm) untuk melakukan presensi pulang.', 'absensi.index');
+        }
+
+        $absensi->update([
+            'jam_pulang' => $now->toTimeString(),
+            'lat_pulang' => $request->lat,
+            'long_pulang' => $request->long,
+        ]);
+
+        return $this->returnResponse($request, true, 'Berhasil melakukan absen pulang. Selamat beristirahat!', 'absensi.index');
+    }
+
+    /**
+     * Store Self-Service Manual Check-in (Absen Masuk Darurat)
+     */
+    public function storeSelfManual(Request $request): RedirectResponse
     {
         $user = Auth::user();
         $pegawai = $user->pegawai;
@@ -153,31 +292,26 @@ class AbsensiController extends Controller
             return redirect()->back()->with('error', 'Akun Anda belum terhubung dengan data Pegawai.');
         }
 
+        $request->validate([
+            'keterangan' => 'required|string|min:5|max:255',
+        ]);
+
         $today = Carbon::today()->toDateString();
         $now = Carbon::now();
+
+        // Validasi Hari Libur (Minggu atau Tanggal Merah)
+        if ($now->isSunday()) {
+            return redirect()->back()->with('error', 'Hari ini adalah hari Minggu (Libur). Anda tidak perlu melakukan presensi.');
+        }
+
+        $hariLibur = \Modules\Absensi\Models\HariLibur::where('tanggal', $today)->first();
+        if ($hariLibur) {
+            return redirect()->back()->with('error', 'Hari ini adalah hari libur (' . $hariLibur->keterangan . '). Anda tidak perlu melakukan presensi.');
+        }
 
         // 1. Validasi: Presensi baru dibuka jam 06:00 pagi
         if ($now->hour < 6) {
             return redirect()->back()->with('error', 'Presensi belum dibuka. Silakan kembali lagi pukul 06:00 pagi.');
-        }
-
-        // VALIDASI QR CODE
-        $expectedToken = md5(config('absensi.qr_secret') . $today);
-        if ($request->qr_token !== $expectedToken) {
-            return redirect()->back()->with('error', 'QR Code tidak valid atau sudah kedaluwarsa. Silakan scan ulang di lobi.');
-        }
-
-        // VALIDASI GPS LOKASI
-        if (!$request->lat || !$request->long) {
-            return redirect()->back()->with('error', 'Koordinat GPS tidak ditemukan. Pastikan izin lokasi aktif di browser Anda.');
-        }
-        $officeLat = config('absensi.office_latitude');
-        $officeLong = config('absensi.office_longitude');
-        $officeRadius = config('absensi.office_radius');
-        $distance = $this->calculateDistance($request->lat, $request->long, $officeLat, $officeLong);
-        
-        if ($distance > $officeRadius) {
-            return redirect()->back()->with('error', 'Anda berada di luar radius kantor (Jarak: ' . round($distance) . 'm). Maksimal radius adalah ' . $officeRadius . 'm.');
         }
 
         // 2. Cek apakah sudah absen hari ini
@@ -198,20 +332,20 @@ class AbsensiController extends Controller
             'tanggal' => $today,
             'jam_masuk' => $now->toTimeString(),
             'status' => $status,
-            'lat_masuk' => $request->lat,
-            'long_masuk' => $request->long,
-            'keterangan' => $request->keterangan
+            'lat_masuk' => null,
+            'long_masuk' => null,
+            'keterangan' => '[Manual Darurat] - ' . $request->keterangan
         ]);
 
-        $msg = $status == 'TERLAMBAT' ? 'Absen masuk berhasil (Terlambat).' : 'Absen masuk berhasil (Tepat Waktu).';
+        $msg = $status == 'TERLAMBAT' ? 'Absen masuk darurat berhasil (Terlambat).' : 'Absen masuk darurat berhasil (Tepat Waktu).';
         
         return redirect()->route('absensi.index')->with('success', $msg);
     }
 
     /**
-     * Update/Clock-out
+     * Update Self-Service Manual Clock-out (Absen Pulang Darurat)
      */
-    public function update(Request $request): RedirectResponse
+    public function updateSelfManual(Request $request): RedirectResponse
     {
         $user = Auth::user();
         $pegawai = $user->pegawai;
@@ -219,6 +353,10 @@ class AbsensiController extends Controller
         if (!$pegawai) {
             return redirect()->back()->with('error', 'Akun Anda belum terhubung dengan data Pegawai.');
         }
+
+        $request->validate([
+            'keterangan' => 'required|string|min:5|max:255',
+        ]);
 
         $today = Carbon::today()->toDateString();
         $now = Carbon::now();
@@ -242,31 +380,38 @@ class AbsensiController extends Controller
             return redirect()->back()->with('error', "Belum waktunya pulang! Jam pulang minimal pukul 16:00 (Sisa waktu: $sisaJam jam $sisaMenit menit lagi).");
         }
 
-        // VALIDASI QR CODE PULANG
-        $expectedToken = md5(config('absensi.qr_secret') . $today);
-        if ($request->qr_token !== $expectedToken) {
-            return redirect()->back()->with('error', 'QR Code tidak valid. Silakan scan ulang di lobi untuk pulang.');
-        }
-
-        // VALIDASI GPS PULANG
-        if (!$request->lat || !$request->long) {
-            return redirect()->back()->with('error', 'Koordinat GPS tidak ditemukan.');
-        }
-        $officeLat = config('absensi.office_latitude');
-        $officeLong = config('absensi.office_longitude');
-        $officeRadius = config('absensi.office_radius');
-        $distance = $this->calculateDistance($request->lat, $request->long, $officeLat, $officeLong);
-        
-        if ($distance > $officeRadius) {
-            return redirect()->back()->with('error', 'Anda berada di luar radius kantor (Jarak: ' . round($distance) . 'm) untuk melakukan presensi pulang.');
+        // Append checkout reason to existing checkin reason
+        $newKeterangan = $absensi->keterangan;
+        if (empty($newKeterangan)) {
+            $newKeterangan = '[Manual Darurat Pulang] - ' . $request->keterangan;
+        } else {
+            $newKeterangan .= ' | [Pulang Darurat] - ' . $request->keterangan;
         }
 
         $absensi->update([
             'jam_pulang' => $now->toTimeString(),
-            'lat_pulang' => $request->lat,
-            'long_pulang' => $request->long,
+            'lat_pulang' => null,
+            'long_pulang' => null,
+            'keterangan' => $newKeterangan
         ]);
 
-        return redirect()->route('absensi.index')->with('success', 'Berhasil melakukan absen pulang. Selamat beristirahat!');
+        return redirect()->route('absensi.index')->with('success', 'Berhasil melakukan absen pulang darurat. Selamat beristirahat!');
+    }
+
+    /**
+     * Helper to return standard redirect or JSON response
+     */
+    private function returnResponse(Request $request, bool $success, string $message, string $redirectRoute)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => $success,
+                'message' => $message
+            ], $success ? 200 : 400);
+        }
+
+        return $success 
+            ? redirect()->route($redirectRoute)->with('success', $message)
+            : redirect()->back()->withInput()->with('error', $message);
     }
 }

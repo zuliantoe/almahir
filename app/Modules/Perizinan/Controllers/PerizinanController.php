@@ -46,6 +46,9 @@ class PerizinanController extends Controller
         
         $query = Perizinan::with('pegawai');
         
+        $isEligibleForCuti = true;
+        $eligibleDate = null;
+        
         if ($user->hasRole('SUPER_ADMIN') || $user->hasRole('STAF_TU')) {
             $isAdmin = true;
             $sisaCuti = null;
@@ -61,6 +64,9 @@ class PerizinanController extends Controller
             $query->where('user_id', $pegawai->id);
             $isAdmin = false;
             $sisaCuti = $this->getSisaCuti($pegawai);
+            
+            $isEligibleForCuti = true;
+            $eligibleDate = null;
         }
 
         if ($search) {
@@ -90,7 +96,9 @@ class PerizinanController extends Controller
             'title' => 'Daftar Perizinan',
             'perizinan' => $perizinan,
             'isAdmin' => $isAdmin,
-            'sisaCuti' => $sisaCuti
+            'sisaCuti' => $sisaCuti,
+            'isEligibleForCuti' => $isEligibleForCuti,
+            'eligibleDate' => $eligibleDate
         ]);
     }
 
@@ -99,27 +107,38 @@ class PerizinanController extends Controller
      */
     public function create(): View
     {
-        if (Auth::user()->hasRole(['SUPER_ADMIN', 'STAF_TU'])) {
-            return view('perizinan::error', [
-                'title' => 'Akses Terbatas',
-                'message' => 'Administrator tidak diperbolehkan mengajukan izin/cuti pribadi.'
-            ]);
-        }
+        $user = Auth::user();
+        $isAdmin = $user->hasRole(['SUPER_ADMIN', 'STAF_TU']);
+        $pegawais = null;
+        $pegawai = null;
+        $sisaCuti = null;
+        $isEligibleForCuti = true;
+        $eligibleDate = null;
 
-        $pegawai = Auth::user()->pegawai;
-        
-        if (!$pegawai) {
-            return view('perizinan::error', [
-                'title' => 'Akses Terbatas',
-                'message' => 'Akun Anda tidak terhubung dengan data Pegawai. Silakan gunakan akun Pegawai Anda untuk mengajukan izin atau cuti.'
-            ]);
+        if ($isAdmin) {
+            $pegawais = \Modules\PegawaiManager\Models\Pegawai::where('status', 'aktif')->orderBy('nama')->get();
+        } else {
+            $pegawai = $user->pegawai;
+            if (!$pegawai) {
+                return view('perizinan::error', [
+                    'title' => 'Akses Terbatas',
+                    'message' => 'Akun Anda tidak terhubung dengan data Pegawai. Silakan gunakan akun Pegawai Anda untuk mengajukan izin atau cuti.'
+                ]);
+            }
+            $sisaCuti = $this->getSisaCuti($pegawai);
+            
+            $isEligibleForCuti = true;
+            $eligibleDate = null;
         }
-
-        $sisaCuti = $this->getSisaCuti($pegawai);
 
         return view('perizinan::create', [
             'title' => 'Ajukan Perizinan',
-            'sisaCuti' => $sisaCuti
+            'pegawai' => $pegawai,
+            'pegawais' => $pegawais,
+            'sisaCuti' => $sisaCuti,
+            'isEligibleForCuti' => $isEligibleForCuti,
+            'eligibleDate' => $eligibleDate,
+            'isAdmin' => $isAdmin
         ]);
     }
 
@@ -128,14 +147,19 @@ class PerizinanController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        if (Auth::user()->hasRole(['SUPER_ADMIN', 'STAF_TU'])) {
-            return redirect()->back()->with('error', 'Administrator tidak diperbolehkan mengajukan izin/cuti.');
-        }
-
-        $pegawai = Auth::user()->pegawai;
-
-        if (!$pegawai) {
-            return redirect()->back()->with('error', 'Akun Anda tidak terhubung dengan data Pegawai.');
+        $user = Auth::user();
+        $isAdmin = $user->hasRole(['SUPER_ADMIN', 'STAF_TU']);
+        
+        if ($isAdmin) {
+            $request->validate([
+                'pegawai_id' => 'required|exists:pegawai,id',
+            ]);
+            $pegawai = \Modules\PegawaiManager\Models\Pegawai::findOrFail($request->pegawai_id);
+        } else {
+            $pegawai = $user->pegawai;
+            if (!$pegawai) {
+                return redirect()->back()->with('error', 'Akun Anda tidak terhubung dengan data Pegawai.');
+            }
         }
 
         $request->validate([
@@ -146,15 +170,42 @@ class PerizinanController extends Controller
             'bukti' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $durasiHari = Carbon::parse($request->tanggal_mulai)->diffInDays(Carbon::parse($request->tanggal_selesai)) + 1;
+        $mulai = Carbon::parse($request->tanggal_mulai);
+        $selesai = Carbon::parse($request->tanggal_selesai);
+        $durasiHari = 0;
+        
+        for ($date = $mulai->copy(); $date->lte($selesai); $date->addDay()) {
+            $isHariLibur = \Modules\Absensi\Models\HariLibur::whereDate('tanggal', $date)->exists();
+            if (!$isHariLibur) {
+                $durasiHari++;
+            }
+        }
+
         $impact = Perizinan::getImpactSettings($request->jenis_izin);
+
+        // Validasi Masa Kerja (Cuti hanya untuk yang terdaftar > 3 bulan)
+        if ($request->jenis_izin === 'cuti') {
+            if ($pegawai->tanggal_masuk) {
+                $monthsDiff = Carbon::parse($pegawai->tanggal_masuk)->diffInMonths(Carbon::now());
+                if ($monthsDiff < 3) {
+                    $eligibleDate = Carbon::parse($pegawai->tanggal_masuk)->addMonths(3)->format('d/m/Y');
+                    return redirect()->back()
+                        ->withInput()
+                        ->with('error', "Pengajuan gagal. Pegawai belum berhak mengambil cuti karena masa kerja kurang dari 3 bulan (Bisa mengajukan mulai {$eligibleDate}).");
+                }
+            } else {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', "Pengajuan gagal. Data tanggal masuk pegawai belum diisi. Silakan hubungi Admin untuk melengkapi data.");
+            }
+        }
 
         if ($impact['potong_kuota']) {
             $sisaCuti = $this->getSisaCuti($pegawai);
             if ($durasiHari > $sisaCuti) {
                 return redirect()->back()
                     ->withInput()
-                    ->with('error', "Pengajuan gagal. Sisa jatah cuti Anda tahun ini adalah {$sisaCuti} hari, namun Anda mengajukan {$durasiHari} hari.");
+                    ->with('error', "Pengajuan gagal. Sisa jatah cuti pegawai tahun ini adalah {$sisaCuti} hari, namun diajukan {$durasiHari} hari.");
             }
         }
 
@@ -173,7 +224,7 @@ class PerizinanController extends Controller
             $statusLabel = $overlap->status === 'disetujui' ? 'DISETUJUI' : 'MENUNGGU PERSETUJUAN';
             return redirect()->back()
                 ->withInput()
-                ->with('error', "Pengajuan gagal. Anda sudah memiliki izin/cuti berstatus {$statusLabel} pada periode {$tglAwal} s/d {$tglAkhir}. Tidak dapat mengajukan izin baru di tanggal yang sama.");
+                ->with('error', "Pengajuan gagal. Pegawai sudah memiliki izin/cuti berstatus {$statusLabel} pada periode {$tglAwal} s/d {$tglAkhir}.");
         }
 
         $buktiPath = null;
@@ -188,20 +239,28 @@ class PerizinanController extends Controller
             'tanggal_selesai' => $request->tanggal_selesai,
             'alasan' => $request->alasan,
             'bukti' => $buktiPath,
-            'status' => 'menunggu',
+            'status' => $isAdmin ? 'disetujui' : 'menunggu', // Jika admin yang menginputkan, langsung disetujui
             'potong_gaji' => $impact['potong_gaji'],
             'potong_kuota' => $impact['potong_kuota'],
             'total_hari' => $durasiHari,
         ]);
 
-        // Notify Admins
-        $admins = User::whereHas('roles', function($q) {
-            $q->whereIn('name', ['SUPER_ADMIN', 'STAF_TU']);
-        })->get();
-        
-        Notification::send($admins, new PengajuanIzinBaru($perizinan));
+        if ($isAdmin) {
+            if ($perizinan->potong_kuota) {
+                $pegawai->deductLeave($perizinan->total_hari);
+            }
+            if ($pegawai->user) {
+                $pegawai->user->notify(new StatusIzinDiperbarui($perizinan));
+            }
+        } else {
+            // Notify Admins
+            $admins = User::whereHas('roles', function($q) {
+                $q->whereIn('name', ['SUPER_ADMIN', 'STAF_TU']);
+            })->get();
+            Notification::send($admins, new PengajuanIzinBaru($perizinan));
+        }
 
-        return redirect()->route('perizinan.index')->with('success', 'Pengajuan perizinan berhasil dikirim.');
+        return redirect()->route('perizinan.index')->with('success', $isAdmin ? 'Izin/Cuti berhasil dibuat oleh Administrator.' : 'Pengajuan perizinan berhasil dikirim.');
     }
 
     /**

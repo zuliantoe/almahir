@@ -420,14 +420,17 @@
                 <div class="row mb-3">
                     @foreach($jenisKegiatanList as $jk)
                     @php
-                        $warna = $jk->warna ?: ($jk->is_kbm ? '#007bff' : '#dc3545');
-                        $jenisUrl = route('akademik.kalender-akademik.export-ical-jenis', ['kegiatan_id' => $jk->id]);
+                        $warna    = $jk->warna ?: ($jk->is_kbm ? '#007bff' : '#dc3545');
+                        // Bangun URL langsung agar tidak bergantung pada route cache di production
+                        $jenisPath = '/akademik/kalender-akademik-export/jenis/' . $jk->id . '/ical.ics';
+                        $jenisUrl  = request()->getSchemeAndHttpHost() . $jenisPath;
+                        $gcalUrl   = 'https://calendar.google.com/calendar/r?cid=' . urlencode('webcal://' . request()->getHost() . $jenisPath);
                     @endphp
                     <div class="col-12 mb-2">
                         <div class="d-flex align-items-center border rounded px-3 py-2" style="gap:10px; background:#f8f9fa;">
                             <span style="width:18px;height:18px;border-radius:4px;background:{{ $warna }};flex-shrink:0;display:inline-block;"></span>
                             <span class="font-weight-bold small flex-fill">{{ $jk->jeniskegiatan }}</span>
-                            <a href="{{ 'https://calendar.google.com/calendar/r?cid=' . urlencode('webcal://' . request()->getHost() . parse_url($jenisUrl, PHP_URL_PATH)) }}"
+                            <a href="{{ $gcalUrl }}"
                                target="_blank" class="btn btn-sm btn-outline-danger mr-1" title="Hubungkan ke Google Calendar">
                                 <i class="fab fa-google mr-1"></i> Hubungkan
                             </a>

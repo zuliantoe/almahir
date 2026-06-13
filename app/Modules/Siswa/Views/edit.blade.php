@@ -134,7 +134,7 @@
                             <option value="">-- Pilih Tahun Ajaran --</option>
                             @if(isset($tahunAjaran))
                                 @foreach($tahunAjaran as $ta)
-                                    <option value="{{ $ta->tahunajaran }}" {{ old('tahun_masuk', $siswa->tahun_masuk) == $ta->id ? 'selected' : '' }}>
+                                    <option value="{{ $ta->tahunajaran }}" {{ (old('tahun_masuk', $siswa->tahun_masuk) == $ta->tahunajaran || old('tahun_masuk', $siswa->tahun_masuk) == explode('/', $ta->tahunajaran)[0]) ? 'selected' : '' }}>
                                         {{ $ta->tahunajaran }}
                                     </option>
                                 @endforeach

@@ -173,8 +173,12 @@ class SiswaController extends Controller
         ]);
 
         $siswa = Siswa::findOrFail($id);
-        $tahun_masuk = explode('/', $validated['tahun_masuk']);
-        $validated['tahun_masuk'] = $tahun_masuk[0];
+        if (!empty($validated['tahun_masuk'])) {
+            $tahun_masuk = explode('/', $validated['tahun_masuk']);
+            $validated['tahun_masuk'] = $tahun_masuk[0];
+        } else {
+            $validated['tahun_masuk'] = null;
+        }
 
         if ($request->hasFile('foto')) {
             if ($siswa->foto && \Illuminate\Support\Facades\Storage::disk('public')->exists($siswa->foto)) {

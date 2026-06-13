@@ -31,6 +31,13 @@ return [
             'roles' => ['SUPER_ADMIN'],
         ],
         [
+            'label' => 'Setting Hari Libur',
+            'icon'  => 'fas fa-calendar-times',
+            'route' => 'absensi.hari-libur.index',
+            'match' => 'absensi/hari-libur',
+            'roles' => ['SUPER_ADMIN'],
+        ],
+        [
             'label' => 'Layar Lobi (QR Code)',
             'icon'  => 'fas fa-qrcode',
             'route' => 'absensi.manage.qr-generator',

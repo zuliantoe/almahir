@@ -38,6 +38,30 @@
                     <form action="{{ route('perizinan.store') }}" method="POST" enctype="multipart/form-data" id="formPengajuan">
                         @csrf
 
+                        @if($isAdmin)
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group text-left">
+                                    <label class="font-weight-bold text-dark">
+                                        <i class="fas fa-user text-primary mr-1"></i> Pilih Pegawai <span class="text-danger">*</span>
+                                    </label>
+                                    <select name="pegawai_id" id="pegawai_id" class="form-control @error('pegawai_id') is-invalid @enderror" required onchange="onPegawaiChange()">
+                                        <option value="">-- Pilih Pegawai --</option>
+                                        @foreach($pegawais as $p)
+                                            <option value="{{ $p->id }}" 
+                                                    data-sisa-cuti="{{ $p->getAvailableQuota() }}"
+                                                    {{ old('pegawai_id') == $p->id ? 'selected' : '' }}>
+                                                {{ $p->nama }} (Sisa Cuti: {{ $p->getAvailableQuota() }} hari)
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('pegawai_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="my-4">
+                        @endif
+
                         {{-- Jenis Izin --}}
                         <div class="form-group">
                             <label class="font-weight-bold text-dark">
@@ -55,7 +79,8 @@
                                 @foreach($jenisList as $j)
                                 <div class="col-6 col-md-3 mb-2">
                                     <label class="jenis-card d-block text-center p-3 rounded border cursor-pointer {{ old('jenis_izin') == $j['val'] ? 'selected' : '' }}"
-                                           style="cursor:pointer;transition:all .2s;" onclick="selectJenis('{{ $j['val'] }}')">
+                                           style="cursor:pointer; transition:all .2s;"
+                                           onclick="selectJenis('{{ $j['val'] }}')">
                                         <input type="radio" name="jenis_izin" value="{{ $j['val'] }}"
                                                id="jenis_{{ str_replace(' ', '_', $j['val']) }}" style="display:none;"
                                                {{ old('jenis_izin') == $j['val'] ? 'checked' : '' }}>
@@ -150,21 +175,24 @@
         {{-- ===== INFO SIDEBAR ===== --}}
         <div class="col-md-4">
             {{-- Sisa cuti card --}}
-            @if(isset($sisaCuti))
+            @if(isset($sisaCuti) || $isAdmin)
             @php
-                $colorCuti = $sisaCuti >= 7 ? '#28a745' : ($sisaCuti >= 4 ? '#ffc107' : '#dc3545');
-                $pct = round(($sisaCuti / 12) * 100);
+                $sisaCutiVal = $sisaCuti ?? 12;
+                $colorCuti = $sisaCutiVal >= 7 ? '#28a745' : ($sisaCutiVal >= 4 ? '#ffc107' : '#dc3545');
+                $pct = round(($sisaCutiVal / 12) * 100);
             @endphp
-            <div class="glass-card p-4 border-0 mb-4" style="border-top:5px solid {{ $colorCuti }} !important;">
-                <h6 class="font-weight-bold mb-3" style="color:{{ $colorCuti }};"><i class="fas fa-umbrella-beach mr-2"></i>Sisa Jatah Cuti</h6>
+            <div id="sisaCutiCard" class="glass-card p-4 border-0 mb-4" style="border-top:5px solid {{ $colorCuti }} !important; {{ $isAdmin ? 'display:none;' : '' }}">
+                <h6 class="font-weight-bold mb-3" style="color:{{ $colorCuti }} ;" id="sisaCutiTitle"><i class="fas fa-umbrella-beach mr-2"></i>Sisa Jatah Cuti</h6>
                 <div class="d-flex align-items-end mb-2">
-                    <span class="display-4 font-weight-bolder mr-2" style="color:{{ $colorCuti }};line-height:1;">{{ $sisaCuti }}</span>
+                    <span class="display-4 font-weight-bolder mr-2" style="color:{{ $colorCuti }} ;line-height:1;" id="sisaCutiVal">{{ $sisaCutiVal }}</span>
                     <span class="text-muted mb-1">/ 12 Hari</span>
                 </div>
                 <div class="progress mb-2" style="height:8px;border-radius:10px;background:#eee;">
-                    <div class="progress-bar" style="width:{{ $pct }}%;background:{{ $colorCuti }};border-radius:10px;transition:width .5s;"></div>
+                    <div class="progress-bar" id="sisaCutiBar" style="width:{{ $pct }}%;background:{{ $colorCuti }};border-radius:10px;transition:width .5s;"></div>
                 </div>
-                <small class="text-muted">{{ 12 - $sisaCuti }} hari telah terpakai di tahun {{ date('Y') }}</small>
+                <small class="text-muted" id="sisaCutiNote">
+                    {{ 12 - $sisaCutiVal }} hari telah terpakai di tahun {{ date('Y') }}
+                </small>
             </div>
             @endif
 
@@ -202,6 +230,41 @@
 
 @push('scripts')
 <script>
+let isAdmin = {{ $isAdmin ? 'true' : 'false' }};
+
+// Handler perubahan pegawai (Admin Only)
+function onPegawaiChange() {
+    if (!isAdmin) return;
+
+    const select = document.getElementById('pegawai_id');
+    const selectedOption = select.options[select.selectedIndex];
+    const card = document.getElementById('sisaCutiCard');
+
+    if (!selectedOption || select.value === "") {
+        card.style.display = 'none';
+        return;
+    }
+
+    const sisa = parseInt(selectedOption.getAttribute('data-sisa-cuti'));
+
+    // Update Card UI
+    card.style.display = 'block';
+    document.getElementById('sisaCutiVal').textContent = sisa;
+    
+    const color = sisa >= 7 ? '#28a745' : (sisa >= 4 ? '#ffc107' : '#dc3545');
+    card.style.borderTop = `5px solid ${color}`;
+    document.getElementById('sisaCutiVal').style.color = color;
+    document.getElementById('sisaCutiTitle').style.color = color;
+    
+    const pct = Math.round((sisa / 12) * 100);
+    const progressBar = document.getElementById('sisaCutiBar');
+    progressBar.style.width = `${pct}%`;
+    progressBar.style.backgroundColor = color;
+
+    const noteEl = document.getElementById('sisaCutiNote');
+    noteEl.innerHTML = `${12 - sisa} hari telah terpakai di tahun {{ date('Y') }}`;
+}
+
 // Pilih jenis izin via card
 function selectJenis(val) {
     // Reset semua kartu
@@ -292,6 +355,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Init selected state dari old value
     const checked = document.querySelector('input[name="jenis_izin"]:checked');
     if (checked) selectJenis(checked.value);
+    
+    if (isAdmin) {
+        onPegawaiChange();
+    }
 
     // Intercept form submit
     document.getElementById('formPengajuan').addEventListener('submit', function(e) {
@@ -335,15 +402,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Cek kuota cuti di client side
-        const sisaCuti = {{ $sisaCuti ?? 999 }};
-        if (jenis.value === 'cuti' && sisaCuti < 999) {
+        let sisaCutiVal = {{ $sisaCuti ?? 999 }};
+        if (isAdmin) {
+            const select = document.getElementById('pegawai_id');
+            if (select && select.value !== "") {
+                const opt = select.options[select.selectedIndex];
+                sisaCutiVal = parseInt(opt.getAttribute('data-sisa-cuti') || 12);
+            }
+        }
+        if (jenis.value === 'cuti' && sisaCutiVal < 999) {
             const diff = Math.round((d2 - d1) / 86400000) + 1;
-            if (diff > sisaCuti) {
+            if (diff > sisaCutiVal) {
                 e.preventDefault();
                 Swal.fire({
                     icon: 'error',
                     title: 'Kuota Tidak Mencukupi',
-                    html: `Sisa jatah cuti Anda tahun ini adalah <strong>${sisaCuti} hari</strong>, namun Anda mengajukan <strong>${diff} hari</strong>.`,
+                    html: `Sisa jatah cuti pegawai tahun ini adalah <strong>${sisaCutiVal} hari</strong>, namun diajukan <strong>${diff} hari</strong>.`,
                     confirmButtonColor: '#d33'
                 });
                 return false;

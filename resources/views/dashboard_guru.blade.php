@@ -310,8 +310,29 @@
                 </div>
             </div>
 
+            {{-- ─── QR CODE ABSENSI DIGITAL ─── --}}
+            <div class="card border-0 shadow-sm mb-4 text-center" style="border-radius: 16px; overflow: hidden; border-top: 5px solid #8b5cf6;">
+                <div class="card-body p-4">
+                    <h5 class="font-weight-bold text-dark mb-2"><i class="fas fa-qrcode text-purple mr-1"></i> Kartu Presensi Digital</h5>
+                    <p class="text-muted small mb-3">Tunjukkan QR Code ini ke webcam lobi untuk melakukan presensi masuk/pulang.</p>
+                    
+                    @if($pegawai && $pegawai->qr_token)
+                        <div class="d-inline-block p-3 bg-white rounded shadow-sm border mb-3">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ $pegawai->qr_token }}&margin=2" alt="QR Presensi" style="width: 150px; height: 150px;">
+                        </div>
+                        <div class="text-uppercase font-weight-bold text-secondary" style="font-size: 0.8rem; letter-spacing: 1px;">
+                            ID: {{ substr($pegawai->qr_token, 0, 8) }}...
+                        </div>
+                    @else
+                        <div class="alert alert-warning py-2 small mb-0">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> QR Code belum digenerate. Silakan hubungi Admin.
+                        </div>
+                    @endif
+                </div>
+            </div>
+
             {{-- Presensi Pegawai Card --}}
-            <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden;">
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; overflow: hidden;">
                 <div class="card-header border-0 p-3 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
                     <div class="d-flex align-items-center text-white">
                         <i class="fas fa-clock mr-2"></i>

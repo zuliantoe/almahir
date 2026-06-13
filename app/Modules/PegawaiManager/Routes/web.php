@@ -46,6 +46,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/', [PegawaiManagerController::class, 'index'])->middleware('permission:guru.view')->name('index');
     Route::get('/create', [PegawaiManagerController::class, 'create'])->middleware('permission:guru.create')->name('create');
     Route::post('/', [PegawaiManagerController::class, 'store'])->middleware('permission:guru.create')->name('store');
+    Route::get('/{id}/print-card', [PegawaiManagerController::class, 'printCard'])->middleware('permission:guru.view')->name('print-card');
     Route::get('/{id}', [PegawaiManagerController::class, 'show'])->middleware('permission:guru.view')->name('show');
     Route::get('/{id}/edit', [PegawaiManagerController::class, 'edit'])->middleware('permission:guru.edit')->name('edit');
     Route::put('/{id}', [PegawaiManagerController::class, 'update'])->middleware('permission:guru.edit')->name('update');
@@ -53,4 +54,5 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('role:SUPER_ADMIN,STAF_TU')
         ->name('toggle-status');
     Route::delete('/{id}', [PegawaiManagerController::class, 'destroy'])->middleware('role:SUPER_ADMIN,STAF_TU')->name('destroy');
+    Route::post('/{id}/reset-password', [PegawaiManagerController::class, 'resetPassword'])->middleware('permission:guru.edit')->name('reset-password');
 });

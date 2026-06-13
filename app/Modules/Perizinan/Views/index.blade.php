@@ -34,7 +34,13 @@
                 <div class="progress mt-3" style="height:5px;border-radius:10px;">
                     <div class="progress-bar" style="width:{{ $pctCuti }}%;background:{{ $colorCuti }};border-radius:10px;"></div>
                 </div>
-                <small class="text-muted">{{ 12 - $sisaCuti }} hari telah terpakai tahun ini</small>
+                <small class="text-muted">
+                    @if(isset($isEligibleForCuti) && !$isEligibleForCuti && isset($eligibleDate))
+                        <span class="text-danger font-weight-bold"><i class="fas fa-lock mr-1"></i>Belum Aktif (Mulai {{ $eligibleDate->translatedFormat('d M Y') }})</span>
+                    @else
+                        {{ 12 - $sisaCuti }} hari telah terpakai tahun ini
+                    @endif
+                </small>
             </div>
         </div>
         @endif

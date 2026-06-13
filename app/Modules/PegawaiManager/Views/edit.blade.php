@@ -95,9 +95,9 @@
                         <label>Tanggal Mulai Tugas (TMT)</label>
                         <div class="input-group">
                             <div class="input-group-prepend">
-                                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                <span class="input-group-text"><i class="fas fa-calendar-alt text-primary"></i></span>
                             </div>
-                            <input type="date" name="tanggal_masuk" class="form-control form-control-premium" value="{{ old('tanggal_masuk', $pegawaiManager->tanggal_masuk ? $pegawaiManager->tanggal_masuk->format('Y-m-d') : '') }}">
+                            <input type="text" name="tanggal_masuk" class="form-control form-control-premium datepicker" value="{{ old('tanggal_masuk', $pegawaiManager->tanggal_masuk ? $pegawaiManager->tanggal_masuk->format('Y-m-d') : '') }}" placeholder="dd/mm/yyyy">
                         </div>
                     </div>
                 </div>
@@ -164,9 +164,31 @@
 </div>
 @endsection
 
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .flatpickr-calendar {
+        border-radius: 12px !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
+        border: 1px solid #e1e5ef !important;
+        font-family: 'Outfit', sans-serif !important;
+    }
+</style>
+@endpush
+
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        flatpickr(".datepicker", {
+            altInput: true,
+            altFormat: "d/m/Y",
+            dateFormat: "Y-m-d",
+            locale: "id",
+            allowInput: true
+        });
+
         $('.btn-toggle-status').on('click', function() {
             let button = $(this);
             let form = $('#form-toggle-status');

@@ -28,6 +28,7 @@ class User extends Authenticatable
         'avatar',
         'phone',
         'account_status',
+        'must_change_password',
         'last_login_at',
         'last_login_ip',
         'ref_type',

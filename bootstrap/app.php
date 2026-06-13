@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->web(append: [
             \App\Http\Middleware\SiswaAccessRestrictionMiddleware::class,
+            \App\Http\Middleware\ForceChangePassword::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

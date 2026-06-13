@@ -209,26 +209,13 @@ class KalenderAkademikController extends Controller
         ];
 
         foreach ($events as $event) {
-            if (!$event->tanggal_awal) {
-                continue;
-            }
+            if (!$event->tanggal_awal) continue;
 
             $endDateObj  = ($event->tanggal_akhir ?? $event->tanggal_awal);
             $dtStart     = $event->tanggal_awal->format('Ymd');
             $dtEnd       = $endDateObj->copy()->addDay()->format('Ymd');
-
             $jenis       = $event->jenisKegiatan;
-            $isKbm       = $jenis ? $jenis->is_kbm : true;
-            $hexColor    = ($jenis && $jenis->warna) ? $jenis->warna : '#007bff';
-            if (!$isKbm && (!$jenis || !$jenis->warna)) {
-                $hexColor = '#dc3545';
-            }
-
-            // Map hex → RFC 7986 named color (the only colors Google Calendar supports)
-            $namedColor  = $this->hexToCalendarColor($hexColor);
             $jenisLabel  = $jenis ? '[' . $jenis->jeniskegiatan . '] ' : '';
-
-            // Escape ICS text fields
             $summary     = $this->escapeIcsText($jenisLabel . $event->nama_kegiatan);
             $description = $this->escapeIcsText($event->deskripsi ?: 'Agenda Akademik Sekolah');
 
@@ -240,8 +227,6 @@ class KalenderAkademikController extends Controller
             $ics[] = 'SUMMARY:' . $summary;
             $ics[] = 'DESCRIPTION:' . $description;
             $ics[] = 'LOCATION:Sekolah Almahir';
-            $ics[] = 'COLOR:' . $namedColor;
-            $ics[] = 'X-APPLE-CALENDAR-COLOR:' . $hexColor;
             $ics[] = 'STATUS:CONFIRMED';
             $ics[] = 'END:VEVENT';
         }
@@ -252,6 +237,67 @@ class KalenderAkademikController extends Controller
             ->header('Content-Type', 'text/calendar; charset=utf-8')
             ->header('Cache-Control', 'no-cache, must-revalidate')
             ->header('Content-Disposition', 'inline; filename="kalender_akademik_almahir.ics"');
+    }
+
+    /**
+     * Export iCal feed per JenisKegiatan.
+     *
+     * Google Calendar CANNOT display per-event colors from a single subscription feed —
+     * it applies ONE color to the entire calendar. The solution is to provide separate
+     * feeds per category (JenisKegiatan), so each Google Calendar subscription has its
+     * own color that the user can set to match the academic calendar.
+     */
+    public function exportIcalByJenis(int $kegiatan_id)
+    {
+        $jenis = JenisKegiatan::findOrFail($kegiatan_id);
+
+        $hexColor  = $jenis->warna ?: ($jenis->is_kbm ? '#007bff' : '#dc3545');
+        $calName   = 'Kalender Akademik Almahir — ' . $jenis->jeniskegiatan;
+
+        $events = KalenderAkademik::with('jenisKegiatan')
+            ->where('kegiatan_id', $kegiatan_id)
+            ->get();
+
+        $ics = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//Almahir//Academic Calendar//ID',
+            'X-WR-CALNAME:' . $this->escapeIcsText($calName),
+            'X-WR-TIMEZONE:Asia/Jakarta',
+            'X-WR-CALCOLOR:' . $hexColor,
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH',
+        ];
+
+        foreach ($events as $event) {
+            if (!$event->tanggal_awal) continue;
+
+            $endDateObj  = ($event->tanggal_akhir ?? $event->tanggal_awal);
+            $dtStart     = $event->tanggal_awal->format('Ymd');
+            $dtEnd       = $endDateObj->copy()->addDay()->format('Ymd');
+            $summary     = $this->escapeIcsText($event->nama_kegiatan);
+            $description = $this->escapeIcsText($event->deskripsi ?: 'Agenda Akademik Sekolah');
+
+            $ics[] = 'BEGIN:VEVENT';
+            $ics[] = 'UID:jenis-' . $kegiatan_id . '-' . $event->id . '@almahir';
+            $ics[] = 'DTSTAMP:' . gmdate('Ymd\THis\Z');
+            $ics[] = 'DTSTART;VALUE=DATE:' . $dtStart;
+            $ics[] = 'DTEND;VALUE=DATE:' . $dtEnd;
+            $ics[] = 'SUMMARY:' . $summary;
+            $ics[] = 'DESCRIPTION:' . $description;
+            $ics[] = 'LOCATION:Sekolah Almahir';
+            $ics[] = 'STATUS:CONFIRMED';
+            $ics[] = 'END:VEVENT';
+        }
+
+        $ics[] = 'END:VCALENDAR';
+
+        $filename = 'kalender-' . \Illuminate\Support\Str::slug($jenis->jeniskegiatan) . '.ics';
+
+        return response(implode("\r\n", $ics))
+            ->header('Content-Type', 'text/calendar; charset=utf-8')
+            ->header('Cache-Control', 'no-cache, must-revalidate')
+            ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
     }
 
     /**
@@ -269,15 +315,9 @@ class KalenderAkademikController extends Controller
 
     /**
      * Map a hex color to the nearest RFC 7986 named color.
-     * These are the ONLY color values Google Calendar recognizes via the COLOR property.
-     *
-     * Google Calendar color palette (named): alice-blue, amethyst, avocado, banana,
-     * basil, blueberry, cherry, citron, cocoa, flamingo, grape, graphite, lavender,
-     * peacock, pistachio, pumpkin, radicchio, sage, tangerine, tomato, wisteria.
      */
     private function hexToCalendarColor(string $hex): string
     {
-        // Normalize hex: remove # and convert to lowercase
         $hex = ltrim(strtolower($hex), '#');
         if (strlen($hex) === 3) {
             $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
@@ -286,35 +326,27 @@ class KalenderAkademikController extends Controller
         $g = hexdec(substr($hex, 2, 2));
         $b = hexdec(substr($hex, 4, 2));
 
-        // RFC 7986 / Google Calendar named colors with approximate RGB values
         $palette = [
-            'tomato'     => [205,  92,  92],  // red
-            'flamingo'   => [250, 128, 114],  // salmon/light-red
-            'tangerine'  => [242, 133,   0],  // orange-yellow
-            'banana'     => [243, 179,  45],  // yellow
-            'sage'       => [147, 196, 125],  // light green
-            'basil'      => [ 15, 157,  88],  // dark green
-            'peacock'    => [ 39, 174, 239],  // light blue
-            'blueberry'  => [ 63,  81, 181],  // indigo/dark blue
-            'lavender'   => [121, 134, 203],  // medium blue-purple
-            'grape'      => [171,  71, 188],  // purple
-            'graphite'   => [ 97,  97,  97],  // gray
-            'amethyst'   => [171,  71, 188],  // purple variant
-            'cherry'     => [211,  72,  54],  // dark red
-            'pumpkin'    => [230, 124,  16],  // orange
-            'cocoa'      => [143,  86,  56],  // brown
+            'tomato'    => [205,  92,  92],
+            'flamingo'  => [250, 128, 114],
+            'tangerine' => [242, 133,   0],
+            'banana'    => [243, 179,  45],
+            'sage'      => [147, 196, 125],
+            'basil'     => [ 15, 157,  88],
+            'peacock'   => [ 39, 174, 239],
+            'blueberry' => [ 63,  81, 181],
+            'lavender'  => [121, 134, 203],
+            'grape'     => [171,  71, 188],
+            'graphite'  => [ 97,  97,  97],
+            'pumpkin'   => [230, 124,  16],
         ];
 
         $nearest = 'blueberry';
         $minDist = PHP_INT_MAX;
         foreach ($palette as $name => $rgb) {
-            $dist = pow($r - $rgb[0], 2) + pow($g - $rgb[1], 2) + pow($b - $rgb[2], 2);
-            if ($dist < $minDist) {
-                $minDist = $dist;
-                $nearest = $name;
-            }
+            $dist = ($r-$rgb[0])**2 + ($g-$rgb[1])**2 + ($b-$rgb[2])**2;
+            if ($dist < $minDist) { $minDist = $dist; $nearest = $name; }
         }
-
         return $nearest;
     }
 }

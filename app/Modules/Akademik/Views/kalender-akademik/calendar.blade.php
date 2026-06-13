@@ -397,57 +397,78 @@
 <div class="modal fade" id="syncModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content shadow-lg border-0">
-            <div class="modal-header border-0 text-white" style="background: linear-gradient(135deg,#1e3c72,#2a5298);">
-                <h5 class="modal-title font-weight-bold"><i class="fas fa-calendar-plus mr-2"></i>Sinkronisasi ke Google Calendar</h5>
+            <div class="modal-header border-0 text-white" style="background:linear-gradient(135deg,#1e3c72,#2a5298);">
+                <h5 class="modal-title font-weight-bold">
+                    <i class="fas fa-calendar-plus mr-2"></i>Sinkronisasi ke Google Calendar
+                </h5>
                 <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body p-4">
 
-                {{-- One-click button --}}
-                <div class="text-center mb-4">
-                    <a id="btnSyncGoogle" href="#" target="_blank"
-                       class="btn btn-lg btn-danger shadow px-4 py-2">
-                        <i class="fab fa-google mr-2"></i> Hubungkan ke Google Calendar (Sekali Klik)
-                    </a>
-                    <p class="text-muted small mt-2 mb-0">
-                        Klik tombol di atas lalu klik <strong>"Tambahkan kalender"</strong> di Google Calendar.
-                    </p>
-                    <p class="text-muted small mt-1">
-                        <i class="fas fa-desktop mr-1"></i> Hanya bisa di browser desktop (bukan HP).
-                    </p>
+                {{-- Penjelasan singkat --}}
+                <div class="alert alert-info py-2 small mb-3">
+                    <i class="fas fa-lightbulb mr-1"></i>
+                    <strong>Cara Kerja:</strong> Google Calendar hanya bisa menampilkan <strong>satu warna per kalender</strong>.
+                    Agar warna sesuai dengan tampilan di sini, subscribe ke <strong>masing-masing jenis kegiatan</strong> di bawah — setiap link sudah otomatis berwarna sesuai.
+                </div>
+
+                {{-- Per-Jenis Kegiatan subscribe cards --}}
+                <h6 class="font-weight-bold mb-2"><i class="fas fa-palette mr-1 text-primary"></i> Subscribe Per Jenis Kegiatan (Warna Sesuai)</h6>
+
+                <div class="row mb-3">
+                    @foreach($jenisKegiatanList as $jk)
+                    @php
+                        $warna = $jk->warna ?: ($jk->is_kbm ? '#007bff' : '#dc3545');
+                        $jenisUrl = route('akademik.kalender-akademik.export-ical-jenis', ['kegiatan_id' => $jk->id]);
+                    @endphp
+                    <div class="col-12 mb-2">
+                        <div class="d-flex align-items-center border rounded px-3 py-2" style="gap:10px; background:#f8f9fa;">
+                            <span style="width:18px;height:18px;border-radius:4px;background:{{ $warna }};flex-shrink:0;display:inline-block;"></span>
+                            <span class="font-weight-bold small flex-fill">{{ $jk->jeniskegiatan }}</span>
+                            <a href="{{ 'https://calendar.google.com/calendar/r?cid=' . urlencode('webcal://' . request()->getHost() . parse_url($jenisUrl, PHP_URL_PATH)) }}"
+                               target="_blank" class="btn btn-sm btn-outline-danger mr-1" title="Hubungkan ke Google Calendar">
+                                <i class="fab fa-google mr-1"></i> Hubungkan
+                            </a>
+                            <button class="btn btn-sm btn-outline-secondary btn-copy-jenis"
+                                    data-url="{{ $jenisUrl }}"
+                                    onclick="copyJenisUrl(this)" title="Salin link iCal">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    @endforeach
                 </div>
 
                 <hr>
 
-                {{-- Manual instructions --}}
-                <h6 class="font-weight-bold"><i class="fas fa-hand-point-right text-primary mr-1"></i> Cara Manual (jika tombol di atas tidak berfungsi):</h6>
-                <ol class="text-muted small mb-3">
-                    <li>Salin link iCal di bawah ini.</li>
-                    <li>Buka <a href="https://calendar.google.com" target="_blank">calendar.google.com</a> di browser desktop.</li>
-                    <li>Di kolom kiri klik ikon <strong>"+"</strong> di sebelah <strong>"Kalender lainnya"</strong>.</li>
-                    <li>Pilih <strong>"Dari URL"</strong> → tempel link → klik <strong>"Tambahkan kalender"</strong>.</li>
-                </ol>
-
-                {{-- iCal URL input --}}
-                <div class="form-group mb-3">
-                    <label class="text-xs font-weight-bold text-uppercase text-muted">Link iCal (URL Kalender Akademik)</label>
-                    <div class="input-group">
-                        <input type="text" id="icalUrl" class="form-control font-monospace small bg-light" readonly value="">
-                        <div class="input-group-append">
-                            <button class="btn btn-primary" id="btnCopyIcal" onclick="copyIcalUrl()" title="Salin link">
-                                <i class="fas fa-copy mr-1"></i> Salin
-                            </button>
-                        </div>
-                    </div>
+                {{-- Semua event (satu feed, tanpa warna berbeda) --}}
+                <h6 class="font-weight-bold mb-2"><i class="fas fa-calendar mr-1 text-secondary"></i> Atau: Semua Kegiatan (1 Link, Warna Seragam)</h6>
+                <div class="d-flex align-items-center border rounded px-3 py-2 mb-3" style="background:#f8f9fa;gap:8px;">
+                    <input type="text" id="icalUrl" class="form-control form-control-sm font-monospace bg-white" readonly value="">
+                    <a id="btnSyncGoogle" href="#" target="_blank" class="btn btn-sm btn-danger flex-shrink-0">
+                        <i class="fab fa-google mr-1"></i> Hubungkan
+                    </a>
+                    <button class="btn btn-sm btn-outline-secondary flex-shrink-0" id="btnCopyIcal" onclick="copyIcalUrl()" title="Salin link">
+                        <i class="fas fa-copy"></i>
+                    </button>
                 </div>
 
-                {{-- Color note --}}
-                <div class="alert alert-warning small mb-0 py-2">
-                    <i class="fas fa-palette mr-1"></i>
-                    <strong>Catatan warna:</strong> Google Calendar hanya mendukung nama warna standar (bukan hex). Warna event di Google Calendar akan dipilihkan yang <em>paling mendekati</em> warna asli di kalender akademik ini secara otomatis.
+                {{-- Cara manual --}}
+                <div class="collapse" id="caraManual">
+                    <h6 class="font-weight-bold"><i class="fas fa-hand-point-right text-primary mr-1"></i> Cara Tambahkan URL ke Google Calendar:</h6>
+                    <ol class="text-muted small mb-0">
+                        <li>Klik tombol <strong>Salin</strong> di salah satu link di atas.</li>
+                        <li>Buka <a href="https://calendar.google.com" target="_blank">calendar.google.com</a> di browser desktop.</li>
+                        <li>Klik ikon <strong>"+"</strong> di sebelah <strong>"Kalender lainnya"</strong>.</li>
+                        <li>Pilih <strong>"Dari URL"</strong> → tempel link → klik <strong>"Tambahkan kalender"</strong>.</li>
+                        <li>Setelah ditambahkan, klik titik tiga di nama kalender → <strong>Edit</strong> → pilih warna yang sesuai.</li>
+                    </ol>
                 </div>
+                <button class="btn btn-link btn-sm p-0 text-muted" type="button" data-toggle="collapse" data-target="#caraManual">
+                    <i class="fas fa-question-circle mr-1"></i> Cara manual / tidak bisa sekali klik?
+                </button>
 
             </div>
             <div class="modal-footer bg-light border-0">
@@ -467,18 +488,34 @@ function copyIcalUrl() {
     copyText.setSelectionRange(0, 99999);
     navigator.clipboard.writeText(copyText.value).then(function() {
         var original = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-check mr-1"></i> Tersalin!';
-        btn.classList.remove('btn-primary');
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        btn.classList.remove('btn-outline-secondary');
         btn.classList.add('btn-success');
         setTimeout(function() {
             btn.innerHTML = original;
             btn.classList.remove('btn-success');
-            btn.classList.add('btn-primary');
+            btn.classList.add('btn-outline-secondary');
         }, 2500);
     }).catch(function() {
-        // Fallback for older browsers
         document.execCommand('copy');
         alert("Link berhasil disalin!");
+    });
+}
+
+function copyJenisUrl(btn) {
+    var url = btn.getAttribute('data-url');
+    navigator.clipboard.writeText(url).then(function() {
+        var original = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        btn.classList.remove('btn-outline-secondary');
+        btn.classList.add('btn-success');
+        setTimeout(function() {
+            btn.innerHTML = original;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-secondary');
+        }, 2500);
+    }).catch(function() {
+        alert("Salin link ini: " + url);
     });
 }
 </script>

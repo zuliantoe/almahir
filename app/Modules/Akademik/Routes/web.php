@@ -76,3 +76,6 @@ Route::middleware(['web', 'auth', \Modules\Akademik\Middleware\ReadOnlyRoleMiddl
 
 // Public route for Calendar Sync (iCal) - Must be outside 'auth' so Google can fetch it
 Route::get('/kalender-akademik-export/ical.ics', [KalenderAkademikController::class, 'exportIcal'])->name('kalender-akademik.export-ical');
+
+// Per-JenisKegiatan iCal export — each feed has ONE color so Google Calendar can display it correctly
+Route::get('/kalender-akademik-export/jenis/{kegiatan_id}/ical.ics', [KalenderAkademikController::class, 'exportIcalByJenis'])->name('kalender-akademik.export-ical-jenis');

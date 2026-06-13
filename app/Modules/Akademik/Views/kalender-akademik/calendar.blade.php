@@ -125,6 +125,18 @@
         font-weight: 700 !important;
         color: #343a40 !important;
     }
+    .fc-header-toolbar .fc-toolbar-chunk {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .fc .fc-button-group {
+        gap: 6px;
+    }
+    .fc .fc-button-group > .fc-button {
+        border-radius: 6px !important;
+        margin-left: 0 !important;
+    }
     .fc .fc-button {
         border-radius: 6px !important;
         font-size: 0.85rem !important;

@@ -397,51 +397,61 @@
 <div class="modal fade" id="syncModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content shadow-lg border-0">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title font-weight-bold"><i class="fas fa-sync mr-2"></i>Sinkronisasi Google Calendar</h5>
+            <div class="modal-header border-0 text-white" style="background: linear-gradient(135deg,#1e3c72,#2a5298);">
+                <h5 class="modal-title font-weight-bold"><i class="fas fa-calendar-plus mr-2"></i>Sinkronisasi ke Google Calendar</h5>
                 <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body p-4">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle mr-2"></i> Metode ini memungkinkan Google Calendar menarik data otomatis dari aplikasi tanpa perlu login ulang.
-                </div>
-                
+
+                {{-- One-click button --}}
                 <div class="text-center mb-4">
-                    <a id="btnSyncGoogle" href="#" 
-                       target="_blank" class="btn btn-danger btn-lg shadow-sm">
+                    <a id="btnSyncGoogle" href="#" target="_blank"
+                       class="btn btn-lg btn-danger shadow px-4 py-2">
                         <i class="fab fa-google mr-2"></i> Hubungkan ke Google Calendar (Sekali Klik)
                     </a>
-                    <p class="text-muted small mt-2">Tombol ini akan otomatis membuka Google Calendar Anda.</p>
+                    <p class="text-muted small mt-2 mb-0">
+                        Klik tombol di atas lalu klik <strong>"Tambahkan kalender"</strong> di Google Calendar.
+                    </p>
+                    <p class="text-muted small mt-1">
+                        <i class="fas fa-desktop mr-1"></i> Hanya bisa di browser desktop (bukan HP).
+                    </p>
                 </div>
 
                 <hr>
 
-                <h6><strong>Atau Cara Manual:</strong></h6>
-                <ol class="text-muted mb-4">
-                    <li>Salin link di bawah ini.</li>
-                    <li>Buka <a href="https://calendar.google.com" target="_blank">Google Calendar</a> Anda.</li>
-                    <li>Di sisi kiri, cari bagian <strong>"Kalender lainnya"</strong> (Other calendars).</li>
-                    <li>Klik ikon <strong>+</strong> lalu pilih <strong>"Dari URL"</strong> (From URL).</li>
-                    <li>Tempelkan link yang sudah disalin tadi dan klik <strong>"Tambahkan kalender"</strong>.</li>
+                {{-- Manual instructions --}}
+                <h6 class="font-weight-bold"><i class="fas fa-hand-point-right text-primary mr-1"></i> Cara Manual (jika tombol di atas tidak berfungsi):</h6>
+                <ol class="text-muted small mb-3">
+                    <li>Salin link iCal di bawah ini.</li>
+                    <li>Buka <a href="https://calendar.google.com" target="_blank">calendar.google.com</a> di browser desktop.</li>
+                    <li>Di kolom kiri klik ikon <strong>"+"</strong> di sebelah <strong>"Kalender lainnya"</strong>.</li>
+                    <li>Pilih <strong>"Dari URL"</strong> → tempel link → klik <strong>"Tambahkan kalender"</strong>.</li>
                 </ol>
 
-                <div class="form-group mb-0">
-                    <label class="text-xs font-weight-bold text-uppercase">Link Kalender Akademik (iCal URL)</label>
+                {{-- iCal URL input --}}
+                <div class="form-group mb-3">
+                    <label class="text-xs font-weight-bold text-uppercase text-muted">Link iCal (URL Kalender Akademik)</label>
                     <div class="input-group">
-                        <input type="text" id="icalUrl" class="form-control font-weight-bold bg-light" readonly 
-                               value="">
+                        <input type="text" id="icalUrl" class="form-control font-monospace small bg-light" readonly value="">
                         <div class="input-group-append">
-                            <button class="btn btn-primary" onclick="copyIcalUrl()">
-                                <i class="fas fa-copy mr-1"></i> Salin Link
+                            <button class="btn btn-primary" id="btnCopyIcal" onclick="copyIcalUrl()" title="Salin link">
+                                <i class="fas fa-copy mr-1"></i> Salin
                             </button>
                         </div>
                     </div>
                 </div>
+
+                {{-- Color note --}}
+                <div class="alert alert-warning small mb-0 py-2">
+                    <i class="fas fa-palette mr-1"></i>
+                    <strong>Catatan warna:</strong> Google Calendar hanya mendukung nama warna standar (bukan hex). Warna event di Google Calendar akan dipilihkan yang <em>paling mendekati</em> warna asli di kalender akademik ini secara otomatis.
+                </div>
+
             </div>
             <div class="modal-footer bg-light border-0">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
@@ -452,11 +462,24 @@
 <script>
 function copyIcalUrl() {
     var copyText = document.getElementById("icalUrl");
+    var btn = document.getElementById("btnCopyIcal");
     copyText.select();
     copyText.setSelectionRange(0, 99999);
-    navigator.clipboard.writeText(copyText.value);
-    
-    alert("Link berhasil disalin! Silakan tempelkan di Google Calendar Anda.");
+    navigator.clipboard.writeText(copyText.value).then(function() {
+        var original = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check mr-1"></i> Tersalin!';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-success');
+        setTimeout(function() {
+            btn.innerHTML = original;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-primary');
+        }, 2500);
+    }).catch(function() {
+        // Fallback for older browsers
+        document.execCommand('copy');
+        alert("Link berhasil disalin!");
+    });
 }
 </script>
 
@@ -477,10 +500,13 @@ document.addEventListener('DOMContentLoaded', function () {
         icalInput.value = absoluteUrl;
     }
     
-    // Set href for one-click button
+    // Set href for one-click button — CORRECT format:
+    // https://calendar.google.com/calendar/r?cid=webcal://host/path
+    // (using /calendar/r not the deprecated /calendar/render)
     const syncButton = document.getElementById('btnSyncGoogle');
     if (syncButton) {
-        syncButton.href = 'https://www.google.com/calendar/render?cid=' + encodeURIComponent(absoluteUrl);
+        const webcalUrl = 'webcal://' + host + relativePath;
+        syncButton.href = 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(webcalUrl);
     }
 
     var calendarEl = document.getElementById('calendar');

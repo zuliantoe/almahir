@@ -286,10 +286,11 @@ class JadwalPelajaranController extends Controller
                 ->where('jamke', $item->jamke)
                 ->exists();
 
-            // Check if guru already teaches in another class in the same tahun_ajaran
+            // Check if guru already teaches in another class in the same tahun_ajaran (excluding source and target rombel)
             $existsGuru = JadwalPelajaran::where('guru_id', $item->guru_id)
                 ->where('hari', $item->hari)
                 ->where('jamke', $item->jamke)
+                ->whereNotIn('rombel_id', [$request->from_rombel_id, $request->to_rombel_id])
                 ->whereHas('rombel', function($q) use ($targetTahunAjaranId) {
                     $q->where('tahunajaran_id', $targetTahunAjaranId);
                 })

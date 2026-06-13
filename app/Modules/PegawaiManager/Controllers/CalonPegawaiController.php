@@ -124,20 +124,34 @@ class CalonPegawaiController extends Controller
                     $user->assignRole($roleName);
                 }
 
-                // 2. Buat Data Pegawai (Master Data Almahira)
-                Pegawai::create([
-                    'nama' => $calon->nama,
-                    'user_id' => $user->id,
-                    'type_pegawai_id' => $calon->type_pegawai_id,
-                    'tempat_lahir' => $calon->tempat_lahir,
-                    'tanggal_lahir' => $calon->tanggal_lahir,
-                    'jenis_kelamin' => $calon->jenis_kelamin,
-                    'alamat' => $calon->alamat,
-                    'tanggal_masuk' => date('Y-m-d'),
-                    'status' => 'aktif',
-                    'sisa_cuti' => 12,
-                    'qr_token' => (string) Str::uuid()
-                ]);
+                // 2. Buat atau Update Data Pegawai (Mencegah Duplicate entry pegawai_user_id_unique)
+                $existingPegawai = Pegawai::where('user_id', $user->id)->first();
+                
+                if (!$existingPegawai) {
+                    Pegawai::create([
+                        'nama' => $calon->nama,
+                        'user_id' => $user->id,
+                        'type_pegawai_id' => $calon->type_pegawai_id,
+                        'tempat_lahir' => $calon->tempat_lahir,
+                        'tanggal_lahir' => $calon->tanggal_lahir,
+                        'jenis_kelamin' => $calon->jenis_kelamin,
+                        'alamat' => $calon->alamat,
+                        'tanggal_masuk' => date('Y-m-d'),
+                        'status' => 'aktif',
+                        'sisa_cuti' => 12,
+                        'qr_token' => (string) Str::uuid()
+                    ]);
+                } else {
+                    // Jika sudah ada, cukup update jabatan dan data terbarunya
+                    $existingPegawai->update([
+                        'nama' => $calon->nama,
+                        'type_pegawai_id' => $calon->type_pegawai_id,
+                        'tempat_lahir' => $calon->tempat_lahir,
+                        'tanggal_lahir' => $calon->tanggal_lahir,
+                        'jenis_kelamin' => $calon->jenis_kelamin,
+                        'alamat' => $calon->alamat,
+                    ]);
+                }
 
                 // 2.5 Kirim Email Pemberitahuan Akun Baru (hanya jika akun baru dibuat)
                 if ($isNewUser) {

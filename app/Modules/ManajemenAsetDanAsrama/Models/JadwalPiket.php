@@ -31,6 +31,6 @@ class JadwalPiket extends Model
     // Relasi: jadwal piket milik 1 siswa
     public function siswa()
     {
-        return $this->belongsTo(Siswa::class, 'siswa_id', 'id');
+        return $this->belongsTo(Siswa::class, 'siswa_id', 'id')->withTrashed();
     }
 }

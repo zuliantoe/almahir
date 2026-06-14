@@ -40,5 +40,10 @@ class DatabaseSeeder extends Seeder
         if (class_exists(\Modules\PenilaianDanPresensi\Database\Seeders\PenilaianIntegrasiSeeder::class)) {
             $this->call(\Modules\PenilaianDanPresensi\Database\Seeders\PenilaianIntegrasiSeeder::class);
         }
+
+        // 6. Manajemen Aset & Asrama Integration
+        if (class_exists(\App\Modules\ManajemenAsetDanAsrama\Database\Seeders\ManajemenAsetDanAsramaSeeder::class)) {
+            $this->call(\App\Modules\ManajemenAsetDanAsrama\Database\Seeders\ManajemenAsetDanAsramaSeeder::class);
+        }
     }
 }
